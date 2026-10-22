@@ -65,4 +65,4 @@ Every question describes a realistic situation, usually from a bank or fintech, 
 
 ## For instructors
 
-The question bank (with answers and explanations) is **not** stored in this public repository. It lives in `assessments/private/` (git-ignored) and is converted to Moodle XML by `scripts/moodle/build_moodle.py`. Keep it in a private repository or the LMS only.
+The question bank (with answers and explanations) is **not** stored in this public repository. It lives in the private repository `sundayayandele/java-zero-hire-assessments` (access on request). Clone it into `assessments/private/` (git-ignored here) and run `scripts/moodle/build_moodle.py` to produce the Moodle XML.

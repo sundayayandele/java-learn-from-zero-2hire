@@ -84,7 +84,7 @@ Core Moodle web services can't create activities or import questions, so those a
 
 ### End-of-phase exam
 
-Import `lms/moodle/out/questions/phase-1-exam.xml` (built from the private bank in `assessments/private/`, which is not in the public repository). Quiz settings:
+Import `lms/moodle/out/questions/phase-1-exam.xml` (built from the private bank: clone the private repo `sundayayandele/java-zero-hire-assessments` into `assessments/private/` first). Quiz settings:
 
 | Setting | Value |
 | --- | --- |
