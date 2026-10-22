@@ -108,6 +108,19 @@ def videos_html(videos: list[dict]) -> str:
     return "\n".join(blocks)
 
 
+def combine_topic_banks() -> None:
+    """One file with every topic category, so all topic quizzes import in a single step. Public: these answers
+    are already in the topic READMEs. Written to lms/moodle/import/ (committed) for Moodle's URL downloader."""
+    blocks = []
+    for f in sorted((OUT / "questions").glob("topic-*.xml"), key=lambda p: [int(x) for x in p.stem[6:].split(".")]):
+        text = f.read_text(encoding="utf-8")
+        blocks.append(text.split("<quiz>", 1)[1].rsplit("</quiz>", 1)[0].strip("\n"))
+    target = ROOT / "lms" / "moodle" / "import" / "phase-1-topic-quizzes.xml"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text('<?xml version="1.0" encoding="UTF-8"?>\n<quiz>\n' + "\n".join(blocks) + "\n</quiz>\n",
+                      encoding="utf-8")
+
+
 def main() -> int:
     if not shutil.which("pandoc"):
         print("pandoc is required: https://pandoc.org/installing.html", file=sys.stderr)
@@ -193,6 +206,7 @@ def main() -> int:
                                     "sections": sections})
 
     (OUT / "course-structure.json").write_text(json.dumps(structure, indent=2) + "\n", encoding="utf-8")
+    combine_topic_banks()
     n_q = len(list((OUT / "questions").glob("*.xml")))
     n_p = len(list((OUT / "pages").glob("*.html")))
     print(f"moodle: {n_p} pages, {n_q} question banks, course-structure.json in {OUT.relative_to(ROOT)}")
