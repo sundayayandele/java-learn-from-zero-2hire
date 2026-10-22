@@ -1,0 +1,109 @@
+{
+  "topic": "2.2",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "Two concurrent requests withdraw ₦800 from an in-memory wallet holding ₦1,000. Both succeed and the balance shows ₦200. The method does `if (balance >= amount) balance = balance - amount;` with no synchronisation.",
+      "question": "What kind of bug is this?",
+      "options": [
+        "A check-then-act race condition",
+        "A memory leak",
+        "Integer overflow",
+        "A deadlock"
+      ],
+      "answer": 0,
+      "explanation": "Both threads checked the balance before either wrote. The check and the act must be one atomic step: a lock, a CAS loop, or (for real balances) a database-level guarantee."
+    },
+    {
+      "type": "single",
+      "scenario": "A request counter is declared `private volatile long count;` and incremented with `count++` from 50 threads. The total is consistently lower than the number of requests.",
+      "question": "What is the fix?",
+      "options": [
+        "Make it static volatile",
+        "Use AtomicLong.incrementAndGet() or LongAdder.increment()",
+        "Use Integer instead of long",
+        "Add Thread.yield() after each increment"
+      ],
+      "answer": 1,
+      "explanation": "volatile gives visibility but not atomicity; count++ is read-modify-write. Atomic classes do the increment atomically. LongAdder scales best under heavy contention."
+    },
+    {
+      "type": "single",
+      "scenario": "A transfer method locks `from` then `to` with nested synchronized blocks. Under load, the service occasionally freezes, and a thread dump says 'Found one Java-level deadlock'.",
+      "question": "What is the standard fix?",
+      "options": [
+        "Make the account fields volatile",
+        "Catch DeadlockException and retry",
+        "Always acquire the two account locks in a consistent global order, e.g. by account number",
+        "Use more threads"
+      ],
+      "answer": 2,
+      "explanation": "Transfers A→B and B→A take locks in opposite orders, creating a cycle. A global lock order removes the circular wait. Java has no DeadlockException."
+    },
+    {
+      "type": "single",
+      "scenario": "A per-merchant counter uses `ConcurrentHashMap<String, Long>` with `if (!m.containsKey(k)) m.put(k, 0L); m.put(k, m.get(k) + 1);`. Counts are still wrong.",
+      "question": "What is the correct approach?",
+      "options": [
+        "Wrap only the put in synchronized",
+        "Switch to Collections.synchronizedMap and keep the same code",
+        "Use an atomic compound operation such as m.merge(k, 1L, Long::sum)",
+        "Use a HashMap instead"
+      ],
+      "answer": 2,
+      "explanation": "Each individual call on ConcurrentHashMap is thread-safe, but the sequence get-then-put is not. merge/compute perform the read and write atomically for that key."
+    },
+    {
+      "type": "single",
+      "scenario": "A partner bank's sandbox allows at most 10 concurrent connections from you. Your service has 200 request threads that may call it.",
+      "question": "Which tool enforces the limit most simply?",
+      "options": [
+        "synchronized on the client object",
+        "A volatile boolean flag",
+        "Semaphore(10), acquire before the call and release in finally",
+        "CountDownLatch(10)"
+      ],
+      "answer": 2,
+      "explanation": "A semaphore with 10 permits allows exactly 10 concurrent holders. synchronized would allow only one at a time; a latch is a one-shot countdown."
+    },
+    {
+      "type": "single",
+      "scenario": "A payments service runs as four instances behind a load balancer. A developer adds `synchronized` to `withdraw` and says the double-spend bug is fixed.",
+      "question": "What is the problem with that claim?",
+      "options": [
+        "The lock exists only inside one JVM; two instances can still withdraw from the same account simultaneously, so the database must enforce it (row locks, optimistic versioning or a conditional UPDATE)",
+        "Load balancers serialise requests anyway",
+        "synchronized makes the service single-threaded",
+        "synchronized does not work on methods"
+      ],
+      "answer": 0,
+      "explanation": "In-memory locks protect in-memory state in one process. Shared money lives in the database, which is where the concurrency guarantee must come from (topic 3.2)."
+    },
+    {
+      "type": "single",
+      "scenario": "A code reviewer sees `lock.lock(); doTransfer(); lock.unlock();` with a ReentrantLock.",
+      "question": "What is the risk?",
+      "options": [
+        "lock() is deprecated",
+        "If doTransfer throws, unlock never runs and every later caller blocks forever; unlock must be in a finally block",
+        "None, this is the standard pattern",
+        "ReentrantLock must be static"
+      ],
+      "answer": 1,
+      "explanation": "Explicit locks are not released automatically. Always use try { ... } finally { lock.unlock(); }."
+    },
+    {
+      "type": "single",
+      "scenario": "An FX-rate table is read by every request (thousands per second) and refreshed by one scheduler thread every five minutes.",
+      "question": "Which approach fits best?",
+      "options": [
+        "Synchronise every read and write on one lock",
+        "Store rates in an immutable Map and publish a new one through a volatile (or AtomicReference) field on each refresh",
+        "Use a CountDownLatch",
+        "Use a plain HashMap with no synchronisation"
+      ],
+      "answer": 1,
+      "explanation": "Readers never block, and each sees either the old or new complete table. A ReadWriteLock also works; a single lock would serialise thousands of reads needlessly."
+    }
+  ]
+}

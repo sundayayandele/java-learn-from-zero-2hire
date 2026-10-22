@@ -1,0 +1,829 @@
+{
+  "about": "Curated English YouTube videos for every topic. Source of truth for the Watch section of each topic README and for the Moodle topic pages. Rules: English audio and captions, embeddable, official or well-established channels first, 'optional' for anything over 30 minutes. Checked by lms/check_videos.py; minutes and published are filled from YouTube by `python lms/check_videos.py --fill`.",
+  "checked": "2026-10-22",
+  "topics": {
+    "1.1": [
+      {
+        "id": "V_vXRRydnYI",
+        "title": "Creating your first Java application with IntelliJ IDEA",
+        "channel": "IntelliJ IDEA, a JetBrains IDE",
+        "minutes": 11.2,
+        "published": "2026-01-22",
+        "why": "JetBrains' own walkthrough: create, run and debug your first Java project in IntelliJ IDEA."
+      },
+      {
+        "id": "Xatr8AZLOsE",
+        "title": "Maven Tutorial - Crash Course",
+        "channel": "Marco Codes",
+        "minutes": 26.1,
+        "published": "2022-05-04",
+        "why": "Maven from first principles: the pom, coordinates, scopes, lifecycle phases and plugins."
+      },
+      {
+        "id": "gKPMKRnnbXU",
+        "title": "Gradle Tutorial - Crash Course",
+        "channel": "Marco Codes",
+        "minutes": 21.9,
+        "published": "2022-07-06",
+        "why": "The same ideas in Gradle, so you can read either build when you join a team."
+      },
+      {
+        "id": "gd7BXuUQ91w",
+        "title": "60 Linux Commands you NEED to know (in 10 minutes)",
+        "channel": "NetworkChuck",
+        "minutes": 10.8,
+        "published": "2022-11-16",
+        "why": "Sixty everyday Linux commands at speed. Rewatch it with a terminal open and type along."
+      }
+    ],
+    "1.2": [
+      {
+        "id": "so1iUWaLmKA",
+        "title": "Variables in Java ✘【12 minutes】",
+        "channel": "Bro Code",
+        "minutes": 12.5,
+        "published": "2020-10-25",
+        "why": "Variables, primitive types and String, explained slowly with examples."
+      },
+      {
+        "id": "MY03bt_0JQI",
+        "title": "Java if statements 🚧【6 minutes】",
+        "channel": "Bro Code",
+        "minutes": 6.2,
+        "published": "2020-10-19",
+        "why": "if / else if / else decisions in six minutes."
+      },
+      {
+        "id": "v5p_SUfi710",
+        "title": "Java methods explained in 10+ minutes! 📞",
+        "channel": "Bro Code",
+        "minutes": 11.1,
+        "published": "2020-10-19",
+        "why": "Defining and calling methods, parameters and return values."
+      },
+      {
+        "id": "P-_Nzi_mCRo",
+        "title": "Java Main Method Explained - What Does All That Stuff Mean?",
+        "channel": "Coding with John",
+        "minutes": 7.2,
+        "published": "2020-11-03",
+        "why": "What every word in `public static void main(String[] args)` actually means."
+      }
+    ],
+    "1.3": [
+      {
+        "id": "pTB0EiLXUC8",
+        "title": "Object-Oriented Programming, Simplified",
+        "channel": "Programming with Mosh",
+        "minutes": 7.6,
+        "published": "2018-03-29",
+        "why": "The four pillars of OOP in plain language: encapsulation, abstraction, inheritance, polymorphism."
+      },
+      {
+        "id": "jhDUxynEQRI",
+        "title": "Java Polymorphism Fully Explained In 7 Minutes",
+        "channel": "Coding with John",
+        "minutes": 7.3,
+        "published": "2021-04-18",
+        "why": "Polymorphism in Java, shown with code you can type yourself."
+      },
+      {
+        "id": "HoA6aZPR5K0",
+        "title": "SOLID Design Principles with Java Examples | Clean Code and Best Practices | Geekific",
+        "channel": "Geekific",
+        "minutes": 10.8,
+        "published": "2021-04-17",
+        "why": "Each SOLID principle with a short Java before-and-after."
+      },
+      {
+        "id": "_jDNAf3CzeY",
+        "title": "Learn SOLID Principles with CLEAN CODE Examples",
+        "channel": "Amigoscode",
+        "minutes": 28.6,
+        "published": "2022-04-21",
+        "optional": true,
+        "why": "A longer, code-along refactor applying SOLID to a realistic class."
+      }
+    ],
+    "1.4": [
+      {
+        "id": "viTHc_4XfCA",
+        "title": "Java Collections Explained (with examples)",
+        "channel": "Visual Computer Science",
+        "minutes": 10.6,
+        "published": "2022-01-15",
+        "why": "A map of the Collections Framework: List, Set, Queue, Map and how they relate."
+      },
+      {
+        "id": "5dscMs2hnDI",
+        "title": "LinkedList vs ArrayList in Java Tutorial - Which Should You Use?",
+        "channel": "Coding with John",
+        "minutes": 11.7,
+        "published": "2021-06-06",
+        "why": "ArrayList vs LinkedList, with the performance reasoning interviewers ask about."
+      },
+      {
+        "id": "K1iu1kXkVoA",
+        "title": "Generics In Java - Full Simple Tutorial",
+        "channel": "Coding with John",
+        "minutes": 17.6,
+        "published": "2021-12-20",
+        "why": "Generic classes, generic methods, bounded types and wildcards."
+      }
+    ],
+    "1.5": [
+      {
+        "id": "tj5sLSFjVj4",
+        "title": "Lambda Expressions in Java - Full Simple Tutorial",
+        "channel": "Coding with John",
+        "minutes": 13.1,
+        "published": "2022-02-07",
+        "why": "Lambdas and functional interfaces from scratch."
+      },
+      {
+        "id": "yv9Q2E39kJM",
+        "title": "Java Streams Crash Course: Everything You Need to Know",
+        "channel": "camelCase",
+        "minutes": 8.8,
+        "published": "2024-05-06",
+        "why": "A fast tour of filter, map, reduce and collect."
+      },
+      {
+        "id": "2StXP1XaU04",
+        "title": "Java Streams API Explained (with examples)",
+        "channel": "Visual Computer Science",
+        "minutes": 18.1,
+        "published": "2023-04-09",
+        "why": "Streams in more depth, including intermediate vs terminal operations and laziness."
+      }
+    ],
+    "1.6": [
+      {
+        "id": "gJ9DYC-jswo",
+        "title": "Records In Java - Full Tutorial - The Best New Java Feature You're Not Using",
+        "channel": "Coding with John",
+        "minutes": 13.8,
+        "published": "2022-04-18",
+        "why": "Records: what they generate for you and when to use them."
+      },
+      {
+        "id": "glvYULuaf-k",
+        "title": "Sealed Classes in Java | Java 17 features",
+        "channel": "Telusko",
+        "minutes": 9.7,
+        "published": "2022-07-21",
+        "why": "Sealed classes and interfaces: closing a type hierarchy on purpose."
+      },
+      {
+        "id": "QrwFrm1R8OY",
+        "title": "Java 21 Pattern Matching Tutorial #RoadTo21",
+        "channel": "Java",
+        "minutes": 23.4,
+        "published": "2023-09-17",
+        "why": "The Java team's own tour of pattern matching in Java 21: record patterns and switch."
+      },
+      {
+        "id": "NDaA9MrTLBM",
+        "title": "Text Blocks - JEP Café #5",
+        "channel": "Java",
+        "minutes": 10.6,
+        "published": "2021-10-21",
+        "why": "Text blocks from the Java team: indentation rules, escapes and formatting."
+      }
+    ],
+    "1.7": [
+      {
+        "id": "1XAfapkBQjk",
+        "title": "Exception Handling in Java Tutorial",
+        "channel": "Coding with John",
+        "minutes": 13.3,
+        "published": "2020-12-30",
+        "why": "try / catch / finally and how exceptions travel up the call stack."
+      },
+      {
+        "id": "bCPClyGsVhc",
+        "title": "Checked vs. Unchecked Exceptions in Java Tutorial - What's The Difference?",
+        "channel": "Coding with John",
+        "minutes": 10.2,
+        "published": "2021-11-08",
+        "why": "Checked vs unchecked exceptions, and when each is the right choice."
+      },
+      {
+        "id": "qbNMAJvv7qI",
+        "title": "Immutable Classes and Objects in Java",
+        "channel": "Neso Academy",
+        "minutes": 5.1,
+        "published": "2020-07-05",
+        "why": "The rules for writing an immutable class."
+      },
+      {
+        "id": "wSDyiEjhp8k",
+        "title": "My 10 “Clean” Code Principles (Start These Now)",
+        "channel": "Conner Ardman",
+        "minutes": 15.2,
+        "published": "2024-03-13",
+        "why": "Ten clean-code habits that make code easier to review and change."
+      }
+    ],
+    "1.8": [
+      {
+        "id": "RuMogS3ycKs",
+        "title": "Ranking Java Features Added from Versions 8 to 21!",
+        "channel": "Tales from the jar side",
+        "minutes": 27.0,
+        "published": "2024-07-07",
+        "why": "Every major language and API change from Java 8 to 21, ranked by how much it matters day to day."
+      },
+      {
+        "id": "uViRlX-RahA",
+        "title": "Migrate to Java 21 using OpenRewrite",
+        "channel": "Moderne and OpenRewrite",
+        "minutes": 7.0,
+        "published": "2024-02-13",
+        "why": "Automating a Java 21 migration with OpenRewrite recipes."
+      },
+      {
+        "id": "X0-TGhktFnE",
+        "title": "All New Java Language Features Since Java 21 #RoadTo25",
+        "channel": "Java",
+        "minutes": 35.1,
+        "published": "2025-08-31",
+        "optional": true,
+        "why": "The Java team on what changed after 21, so you know what Java 25 adds."
+      }
+    ],
+    "1.9": [
+      {
+        "id": "xT8oP0wy-A0",
+        "title": "Kotlin in 100 Seconds",
+        "channel": "Fireship",
+        "minutes": 2.4,
+        "published": "2021-11-05",
+        "why": "Kotlin in 100 seconds: what it is and why JVM teams adopt it."
+      },
+      {
+        "id": "f-y817B6CUE",
+        "title": "Top 5 KEY DIFFERENCES between Java and Kotlin",
+        "channel": "Visual Computer Science",
+        "minutes": 8.4,
+        "published": "2021-11-30",
+        "why": "The five differences between Java and Kotlin that matter most."
+      },
+      {
+        "id": "EYUyYu-wuww",
+        "title": "Java dev tries Kotlin for the first time",
+        "channel": "ForrestKnight",
+        "minutes": 28.7,
+        "published": "2025-02-19",
+        "why": "A Java developer writing Kotlin for the first time: the surprises and the wins."
+      }
+    ],
+    "2.1": [
+      {
+        "id": "r_MbozD32eo",
+        "title": "Multithreading in Java Explained in 10 Minutes",
+        "channel": "Coding with John",
+        "minutes": 10.0,
+        "published": "2021-06-28",
+        "why": "Threads, Runnable and join() explained in ten minutes."
+      },
+      {
+        "id": "6Oo-9Can3H8",
+        "title": "Java ExecutorService - Part 1 - Introduction",
+        "channel": "Defog Tech",
+        "minutes": 10.2,
+        "published": "2017-12-30",
+        "why": "Why thread pools exist and how ExecutorService manages them."
+      },
+      {
+        "id": "xpjvY45Hbyg",
+        "title": "A Guide To CompletableFuture in Java with Examples | Asynchronous Operations in Java | Geekific",
+        "channel": "Geekific",
+        "minutes": 9.5,
+        "published": "2022-10-01",
+        "why": "Composing asynchronous work with CompletableFuture."
+      }
+    ],
+    "2.2": [
+      {
+        "id": "7eV4nib3Cm8",
+        "title": "#89 Race Condition in Java",
+        "channel": "Telusko",
+        "minutes": 12.5,
+        "published": "2023-01-18",
+        "why": "A race condition reproduced live, then fixed with synchronized."
+      },
+      {
+        "id": "WH5UvQJizH0",
+        "title": "Using volatile vs AtomicInteger in Java concurrency",
+        "channel": "Defog Tech",
+        "minutes": 7.4,
+        "published": "2018-07-03",
+        "why": "volatile vs AtomicInteger: visibility is not the same as atomicity."
+      },
+      {
+        "id": "B4IVu-2hCos",
+        "title": "How detect and resolve DeadLocks in Java",
+        "channel": "Defog Tech",
+        "minutes": 10.9,
+        "published": "2019-01-12",
+        "why": "How deadlocks happen, how to spot them in a thread dump, and how to avoid them."
+      },
+      {
+        "id": "_A0Wty5Aeis",
+        "title": "ConcurrentHashmap in Java and its differences with Synchronized HashMap",
+        "channel": "Daily Code Buffer",
+        "minutes": 11.6,
+        "published": "2022-08-13",
+        "why": "ConcurrentHashMap vs a synchronized HashMap."
+      }
+    ],
+    "2.3": [
+      {
+        "id": "0NtIcbSsjBc",
+        "title": "Java Threads vs Virtual Threads | Why This Changes Everything",
+        "channel": "ByteMonk",
+        "minutes": 8.0,
+        "published": "2025-05-31",
+        "why": "Platform threads vs virtual threads, with a clear mental model of carrier threads."
+      },
+      {
+        "id": "kirhhcFAGB4",
+        "title": "Java Virtual Threads",
+        "channel": "Jakob Jenkov",
+        "minutes": 9.1,
+        "published": "2023-01-02",
+        "why": "Creating and running virtual threads in code."
+      },
+      {
+        "id": "vLJDPmXufQw",
+        "title": "Structured Concurrency Revamp in Java 25 - Inside Java Newscast #91",
+        "channel": "Java",
+        "minutes": 8.6,
+        "published": "2025-05-07",
+        "why": "The Java team on the redesigned structured-concurrency API in Java 25."
+      }
+    ],
+    "2.4": [
+      {
+        "id": "5OJRqkYbK-4",
+        "title": "Stack vs Heap Memory - Simple Explanation",
+        "channel": "Alex Hyett",
+        "minutes": 5.5,
+        "published": "2022-11-25",
+        "why": "Stack vs heap memory in five minutes."
+      },
+      {
+        "id": "Mlbyft_MFYM",
+        "title": "Java's Garbage Collection Explained - How It Saves your Lazy Programmer Butt",
+        "channel": "Coding with John",
+        "minutes": 9.0,
+        "published": "2023-11-13",
+        "why": "How Java's garbage collector finds and frees unreachable objects."
+      },
+      {
+        "id": "XXOaCV5xm9s",
+        "title": "Garbage Collection in Java | What is GC and How does it Work in the JVM? | Types of GCs | Geekific",
+        "channel": "Geekific",
+        "minutes": 11.3,
+        "published": "2022-11-05",
+        "why": "Generational collection and the main collectors: Serial, Parallel, G1, ZGC."
+      }
+    ],
+    "3.1": [
+      {
+        "id": "GFQaEYEc8_8",
+        "title": "Learn Database Normalization - 1NF, 2NF, 3NF, 4NF, 5NF",
+        "channel": "Decomplexify",
+        "minutes": 28.6,
+        "published": "2021-11-21",
+        "why": "The clearest explanation of 1NF through 5NF, with one running example."
+      },
+      {
+        "id": "Yh4CrPHVBdE",
+        "title": "6 SQL Joins you MUST know! (Animated + Practice)",
+        "channel": "Anton Putra",
+        "minutes": 9.8,
+        "published": "2023-07-23",
+        "why": "Six joins animated, with practice queries."
+      },
+      {
+        "id": "9yeOJ0ZMUYw",
+        "title": "SQL Joins Explained  |¦| Joins in SQL |¦| SQL Tutorial",
+        "channel": "Socratica",
+        "minutes": 10.4,
+        "published": "2019-03-25",
+        "why": "Inner vs outer joins and what NULLs mean in the result."
+      }
+    ],
+    "3.2": [
+      {
+        "id": "GAe5oB742dw",
+        "title": "ACID Properties in Databases With Examples",
+        "channel": "ByteByteGo",
+        "minutes": 5.0,
+        "published": "2024-03-26",
+        "why": "ACID properties with examples, from ByteByteGo."
+      },
+      {
+        "id": "G8wDjV0N9tk",
+        "title": "Transaction Isolation Levels With PostgreSQL as an example",
+        "channel": "mkdev",
+        "minutes": 8.3,
+        "published": "2020-11-08",
+        "why": "Isolation levels and their anomalies, demonstrated in PostgreSQL."
+      },
+      {
+        "id": "CTCAo89fcQw",
+        "title": "Transaction Isolation Levels",
+        "channel": "Bharath thippireddy",
+        "minutes": 5.2,
+        "published": "2016-06-30",
+        "why": "A short recap of the four isolation levels and what each prevents."
+      }
+    ],
+    "3.3": [
+      {
+        "id": "Jemuod4wKWo",
+        "title": "what is a database index?",
+        "channel": "Hussein Nasser",
+        "minutes": 5.2,
+        "published": "2021-11-28",
+        "why": "What a database index physically is, from Hussein Nasser."
+      },
+      {
+        "id": "P7EUFtjeAmI",
+        "title": "Postgres Explain Explained - How Databases Prepare Optimal Query Plans to Execute SQL",
+        "channel": "Hussein Nasser",
+        "minutes": 10.3,
+        "published": "2021-03-17",
+        "why": "How PostgreSQL chooses a plan, and how to read EXPLAIN output."
+      },
+      {
+        "id": "BIlFTFrEFOI",
+        "title": "SQL indexing best practices | How to make your database FASTER!",
+        "channel": "CockroachDB",
+        "minutes": 4.1,
+        "published": "2022-09-20",
+        "why": "Index best practices in four minutes."
+      },
+      {
+        "id": "TukZd6LjeBc",
+        "title": "Use MySQL EXPLAIN for Query Optimization",
+        "channel": "Code with Lucian",
+        "minutes": 17.3,
+        "published": "2021-01-17",
+        "why": "The same skill in MySQL: reading EXPLAIN and fixing slow queries."
+      }
+    ],
+    "3.4": [
+      {
+        "id": "dJDBP7pPA-o",
+        "title": "Database Migrations for Beginners | Flyway Tutorial",
+        "channel": "Redhwan Nacef",
+        "minutes": 17.6,
+        "published": "2022-02-11",
+        "why": "Why migrations exist and how Flyway versions a schema."
+      },
+      {
+        "id": "AMopB9C2bH8",
+        "title": "Working with Flyway Migrations in a Spring Boot Application",
+        "channel": "IntelliJ IDEA, a JetBrains IDE",
+        "minutes": 7.8,
+        "published": "2025-03-27",
+        "why": "Flyway inside a Spring Boot project, from JetBrains."
+      },
+      {
+        "id": "U9nVo9MS12o",
+        "title": "How Liquibase Works",
+        "channel": "Liquibase",
+        "minutes": 2.8,
+        "published": "2020-10-31",
+        "why": "Liquibase's model of changelogs and changesets, from Liquibase."
+      }
+    ],
+    "3.5": [
+      {
+        "id": "KgXq2UBNEhA",
+        "title": "JDBC Tutorial - Crash Course",
+        "channel": "Marco Codes",
+        "minutes": 23.6,
+        "published": "2022-05-20",
+        "why": "JDBC end to end: connections, statements, result sets and transactions."
+      },
+      {
+        "id": "7v2OnUti2eM",
+        "title": "Java Database Connectivity | JDBC",
+        "channel": "Telusko",
+        "minutes": 20.6,
+        "published": "2023-09-12",
+        "why": "A second walkthrough of the JDBC steps, slower and beginner-friendly."
+      }
+    ],
+    "3.6": [
+      {
+        "id": "G1rOthIU-uo",
+        "title": "Redis in 100 Seconds",
+        "channel": "Fireship",
+        "minutes": 2.4,
+        "published": "2021-07-08",
+        "why": "Redis in 100 seconds."
+      },
+      {
+        "id": "Tqaqdfxi-J4",
+        "title": "What is Redis Cache?",
+        "channel": "Redis",
+        "minutes": 6.3,
+        "published": "2021-08-10",
+        "why": "What a cache is and the cache-aside pattern, from Redis."
+      },
+      {
+        "id": "-bt_y4Loofg",
+        "title": "MongoDB in 100 Seconds",
+        "channel": "Fireship",
+        "minutes": 2.5,
+        "published": "2021-07-14",
+        "why": "MongoDB in 100 seconds."
+      },
+      {
+        "id": "GV9VBwH_h1U",
+        "title": "MongoDB Explained in 10 Minutes | SQL vs NoSQL | Jumpstart",
+        "channel": "MongoDB",
+        "minutes": 9.3,
+        "published": "2024-10-14",
+        "why": "Documents vs rows: when MongoDB fits better than SQL, from MongoDB."
+      }
+    ],
+    "4.1": [
+      {
+        "id": "5cRaQqQb14Q",
+        "title": "#4  IoC and DI in Spring",
+        "channel": "Telusko",
+        "minutes": 7.9,
+        "published": "2024-05-01",
+        "why": "IoC and dependency injection in Spring, short and current."
+      },
+      {
+        "id": "GB8k2-Egfv0",
+        "title": "Spring Tutorial 01 - Understanding Dependency Injection",
+        "channel": "Java Brains",
+        "minutes": 14.9,
+        "published": "2011-06-16",
+        "why": "The classic Java Brains explanation of why dependency injection exists."
+      },
+      {
+        "id": "J_kTukE7hr8",
+        "title": "Spring Boot Auto Configuration - Understand The Magic",
+        "channel": "in28minutes",
+        "minutes": 15.9,
+        "published": "2017-02-10",
+        "why": "What Spring Boot auto-configuration does behind the scenes."
+      }
+    ],
+    "4.2": [
+      {
+        "id": "LItERTUC9y4",
+        "title": "Spring Boot Validation",
+        "channel": "Fast and Simple Development",
+        "minutes": 12.0,
+        "published": "2023-04-12",
+        "why": "Bean Validation on request bodies with @Valid and constraint annotations."
+      },
+      {
+        "id": "PzK4ZXa2Tbc",
+        "title": "Spring Boot Tutorial | How To Handle Exceptions",
+        "channel": "Amigoscode",
+        "minutes": 14.2,
+        "published": "2019-04-20",
+        "why": "Turning exceptions into clean HTTP responses."
+      },
+      {
+        "id": "IdHHwZg3v58",
+        "title": "Master Exception Handling in Spring Boot: @ExceptionHandler & @ControllerAdvice Explained",
+        "channel": "CodeSnippet by Chetan",
+        "minutes": 28.1,
+        "published": "2024-09-08",
+        "why": "@ExceptionHandler and @RestControllerAdvice in depth."
+      }
+    ],
+    "4.3": [
+      {
+        "id": "xHminZ9Dxm4",
+        "title": "Hibernate & JPA Tutorial - Crash Course",
+        "channel": "Marco Codes",
+        "minutes": 24.4,
+        "published": "2022-08-23",
+        "why": "JPA and Hibernate from the ground up: entities, mappings and the persistence context."
+      },
+      {
+        "id": "QAaTLLYdHJ0",
+        "title": "JOIN FETCH with Hibernate - The end of n+1 select issues",
+        "channel": "Thorben Janssen",
+        "minutes": 6.5,
+        "published": "2024-10-17",
+        "why": "Fixing N+1 selects with JOIN FETCH, from Thorben Janssen."
+      },
+      {
+        "id": "7gm30iX3Nfw",
+        "title": "Fix N+1 Select Issues with Hibernate’s EntityGraphs",
+        "channel": "Thorben Janssen",
+        "minutes": 6.9,
+        "published": "2024-10-24",
+        "why": "Fixing N+1 selects with entity graphs."
+      }
+    ],
+    "4.4": [
+      {
+        "id": "P91tqdWUHE4",
+        "title": "Spring profiles explained -  Microservice configuration with Spring Boot [08]",
+        "channel": "Java Brains",
+        "minutes": 17.4,
+        "published": "2020-01-25",
+        "why": "How Spring profiles select configuration per environment."
+      },
+      {
+        "id": "mGo_IToQ7EE",
+        "title": "Spring Boot Profiles: Manage Dev, Staging & Production Environments Easily",
+        "channel": "Philipp Lackner",
+        "minutes": 22.8,
+        "published": "2025-04-27",
+        "why": "Managing dev, staging and production settings cleanly."
+      }
+    ],
+    "4.5": [
+      {
+        "id": "4OVe0MWgZ4k",
+        "title": "The #1 Spring Boot Starter you should include in every single application",
+        "channel": "Dan Vega",
+        "minutes": 19.3,
+        "published": "2023-09-14",
+        "why": "Dan Vega on why Actuator belongs in every application."
+      },
+      {
+        "id": "ojc_Jy_0EgI",
+        "title": "Spring Boot Quick Start 33 - Spring Boot Actuator",
+        "channel": "Java Brains",
+        "minutes": 4.9,
+        "published": "2016-12-23",
+        "why": "A five-minute first look at the Actuator endpoints."
+      }
+    ],
+    "4.6": [
+      {
+        "id": "kTLuhE7_jGU",
+        "title": "Spring Boot 4 Modularization Explained: What you need to know",
+        "channel": "Dan Vega",
+        "minutes": 10.9,
+        "published": "2025-12-12",
+        "why": "Spring Boot 4's modular starters explained by Dan Vega."
+      },
+      {
+        "id": "ENpq2J5yQ8Y",
+        "title": "Migrating To Spring Boot 4",
+        "channel": "SivaLabs",
+        "minutes": 20.8,
+        "published": "2025-11-26",
+        "why": "A step-by-step migration to Spring Boot 4, from SivaLabs."
+      },
+      {
+        "id": "HiPkoGTeNJc",
+        "title": "Spring Boot 3 to 4 Migration: A Real App, Migrated Live",
+        "channel": "Dan Vega",
+        "minutes": 29.9,
+        "published": "2026-09-24",
+        "why": "A real application migrated from Boot 3 to 4, live, including what broke."
+      },
+      {
+        "id": "4cvP_qroLH4",
+        "title": "Jackson 3 Support is HERE: What's New in Spring Framework 7 & Spring Boot 4",
+        "channel": "Dan Vega",
+        "minutes": 34.0,
+        "published": "2025-11-10",
+        "optional": true,
+        "why": "Jackson 3 in Spring Framework 7 and Boot 4: the biggest code-level change."
+      }
+    ],
+    "4.7": [
+      {
+        "id": "eRej0b_Bm7A",
+        "title": "Project Creation & First Hello World App - Spring Boot 4 Basics With Kotlin",
+        "channel": "Philipp Lackner",
+        "minutes": 18.7,
+        "published": "2025-07-16",
+        "why": "Creating a Spring Boot 4 project in Kotlin and running it."
+      },
+      {
+        "id": "yA5_xp2nlgk",
+        "title": "Spring Boot & Kotlin Tutorial - Crash Course",
+        "channel": "Marco Codes",
+        "minutes": 32.2,
+        "published": "2023-09-21",
+        "optional": true,
+        "why": "A full Spring Boot + Kotlin REST API crash course."
+      },
+      {
+        "id": "TxmBk_VhuqY",
+        "title": "Idiomatic Kotlin applications with Spring Boot 4 | Sébastien Deleuze",
+        "channel": "Kotlin by JetBrains",
+        "minutes": 42.0,
+        "published": "2026-08-13",
+        "optional": true,
+        "why": "Idiomatic Kotlin with Spring Boot 4, from the Spring team's Kotlin lead."
+      }
+    ],
+    "getting-hired": [
+      {
+        "id": "na3gWTOBJEE",
+        "title": "The Java Developer Roadmap You Need in the AI Era",
+        "channel": "Amigoscode",
+        "minutes": 21.6,
+        "published": "2026-04-20",
+        "why": "What the Java job market asks for now, and where AI fits."
+      },
+      {
+        "id": "eGmZZFJ-8PY",
+        "title": "Ex-Google Recruiter Explains: 6 Résumé Secrets That Get You Hired",
+        "channel": "Farah Sharghi",
+        "minutes": 9.7,
+        "published": "2025-09-16",
+        "why": "Résumé advice from an ex-Google recruiter."
+      },
+      {
+        "id": "9A8sQZDRn5o",
+        "title": "I Made a Custom GitHub Profile README Portfolio (and you can, too)",
+        "channel": "ForrestKnight",
+        "minutes": 9.4,
+        "published": "2022-09-21",
+        "why": "Building a GitHub profile README that works as a portfolio page."
+      },
+      {
+        "id": "cNzFPWuju8k",
+        "title": "Top 10 Spring Boot Interview Questions and Answers [2025]",
+        "channel": "Amigoscode",
+        "minutes": 12.5,
+        "published": "2025-07-28",
+        "why": "Ten Spring Boot interview questions and how to answer them."
+      },
+      {
+        "id": "1t1_a1BZ04o",
+        "title": "How to NOT Fail a Technical Interview",
+        "channel": "Fireship",
+        "minutes": 8.4,
+        "published": "2022-08-01",
+        "why": "How to behave in a technical interview so your thinking is visible."
+      },
+      {
+        "id": "UQrTMxouDUY",
+        "title": "STAR Method - How to Ace Your Amazon Interview",
+        "channel": "Inside Amazon",
+        "minutes": 6.0,
+        "published": "2024-01-25",
+        "why": "The STAR method for behavioural answers, from Amazon."
+      },
+      {
+        "id": "auCdqGdn2as",
+        "title": "MUST KNOW junior role JAVA interview questions",
+        "channel": "Keep On Coding",
+        "minutes": 42.2,
+        "published": "2023-06-30",
+        "optional": true,
+        "why": "Core Java interview questions for junior roles, answered."
+      }
+    ],
+    "deploy": [
+      {
+        "id": "3fALfjlkfuU",
+        "title": "How To Dockerize Spring Boot Application & PostgreSQL Database",
+        "channel": "CodeVice",
+        "minutes": 15.0,
+        "published": "2023-02-13",
+        "why": "Dockerising a Spring Boot app with PostgreSQL."
+      },
+      {
+        "id": "YLtlz88zrLg",
+        "title": "CI/CD Tutorial using GitHub Actions - Automated Testing & Automated Deployments",
+        "channel": "Tom Shaw",
+        "minutes": 6.2,
+        "published": "2024-09-01",
+        "why": "CI/CD with GitHub Actions in six minutes."
+      },
+      {
+        "id": "z7nLsJvEyMY",
+        "title": "GitLab CI/CD Pipeline Tutorial for Beginners",
+        "channel": "Valentin Despa",
+        "minutes": 19.5,
+        "published": "2024-08-14",
+        "why": "GitLab CI/CD pipelines for beginners."
+      },
+      {
+        "id": "8X6uvKymTkM",
+        "title": "Full Guide to Auto-Deploy a Spring Boot Backend (VPS Server, GitHub Actions, HTTPS, Security)",
+        "channel": "Philipp Lackner",
+        "minutes": 94.8,
+        "published": "2025-04-09",
+        "optional": true,
+        "why": "Auto-deploying a Spring Boot backend to a VPS with GitHub Actions and HTTPS."
+      }
+    ]
+  }
+}

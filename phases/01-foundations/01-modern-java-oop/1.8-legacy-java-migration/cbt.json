@@ -1,0 +1,96 @@
+{
+  "topic": "1.8",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "After moving a Java 8 service to Java 11, compilation fails with `package javax.xml.bind does not exist`.",
+      "question": "What is the correct fix?",
+      "options": [
+        "Add --add-opens to the JVM flags",
+        "Add the JAXB API and implementation as Maven dependencies (Jakarta XML Binding), because they were removed from the JDK in Java 11",
+        "Rename the package to jakarta.xml.bind with find-and-replace only",
+        "Downgrade to Java 8 permanently"
+      ],
+      "answer": 1,
+      "explanation": "Java 11 removed the Java EE modules (JAXB, JAX-WS and others). They now ship as ordinary libraries you declare as dependencies. Renaming imports alone gives you no implementation."
+    },
+    {
+      "type": "single",
+      "scenario": "On Java 17, an old Mockito version fails with `InaccessibleObjectException: Unable to make field private ... accessible`.",
+      "question": "What is the preferred long-term fix?",
+      "options": [
+        "Upgrade Mockito (and Byte Buddy) to versions that support Java 17+",
+        "Remove the failing tests",
+        "Switch off strong encapsulation with --illegal-access=permit",
+        "Add --add-opens for every reported package and move on"
+      ],
+      "answer": 0,
+      "explanation": "Java 17 strongly encapsulates JDK internals and removed --illegal-access. Updated libraries no longer need the hack; --add-opens is only a temporary, documented workaround."
+    },
+    {
+      "type": "single",
+      "scenario": "A developer replaces every `.collect(Collectors.toList())` with `.toList()`. A month later, a batch job fails with `UnsupportedOperationException` when it calls `add` on one of the results.",
+      "question": "What was missed?",
+      "options": [
+        "toList() returns null for empty streams",
+        "Stream.toList() returns an unmodifiable list, while Collectors.toList() in practice returned a mutable ArrayList that callers relied on",
+        "toList() sorts the elements",
+        "toList() only works on parallel streams"
+      ],
+      "answer": 1,
+      "explanation": "The two look interchangeable but differ in mutability. Check how each result is used before applying a mechanical modernisation."
+    },
+    {
+      "type": "single",
+      "scenario": "You must upgrade a critical Java 8 payment service to Java 21. It has few tests.",
+      "question": "What should you do first?",
+      "options": [
+        "Rewrite the service in Kotlin",
+        "Change the compiler release to 21 and fix errors as they appear in production",
+        "Write characterisation tests around critical behaviour (fees, rounding, dates) so you can detect any change",
+        "Run OpenRewrite on the main branch and deploy"
+      ],
+      "answer": 2,
+      "explanation": "Without tests you cannot tell whether a migration changed behaviour. Pin the current behaviour first, then migrate in small, verified steps."
+    },
+    {
+      "type": "single",
+      "scenario": "During a Spring Boot upgrade, someone runs a global find-and-replace from `javax.` to `jakarta.`. Now `javax.sql.DataSource` and `javax.crypto.Cipher` imports fail to compile.",
+      "question": "Why?",
+      "options": [
+        "Only Java EE / Jakarta EE packages moved to jakarta.*; javax.sql and javax.crypto are part of the JDK and keep their names",
+        "jakarta packages are only for Kotlin",
+        "Those classes were deleted from Java",
+        "The replace must also change java. to jakarta."
+      ],
+      "answer": 0,
+      "explanation": "The namespace change applies to enterprise specs such as persistence, servlet and validation. JDK packages like javax.sql, javax.crypto and javax.net are unchanged. Tools like OpenRewrite know the difference."
+    },
+    {
+      "type": "single",
+      "scenario": "You want to know whether a legacy jar calls internal JDK APIs such as sun.misc.* before upgrading.",
+      "question": "Which JDK tool answers that?",
+      "options": [
+        "jar -tf app.jar",
+        "jshell",
+        "jdeps --jdk-internals app.jar",
+        "javadoc"
+      ],
+      "answer": 2,
+      "explanation": "jdeps analyses class dependencies; --jdk-internals lists uses of internal APIs and suggests supported replacements."
+    },
+    {
+      "type": "single",
+      "scenario": "A legacy utility declares `private static final SimpleDateFormat FMT = new SimpleDateFormat(\"dd/MM/yyyy\");` and is used by many request threads. Statement dates are occasionally garbled.",
+      "question": "What is the cause and fix?",
+      "options": [
+        "SimpleDateFormat is not thread-safe; replace it with an immutable java.time DateTimeFormatter",
+        "Call FMT.clone() once at startup",
+        "Make the field volatile",
+        "The pattern is wrong; use yyyy-MM-dd"
+      ],
+      "answer": 0,
+      "explanation": "SimpleDateFormat keeps internal mutable state, so concurrent use corrupts results. DateTimeFormatter is immutable and safe to share."
+    }
+  ]
+}

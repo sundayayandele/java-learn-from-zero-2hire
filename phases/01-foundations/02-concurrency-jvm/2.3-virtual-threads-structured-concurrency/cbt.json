@@ -1,0 +1,96 @@
+{
+  "topic": "2.3",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A Spring Boot payments API on Java 21 spends ~90% of each request waiting on PostgreSQL and two partner APIs. At 200 concurrent requests, latency spikes while CPU sits at 15%.",
+      "question": "What is the simplest change most likely to raise throughput?",
+      "options": [
+        "Enable virtual threads (spring.threads.virtual.enabled=true) so waiting requests no longer hold scarce platform threads",
+        "Double the CPU count",
+        "Rewrite the service with WebFlux",
+        "Switch to parallel streams"
+      ],
+      "answer": 0,
+      "explanation": "The bottleneck is the size of the platform-thread pool, not CPU. Virtual threads make blocking cheap, so far more requests can wait concurrently with the same code."
+    },
+    {
+      "type": "single",
+      "scenario": "A colleague moves an interest-calculation batch (pure arithmetic, no I/O) to virtual threads and is disappointed that it is no faster.",
+      "question": "Why?",
+      "options": [
+        "The work is CPU-bound; virtual threads add concurrency for waiting tasks but cannot add CPU cores",
+        "BigDecimal is not supported on virtual threads",
+        "Virtual threads are slower than platform threads",
+        "Virtual threads only work in Spring"
+      ],
+      "answer": 0,
+      "explanation": "Virtual threads improve throughput when tasks block. CPU-bound work is limited by the number of cores; a platform pool sized to the core count is appropriate."
+    },
+    {
+      "type": "single",
+      "scenario": "A team creates `Executors.newFixedThreadPool(50, Thread.ofVirtual().factory())` 'to limit load on the card switch'.",
+      "question": "What is the better design?",
+      "options": [
+        "Set the carrier pool size to 50",
+        "Keep it; pooling virtual threads is best practice",
+        "Use newVirtualThreadPerTaskExecutor() and limit concurrent calls to the card switch with a Semaphore(50)",
+        "Use a cached thread pool"
+      ],
+      "answer": 2,
+      "explanation": "Virtual threads are cheap and shouldn't be pooled. Limiting concurrency is a separate concern, expressed clearly with a semaphore around the call that needs protecting."
+    },
+    {
+      "type": "single",
+      "scenario": "On Java 21, a service using virtual threads stalls under load. JFR shows many jdk.VirtualThreadPinned events from a legacy client that performs socket reads inside synchronized methods.",
+      "question": "What is happening, and what are the fixes?",
+      "options": [
+        "Virtual threads cannot do network I/O",
+        "The heap is too small; increase -Xmx",
+        "JFR is causing the stall",
+        "Blocking inside synchronized pins the virtual thread to its carrier, exhausting the few carriers; replace synchronized with ReentrantLock (or upgrade the library), or move to Java 24+ where synchronized no longer pins"
+      ],
+      "answer": 3,
+      "explanation": "Pinned threads keep their carrier while blocked. With roughly one carrier per core, a few pinned threads stall everything. JEP 491 removed this for synchronized in Java 24."
+    },
+    {
+      "type": "single",
+      "scenario": "Three parallel calls load a customer dashboard. With CompletableFuture, when the account call fails, the fraud and loyalty calls keep running for seconds and waste partner quota.",
+      "question": "What does structured concurrency (StructuredTaskScope) provide here?",
+      "options": [
+        "When one subtask fails, the scope cancels its sibling subtasks, and no subtask outlives the enclosing block",
+        "Automatic retries",
+        "Faster network I/O",
+        "It runs subtasks on platform threads"
+      ],
+      "answer": 0,
+      "explanation": "Structured concurrency ties subtasks' lifetimes to a lexical scope. Failure in one cancels the rest and the error propagates to the parent, which is hard to get right with unstructured futures."
+    },
+    {
+      "type": "single",
+      "scenario": "A developer copies a StructuredTaskScope example into a Java 21 project and it fails to compile.",
+      "question": "What is the most likely reason?",
+      "options": [
+        "It only works in Kotlin",
+        "StructuredTaskScope does not exist",
+        "It requires Spring Boot 4",
+        "It is a preview API: it requires --enable-preview at compile and run time, and the example may use the redesigned Java 25 API (StructuredTaskScope.open()) instead of Java 21's ShutdownOnFailure"
+      ],
+      "answer": 3,
+      "explanation": "Structured concurrency has been in preview since Java 21, and its API changed in Java 25. Preview features need --enable-preview and should be matched to your exact JDK version."
+    },
+    {
+      "type": "single",
+      "scenario": "After enabling virtual threads, someone proposes raising the HikariCP pool from 20 to 5,000 connections 'because threads are cheap now'.",
+      "question": "What's the right response?",
+      "options": [
+        "Remove the pool entirely",
+        "Use one connection per virtual thread",
+        "Disagree: each database connection is a real, expensive server-side resource; size the pool for what the database can handle and let virtual threads wait cheaply for a connection",
+        "Agree; connections are as cheap as virtual threads"
+      ],
+      "answer": 2,
+      "explanation": "Virtual threads make waiting cheap on the application side, but PostgreSQL still pays for every connection. Thousands of connections degrade the database for everyone."
+    }
+  ]
+}

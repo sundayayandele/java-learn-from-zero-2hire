@@ -1,0 +1,96 @@
+{
+  "topic": "3.4",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A developer fixes a typo in `V3__add_account_daily_limit.sql`, which already ran in UAT and production. The next deployment fails with a Flyway checksum mismatch.",
+      "question": "What is the correct approach?",
+      "options": [
+        "Disable validation permanently",
+        "Run flyway clean, then migrate",
+        "Delete the row from flyway_schema_history",
+        "Revert the edit to V3 and put the correction in a new migration V6"
+      ],
+      "answer": 3,
+      "explanation": "Applied migrations are immutable history. Corrections go in new migrations so every environment converges the same way. Clean would drop production data."
+    },
+    {
+      "type": "single",
+      "scenario": "Your team needs to rename `account.number` to `account.nuban` while the service runs as several instances with rolling deploys.",
+      "question": "Which approach avoids breaking old instances during the deploy?",
+      "options": [
+        "Expand and contract: add nuban, write both, backfill, switch reads, then later drop number",
+        "Take the database offline over the weekend",
+        "Use a view called number",
+        "ALTER TABLE account RENAME COLUMN number TO nuban in one release"
+      ],
+      "answer": 0,
+      "explanation": "During a rolling deploy, old code still reads number. Spreading the change over several backward-compatible releases keeps every running version working."
+    },
+    {
+      "type": "single",
+      "scenario": "A Flyway migration `CREATE INDEX CONCURRENTLY idx_txn_ref ON txn(reference);` fails with 'CREATE INDEX CONCURRENTLY cannot run inside a transaction block'.",
+      "question": "How do you fix it?",
+      "options": [
+        "Put it in its own migration and configure that script not to run in a transaction (executeInTransaction=false)",
+        "Remove CONCURRENTLY",
+        "Switch to Liquibase",
+        "Wrap it in BEGIN/COMMIT"
+      ],
+      "answer": 0,
+      "explanation": "Flyway wraps each migration in a transaction by default, which CONCURRENTLY forbids. Removing CONCURRENTLY would block writes on a hot table during the build."
+    },
+    {
+      "type": "single",
+      "scenario": "You need a reporting view that the analytics team changes often. You want it recreated whenever its definition changes.",
+      "question": "Which Flyway migration type fits?",
+      "options": [
+        "A repeatable migration R__view_name.sql with CREATE OR REPLACE VIEW",
+        "An undo migration",
+        "A baseline",
+        "A new versioned migration V__ for every change"
+      ],
+      "answer": 0,
+      "explanation": "Repeatable migrations re-run when their checksum changes, after all versioned migrations, which is ideal for views, functions and stored procedures."
+    },
+    {
+      "type": "single",
+      "scenario": "The team is adopting Flyway on a 10-year-old production database that already has 140 tables and no migration history.",
+      "question": "Which Flyway feature lets it start tracking from the current state?",
+      "options": [
+        "outOfOrder",
+        "repair",
+        "baseline (e.g. baseline version 1, with new changes as V2 onwards)",
+        "clean"
+      ],
+      "answer": 2,
+      "explanation": "Baseline records the existing schema as a known version so Flyway only applies migrations newer than it."
+    },
+    {
+      "type": "single",
+      "scenario": "A migration adding a column needs an ACCESS EXCLUSIVE lock on `account`, but a long-running report holds a conflicting lock. All payment queries queue up behind the waiting migration and the app freezes.",
+      "question": "What precaution limits the damage?",
+      "options": [
+        "Disable autovacuum",
+        "Run migrations only with superuser",
+        "SET lock_timeout (e.g. '5s') at the start of the migration so it fails fast instead of queueing traffic behind it, then retry later",
+        "Increase max_connections"
+      ],
+      "answer": 2,
+      "explanation": "Lock requests queue in order; a waiting DDL lock blocks later queries too. A short lock_timeout makes the migration give up quickly, keeping production responsive."
+    },
+    {
+      "type": "single",
+      "scenario": "A bank's platform team standardised on Liquibase. You need to explain to a Flyway user how Liquibase identifies a change it has already applied.",
+      "question": "Which answer is correct?",
+      "options": [
+        "By the timestamp of the deploy",
+        "By the changeset's id plus author plus changelog file path, recorded in DATABASECHANGELOG",
+        "By the SQL text only",
+        "By file name version number"
+      ],
+      "answer": 1,
+      "explanation": "Liquibase tracks changesets by id/author/file and stores checksums in DATABASECHANGELOG, whereas Flyway uses the version in the file name and flyway_schema_history."
+    }
+  ]
+}

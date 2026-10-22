@@ -1,0 +1,113 @@
+{
+  "topic": "3.3",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "The 'last 20 transactions' query `WHERE account_id = ? ORDER BY posted_at DESC LIMIT 20` takes 2 seconds. EXPLAIN ANALYZE shows Seq Scan on txn with 'Rows Removed by Filter: 49,985,880', then a Sort.",
+      "question": "Which index fixes both the scan and the sort?",
+      "options": [
+        "CREATE INDEX ON txn (posted_at)",
+        "CREATE INDEX ON txn (posted_at, account_id)",
+        "CREATE INDEX ON txn USING hash (account_id)",
+        "CREATE INDEX ON txn (account_id, posted_at DESC)"
+      ],
+      "answer": 3,
+      "explanation": "Equality column first, sort column second. The index finds account 42's entries already in posted_at order, so the planner reads 20 entries and stops. A hash index can't provide ordering."
+    },
+    {
+      "type": "single",
+      "scenario": "There is an index on `txn(posted_at)`, but `WHERE date(posted_at) = '2026-10-21'` still does a sequential scan.",
+      "question": "Why, and what is the fix?",
+      "options": [
+        "Wrapping the column in a function makes the predicate non-sargable; use a range: posted_at >= '2026-10-21' AND posted_at < '2026-10-22'",
+        "The index is corrupt; REINDEX it",
+        "Use BETWEEN with 23:59:59",
+        "date() is not supported in PostgreSQL"
+      ],
+      "answer": 0,
+      "explanation": "The index stores posted_at values, not date(posted_at). A half-open range on the raw column uses the index and avoids end-of-day boundary bugs."
+    },
+    {
+      "type": "single",
+      "scenario": "A composite index exists on `(value_date, account_id)`. The query is `WHERE account_id = ? AND value_date BETWEEN ? AND ?` and it is still slow for busy date ranges.",
+      "question": "What is the better index?",
+      "options": [
+        "Two separate single-column indexes only",
+        "(account_id) only",
+        "(account_id, value_date): equality column first, range column last",
+        "(value_date, account_id) is optimal"
+      ],
+      "answer": 2,
+      "explanation": "With the range column first, the index must scan every account's entries across the date range. Putting the equality column first narrows straight to one account, then reads its date range."
+    },
+    {
+      "type": "single",
+      "scenario": "EXPLAIN ANALYZE shows the planner estimated 12 rows for a filter but 1,480,000 rows actually matched, and it chose a nested loop that ran for minutes. The table was bulk-loaded an hour ago.",
+      "question": "What should you do first?",
+      "options": [
+        "Disable nested loops globally",
+        "Increase max_connections",
+        "Run ANALYZE on the table to refresh planner statistics, then re-check the plan",
+        "Drop all indexes"
+      ],
+      "answer": 2,
+      "explanation": "A huge estimate-vs-actual gap points to stale statistics. After a bulk load, autovacuum may not yet have analysed the table. Fresh statistics usually fix the plan choice."
+    },
+    {
+      "type": "single",
+      "scenario": "A payment table has 200 million rows, of which ~5,000 are PENDING at any time. Workers query `WHERE status = 'PENDING' ORDER BY created_at LIMIT 50`.",
+      "question": "Which index is most efficient?",
+      "options": [
+        "CREATE INDEX ON payment (created_at)",
+        "CREATE INDEX ON payment (status)",
+        "A partial index: CREATE INDEX ON payment (created_at) WHERE status = 'PENDING'",
+        "A GIN index on status"
+      ],
+      "answer": 2,
+      "explanation": "The partial index contains only the ~5,000 pending rows, already sorted by created_at: tiny, fast, and cheap to maintain."
+    },
+    {
+      "type": "single",
+      "scenario": "A DBA asks you to add an index to the 2-billion-row `txn` table in production during business hours.",
+      "question": "How should it be created?",
+      "options": [
+        "LOCK TABLE txn first, then CREATE INDEX",
+        "CREATE INDEX inside the application's migration transaction",
+        "It cannot be done; take the bank offline",
+        "CREATE INDEX CONCURRENTLY, outside a transaction block, and monitor for failure (an invalid index must be dropped and retried)"
+      ],
+      "answer": 3,
+      "explanation": "A plain CREATE INDEX blocks writes for the whole build. CONCURRENTLY allows writes to continue, at the cost of a longer build, and can't run inside a transaction."
+    },
+    {
+      "type": "single",
+      "scenario": "In MySQL, EXPLAIN for a statement query shows `type: ALL` and `Extra: Using where; Using filesort`.",
+      "question": "What does that tell you?",
+      "options": [
+        "A full table scan followed by an extra sort step: there's no suitable index for the filter and ORDER BY",
+        "The query is cached",
+        "The query is using the primary key",
+        "The query uses a covering index"
+      ],
+      "answer": 0,
+      "explanation": "type ALL is a full table scan; 'Using filesort' means rows are sorted after fetching. An index matching the filter and order removes both."
+    },
+    {
+      "type": "multi",
+      "scenario": "The transaction ingestion job has slowed down as the team keeps adding indexes to `txn`.",
+      "question": "Which statements about index cost are true?",
+      "options": [
+        "Indexes make INSERTs faster",
+        "Every INSERT must update every index on the table",
+        "Unused indexes still cost write time and storage",
+        "pg_stat_user_indexes.idx_scan helps find indexes that are never used"
+      ],
+      "answer": [
+        1,
+        2,
+        3
+      ],
+      "explanation": "Indexes speed up reads but slow writes, use storage and compete for cache. Check usage statistics and drop indexes that never serve queries."
+    }
+  ]
+}

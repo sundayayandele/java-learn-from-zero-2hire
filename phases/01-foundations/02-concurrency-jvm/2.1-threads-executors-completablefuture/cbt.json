@@ -1,0 +1,96 @@
+{
+  "topic": "2.1",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A balance-enquiry endpoint calls the core banking system (400 ms), a fraud score service (300 ms) and a loyalty service (250 ms) one after another. Product wants it under 500 ms.",
+      "question": "Which approach reduces latency the most without changing the services?",
+      "options": [
+        "Call them in a parallel stream",
+        "Increase the JVM heap size",
+        "Cache nothing and call them in a different order",
+        "Start all three with CompletableFuture.supplyAsync on a dedicated I/O executor and combine the results with thenCombine/allOf"
+      ],
+      "answer": 3,
+      "explanation": "Independent I/O calls can run concurrently, so total latency becomes about the slowest call (400 ms) instead of the sum (950 ms). A dedicated executor avoids starving the common pool."
+    },
+    {
+      "type": "single",
+      "scenario": "During a traffic spike, a service using `Executors.newFixedThreadPool(20)` for outbound webhook calls dies with OutOfMemoryError. Heap dumps show millions of queued Runnable objects.",
+      "question": "What is the root cause?",
+      "options": [
+        "newFixedThreadPool uses an unbounded queue, so tasks accumulated faster than they were processed",
+        "20 threads is too many",
+        "The JVM leaks Runnable objects",
+        "Webhooks must use daemon threads"
+      ],
+      "answer": 0,
+      "explanation": "The fixed pool's LinkedBlockingQueue has no limit. Under sustained overload it grows until memory runs out. Use a bounded queue and a rejection policy that applies back-pressure."
+    },
+    {
+      "type": "single",
+      "scenario": "A debit step returns `CompletableFuture<DebitResult>` and the credit step is `CompletableFuture<Receipt> credit(DebitResult d)`. Chaining with thenApply gives the type `CompletableFuture<CompletableFuture<Receipt>>`.",
+      "question": "Which method should chain the credit step?",
+      "options": [
+        "thenCompose",
+        "thenCombine",
+        "thenRun",
+        "thenAccept"
+      ],
+      "answer": 0,
+      "explanation": "thenCompose flattens a function that itself returns a CompletableFuture, just as flatMap does for streams. thenApply is for plain value transformations."
+    },
+    {
+      "type": "single",
+      "scenario": "A shutdown of the settlement poller hangs for minutes. The poller's loop has `catch (InterruptedException e) { log.warn(\"interrupted\"); }` and then continues looping.",
+      "question": "What is wrong?",
+      "options": [
+        "The poller must be a daemon thread",
+        "It should catch Exception instead",
+        "The code swallows the interrupt; it should restore the flag with Thread.currentThread().interrupt() and exit the loop",
+        "Thread.sleep cannot be interrupted"
+      ],
+      "answer": 2,
+      "explanation": "Catching InterruptedException clears the interrupt flag. Swallowing it means the request to stop is lost, so shutdown waits for a timeout. Restore the flag and return."
+    },
+    {
+      "type": "single",
+      "scenario": "A developer uses `CompletableFuture.supplyAsync(() -> jdbc.query(...))` with no executor in a web service. Under load, unrelated parallel-stream code elsewhere becomes very slow.",
+      "question": "Why?",
+      "options": [
+        "Parallel streams and CompletableFuture cannot be used together",
+        "The JIT compiler is disabled",
+        "Without an executor, supplyAsync uses the shared ForkJoinPool.commonPool(), sized for CPU work; blocking JDBC calls tie up its few threads",
+        "JDBC is not thread-safe"
+      ],
+      "answer": 2,
+      "explanation": "The common pool has roughly one thread per core and is shared JVM-wide. Blocking it starves every other user. Pass a dedicated executor for I/O work."
+    },
+    {
+      "type": "single",
+      "scenario": "An interest-calculation job is purely CPU-bound (no I/O) and runs on an 8-core server.",
+      "question": "What is a sensible starting pool size?",
+      "options": [
+        "500",
+        "1",
+        "About 8 (the number of cores)",
+        "One thread per account"
+      ],
+      "answer": 2,
+      "explanation": "CPU-bound tasks can't run faster than the cores allow; extra threads add context switching. Start at the core count and measure."
+    },
+    {
+      "type": "single",
+      "scenario": "A future's task threw `IllegalStateException(\"ledger closed\")`. The caller does `future.get()`.",
+      "question": "What does the caller see?",
+      "options": [
+        "The IllegalStateException directly, unwrapped",
+        "null",
+        "An ExecutionException whose getCause() is the IllegalStateException",
+        "Nothing; the exception is lost"
+      ],
+      "answer": 2,
+      "explanation": "Future.get wraps task failures in ExecutionException (CompletableFuture.join uses CompletionException). Unwrap getCause() to handle the real error."
+    }
+  ]
+}

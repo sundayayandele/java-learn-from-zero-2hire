@@ -1,0 +1,113 @@
+{
+  "topic": "1.7",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "Customers complain that some transfers 'disappear': no money moved and no error shown. You find `try { ledger.post(entry); } catch (Exception e) { }` in the posting code.",
+      "question": "What is the right change?",
+      "options": [
+        "Catch Throwable instead",
+        "Retry the post in an infinite loop",
+        "Remove the empty catch (or translate to a specific domain exception with the cause) so the failure propagates to a handler that reports it",
+        "Add e.printStackTrace() inside the catch"
+      ],
+      "answer": 2,
+      "explanation": "Swallowing hides the failure from the caller, the customer and the logs. Let it propagate, or translate it into a meaningful exception that keeps the cause, and log once at the boundary."
+    },
+    {
+      "type": "single",
+      "scenario": "An incident report shows `LedgerException: Posting failed` with no further detail. The code was `catch (SQLException e) { throw new LedgerException(\"Posting failed\"); }`.",
+      "question": "What was lost, and how do you keep it?",
+      "options": [
+        "The original SQLException (and its message/stack trace); pass it as the cause: new LedgerException(\"Posting failed for entry \" + id, e)",
+        "The return value; return null instead",
+        "Nothing was lost",
+        "The transaction; add finally"
+      ],
+      "answer": 0,
+      "explanation": "Exception chaining preserves the root cause in getCause(), so logs show 'Caused by: ... duplicate key ...'. Adding the entry ID gives the investigator context."
+    },
+    {
+      "type": "single",
+      "scenario": "Under load the service fails with 'Connection is not available, request timed out'. Code review finds JDBC connections opened with `dataSource.getConnection()` and closed at the end of the method, but not when a query throws.",
+      "question": "Which construct fixes this reliably?",
+      "options": [
+        "try-with-resources around the Connection, PreparedStatement and ResultSet",
+        "Call conn.close() in the catch block",
+        "Call System.gc()",
+        "Increase the pool size"
+      ],
+      "answer": 0,
+      "explanation": "Every exception path leaked a connection until the pool ran dry. try-with-resources closes them in all cases, in reverse order. A bigger pool only delays the outage."
+    },
+    {
+      "type": "single",
+      "scenario": "A security review flags this log line: `Insufficient funds for card 5399831234567890 CVV 123, PIN attempts 2`.",
+      "question": "How should the exception message be written?",
+      "options": [
+        "Encrypt the whole log file and keep the message",
+        "Mask the PAN (e.g. last four digits only) and never include the CVV or PIN-related secrets",
+        "Base64-encode the card number",
+        "Keep it; logs are internal"
+      ],
+      "answer": 1,
+      "explanation": "Exception messages end up in logs, monitoring tools and support tickets. PCI DSS forbids storing CVVs and requires PANs to be masked. Base64 is encoding, not protection."
+    },
+    {
+      "type": "single",
+      "scenario": "An `ExchangeRate` object is shared by the pricing, reporting and settlement modules. A bug in reporting calls `rate.setRate(...)` and settlement starts using the wrong rate mid-batch.",
+      "question": "What design prevents this whole class of bug?",
+      "options": [
+        "Synchronise setRate",
+        "Document that setRate must not be called",
+        "Give each module its own subclass",
+        "Make ExchangeRate immutable (final fields, no setters, validated in the constructor, or a record)"
+      ],
+      "answer": 3,
+      "explanation": "If the object cannot change after construction, sharing it is safe: no module can affect another, and it is also thread-safe without locks."
+    },
+    {
+      "type": "single",
+      "scenario": "A method checks for a missing account like this: `try { return repo.findOrThrow(number); } catch (AccountNotFoundException e) { return createDefault(); }`. Misses happen on 40% of calls.",
+      "question": "What is the better design?",
+      "options": [
+        "Log the exception at INFO",
+        "Catch RuntimeException instead",
+        "Return Optional<Account> from the lookup and use orElseGet(this::createDefault), since an expected miss is not exceptional",
+        "Make the exception checked"
+      ],
+      "answer": 2,
+      "explanation": "Exceptions for normal control flow are slow (stack traces) and misleading. When absence is an expected outcome, model it in the return type."
+    },
+    {
+      "type": "single",
+      "scenario": "In review you see `if (amt.compareTo(new BigDecimal(\"5000000\")) > 0) report(tx);` with no comment.",
+      "question": "What is the clean-code improvement?",
+      "options": [
+        "Extract a named constant such as CTR_THRESHOLD_INDIVIDUAL and, if helpful, a comment explaining which regulation sets it",
+        "Add a comment: // compare amount",
+        "Change the number to 5e6",
+        "Move the number into a local variable called x"
+      ],
+      "answer": 0,
+      "explanation": "A magic number hides the business rule. A named constant makes the intent searchable and changeable in one place; a short why-comment records its regulatory source."
+    },
+    {
+      "type": "multi",
+      "scenario": "You are making a `Statement` class immutable. It has fields `account` (String), `period` (DateRange record) and `lines` (List<Transaction>).",
+      "question": "Which steps are needed?",
+      "options": [
+        "Provide setters that validate input",
+        "Declare the class final and all fields private final",
+        "Validate the arguments in the constructor",
+        "Copy lines with List.copyOf in the constructor and return the unmodifiable list from the getter"
+      ],
+      "answer": [
+        1,
+        2,
+        3
+      ],
+      "explanation": "Final class and fields, constructor validation and defensive copying of the mutable list together make it immutable. Setters, even validating ones, make it mutable."
+    }
+  ]
+}

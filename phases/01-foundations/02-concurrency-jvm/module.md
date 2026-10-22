@@ -1,0 +1,48 @@
+## What this module gives you
+
+Two weeks on how Java runs many things at once, and how the JVM manages memory underneath. Week 5 covers classic concurrency: threads, pools, `CompletableFuture`, races and locks. Week 6 covers Java 21's virtual threads, structured concurrency, and the JVM memory model and garbage collection.
+
+**Exit check for Module 2:** all four topic CBTs passed, and project 2.C below completed (it is short and everyone should do it), plus either 2.A or 2.B.
+
+## Module projects
+
+### Project 2.A: Parallel transaction-file processor
+
+A bank receives end-of-day transaction files from its switch: one CSV per channel, millions of rows in total.
+
+- **Input:** write a small generator that produces 2–5 million synthetic rows (`reference, account, channel, type, amount_kobo, timestamp`) split across 6 files, with about 0.5% deliberately invalid rows. Or use the [PaySim dataset](../../../docs/data-sources.md) (CC BY-SA 4.0).
+- **Task:** validate every row (format, positive amount, known channel), compute per-account debit/credit totals and per-channel counts, and write a summary CSV plus a rejects file with line numbers and reasons.
+- **Requirements:** a sequential version and a concurrent version that must produce **identical** output. Use a bounded `BlockingQueue` between a reader and N parser/aggregator workers, or one task per file merged at the end. No shared mutable `HashMap` without a concurrency strategy.
+- **Report:** a README table of runtimes for 1, 2, 4 and 8 workers, with a paragraph explaining where the speed-up flattens and why (CPU, disk, or contention).
+- **Acceptance:** a test that runs both versions on the same 100,000-row file and asserts equal results.
+
+### Project 2.B: Rate-limited API caller using virtual threads
+
+A fintech must check 20,000 account names against a partner's name-enquiry API that allows **at most 25 concurrent requests** and **100 requests per second**.
+
+- **Setup:** write a fake partner server with the JDK's built-in `com.sun.net.httpserver.HttpServer` (running its handlers on virtual threads) that sleeps 50–800 ms per call and fails 3% of requests, or use WireMock.
+- **Task:** call the API once per account using `Executors.newVirtualThreadPerTaskExecutor()`, enforce the concurrency limit with a `Semaphore`, enforce the rate with a simple token bucket you write yourself, retry failures up to twice with backoff, and record every outcome.
+- **Report:** total time, observed maximum concurrency (track it with an `AtomicInteger` high-water mark), number of retries and final failures.
+- **Stretch:** the same with `StructuredTaskScope` on a Java 25 JDK with `--enable-preview`, processing accounts in batches of 100 where one failed batch member cancels the rest.
+
+### Project 2.C: Find-and-fix lab, deadlocks and race conditions
+
+A small, deliberately broken "mini core banking" codebase is provided in [`labs/02-concurrency-find-and-fix`](../../../labs/02-concurrency-find-and-fix/README.md). It contains five planted bugs:
+
+1. A check-then-act double withdrawal.
+2. A lost update on a daily-limit counter.
+3. A transfer deadlock from inconsistent lock ordering.
+4. A visibility bug: a shutdown flag that is not `volatile`.
+5. A `HashMap` cache shared across threads.
+
+For each bug: write a test that reproduces it (use `CountDownLatch` to start threads together and loop many times), take a thread dump for the deadlock, fix the code, and explain the fix in two or three sentences in `FINDINGS.md`. This is exactly the shape of a take-home task several Lagos fintechs use.
+
+## How these projects are assessed
+
+| Criterion | Not yet | Competent | Strong |
+| --- | --- | --- | --- |
+| Correctness under concurrency | Results differ between runs | Results identical, races reproduced and fixed | Stress tests run thousands of iterations in CI |
+| Choice of tools | Locks everywhere, or none | Right tool per problem (atomic, concurrent map, semaphore, queue) | Prefers immutability and confinement, justifies every lock |
+| Measurement | No numbers | Timings for several configurations | Explains the curve (CPU, I/O, contention) convincingly |
+| Resource safety | Pools never shut down | Bounded pools and queues, clean shutdown | Back-pressure designed in |
+| Communication | Code only | README explains the design | `FINDINGS.md` reads like a good incident write-up |

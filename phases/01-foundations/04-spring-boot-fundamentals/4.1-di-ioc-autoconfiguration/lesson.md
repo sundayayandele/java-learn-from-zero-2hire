@@ -1,0 +1,296 @@
+## What you will be able to do
+
+- Explain inversion of control and dependency injection, and why Spring is built on them.
+- Create a Spring Boot 4 project from start.spring.io and explain each part of the generated build.
+- Declare beans with stereotypes (`@Component`, `@Service`, `@Repository`, `@Controller`) and `@Bean` methods, and inject them through constructors.
+- Resolve ambiguity with `@Primary` and `@Qualifier`, choose bean scopes, and use lifecycle callbacks.
+- Explain how auto-configuration and conditional beans work, inspect them with the conditions report, and override them.
+
+## Why this matters in a bank or fintech
+
+Almost every Java backend job in Lagos, London or remote-first teams lists Spring Boot. Its core idea is the one you met in topic 1.3: depend on abstractions and let something else wire the concrete objects together. Spring does that wiring for a whole application, consistently, which is what lets a bank's 40 microservices share the same structure, testing approach and operational behaviour. Understanding what Spring does at startup (rather than treating it as magic) is how you debug the "bean not found" and "why is it connecting to the wrong database?" problems that eat new engineers' first weeks.
+
+## 1. Inversion of control and dependency injection
+
+Without a framework, objects create their own collaborators:
+
+```java
+public class TransferService {
+    private final AccountRepository accounts = new JdbcAccountRepository(new HikariDataSource(...));
+    private final FraudClient fraud = new HttpFraudClient("https://fraud.internal", Duration.ofSeconds(2));
+}
+```
+
+Every class knows how to build its dependencies, configuration is scattered, and tests cannot substitute fakes. **Inversion of control (IoC)** flips this: a container creates the objects and decides what each one receives. **Dependency injection (DI)** is the mechanism: dependencies are passed in, usually through the constructor.
+
+```java
+@Service
+public class TransferService {
+    private final AccountRepository accounts;
+    private final FraudClient fraud;
+
+    public TransferService(AccountRepository accounts, FraudClient fraud) {   // constructor injection
+        this.accounts = accounts;
+        this.fraud = fraud;
+    }
+}
+```
+
+Spring's container is the **`ApplicationContext`**. The objects it manages are **beans**. At startup it finds bean definitions, works out the dependency graph, creates beans in the right order and injects them.
+
+### Prefer constructor injection
+
+| Style | Example | Verdict |
+| --- | --- | --- |
+| **Constructor** | `TransferService(AccountRepository a)` | **Use this.** Fields can be `final`, dependencies are explicit, objects are complete after construction, easy to unit test with `new` |
+| Setter | `@Autowired void setRepo(...)` | Only for genuinely optional dependencies |
+| Field | `@Autowired private AccountRepository repo;` | Avoid: hides dependencies, prevents `final`, needs reflection in tests |
+
+With a single constructor, `@Autowired` is unnecessary. If a constructor needs more than about five dependencies, the class probably has too many responsibilities (topic 1.3).
+
+## 2. Creating a Spring Boot 4 project
+
+Generate one at [start.spring.io](https://start.spring.io) (or *File → New → Project → Spring Boot* in IntelliJ): Maven, Java 21, Spring Boot 4.1.x, group `ng.itlearning.bank`, dependencies *Spring Web*, *Validation*, *Spring Data JPA*, *Flyway*, *PostgreSQL Driver*, *Actuator*.
+
+The generated `pom.xml`:
+
+```xml
+<parent>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-starter-parent</artifactId>
+  <version>4.1.2</version>
+</parent>
+
+<properties>
+  <java.version>21</java.version>
+</properties>
+
+<dependencies>
+  <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-webmvc</artifactId></dependency>
+  <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-validation</artifactId></dependency>
+  <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-data-jpa</artifactId></dependency>
+  <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-flyway</artifactId></dependency>
+  <dependency><groupId>org.flywaydb</groupId><artifactId>flyway-database-postgresql</artifactId></dependency>
+  <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-actuator</artifactId></dependency>
+  <dependency><groupId>org.postgresql</groupId><artifactId>postgresql</artifactId><scope>runtime</scope></dependency>
+
+  <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-webmvc-test</artifactId><scope>test</scope></dependency>
+  <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-data-jpa-test</artifactId><scope>test</scope></dependency>
+</dependencies>
+
+<build>
+  <plugins>
+    <plugin><groupId>org.springframework.boot</groupId><artifactId>spring-boot-maven-plugin</artifactId></plugin>
+  </plugins>
+</build>
+```
+
+- The **parent POM** manages versions of hundreds of libraries that are tested together (Spring Framework 7, Hibernate 7, Jackson 3, HikariCP, the PostgreSQL driver...). You add dependencies without versions.
+- **Starters** are curated dependency bundles plus auto-configuration. Spring Boot 4 made them modular: each technology has its own starter (`spring-boot-starter-webmvc`, `spring-boot-starter-flyway`) and a matching **test starter** (`spring-boot-starter-webmvc-test`). Topic 4.6 explains the change from Boot 3.
+- The **Spring Boot Maven plugin** packages an executable "fat" jar with everything inside: `java -jar target/app.jar`.
+
+The entry point:
+
+```java
+@SpringBootApplication
+public class BankApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(BankApplication.class, args);
+    }
+}
+```
+
+`@SpringBootApplication` combines three annotations:
+
+- `@SpringBootConfiguration` (a `@Configuration`): this class can define beans.
+- `@ComponentScan`: scan this package **and its sub-packages** for components. Put the main class in your root package (`ng.itlearning.bank`), or components in sibling packages won't be found.
+- `@EnableAutoConfiguration`: switch on auto-configuration (section 5).
+
+Run it with `./mvnw spring-boot:run`, or the green arrow in IntelliJ.
+
+## 3. Declaring beans
+
+### Stereotype annotations (component scanning)
+
+| Annotation | Layer | Extra behaviour |
+| --- | --- | --- |
+| `@Component` | Generic | None |
+| `@Service` | Business logic | None (documents intent) |
+| `@Repository` | Data access | Translates persistence exceptions to Spring's `DataAccessException` |
+| `@Controller` / `@RestController` | Web | Request mapping (topic 4.2) |
+| `@Configuration` | Configuration | Holds `@Bean` methods |
+
+### `@Bean` methods
+
+For classes you don't own (third-party libraries) or that need construction logic, declare beans in a `@Configuration` class:
+
+```java
+@Configuration
+public class ClientConfig {
+
+    @Bean
+    Clock clock() {
+        return Clock.system(ZoneId.of("Africa/Lagos"));     // inject Clock everywhere: testable time
+    }
+
+    @Bean
+    RestClient fraudRestClient(RestClient.Builder builder, FraudProperties props) {
+        return builder.baseUrl(props.baseUrl()).build();     // parameters are injected too
+    }
+}
+```
+
+Injecting a `Clock` instead of calling `LocalDate.now()` directly is a small habit with a big payoff: tests can fix the date to the last day of the month and check your interest posting logic deterministically.
+
+### When there is more than one candidate
+
+```java
+public interface NotificationSender { void send(String to, String message); }
+
+@Component @Primary class SmsSender implements NotificationSender { ... }
+@Component class EmailSender implements NotificationSender { ... }
+
+@Service
+class AlertService {
+    AlertService(NotificationSender defaultSender,                              // gets SmsSender (@Primary)
+                 @Qualifier("emailSender") NotificationSender email,             // by bean name
+                 List<NotificationSender> all) { ... }                           // every implementation
+}
+```
+
+Injecting a `List<T>` or `Map<String, T>` of all implementations is how you build the "open/closed" rule engines from topic 1.3: add a new `@Component FeeRule` and the engine picks it up without changes.
+
+If Spring finds no candidate you get `NoSuchBeanDefinitionException`; if it finds several and can't choose, `NoUniqueBeanDefinitionException`. Both messages name the type and the injection point. Read them carefully: they are usually precise.
+
+## 4. Scopes and lifecycle
+
+| Scope | Instances | Use |
+| --- | --- | --- |
+| `singleton` (default) | One per application context | Almost everything: services, repositories, clients |
+| `prototype` | New one per injection/lookup | Stateful helpers (rare) |
+| `request` / `session` | One per HTTP request / session | Web-specific state (rare in REST APIs) |
+
+**Singletons are shared by every request thread**, so they must be **stateless** or thread-safe (topic 2.2). A `private BigDecimal runningTotal` field on a `@Service` is a race condition waiting for load.
+
+Lifecycle hooks:
+
+```java
+@Component
+class RateTableLoader {
+    @PostConstruct void load() { ... }        // after injection: warm a cache, validate config
+    @PreDestroy void flush() { ... }          // on graceful shutdown
+}
+```
+
+(`jakarta.annotation.PostConstruct`.) For work that should run once the whole application has started, implement `ApplicationRunner` or listen for `ApplicationReadyEvent`.
+
+## 5. Auto-configuration
+
+Add `spring-boot-starter-data-jpa` and the PostgreSQL driver, set three properties, and you get a configured `DataSource` with a HikariCP pool, an `EntityManagerFactory`, a transaction manager and Spring Data repositories, without writing any of them. That is **auto-configuration**.
+
+It works through **conditional beans**. Each auto-configuration class (listed in `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` inside the Boot jars) declares beans guarded by conditions:
+
+```java
+@AutoConfiguration
+@ConditionalOnClass(DataSource.class)                  // only if JDBC is on the classpath
+public class DataSourceAutoConfiguration {
+
+    @Bean
+    @ConditionalOnMissingBean(DataSource.class)        // only if YOU haven't defined one
+    DataSource dataSource(DataSourceProperties props) { ... }
+}
+```
+
+Common conditions: `@ConditionalOnClass`, `@ConditionalOnMissingBean`, `@ConditionalOnProperty`, `@ConditionalOnBean`, `@ConditionalOnWebApplication`.
+
+Two consequences:
+
+1. **The classpath drives behaviour.** Adding a dependency can switch features on. If an app suddenly tries to connect to Redis, check whether someone added a Redis starter.
+2. **Your beans win.** Define your own `DataSource`, `RestClient.Builder` customiser or `JsonMapper` and the auto-configured one backs off. You customise first through **properties** (topic 4.4), then **customiser beans**, and only then by replacing beans.
+
+### Seeing what happened
+
+```bash
+java -jar app.jar --debug          # prints the CONDITIONS EVALUATION REPORT at startup
+```
+
+The report lists *positive matches* (auto-configurations applied and why) and *negative matches* (skipped and why), which answers "why is this bean (not) here?". The Actuator `conditions` and `beans` endpoints (topic 4.5) expose the same information at runtime.
+
+To exclude an auto-configuration explicitly: `@SpringBootApplication(exclude = SomeAutoConfiguration.class)` or the `spring.autoconfigure.exclude` property.
+
+## 6. Layered architecture
+
+Spring applications usually follow layers, each depending only on the one below:
+
+```text
+web (controllers, DTOs)  →  service (business rules, transactions)  →  repository (data access)  →  database
+```
+
+Package by **feature** rather than by layer once a codebase grows: `ng.itlearning.bank.account`, `...transfer`, `...statement`, each containing its controller, service, repository and model. Features stay cohesive and can later become separate services (Module 10).
+
+## Worked example: a fee calculator wired by Spring
+
+```java
+public interface FeeRule {
+    boolean appliesTo(TransferRequest r);
+    BigDecimal fee(TransferRequest r);
+}
+
+@Component @Order(1)
+class SameBankFeeRule implements FeeRule {
+    public boolean appliesTo(TransferRequest r) { return r.destinationBank().equals("000"); }
+    public BigDecimal fee(TransferRequest r) { return BigDecimal.ZERO; }
+}
+
+@Component @Order(2)
+class NipTieredFeeRule implements FeeRule {
+    public boolean appliesTo(TransferRequest r) { return true; }
+    public BigDecimal fee(TransferRequest r) {
+        BigDecimal amt = r.amount();
+        if (amt.compareTo(new BigDecimal("5000")) <= 0) return new BigDecimal("10.75");
+        if (amt.compareTo(new BigDecimal("50000")) <= 0) return new BigDecimal("26.88");
+        return new BigDecimal("53.75");
+    }
+}
+
+@Service
+public class FeeService {
+    private final List<FeeRule> rules;                 // injected in @Order order
+
+    public FeeService(List<FeeRule> rules) { this.rules = rules; }
+
+    public BigDecimal feeFor(TransferRequest r) {
+        return rules.stream().filter(rule -> rule.appliesTo(r)).findFirst()
+                .map(rule -> rule.fee(r)).orElseThrow();
+    }
+}
+```
+
+A unit test needs no Spring at all: `new FeeService(List.of(new SameBankFeeRule(), new NipTieredFeeRule()))`. That is the quiet benefit of constructor injection.
+
+## Common mistakes
+
+- Field injection with `@Autowired`.
+- The main class in a sub-package, so components aren't scanned.
+- Mutable state in singleton beans.
+- Calling `new` on a class that should be a bean (it gets no injection, no transactions, no proxies).
+- Defining a bean that silently replaces an auto-configured one you still needed.
+- Fighting auto-configuration instead of reading the conditions report.
+
+## Practice
+
+1. Generate a Boot 4.1 project with Web and Actuator, run it, and call `http://localhost:8080/actuator/health`. Run it with `--debug` and find three positive and three negative matches in the report.
+2. Implement the fee example with three rules and constructor injection. Unit-test `FeeService` without Spring, then write one `@SpringBootTest` that checks the rules arrive in `@Order` order.
+3. Create two `NotificationSender` beans and trigger `NoUniqueBeanDefinitionException`. Fix it once with `@Primary` and once with `@Qualifier`.
+4. Inject a `Clock` into a service that computes "is today the last business day of the month?" and test it with `Clock.fixed(...)` for three dates.
+
+## Key terms
+
+IoC, dependency injection, `ApplicationContext`, bean, constructor injection, stereotype annotation, component scanning, `@Configuration`, `@Bean`, `@Primary`, `@Qualifier`, scope, singleton, lifecycle callback, starter, parent POM, auto-configuration, conditional bean, conditions evaluation report, layered architecture, package by feature.
+
+## Further reading
+
+- [Spring Framework reference: The IoC Container](https://docs.spring.io/spring-framework/reference/core/beans.html)
+- [Spring Boot reference: Auto-configuration](https://docs.spring.io/spring-boot/reference/using/auto-configuration.html)
+- [Spring Boot reference: Structuring your code](https://docs.spring.io/spring-boot/reference/using/structuring-your-code.html)
+- [Spring Boot reference: Spring Beans and Dependency Injection](https://docs.spring.io/spring-boot/reference/using/spring-beans-and-dependency-injection.html)

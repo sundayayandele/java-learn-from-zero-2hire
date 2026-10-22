@@ -1,0 +1,49 @@
+spring:
+  application:
+    name: core-banking-ledger
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/app}
+    username: ${DB_USER:app}
+    password: ${DB_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  threads:
+    virtual:
+      enabled: true
+  mvc:
+    problemdetails:
+      enabled: true
+
+ledger:
+  business-zone: Africa/Lagos
+  supported-currencies: [NGN]
+  default-daily-limit: 5000000.00
+  # NIP-style transfer fee tiers, illustrative. A tier applies to amounts up to and including up-to.
+  fee-tiers:
+    - up-to: 5000.00
+      fee: 10.75
+    - up-to: 50000.00
+      fee: 26.88
+    - fee: 53.75
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+      group:
+        readiness:
+          include: readinessState,db
+    heapdump:
+      access: none
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+server:
+  shutdown: graceful

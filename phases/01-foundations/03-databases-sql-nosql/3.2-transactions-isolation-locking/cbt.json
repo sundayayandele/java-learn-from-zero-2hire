@@ -1,0 +1,109 @@
+{
+  "topic": "3.2",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A transfer service debits account A, then crashes before crediting account B. Afterwards A shows the debit and B shows nothing.",
+      "question": "What was missing?",
+      "options": [
+        "A CHECK constraint on balance",
+        "A larger connection pool",
+        "An index on account.number",
+        "Both updates (and the ledger inserts) inside one database transaction, so a failure rolls the debit back"
+      ],
+      "answer": 3,
+      "explanation": "Atomicity: statements in one transaction commit together or not at all. Without it, a crash between statements leaves partial work."
+    },
+    {
+      "type": "single",
+      "scenario": "Running at PostgreSQL's default isolation (Read Committed), two app instances each do: SELECT balance; check in Java; UPDATE account SET balance = <computed value>. Occasionally a withdrawal disappears.",
+      "question": "Which change prevents this lost update most simply?",
+      "options": [
+        "Cache the balance in the application",
+        "Add an index on balance",
+        "Use one atomic statement: UPDATE account SET balance = balance - :amt WHERE id = :id AND balance >= :amt, and check the affected row count",
+        "Switch to Read Uncommitted"
+      ],
+      "answer": 2,
+      "explanation": "The conditional update performs the check and the change atomically on the locked row. A result of 0 rows means insufficient funds. Read Committed alone does not stop read-then-write lost updates."
+    },
+    {
+      "type": "single",
+      "scenario": "Several worker instances poll a `payment_job` table for PENDING jobs. Sometimes two workers process the same job, sending a payment twice.",
+      "question": "Which query pattern lets workers claim jobs safely without blocking each other?",
+      "options": [
+        "SELECT ... WHERE status = 'PENDING' LIMIT 10",
+        "SELECT DISTINCT ...",
+        "SELECT ... WHERE status = 'PENDING' LIMIT 10 FOR UPDATE SKIP LOCKED, inside a transaction that marks them IN_PROGRESS",
+        "LOCK TABLE payment_job in every worker"
+      ],
+      "answer": 2,
+      "explanation": "FOR UPDATE locks the claimed rows; SKIP LOCKED makes other workers skip them instead of waiting, so each job goes to exactly one worker. Locking the whole table would serialise all workers."
+    },
+    {
+      "type": "single",
+      "scenario": "A transfer locks the source account row first and then the destination. Under load, PostgreSQL logs 'deadlock detected' and aborts some transfers.",
+      "question": "What is the best prevention?",
+      "options": [
+        "Disable foreign keys",
+        "Raise deadlock_timeout",
+        "Use Read Uncommitted",
+        "Lock both rows in a consistent order (e.g. by account id), for example SELECT ... WHERE id IN (:a, :b) ORDER BY id FOR UPDATE"
+      ],
+      "answer": 3,
+      "explanation": "Transfers A→B and B→A lock in opposite orders. A consistent global order removes the cycle. Aborted transactions should still be retried, but prevention comes first."
+    },
+    {
+      "type": "single",
+      "scenario": "Customer profile edits are rare and users may keep the edit screen open for minutes. You want to stop one agent's save from silently overwriting another's.",
+      "question": "Which technique fits best?",
+      "options": [
+        "SELECT ... FOR UPDATE when the screen opens, held until save",
+        "Optimistic locking: a version column checked in the UPDATE's WHERE clause, with a 'someone else changed this' error on 0 rows",
+        "Serializable isolation with no retries",
+        "A table lock"
+      ],
+      "answer": 1,
+      "explanation": "Holding a row lock during minutes of user think-time blocks everyone else. Optimistic locking holds no locks and detects the rare conflict at save time."
+    },
+    {
+      "type": "single",
+      "scenario": "A service runs its transaction at SERIALIZABLE. In production, some requests fail with SQLSTATE 40001 'could not serialize access'.",
+      "question": "What is the correct handling?",
+      "options": [
+        "Retry only the failed statement",
+        "Retry the entire transaction from the beginning a few times with a short random backoff, provided the operation is idempotent",
+        "Ignore it; the data was saved",
+        "Treat it as a bug and lower the isolation level"
+      ],
+      "answer": 1,
+      "explanation": "Serialization failures are the expected mechanism by which Serializable guarantees correctness. The whole transaction must be retried, and idempotency (e.g. a unique reference) prevents duplicates."
+    },
+    {
+      "type": "single",
+      "scenario": "A long-running monthly report query runs for 20 minutes on PostgreSQL. The payments team worries it will block card postings on the same tables.",
+      "question": "What actually happens?",
+      "options": [
+        "Under MVCC, readers don't block writers; postings continue, though very long transactions can delay VACUUM cleanup",
+        "The report sees postings as they happen",
+        "Postings are blocked until the report finishes",
+        "PostgreSQL cancels the report automatically"
+      ],
+      "answer": 0,
+      "explanation": "MVCC gives the report a consistent snapshot without blocking writers. The cost of a long transaction is bloat from row versions VACUUM can't yet remove; reports often run on a replica for that reason."
+    },
+    {
+      "type": "single",
+      "scenario": "Two joint-account holders withdraw at the same time. Each transaction checks that the combined balance of both accounts stays ≥ 0, then debits a different account row. Both succeed and the combined balance goes negative, at Repeatable Read.",
+      "question": "What is this anomaly, and what prevents it?",
+      "options": [
+        "A deadlock; reorder the updates",
+        "A dirty read; use Read Committed",
+        "A phantom read; add an index",
+        "Write skew; use SERIALIZABLE (with retries) or lock both rows with SELECT ... FOR UPDATE before checking"
+      ],
+      "answer": 3,
+      "explanation": "Each transaction wrote a different row based on a read of both, so no write-write conflict occurred. Serializable isolation detects this pattern; explicit locking of both rows also prevents it."
+    }
+  ]
+}

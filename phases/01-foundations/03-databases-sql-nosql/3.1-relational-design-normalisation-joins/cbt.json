@@ -1,0 +1,96 @@
+{
+  "topic": "3.1",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A legacy `account` table stores `branch_code`, `branch_name` and `branch_city` on every account row. A branch was renamed and now some accounts show the old name and some the new one.",
+      "question": "Which normal form is violated, and what is the fix?",
+      "options": [
+        "3NF; branch_name and branch_city depend on branch_code, not on the account, so move them to a branch table referenced by account.branch_code",
+        "None; add a trigger to keep copies in sync",
+        "1NF; split branch_name into two columns",
+        "2NF; add branch_code to the primary key"
+      ],
+      "answer": 0,
+      "explanation": "That is a transitive dependency (account → branch_code → branch_name). Storing branch facts once in a branch table removes the possibility of inconsistent copies."
+    },
+    {
+      "type": "single",
+      "scenario": "A mobile app retries a transfer request after a network timeout. The database now has two identical debit rows for the same transfer reference.",
+      "question": "Which schema change would have prevented the duplicate at the database level?",
+      "options": [
+        "A CHECK (amount > 0) constraint",
+        "Changing amount to DOUBLE PRECISION",
+        "An index on amount",
+        "A UNIQUE constraint on txn.reference"
+      ],
+      "answer": 3,
+      "explanation": "A unique constraint makes the second insert fail no matter which service or retry attempted it. The application can then treat the failure as 'already processed' (idempotency)."
+    },
+    {
+      "type": "single",
+      "scenario": "You need every customer and their total October debits, including customers with zero debits. This query drops the zero-debit customers: `... FROM customer c LEFT JOIN account a ON ... LEFT JOIN txn t ON t.account_id = a.id WHERE t.direction = 'D' ...`",
+      "question": "How should it be fixed?",
+      "options": [
+        "Add DISTINCT",
+        "Use INNER JOIN instead",
+        "Use RIGHT JOIN",
+        "Move the conditions on txn (direction, date range) into the ON clause of the LEFT JOIN and use coalesce(sum(t.amount), 0)"
+      ],
+      "answer": 3,
+      "explanation": "A WHERE condition on the right-hand table removes rows where it is NULL, turning the outer join into an inner join. Conditions in ON keep unmatched customers."
+    },
+    {
+      "type": "single",
+      "scenario": "Finance asks for accounts whose total debits in October exceeded ₦5,000,000.",
+      "question": "Which clause filters on the aggregated total?",
+      "options": [
+        "HAVING sum(amount) > 5000000 after GROUP BY account_id",
+        "ORDER BY sum(amount) LIMIT 5000000",
+        "WHERE amount > 5000000",
+        "WHERE sum(amount) > 5000000"
+      ],
+      "answer": 0,
+      "explanation": "WHERE filters individual rows before grouping and cannot use aggregates. HAVING filters groups after aggregation."
+    },
+    {
+      "type": "single",
+      "scenario": "Ops needs a list of every reference that appears in the ledger but not in the switch file, in the switch file but not the ledger, or in both with different amounts.",
+      "question": "Which join type produces all three categories in one query?",
+      "options": [
+        "FULL OUTER JOIN",
+        "CROSS JOIN",
+        "INNER JOIN",
+        "LEFT JOIN"
+      ],
+      "answer": 0,
+      "explanation": "A full outer join keeps unmatched rows from both sides (NULLs on the other side) and matched rows, so missing and mismatched transactions all appear."
+    },
+    {
+      "type": "single",
+      "scenario": "A customer statement must show each transaction with the balance after it, in posting order.",
+      "question": "Which SQL feature computes this without collapsing rows?",
+      "options": [
+        "DISTINCT ON",
+        "A CROSS JOIN",
+        "GROUP BY account_id",
+        "A window function: sum(signed_amount) OVER (PARTITION BY account_id ORDER BY posted_at, id)"
+      ],
+      "answer": 3,
+      "explanation": "Window functions compute across related rows while keeping each row. A running sum ordered by posting time (with id as tie-breaker) gives the running balance."
+    },
+    {
+      "type": "single",
+      "scenario": "A designer proposes storing account balances and transaction amounts as DOUBLE PRECISION 'for speed'.",
+      "question": "What should you recommend?",
+      "options": [
+        "TEXT, to preserve formatting",
+        "Accept; doubles are faster and accurate enough",
+        "The MONEY type, because it is locale-aware",
+        "NUMERIC(19,2) (or BIGINT minor units), because binary floating point cannot represent many decimal amounts exactly"
+      ],
+      "answer": 3,
+      "explanation": "Floating-point errors accumulate in sums and break reconciliation. NUMERIC is exact. PostgreSQL's MONEY type depends on locale settings and is generally discouraged."
+    }
+  ]
+}

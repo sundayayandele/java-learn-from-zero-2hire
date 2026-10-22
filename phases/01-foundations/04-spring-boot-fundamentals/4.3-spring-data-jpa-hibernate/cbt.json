@@ -1,0 +1,113 @@
+{
+  "topic": "4.3",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "An endpoint lists 500 active accounts with each customer's name. SQL logs show one select from account, then 500 nearly identical `select ... from customer where id=?` statements.",
+      "question": "What is this, and which fix loads the data in one query?",
+      "options": [
+        "Connection pool exhaustion; raise the pool size",
+        "A missing index; index customer.id",
+        "The N+1 select problem; use a fetch join (join fetch a.customer), an @EntityGraph, or a DTO projection",
+        "A deadlock; add @Version"
+      ],
+      "answer": 2,
+      "explanation": "Each lazy access fires its own query. Fetching the association in the original query (or projecting the needed columns) turns 501 round trips into one."
+    },
+    {
+      "type": "single",
+      "scenario": "A product enum is reordered (`CURRENT` moved before `SAVINGS`). Afterwards, every savings account displays as current.",
+      "question": "What mapping caused this, and what should be used?",
+      "options": [
+        "@Column(length = 10) truncated values",
+        "@Enumerated(EnumType.ORDINAL) stored positions; use @Enumerated(EnumType.STRING)",
+        "Enums can't be persisted; use strings",
+        "The database collation changed"
+      ],
+      "answer": 1,
+      "explanation": "ORDINAL stores 0, 1, 2, which changes meaning when the enum changes. STRING stores the constant's name and is stable."
+    },
+    {
+      "type": "single",
+      "scenario": "`TransferService.transferAll()` loops and calls `this.transfer(...)`, which is annotated @Transactional. Logs show that no transaction is ever started: a failure between the debit and the credit leaves the debit saved.",
+      "question": "Why didn't @Transactional apply?",
+      "options": [
+        "The method must be static",
+        "Self-invocation bypasses the Spring proxy, so the annotation on transfer() is never applied when called from inside the same bean",
+        "Transactions are disabled for loops",
+        "@Transactional only works on interfaces"
+      ],
+      "answer": 1,
+      "explanation": "Transactional behaviour is added by a proxy around the bean. Internal this.method() calls don't go through it. Move the method to another bean or put the transaction on the outer method."
+    },
+    {
+      "type": "single",
+      "scenario": "A service method annotated @Transactional throws a checked `StatementGenerationException` after inserting rows. The rows remain in the database.",
+      "question": "Why?",
+      "options": [
+        "By default Spring rolls back only on unchecked exceptions (RuntimeException and Error); use an unchecked exception or rollbackFor",
+        "Hibernate ignores exceptions",
+        "The exception was thrown too late",
+        "Inserts can't be rolled back"
+      ],
+      "answer": 0,
+      "explanation": "Spring's default mirrors EJB conventions: checked exceptions commit. Prefer unchecked domain exceptions, or configure rollbackFor explicitly."
+    },
+    {
+      "type": "single",
+      "scenario": "Two back-office agents edit the same customer profile. The second save silently overwrites the first agent's changes.",
+      "question": "Which JPA feature detects this conflict?",
+      "options": [
+        "FetchType.EAGER",
+        "ddl-auto=update",
+        "@Lock(PESSIMISTIC_WRITE) on every read",
+        "A @Version field (optimistic locking); the stale update fails with an optimistic-locking exception you can map to 409"
+      ],
+      "answer": 3,
+      "explanation": "@Version adds 'AND version = ?' to the UPDATE. If someone else committed first, no row matches and Hibernate throws, instead of losing an update."
+    },
+    {
+      "type": "single",
+      "scenario": "A developer sets `spring.jpa.hibernate.ddl-auto=update` in production 'so new columns appear automatically'.",
+      "question": "What should the team do instead?",
+      "options": [
+        "Manage the schema with Flyway (or Liquibase) migrations and set ddl-auto=validate so startup fails on mismatches",
+        "Use none and edit the database by hand",
+        "Use create-drop for safety",
+        "Keep update but back up daily"
+      ],
+      "answer": 0,
+      "explanation": "update makes unreviewed, unversioned, sometimes destructive schema changes and can't handle renames or data migrations. Migrations are reviewed and repeatable; validate catches drift."
+    },
+    {
+      "type": "single",
+      "scenario": "A statement endpoint returns `account.getTransactions()` (a @OneToMany collection) as JSON. For a 6-year-old business account, it takes 40 seconds and uses gigabytes of memory.",
+      "question": "What is the better design?",
+      "options": [
+        "Cache the entity in Redis",
+        "Increase the heap",
+        "Make the collection EAGER",
+        "Query transactions with a paged, filtered repository method (ideally a DTO projection) instead of loading the whole collection"
+      ],
+      "answer": 3,
+      "explanation": "Unbounded collections should be queried, not navigated. A paged projection loads only the requested page of columns."
+    },
+    {
+      "type": "multi",
+      "scenario": "You're reviewing a new JPA entity class.",
+      "question": "Which of these are problems?",
+      "options": [
+        "toString() prints the lazy accounts collection",
+        "@ManyToOne without fetch = FetchType.LAZY",
+        "The class is declared final",
+        "It has a protected no-arg constructor"
+      ],
+      "answer": [
+        0,
+        1,
+        2
+      ],
+      "explanation": "Final classes prevent Hibernate's proxies; toString on lazy associations triggers loading (or LazyInitializationException); @ManyToOne defaults to EAGER. A protected no-arg constructor is correct."
+    }
+  ]
+}

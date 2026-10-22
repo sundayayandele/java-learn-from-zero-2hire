@@ -1,0 +1,96 @@
+{
+  "topic": "3.5",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A statement-search endpoint builds SQL as `\"... WHERE narration LIKE '%\" + q + \"%'\"`. A pentester sends `q = %' UNION SELECT bvn, full_name, null FROM customer --`.",
+      "question": "What is the correct fix?",
+      "options": [
+        "Use a PreparedStatement: WHERE narration LIKE ? with ps.setString(1, \"%\" + q + \"%\")",
+        "Run the query as a read-only user only",
+        "Escape single quotes with replace(\"'\", \"''\")",
+        "Reject inputs containing UNION"
+      ],
+      "answer": 0,
+      "explanation": "Placeholders send the value separately from the SQL, so it can never change the statement's structure. Hand-escaping and keyword blocklists are fragile; least privilege helps but doesn't fix the bug."
+    },
+    {
+      "type": "single",
+      "scenario": "An API lets clients sort transactions by a `sort` query parameter (`date` or `amount`). A developer tries `ORDER BY ?` with ps.setString and the sort has no effect.",
+      "question": "How should dynamic sort columns be handled?",
+      "options": [
+        "Map allowed values to column names with an allow-list (e.g. date → posted_at) and reject anything else",
+        "Use a stored procedure",
+        "Sort in Java after loading all rows",
+        "Concatenate the parameter directly into the SQL"
+      ],
+      "answer": 0,
+      "explanation": "Placeholders bind values, not identifiers, so ORDER BY ? sorts by a constant. An allow-list keeps identifiers safe; concatenating raw input reintroduces injection."
+    },
+    {
+      "type": "single",
+      "scenario": "After a day in production, every request fails with `Connection is not available, request timed out after 30000ms`. Database CPU is idle. Code review finds `Connection c = ds.getConnection();` with `c.close()` only on the success path.",
+      "question": "What's the cause and fix?",
+      "options": [
+        "Use DriverManager instead of a pool",
+        "Connections leak on exception paths and the pool runs dry; use try-with-resources (and leakDetectionThreshold to find others)",
+        "PostgreSQL is down",
+        "The pool is too small; set it to 500"
+      ],
+      "answer": 1,
+      "explanation": "Each exception leaked one pooled connection until none were left. try-with-resources always returns them. A bigger pool only delays the outage."
+    },
+    {
+      "type": "single",
+      "scenario": "A nightly job inserts 2 million settlement rows one INSERT at a time with auto-commit on. It takes 3 hours.",
+      "question": "Which change gives the biggest improvement?",
+      "options": [
+        "Turn off auto-commit, use addBatch/executeBatch in chunks (e.g. 1,000) and enable reWriteBatchedInserts=true, or use COPY",
+        "Add more indexes to the table",
+        "Run the job twice in parallel without changes",
+        "Use Statement instead of PreparedStatement"
+      ],
+      "answer": 0,
+      "explanation": "Row-by-row auto-commit means 2 million round trips and 2 million commits. Batching and fewer commits cut both dramatically; COPY is fastest for bulk loads. More indexes would slow it further."
+    },
+    {
+      "type": "single",
+      "scenario": "An import retried after a partial failure throws SQLException with SQLState 23505 on a reference that was already inserted.",
+      "question": "What does 23505 mean, and a good way to make the import safely re-runnable?",
+      "options": [
+        "Check constraint; drop the constraint",
+        "Unique violation; make the insert idempotent with ON CONFLICT (reference) DO NOTHING (or treat 23505 as 'already processed')",
+        "Deadlock; retry forever",
+        "Connection lost; reconnect"
+      ],
+      "answer": 1,
+      "explanation": "23505 is unique_violation. With a unique reference plus ON CONFLICT DO NOTHING, re-running the file is harmless: existing rows are skipped."
+    },
+    {
+      "type": "single",
+      "scenario": "A query reads a nullable `overdraft_limit BIGINT` column with `rs.getLong(\"overdraft_limit\")`. Customers with no overdraft (NULL) are treated as having a limit of 0, and some logic depends on telling them apart.",
+      "question": "How do you read the NULL correctly?",
+      "options": [
+        "Use getString and parse it",
+        "getLong already returns null",
+        "Change the column to NOT NULL DEFAULT 0 silently",
+        "Use rs.getObject(\"overdraft_limit\", Long.class), which returns null for SQL NULL (or check rs.wasNull())"
+      ],
+      "answer": 3,
+      "explanation": "Primitive getters return 0 for NULL. getObject with a wrapper class returns null, preserving the difference between 'no limit' and 'limit of zero'."
+    },
+    {
+      "type": "single",
+      "scenario": "A transfer runs two UPDATE statements through JDBC with the default connection settings. The second update fails, but the first one (the debit) remains in the database.",
+      "question": "What was missing?",
+      "options": [
+        "conn.setAutoCommit(false) before the statements, then commit() on success and rollback() on failure",
+        "A larger statement timeout",
+        "Calling executeQuery instead of executeUpdate",
+        "A finally block that prints the error"
+      ],
+      "answer": 0,
+      "explanation": "In auto-commit mode each statement commits immediately. Grouping them in a manual transaction makes the transfer atomic."
+    }
+  ]
+}

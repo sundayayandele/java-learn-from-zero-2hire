@@ -1,0 +1,112 @@
+{
+  "topic": "1.1",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A new teammate cloned the payments service. `java -version` prints 21, but `./mvnw -v` reports \"Java version: 17\" and the build fails on a Java 21 feature.",
+      "question": "What is the most likely cause?",
+      "options": [
+        "IntelliJ IDEA is overriding the terminal's Java",
+        "JAVA_HOME points at a JDK 17 installation, and Maven uses JAVA_HOME",
+        "The Maven Wrapper only supports Java 17",
+        "The pom.xml is corrupted"
+      ],
+      "answer": 1,
+      "explanation": "Maven runs on whatever JDK JAVA_HOME points to, which can differ from the `java` on the PATH. Point JAVA_HOME at the Java 21 JDK (for example with `sdk default java 21...`) and open a new shell."
+    },
+    {
+      "type": "single",
+      "scenario": "Your CI pipeline must run unit tests and integration tests and produce the deployable jar in one command.",
+      "question": "Which Maven command matches what a CI pipeline should run?",
+      "options": [
+        "./mvnw test",
+        "./mvnw install -DskipTests",
+        "./mvnw compile",
+        "./mvnw verify"
+      ],
+      "answer": 3,
+      "explanation": "`verify` runs every phase up to and including verification: compile, unit tests, package, integration tests and checks. `install` adds copying to the local repository, which CI does not need, and skipping tests defeats the point."
+    },
+    {
+      "type": "single",
+      "scenario": "You add the PostgreSQL JDBC driver to a service. Your code only uses the standard `java.sql` interfaces, never the driver's own classes.",
+      "question": "Which dependency scope is the best fit for the driver?",
+      "options": [
+        "compile",
+        "test",
+        "runtime",
+        "provided"
+      ],
+      "answer": 2,
+      "explanation": "`runtime` keeps the driver off the compile classpath (so nobody accidentally codes against its internals) while still packaging it so the application can connect at runtime."
+    },
+    {
+      "type": "single",
+      "scenario": "After adding a reporting library, the app throws `NoSuchMethodError` from a Jackson class at startup. Nothing in your own code changed.",
+      "question": "What should you run first to investigate?",
+      "options": [
+        "Downgrade Java",
+        "./mvnw dependency:tree and look for two Jackson versions",
+        "./mvnw clean",
+        "Delete ~/.m2 and rebuild"
+      ],
+      "answer": 1,
+      "explanation": "NoSuchMethodError after adding a dependency usually means a transitive dependency pulled in a different version of a shared library. The dependency tree shows which version won and why."
+    },
+    {
+      "type": "single",
+      "scenario": "On-call at 2 a.m., you need to watch a payment service's log for new `TransferFailed` lines as they happen.",
+      "question": "Which command does that?",
+      "options": [
+        "less app.log",
+        "find . -name TransferFailed",
+        "tail -f app.log | grep TransferFailed",
+        "cat app.log | grep TransferFailed"
+      ],
+      "answer": 2,
+      "explanation": "`tail -f` keeps the file open and prints new lines as they are written; piping it into `grep` filters to the lines you care about. `cat` prints the file once and exits."
+    },
+    {
+      "type": "single",
+      "scenario": "A teammate on Windows pushed the project. On the Linux CI runner the job fails with `./mvnw: Permission denied`.",
+      "question": "What is the fix?",
+      "options": [
+        "Make the wrapper executable (chmod +x mvnw) and commit the permission change (git update-index --chmod=+x mvnw)",
+        "Delete the .mvn folder",
+        "Run the job as root",
+        "Replace ./mvnw with mvn in every pipeline"
+      ],
+      "answer": 0,
+      "explanation": "The executable bit was lost. Setting it and recording it in Git fixes it for every clone. Switching to a global `mvn` would lose the version pinning the wrapper provides."
+    },
+    {
+      "type": "multi",
+      "scenario": "You are setting up the .gitignore for a new Maven project in IntelliJ.",
+      "question": "Which of these should NOT be committed?",
+      "options": [
+        ".idea/ workspace files",
+        "pom.xml",
+        "target/",
+        "mvnw and the .mvn/wrapper folder"
+      ],
+      "answer": [
+        0,
+        2
+      ],
+      "explanation": "`target/` is build output and `.idea/` holds personal IDE state; both cause conflicts. The wrapper and the POM are the build definition and must be committed."
+    },
+    {
+      "type": "single",
+      "scenario": "A service fails to start with \"Port 8080 already in use\" on a Linux server.",
+      "question": "Which command tells you which process is listening on that port?",
+      "options": [
+        "chmod 8080",
+        "free -h",
+        "df -h",
+        "ss -tlnp (or lsof -i :8080)"
+      ],
+      "answer": 3,
+      "explanation": "`ss -tlnp` lists listening TCP sockets with the owning process ID; `lsof -i :8080` does the same for one port. Then decide whether to stop that process or change your port."
+    }
+  ]
+}

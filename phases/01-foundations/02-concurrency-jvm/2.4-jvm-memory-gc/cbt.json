@@ -1,0 +1,96 @@
+{
+  "topic": "2.4",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A Spring Boot service runs in a container with a 1 GiB limit and no JVM memory flags. Monitoring shows the heap never exceeds ~256 MB, and the service hits frequent GCs under load while most of the container's memory sits unused.",
+      "question": "What explains this, and what is a sensible fix?",
+      "options": [
+        "The container limit is ignored by Java; set -Xmx1g",
+        "G1 caps the heap at 256 MB; switch to ZGC",
+        "Spring Boot limits the heap; change application.properties",
+        "By default the JVM's max heap is 25% of container memory; set -XX:MaxRAMPercentage to around 70-75"
+      ],
+      "answer": 3,
+      "explanation": "The JVM is container-aware but conservative by default. Raising MaxRAMPercentage uses more of the container while leaving room for metaspace, thread stacks and native buffers. Setting -Xmx equal to the limit risks OOMKilled."
+    },
+    {
+      "type": "single",
+      "scenario": "A pod restarts every few hours with Kubernetes status OOMKilled (exit 137). There is no OutOfMemoryError in the application logs. -Xmx is set equal to the container limit.",
+      "question": "What is happening?",
+      "options": [
+        "The garbage collector crashed",
+        "A Java heap leak",
+        "Total process memory (heap + metaspace + thread stacks + code cache + direct buffers) exceeds the container limit, so the kernel kills the process",
+        "Kubernetes restarts Java pods on a schedule"
+      ],
+      "answer": 2,
+      "explanation": "The OOM killer acts on the whole process, not just the heap, and leaves no Java error. Leave headroom for native memory by lowering the heap share."
+    },
+    {
+      "type": "single",
+      "scenario": "GC logs from a payments API over a week show 'heap after GC' rising steadily: 200 MB, 350 MB, 600 MB, 900 MB. Full GCs become frequent and latency degrades.",
+      "question": "What is the most likely cause, and the next step?",
+      "options": [
+        "The JIT compiler is leaking code",
+        "A memory leak: objects remain reachable; take a heap dump and find the biggest retainers in the dominator tree",
+        "Normal behaviour; increase the heap every week",
+        "Too many virtual threads"
+      ],
+      "answer": 1,
+      "explanation": "In a healthy service, the post-GC floor is stable. A rising floor means live data keeps growing, typically an unbounded cache or collection. Heap dump analysis (Eclipse MAT) shows who holds it."
+    },
+    {
+      "type": "single",
+      "scenario": "In `void fee(Transaction tx) { long kobo = tx.amountKobo(); BigDecimal f = new BigDecimal(kobo); }`, a teammate asks where `kobo`, the reference `f` and the BigDecimal object live.",
+      "question": "Which is correct?",
+      "options": [
+        "All three on the heap",
+        "All three on the stack",
+        "kobo on the heap, f on the stack",
+        "kobo and the reference f in the method's stack frame; the BigDecimal object on the heap"
+      ],
+      "answer": 3,
+      "explanation": "Primitive locals and references live in the thread's stack frame; objects always live on the heap (the JIT may optimise some away with escape analysis, but that is the model)."
+    },
+    {
+      "type": "single",
+      "scenario": "A card-authorisation service has a p99 latency target of 50 ms. G1 logs show occasional 150 ms pauses with an 8 GB heap.",
+      "question": "Which collector is the natural candidate to evaluate?",
+      "options": [
+        "Serial GC",
+        "Parallel GC",
+        "Generational ZGC, which keeps pauses sub-millisecond regardless of heap size",
+        "No GC: disable it"
+      ],
+      "answer": 2,
+      "explanation": "ZGC trades a little throughput and memory for very short pauses, which suits latency-critical APIs. Parallel maximises throughput with longer pauses, the opposite of what's needed."
+    },
+    {
+      "type": "single",
+      "scenario": "A production service is unresponsive and you suspect a deadlock or threads stuck on a slow database. You have shell access to the host.",
+      "question": "Which command gives you the evidence?",
+      "options": [
+        "jcmd <pid> Thread.print",
+        "java -version",
+        "jstat -gcutil <pid>",
+        "jcmd <pid> GC.heap_info"
+      ],
+      "answer": 0,
+      "explanation": "A thread dump shows every thread's state and stack trace, including BLOCKED threads, the locks they wait on and any detected deadlock."
+    },
+    {
+      "type": "single",
+      "scenario": "A new deployment is benchmarked with a load test that starts immediately after startup and runs for 30 seconds. The results are much slower than production.",
+      "question": "What is the most likely flaw in the test?",
+      "options": [
+        "Production uses a different GC",
+        "The heap was too large",
+        "No warm-up: during the first period the JVM is still interpreting and JIT-compiling hot methods",
+        "Load tests cannot measure Java"
+      ],
+      "answer": 2,
+      "explanation": "HotSpot compiles hot code after profiling it, so early requests run slower. Warm up the service before measuring."
+    }
+  ]
+}

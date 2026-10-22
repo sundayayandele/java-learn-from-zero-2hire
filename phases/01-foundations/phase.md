@@ -1,0 +1,72 @@
+From zero programming experience to building your first production-style Spring Boot 4 services: modern Java 21 (and Kotlin), concurrency and the JVM, relational and NoSQL databases, and Spring Boot fundamentals. Every example uses banking and payments scenarios, because those are the systems Lagos fintechs, banks and global consultancies hire Java engineers to build.
+
+> **Status: Phase 1 pilot.** This phase is fully built. Phases 2 and 3 are mapped in the [full curriculum](../../CURRICULUM.md) and will be built after review.
+
+## How to study this phase
+
+Plan for **10–15 hours per week** for 13 weeks. Each topic page has three parts, and you should do them in this order:
+
+1. **Read** the lesson and type out the code yourself. Copy-paste teaches nothing.
+2. **Watch** the curated videos (all checked: real, embeddable, English with captions). They reinforce the reading from a second voice; they don't replace it.
+3. **Check your understanding** with the scenario CBT at the end of the topic. On Moodle it is graded (pass mark 70%, unlimited attempts); on GitHub the answers are folded under each question.
+
+Then do the topic's **practice** tasks and, each module, at least one **module project**. From week 5, start your **capstones**.
+
+## Weekly plan
+
+| Week | Module | Topics | Milestone |
+| --- | --- | --- | --- |
+| 1 | 1 Modern Java & OOP | 1.1 Toolkit, 1.2 Syntax and types | JDK, IntelliJ, Git and GitHub set up; first Maven build |
+| 2 | 1 | 1.3 OOP and SOLID, 1.4 Collections and generics | |
+| 3 | 1 | 1.5 Lambdas and streams, 1.6 Records, sealed types, pattern matching | |
+| 4 | 1 | 1.7 Exceptions and clean code, 1.8 Legacy Java migration, 1.9 Kotlin | Module 1 project pushed with green CI |
+| 5 | 2 Concurrency & JVM | 2.1 Threads and executors, 2.2 Races and locks | Start Capstone 1 design |
+| 6 | 2 | 2.3 Virtual threads, 2.4 JVM memory and GC | Module 2 find-and-fix lab |
+| 7 | 3 Databases | 3.1 Relational design and joins, 3.2 Transactions and locking | Ledger schema (project 3.B) |
+| 8 | 3 | 3.3 Indexing and plans, 3.4 Migrations, 3.5 JDBC | Query-tuning lab (project 3.D) |
+| 9 | 3 | 3.6 Redis and MongoDB | Capstone 1 core logic complete |
+| 10 | 4 Spring Boot 4 | 4.1 DI and auto-configuration, 4.2 MVC, validation, errors | |
+| 11 | 4 | 4.3 Spring Data JPA and Hibernate | Capstone 2 started |
+| 12 | 4 | 4.4 Configuration and secrets, 4.5 Actuator | Capstones deployed to a VPS or cloud |
+| 13 | 4 | 4.6 Boot 3 → 4 upgrade, 4.7 Spring Boot with Kotlin | **End-of-phase exam**, **Getting Hired** session, portfolio checkpoint |
+
+## Modules
+
+| Module | Weeks | What you build |
+| --- | --- | --- |
+| [1. Modern Java & OOP Foundations](01-modern-java-oop/README.md) | 1–4 | Wallet simulator, library CLI, payroll calculator or inventory manager |
+| [2. Concurrency & the JVM](02-concurrency-jvm/README.md) | 5–6 | Parallel transaction processor, rate-limited caller, find-and-fix lab |
+| [3. Databases: SQL & NoSQL](03-databases-sql-nosql/README.md) | 7–9 | E-commerce schema, double-entry ledger, hospital DB, query-tuning lab |
+| [4. Spring Boot 4 Fundamentals](04-spring-boot-fundamentals/README.md) | 10–13 | Task manager API, blog API, product catalogue, Boot 3 → 4 upgrade |
+
+## Capstones
+
+Ten financial-institution capstones built on public datasets that are free for commercial and non-commercial use, each with a recorded licence. **Complete at least three** by the end of the phase: Capstone 1 (the ledger) plus any two others. Two capstones come with complete reference solutions.
+
+→ [Phase 1 capstones](capstones/README.md)
+
+## Deployment and CI/CD
+
+Every capstone ships with GitHub Actions CI (primary) and an equivalent GitLab CI file (secondary, on a free gitlab.com account), plus infrastructure sizing and step-by-step deployment to a VPS (for example SSDNodes), AWS, Azure and GCP.
+
+→ [Deployment and CI/CD guide](deploy/README.md)
+
+## End-of-phase exam
+
+A 2-hour, 50-question scenario-based CBT covering every Phase 1 topic, taken on Moodle in week 13. Pass mark 70%.
+
+→ [Exam information and blueprint](exam/README.md)
+
+## Getting hired
+
+What a Phase 1 graduate can credibly apply for, how to present your capstones, and how to prepare for junior Java interviews.
+
+→ [Getting Hired after Phase 1](getting-hired/README.md)
+
+## Phase 1 exit criteria
+
+- [ ] All 26 topic CBTs passed (70%+)
+- [ ] One project per module, each on GitHub with README, tests and green CI
+- [ ] Three capstones (including Capstone 1), at least one deployed with a public health endpoint
+- [ ] End-of-phase exam passed (70%+)
+- [ ] Getting Hired checklist complete: CV draft, GitHub profile README, LinkedIn updated

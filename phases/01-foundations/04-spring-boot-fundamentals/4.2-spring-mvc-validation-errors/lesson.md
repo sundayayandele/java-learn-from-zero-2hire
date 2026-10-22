@@ -1,0 +1,344 @@
+## What you will be able to do
+
+- Build REST endpoints with `@RestController`, request mappings, path variables, query parameters, request bodies and `ResponseEntity`.
+- Separate API DTOs (records) from domain and persistence objects.
+- Validate input with Jakarta Bean Validation, including custom constraints and validation groups.
+- Return consistent, standards-based errors (RFC 9457 Problem Details) from one global handler.
+- Test controllers with `@WebMvcTest` and MockMvc.
+
+## Why this matters in a bank or fintech
+
+The API is the bank's contract with mobile apps, partner fintechs and internal teams. A transfer endpoint that accepts a negative amount, a malformed account number or a missing narration, or one that answers every failure with "500 Internal Server Error" and a stack trace, is both a defect and a security finding. Good controllers are thin: they validate input at the boundary, call one service method, and translate outcomes into precise HTTP responses that client developers can rely on.
+
+## 1. How a request flows through Spring MVC
+
+```text
+HTTP request → Tomcat → DispatcherServlet → HandlerMapping (which method?)
+             → argument resolution & validation → your @RestController method
+             → return value → HttpMessageConverter (Jackson 3 → JSON) → HTTP response
+             (exceptions → @RestControllerAdvice → Problem Details response)
+```
+
+`DispatcherServlet` is the front controller that Spring Boot registers for you. Jackson converts Java objects to and from JSON. Spring Boot 4 uses **Jackson 3**, whose packages are `tools.jackson.*` (the annotations remain `com.fasterxml.jackson.annotation`).
+
+## 2. Controllers
+
+```java
+@RestController
+@RequestMapping("/api/v1/accounts")
+public class AccountController {
+
+    private final AccountService accounts;
+
+    public AccountController(AccountService accounts) { this.accounts = accounts; }
+
+    @GetMapping("/{number}")
+    public AccountResponse get(@PathVariable String number) {
+        return accounts.find(number);                         // 200 OK with JSON body
+    }
+
+    @GetMapping("/{number}/transactions")
+    public List<TransactionResponse> transactions(
+            @PathVariable String number,
+            @RequestParam(defaultValue = "20") @Max(100) int limit,
+            @RequestParam(required = false) LocalDate from) {
+        return accounts.transactions(number, from, limit);
+    }
+
+    @PostMapping
+    public ResponseEntity<AccountResponse> open(@Valid @RequestBody OpenAccountRequest request) {
+        AccountResponse created = accounts.open(request);
+        URI location = URI.create("/api/v1/accounts/" + created.number());
+        return ResponseEntity.created(location).body(created);   // 201 Created + Location header
+    }
+
+    @PostMapping("/{number}/freeze")
+    @ResponseStatus(HttpStatus.NO_CONTENT)                       // 204
+    public void freeze(@PathVariable String number, @RequestHeader("X-Officer-Id") String officer) {
+        accounts.freeze(number, officer);
+    }
+}
+```
+
+| Annotation | Binds |
+| --- | --- |
+| `@GetMapping`, `@PostMapping`, `@PutMapping`, `@PatchMapping`, `@DeleteMapping` | HTTP method + path |
+| `@PathVariable` | `/accounts/{number}` |
+| `@RequestParam` | `?limit=20&from=2026-10-01` |
+| `@RequestBody` | JSON body → object |
+| `@RequestHeader` | A header such as `Idempotency-Key` |
+| `ResponseEntity<T>` | Full control of status, headers and body |
+| `@ResponseStatus` | Fixed status for a method or exception class |
+
+`@RestController` = `@Controller` + `@ResponseBody`: return values are written to the response body as JSON.
+
+### HTTP status codes you will use constantly
+
+| Code | When |
+| --- | --- |
+| 200 OK | Successful read or update returning a body |
+| 201 Created | Resource created; include `Location` |
+| 202 Accepted | Accepted for asynchronous processing (e.g. a transfer queued for NIP) |
+| 204 No Content | Success with no body |
+| 400 Bad Request | Malformed input, validation failure |
+| 401 Unauthorized / 403 Forbidden | Not authenticated / not allowed (Module 6) |
+| 404 Not Found | Resource doesn't exist |
+| 409 Conflict | State conflict, duplicate request, optimistic-lock failure |
+| 422 Unprocessable Content | Valid input that breaks a business rule (insufficient funds, limit exceeded) |
+| 500 Internal Server Error | A bug. Never intentionally. |
+| 503 Service Unavailable | A dependency is down; retry later |
+
+Module 5 goes deeper on API design; this topic gives you the essentials.
+
+## 3. DTOs: don't expose your entities
+
+Use dedicated request and response types, usually records:
+
+```java
+public record OpenAccountRequest(
+        @NotBlank @Pattern(regexp = "\\d{11}", message = "BVN must be 11 digits") String bvn,
+        @NotNull Product product,
+        @Size(max = 3) @Pattern(regexp = "[A-Z]{3}") String currency) { }
+
+public record AccountResponse(String number, String product, String currency, BigDecimal balance,
+                              String status, LocalDate openedOn) {
+    static AccountResponse from(Account a) {
+        return new AccountResponse(a.getNumber(), a.getProduct().name(), a.getCurrency(),
+                a.getBalance(), a.getStatus().name(), a.getOpenedOn());
+    }
+}
+```
+
+Why not return the JPA entity directly?
+
+- **Security**: entities contain fields clients must never see (internal IDs, flags, PINs' hashes) or set (**mass assignment**: a client sends `"balance": 1000000` and it binds).
+- **Stability**: the API contract shouldn't change when you rename a column.
+- **Performance and correctness**: serialising entities can trigger lazy loading and N+1 queries (topic 4.3), or infinite recursion through bidirectional relationships.
+
+### JSON details that matter for money
+
+- Serialise `BigDecimal` as a JSON **number** with its scale (`1500.00`) or, for maximum safety with JavaScript clients, as a **string** (`"1500.00"`). Decide once, document it.
+- Dates as ISO-8601 strings (`2026-10-21`, `2026-10-21T09:15:00Z`), which is the Boot default.
+
+## 4. Validation
+
+Add `spring-boot-starter-validation` (Hibernate Validator, the Jakarta Bean Validation reference implementation). Annotate DTO fields, then put `@Valid` on the parameter:
+
+| Constraint | Example |
+| --- | --- |
+| `@NotNull`, `@NotBlank`, `@NotEmpty` | Required values |
+| `@Size(min, max)` | Lengths of strings and collections |
+| `@Pattern(regexp)` | Account numbers, codes |
+| `@Positive`, `@PositiveOrZero`, `@Min`, `@Max` | Numeric ranges |
+| `@DecimalMin("0.01")`, `@Digits(integer = 15, fraction = 2)` | Money amounts |
+| `@Email`, `@Past`, `@Future` | Formats and dates |
+
+```java
+public record TransferRequest(
+        @NotBlank @Pattern(regexp = "\\d{10}") String fromAccount,
+        @NotBlank @Pattern(regexp = "\\d{10}") String toAccount,
+        @NotBlank @Pattern(regexp = "\\d{3,6}") String destinationBankCode,
+        @NotNull @DecimalMin("1.00") @Digits(integer = 13, fraction = 2) BigDecimal amount,
+        @NotBlank @Size(max = 100) String narration,
+        @NotBlank @Size(max = 64) String clientReference) { }
+```
+
+`@Digits(fraction = 2)` rejects ₦10.555 at the boundary instead of letting rounding happen somewhere unexpected.
+
+Validating path variables and request parameters (like `@Max(100) int limit` above) is built into Spring Framework 6.1+ method validation for controllers; failures produce a `HandlerMethodValidationException`.
+
+### Custom constraints
+
+```java
+@Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.RECORD_COMPONENT})
+@Retention(RetentionPolicy.RUNTIME)
+@Constraint(validatedBy = NubanValidator.class)
+public @interface ValidNuban {
+    String message() default "Invalid account number";
+    Class<?>[] groups() default {};
+    Class<? extends Payload>[] payload() default {};
+}
+
+public class NubanValidator implements ConstraintValidator<ValidNuban, String> {
+    @Override
+    public boolean isValid(String value, ConstraintValidatorContext ctx) {
+        return value == null || (value.matches("\\d{10}") && checkDigitOk(value));   // null handled by @NotNull
+    }
+}
+```
+
+**Class-level constraints** validate several fields together, for example "`toAccount` must differ from `fromAccount`".
+
+Validation at the edge checks **shape**. **Business rules** that depend on state (balance, limits, account status) belong in the service, and failures are domain exceptions (topic 1.7).
+
+## 5. Global error handling with Problem Details
+
+Clients need one predictable error format. **RFC 9457 Problem Details** (`application/problem+json`) is the standard, and Spring supports it natively with the `ProblemDetail` class:
+
+```json
+{
+  "type": "https://api.itlearning-bank.ng/problems/insufficient-funds",
+  "title": "Insufficient funds",
+  "status": 422,
+  "detail": "Account ******6789 has insufficient funds for this transfer",
+  "instance": "/api/v1/transfers",
+  "available": "1500.00",
+  "requested": "5000.00",
+  "traceId": "4bf92f3577b34da6"
+}
+```
+
+Enable it for Spring's own exceptions:
+
+```properties
+spring.mvc.problemdetails.enabled=true
+```
+
+Then map your domain exceptions in one `@RestControllerAdvice`:
+
+```java
+@RestControllerAdvice
+public class ApiExceptionHandler extends ResponseEntityExceptionHandler {   // handles Spring MVC's exceptions as ProblemDetail
+
+    private static final URI BASE = URI.create("https://api.itlearning-bank.ng/problems/");
+
+    @ExceptionHandler(AccountNotFoundException.class)
+    ProblemDetail notFound(AccountNotFoundException e) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+        pd.setType(BASE.resolve("account-not-found"));
+        pd.setTitle("Account not found");
+        return pd;
+    }
+
+    @ExceptionHandler(InsufficientFundsException.class)
+    ProblemDetail insufficientFunds(InsufficientFundsException e) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, e.getMessage());
+        pd.setType(BASE.resolve("insufficient-funds"));
+        pd.setTitle("Insufficient funds");
+        pd.setProperty("available", e.available().toPlainString());
+        pd.setProperty("requested", e.requested().toPlainString());
+        return pd;
+    }
+
+    @ExceptionHandler(DuplicateTransferException.class)
+    ProblemDetail duplicate(DuplicateTransferException e) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
+        pd.setType(BASE.resolve("duplicate-request"));
+        return pd;
+    }
+
+    @ExceptionHandler(Exception.class)
+    ProblemDetail unexpected(Exception e) {
+        log.error("Unhandled error", e);                            // log once, with the stack trace
+        return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR,
+                "An unexpected error occurred. Quote the trace ID when contacting support.");
+    }
+}
+```
+
+`ResponseEntityExceptionHandler` already turns validation failures (`MethodArgumentNotValidException`), malformed JSON, unsupported media types and wrong methods into Problem Details. Override `handleMethodArgumentNotValid` to add a list of field errors:
+
+```java
+@Override
+protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
+        HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+    ProblemDetail pd = ex.getBody();
+    pd.setTitle("Validation failed");
+    pd.setProperty("errors", ex.getBindingResult().getFieldErrors().stream()
+            .map(fe -> Map.of("field", fe.getField(), "message", String.valueOf(fe.getDefaultMessage())))
+            .toList());
+    return ResponseEntity.status(status).body(pd);
+}
+```
+
+Rules for error responses in finance:
+
+- **Never** return stack traces, SQL, class names or internal hostnames. Set `server.error.include-stacktrace=never` (the default) and don't put `e.toString()` in `detail`.
+- Mask account numbers and never echo secrets.
+- Include a correlation/trace ID so support can find the logs (Module 13 automates this).
+- Keep `type` URIs stable: client apps switch on them.
+
+## 6. Testing controllers
+
+`@WebMvcTest` starts only the web layer (controllers, advice, converters, validation), not services or the database. Mock the service:
+
+```java
+@WebMvcTest(AccountController.class)
+class AccountControllerTest {
+
+    @Autowired MockMvc mvc;
+    @MockitoBean AccountService accounts;                // Spring Framework's Mockito integration
+
+    @Test
+    void rejectsInvalidBvn() throws Exception {
+        mvc.perform(post("/api/v1/accounts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"bvn": "123", "product": "SAVINGS", "currency": "NGN"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.errors[0].field").value("bvn"));
+    }
+
+    @Test
+    void returns404ProblemForUnknownAccount() throws Exception {
+        when(accounts.find("0000000000")).thenThrow(new AccountNotFoundException("0000000000"));
+        mvc.perform(get("/api/v1/accounts/0000000000"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.title").value("Account not found"));
+    }
+}
+```
+
+In Spring Boot 4, `@WebMvcTest` comes from the `spring-boot-starter-webmvc-test` starter, and `@MockitoBean` replaces the removed `@MockBean`. Module 7 covers testing in depth (including the AssertJ-style `MockMvcTester` and full integration tests with Testcontainers).
+
+## Worked example: a transfer endpoint, end to end
+
+```java
+@RestController
+@RequestMapping("/api/v1/transfers")
+public class TransferController {
+    private final TransferService transfers;
+    public TransferController(TransferService transfers) { this.transfers = transfers; }
+
+    @PostMapping
+    public ResponseEntity<TransferResponse> create(@Valid @RequestBody TransferRequest request) {
+        TransferReceipt receipt = transfers.transfer(request);       // throws domain exceptions
+        return ResponseEntity
+                .created(URI.create("/api/v1/transfers/" + receipt.reference()))
+                .body(TransferResponse.from(receipt));
+    }
+}
+```
+
+The controller does three things: validate (annotations), delegate (one service call), respond (status + DTO). Insufficient funds becomes a 422 Problem Detail, a duplicate `clientReference` becomes a 409, and an unknown account a 404, all in the advice class. No `try/catch` in the controller at all.
+
+## Common mistakes
+
+- Returning JPA entities from controllers.
+- Business logic in controllers.
+- Forgetting `@Valid`, so annotations on the DTO are never checked.
+- `200 OK` with `{"success": false}` bodies instead of proper status codes.
+- Leaking exception messages or stack traces to clients.
+- Catching exceptions in every controller instead of one advice class.
+- `double` amounts in request DTOs.
+
+## Practice
+
+1. Build `AccountController` and `TransferController` as above, backed by an in-memory service, with validation and the Problem Details advice.
+2. Write a custom `@ValidNuban` constraint and a class-level `@DifferentAccounts` constraint, with unit tests for the validators.
+3. Write `@WebMvcTest` tests for: a valid transfer (201 with `Location`), a validation failure (400 with field errors), insufficient funds (422), unknown account (404) and malformed JSON (400).
+4. Call your API with `curl -i` and check every response's status, headers and `Content-Type`.
+
+## Key terms
+
+`DispatcherServlet`, `@RestController`, `@RequestMapping`, `@PathVariable`, `@RequestParam`, `@RequestBody`, `ResponseEntity`, status code, DTO, mass assignment, Jakarta Bean Validation, `@Valid`, constraint, custom validator, method validation, Problem Details (RFC 9457), `ProblemDetail`, `@RestControllerAdvice`, `@ExceptionHandler`, `ResponseEntityExceptionHandler`, `@WebMvcTest`, MockMvc, `@MockitoBean`.
+
+## Further reading
+
+- [Spring Framework reference: Annotated Controllers](https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller.html)
+- [Spring Framework reference: Error Responses (Problem Details)](https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-ann-rest-exceptions.html)
+- [Spring Framework reference: Validation](https://docs.spring.io/spring-framework/reference/core/validation/beanvalidation.html)
+- [RFC 9457: Problem Details for HTTP APIs](https://www.rfc-editor.org/rfc/rfc9457)
+- [Hibernate Validator reference](https://docs.jboss.org/hibernate/stable/validator/reference/en-US/html_single/)

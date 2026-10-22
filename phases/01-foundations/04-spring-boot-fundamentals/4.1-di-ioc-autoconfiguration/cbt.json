@@ -1,0 +1,96 @@
+{
+  "topic": "4.1",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A new `@Service` in package `ng.itlearning.payments` isn't found at startup ('required a bean of type ... that could not be found'). The main class annotated @SpringBootApplication is in `ng.itlearning.bank.app`.",
+      "question": "What is the most likely cause?",
+      "options": [
+        "The service needs @Autowired on the class",
+        "@Service only works on interfaces",
+        "Component scanning starts from the main class's package and its sub-packages, so ng.itlearning.payments is never scanned",
+        "Spring Boot 4 removed @Service"
+      ],
+      "answer": 2,
+      "explanation": "Put the main class in the root package (e.g. ng.itlearning) so every feature package is beneath it, or configure scanning explicitly."
+    },
+    {
+      "type": "single",
+      "scenario": "In code review you see `@Autowired private AccountRepository repo;` on a service. The reviewer asks for a change.",
+      "question": "What is the preferred style and why?",
+      "options": [
+        "Setter injection, because it is more flexible",
+        "Static fields, for performance",
+        "Constructor injection with a final field: dependencies are explicit, the object is complete after construction, and unit tests can use plain new",
+        "Keep field injection but make it public"
+      ],
+      "answer": 2,
+      "explanation": "Constructor injection is the Spring team's recommendation. Field injection hides dependencies and forces reflection or a Spring context in tests."
+    },
+    {
+      "type": "single",
+      "scenario": "A singleton `@Service` keeps `private BigDecimal dailyTotal` and adds each transfer's amount to it. Under load the totals are wrong.",
+      "question": "What's the root cause?",
+      "options": [
+        "The bean should be @Repository",
+        "Singleton beans are shared by all request threads, so mutable instance state is a race condition",
+        "BigDecimal is immutable",
+        "Spring creates a new service per request"
+      ],
+      "answer": 1,
+      "explanation": "One instance serves every thread. Keep beans stateless; put shared state in the database, Redis or a thread-safe structure."
+    },
+    {
+      "type": "single",
+      "scenario": "Two beans implement `NotificationSender` (SMS and email). Startup fails with NoUniqueBeanDefinitionException at AlertService's constructor.",
+      "question": "Which fixes are valid?",
+      "options": [
+        "Mark one implementation @Primary, or use @Qualifier at the injection point, or inject List<NotificationSender> if all are needed",
+        "Rename the interface",
+        "Delete one implementation",
+        "Add @Lazy to the constructor"
+      ],
+      "answer": 0,
+      "explanation": "Spring needs a way to choose: a default (@Primary), an explicit choice (@Qualifier), or a collection of all candidates."
+    },
+    {
+      "type": "single",
+      "scenario": "A team adds `spring-boot-starter-data-redis` for a cache in one feature. The next deploy fails health checks because the app tries to connect to Redis on localhost:6379.",
+      "question": "Why did this happen?",
+      "options": [
+        "Spring always connects to Redis",
+        "A bug in Redis",
+        "Flyway requires Redis",
+        "Auto-configuration is driven by the classpath: the starter's presence activated Redis auto-configuration with default connection properties"
+      ],
+      "answer": 3,
+      "explanation": "@ConditionalOnClass conditions switch on when a library appears. Configure the connection properties for each environment (or exclude the auto-configuration if unused)."
+    },
+    {
+      "type": "single",
+      "scenario": "You define your own `DataSource` @Bean with a custom HikariCP configuration. A colleague worries Spring Boot will create a second DataSource too.",
+      "question": "What actually happens?",
+      "options": [
+        "Spring ignores your bean",
+        "The auto-configured DataSource is guarded by @ConditionalOnMissingBean, so it backs off and yours is used",
+        "Two DataSources are created and startup fails",
+        "Spring merges the two configurations"
+      ],
+      "answer": 1,
+      "explanation": "Auto-configuration is designed to step aside when you provide a bean of the same type. Prefer properties first, though: replacing the bean also replaces the defaults you got for free."
+    },
+    {
+      "type": "single",
+      "scenario": "You need to know why `DataSourceAutoConfiguration` did not apply in a test environment.",
+      "question": "What is the quickest way to find out?",
+      "options": [
+        "Read every Spring Boot source file",
+        "Add System.out.println in main",
+        "Start the app with --debug (or check the actuator conditions endpoint) and read the conditions evaluation report's negative matches",
+        "Delete the .m2 folder"
+      ],
+      "answer": 2,
+      "explanation": "The report lists every auto-configuration and the exact condition that matched or failed, for example 'did not find required class' or 'found bean of type DataSource'."
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "topic": "1.5",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "You need a map from account number to the total of that account's transaction amounts (BigDecimal) for a daily report.",
+      "question": "Which pipeline is correct?",
+      "options": [
+        "txs.stream().map(Transaction::amount).collect(groupingBy(Transaction::account))",
+        "txs.stream().reduce(BigDecimal.ZERO, BigDecimal::add)",
+        "txs.stream().collect(groupingBy(Transaction::account, reducing(BigDecimal.ZERO, Transaction::amount, BigDecimal::add)))",
+        "txs.stream().collect(toMap(Transaction::account, Transaction::amount))"
+      ],
+      "answer": 2,
+      "explanation": "groupingBy with a downstream reducing collector sums per key. Mapping to amounts first loses the account; toMap throws on the second transaction for the same account (duplicate key); a plain reduce gives one grand total."
+    },
+    {
+      "type": "single",
+      "scenario": "Building a lookup with `accounts.stream().collect(toMap(Account::bvn, a -> a))` crashes in production with `IllegalStateException: Duplicate key`. Some customers have two accounts with the same BVN.",
+      "question": "What is the right fix?",
+      "options": [
+        "Use groupingBy(Account::bvn) to get Map<String, List<Account>>, since one BVN legitimately maps to many accounts",
+        "Call distinct() before collecting",
+        "Use a parallel stream",
+        "Catch the exception and return an empty map"
+      ],
+      "answer": 0,
+      "explanation": "The data model says one BVN has many accounts, so the result type should be a map of lists. A merge function that drops one account would silently lose data; distinct() compares whole accounts, not BVNs."
+    },
+    {
+      "type": "single",
+      "scenario": "A lookup method returns `Optional<Customer>`. A developer writes `repo.find(id).get().getName()` and it fails in production for unknown IDs.",
+      "question": "Which replacement makes the 'not found' case explicit and safe?",
+      "options": [
+        "repo.find(id).map(Customer::getName).orElseThrow(() -> new CustomerNotFoundException(id))",
+        "if (repo.find(id) != null) ...",
+        "repo.find(id).orElse(null).getName()",
+        "repo.find(id).isPresent() ? repo.find(id).get() : null"
+      ],
+      "answer": 0,
+      "explanation": "get() on an empty Optional throws NoSuchElementException with no business meaning. map plus orElseThrow handles absence explicitly with a domain exception. The Optional itself is never null."
+    },
+    {
+      "type": "single",
+      "scenario": "A colleague writes a pipeline `txs.stream().filter(t -> isSuspicious(t)).map(t -> flag(t));` and is surprised that no transactions get flagged.",
+      "question": "Why does nothing happen?",
+      "options": [
+        "Intermediate operations are lazy; without a terminal operation such as toList() or forEach() the pipeline never runs",
+        "Streams only work on arrays",
+        "filter removes everything",
+        "map cannot call methods"
+      ],
+      "answer": 0,
+      "explanation": "Streams do no work until a terminal operation pulls elements through. Also, if flag() has side effects, forEach is the honest terminal operation; map is meant for pure transformations."
+    },
+    {
+      "type": "single",
+      "scenario": "Each customer has a `List<Account>`. You need one flat `List<Account>` of every account owned by customers in Lagos.",
+      "question": "Which operation flattens the nested lists?",
+      "options": [
+        "flatMap(c -> c.accounts().stream())",
+        "distinct()",
+        "map(c -> c.accounts())",
+        "reduce(List::addAll)"
+      ],
+      "answer": 0,
+      "explanation": "map would produce a Stream<List<Account>>. flatMap maps each customer to a stream of accounts and joins those streams into one Stream<Account>."
+    },
+    {
+      "type": "single",
+      "scenario": "In a Spring web service, a developer changes `.stream()` to `.parallelStream()` on every request handler 'for speed'. Latency gets worse under load.",
+      "question": "What is the most likely explanation?",
+      "options": [
+        "Parallel streams always run on one thread",
+        "Parallel streams cannot use lambdas",
+        "Every request now competes for the shared common ForkJoinPool, and the per-request lists are too small to benefit from splitting",
+        "The JVM disables parallelism in web apps"
+      ],
+      "answer": 2,
+      "explanation": "Parallel streams share one pool sized to the CPU count. Under concurrent requests they contend for it, and splitting small lists costs more than it saves. Measure before parallelising."
+    },
+    {
+      "type": "single",
+      "scenario": "You want a list of reviewers' predicates combined: debit AND amount over ₦1m AND NOT internal transfer.",
+      "question": "Which expression builds that rule from existing predicates isDebit, isLarge and isInternal?",
+      "options": [
+        "isDebit && isLarge && !isInternal",
+        "Predicate.of(isDebit, isLarge, isInternal)",
+        "isDebit.or(isLarge).or(isInternal)",
+        "isDebit.and(isLarge).and(isInternal.negate())"
+      ],
+      "answer": 3,
+      "explanation": "Predicate has default methods and, or and negate (or Predicate.not). Java's && operator works on booleans, not on Predicate objects."
+    }
+  ]
+}

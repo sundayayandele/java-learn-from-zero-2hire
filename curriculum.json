@@ -1,0 +1,187 @@
+{
+  "title": "Java Backend Engineer: Zero to Hired",
+  "source": "https://itlearning.ng/java-backend-engineer-training-program/",
+  "source_checked": "2026-10-22",
+  "stack": {
+    "java": "21 (LTS); Java 25 LTS features noted where relevant",
+    "spring_boot": "4.1.x (Spring Framework 7, Jakarta EE 11)",
+    "kotlin": "2.4.x",
+    "build": "Maven (primary), Gradle (covered)",
+    "database": "PostgreSQL 17",
+    "containers": "Docker, Docker Compose",
+    "ci": "GitHub Actions (primary), GitLab CI on gitlab.com (secondary)"
+  },
+  "phases": [
+    {
+      "number": 1,
+      "slug": "01-foundations",
+      "title": "Foundations",
+      "weeks": "1-13",
+      "status": "built",
+      "summary": "Modern Java, concurrency and the JVM, SQL and NoSQL databases, and your first Spring Boot 4 services.",
+      "modules": [
+        {
+          "number": 1,
+          "slug": "01-modern-java-oop",
+          "title": "Modern Java & OOP Foundations",
+          "weeks": "1-4",
+          "topics": [
+            {"id": "1.1", "slug": "1.1-tooling-build-linux", "title": "Your toolkit: JDK, IntelliJ IDEA, Maven, Gradle and the Linux command line", "week": 1, "covers": "Maven and Gradle, IntelliJ IDEA, Linux command line basics"},
+            {"id": "1.2", "slug": "1.2-syntax-types-control-flow", "title": "Java syntax, types, control flow and methods", "week": 1, "covers": "Syntax, types, control flow, methods"},
+            {"id": "1.3", "slug": "1.3-oop-and-solid", "title": "Object-oriented programming and the SOLID principles", "week": 2, "covers": "OOP principles (SOLID)"},
+            {"id": "1.4", "slug": "1.4-collections-generics", "title": "Collections and generics", "week": 2, "covers": "Collections, generics"},
+            {"id": "1.5", "slug": "1.5-lambdas-streams", "title": "Lambdas and the Streams API", "week": 3, "covers": "Streams API and lambdas"},
+            {"id": "1.6", "slug": "1.6-modern-java-features", "title": "Modern Java: records, sealed classes, pattern matching for switch and text blocks", "week": 3, "covers": "Modern Java: records, sealed classes, pattern matching for switch, text blocks"},
+            {"id": "1.7", "slug": "1.7-exceptions-immutability-clean-code", "title": "Exceptions, immutability and clean-code habits", "week": 4, "covers": "Exceptions, immutability and clean-code habits"},
+            {"id": "1.8", "slug": "1.8-legacy-java-migration", "title": "Reading legacy Java 8/11/17 code and migrating it forward", "week": 4, "covers": "Reading legacy Java 8/11/17 code and migrating it forward"},
+            {"id": "1.9", "slug": "1.9-kotlin-for-java-developers", "title": "Kotlin for Java developers", "week": 4, "covers": "Kotlin (added to this programme; not listed on the website)"}
+          ],
+          "projects": ["Wallet & transfers simulator (accounts, transfers, statements)", "Library management CLI (loans, fines, reports)", "Payroll calculator with PAYE-style tax rules", "Retail inventory manager with reorder alerts"]
+        },
+        {
+          "number": 2,
+          "slug": "02-concurrency-jvm",
+          "title": "Concurrency & the JVM",
+          "weeks": "5-6",
+          "topics": [
+            {"id": "2.1", "slug": "2.1-threads-executors-completablefuture", "title": "Threads, ExecutorService and CompletableFuture", "week": 5, "covers": "Threads, ExecutorService, CompletableFuture"},
+            {"id": "2.2", "slug": "2.2-race-conditions-locks-atomics", "title": "Race conditions, locks, atomics and concurrent collections", "week": 5, "covers": "Race conditions, locks, atomics and concurrent collections"},
+            {"id": "2.3", "slug": "2.3-virtual-threads-structured-concurrency", "title": "Virtual threads (Project Loom) and structured concurrency", "week": 6, "covers": "Virtual threads (Project Loom) and structured concurrency concepts"},
+            {"id": "2.4", "slug": "2.4-jvm-memory-gc", "title": "The JVM memory model, heap vs stack and garbage collection", "week": 6, "covers": "JVM memory model, heap vs stack, garbage collection basics"}
+          ],
+          "projects": ["Parallel transaction-file processor", "Rate-limited API caller using virtual threads", "Find-and-fix lab: deadlocks and race conditions"]
+        },
+        {
+          "number": 3,
+          "slug": "03-databases-sql-nosql",
+          "title": "Databases: SQL & NoSQL",
+          "weeks": "7-9",
+          "topics": [
+            {"id": "3.1", "slug": "3.1-relational-design-normalisation-joins", "title": "Relational design: normalisation and joins", "week": 7, "covers": "Normalisation, joins"},
+            {"id": "3.2", "slug": "3.2-transactions-isolation-locking", "title": "Transactions, isolation levels and locking", "week": 7, "covers": "Transactions, isolation levels and locking"},
+            {"id": "3.3", "slug": "3.3-indexing-query-plans", "title": "Indexing and reading query plans in PostgreSQL and MySQL", "week": 8, "covers": "Indexing and reading query plans in PostgreSQL and MySQL"},
+            {"id": "3.4", "slug": "3.4-schema-migrations-flyway-liquibase", "title": "Schema migrations with Flyway and Liquibase", "week": 8, "covers": "Schema migrations with Flyway or Liquibase"},
+            {"id": "3.5", "slug": "3.5-jdbc-fundamentals", "title": "JDBC fundamentals", "week": 8, "covers": "JDBC fundamentals before moving to JPA"},
+            {"id": "3.6", "slug": "3.6-redis-and-mongodb", "title": "Redis for caching and MongoDB for document data", "week": 9, "covers": "Redis for caching and MongoDB for document data"}
+          ],
+          "projects": ["E-commerce relational schema with sample dataset", "Double-entry ledger schema for a payments app", "Hospital management DB (patients, visits, billing)", "Query-tuning lab: from slow query to indexed query"]
+        },
+        {
+          "number": 4,
+          "slug": "04-spring-boot-fundamentals",
+          "title": "Spring Boot 4 Fundamentals",
+          "weeks": "10-13",
+          "topics": [
+            {"id": "4.1", "slug": "4.1-di-ioc-autoconfiguration", "title": "Dependency injection, IoC and auto-configuration", "week": 10, "covers": "Dependency injection, IoC and auto-configuration"},
+            {"id": "4.2", "slug": "4.2-spring-mvc-validation-errors", "title": "Spring MVC controllers, validation and global error handling", "week": 10, "covers": "Spring MVC controllers, validation and global error handling"},
+            {"id": "4.3", "slug": "4.3-spring-data-jpa-hibernate", "title": "Spring Data JPA and Hibernate: mappings, fetching and avoiding N+1", "week": 11, "covers": "Spring Data JPA and Hibernate: mappings, fetching, avoiding N+1"},
+            {"id": "4.4", "slug": "4.4-configuration-profiles-secrets", "title": "Configuration, profiles and secrets handling", "week": 12, "covers": "Configuration, profiles and secrets handling"},
+            {"id": "4.5", "slug": "4.5-actuator-health-metrics", "title": "Spring Boot Actuator: health checks and metrics", "week": 12, "covers": "Spring Boot Actuator health checks and metrics"},
+            {"id": "4.6", "slug": "4.6-spring-boot-3-to-4-upgrade", "title": "What changed from Spring Boot 3 to 4, and how to upgrade", "week": 13, "covers": "What changed from Spring Boot 3 to 4, and how to upgrade"},
+            {"id": "4.7", "slug": "4.7-spring-boot-with-kotlin", "title": "Spring Boot with Kotlin", "week": 13, "covers": "Kotlin with Spring Boot (added to this programme)"}
+          ],
+          "projects": ["Task manager REST API (CRUD, validation)", "Blog API with pagination and sorting", "Product catalogue API with search and filters", "Spring Boot 3 to 4 upgrade exercise"]
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "slug": "02-professional-backend",
+      "title": "Professional Backend",
+      "weeks": "14-24",
+      "status": "planned",
+      "summary": "API design, security, testing, Git, Docker, CI/CD and AI-assisted engineering. Ends with your junior portfolio and interview prep.",
+      "modules": [
+        {"number": 5, "slug": "05-api-design-integration", "title": "API Design & Integration", "weeks": "14-16", "topics": [
+          {"id": "5.1", "title": "Resource design, HTTP semantics and status codes"},
+          {"id": "5.2", "title": "OpenAPI/Swagger documentation and API versioning"},
+          {"id": "5.3", "title": "Standard error responses (Problem Details), pagination, idempotency keys"},
+          {"id": "5.4", "title": "Consuming third-party APIs: timeouts, retries, circuit breakers"},
+          {"id": "5.5", "title": "Introduction to GraphQL and gRPC, and when to use each"}],
+          "projects": ["Payment gateway integration (sandbox) with webhooks", "Weather or FX-rate service consuming external APIs", "News aggregator from multiple sources", "gRPC service for internal account lookups"]},
+        {"number": 6, "slug": "06-security-essentials", "title": "Security Essentials", "weeks": "17-18", "topics": [
+          {"id": "6.1", "title": "Spring Security filter chain and configuration"},
+          {"id": "6.2", "title": "JWT access and refresh tokens, OAuth2 / OpenID Connect login"},
+          {"id": "6.3", "title": "Role-based access control and method security"},
+          {"id": "6.4", "title": "OWASP Top 10 and how they show up in Java APIs"},
+          {"id": "6.5", "title": "Password hashing, secrets management, dependency scanning"}],
+          "projects": ["Secure API with JWT and refresh tokens", "Google/GitHub login via OAuth2 / Keycloak", "Role-based admin vs customer endpoints"]},
+        {"number": 7, "slug": "07-testing-code-quality", "title": "Testing & Code Quality", "weeks": "19-20", "topics": [
+          {"id": "7.1", "title": "Unit testing with JUnit and Mockito; test-driven development"},
+          {"id": "7.2", "title": "Integration tests with Testcontainers (real Postgres, Kafka, Redis)"},
+          {"id": "7.3", "title": "API tests with MockMvc and REST Assured"},
+          {"id": "7.4", "title": "Coverage with JaCoCo and static analysis with SonarQube"},
+          {"id": "7.5", "title": "Code review etiquette and pull-request standards"}],
+          "projects": ["Full test suite for the wallet application", "TDD kata: tax and fee engine", "Integration tests for the e-commerce API"]},
+        {"number": 8, "slug": "08-git-docker-cicd", "title": "Git, Docker & CI/CD", "weeks": "21-22", "topics": [
+          {"id": "8.1", "title": "Git branching, pull requests, rebasing and branch-protection rules"},
+          {"id": "8.2", "title": "Multi-stage Docker images for Spring Boot; Docker Compose"},
+          {"id": "8.3", "title": "CI/CD with GitHub Actions (build, test, scan, publish image), plus GitLab CI"},
+          {"id": "8.4", "title": "Overview of Jenkins and Azure DevOps pipelines used in enterprises"},
+          {"id": "8.5", "title": "Deploying a container to a cloud host"}],
+          "projects": ["Team workflow with peer PR reviews", "Dockerised Spring Boot + Postgres stack", "GitHub Actions pipeline with quality gates"]},
+        {"number": 9, "slug": "09-ai-assisted-engineering-portfolio", "title": "AI-Assisted Engineering & Junior Portfolio", "weeks": "23-24", "topics": [
+          {"id": "9.1", "title": "Daily workflows with AI coding assistants (GitHub Copilot, Claude Code, Cursor and similar)"},
+          {"id": "9.2", "title": "Reviewing AI-generated code for bugs, security issues and licence risk"},
+          {"id": "9.3", "title": "Using AI to write tests, docs and refactors without losing understanding"},
+          {"id": "9.4", "title": "CV, GitHub profile and LinkedIn optimisation for Java roles"},
+          {"id": "9.5", "title": "Junior interview prep: core Java, Spring, SQL and live coding"}],
+          "projects": ["Polished junior portfolio (4-5 projects) with READMEs", "Mock technical interview with feedback", "Tailored CV and application plan"]}
+      ]
+    },
+    {
+      "number": 3,
+      "slug": "03-enterprise-cloud-native",
+      "title": "Enterprise & Cloud-Native",
+      "weeks": "25-36",
+      "status": "planned",
+      "summary": "Microservices, Kafka, Kubernetes, AWS, observability, reactive Java and Spring AI, delivered through one capstone system.",
+      "modules": [
+        {"number": 10, "slug": "10-microservices-distributed-systems", "title": "Microservices & Distributed Systems", "weeks": "25-26", "topics": [
+          {"id": "10.1", "title": "Domain-driven design and service boundaries"},
+          {"id": "10.2", "title": "Spring Cloud Gateway, centralised config and service discovery"},
+          {"id": "10.3", "title": "Resilience patterns: retries, timeouts, bulkheads, circuit breakers"},
+          {"id": "10.4", "title": "Data consistency across services; distributed transactions"}],
+          "projects": ["E-commerce services: User, Product, Order, Payment", "Banking services: Account, Transaction, Notification"]},
+        {"number": 11, "slug": "11-event-driven-kafka", "title": "Event-Driven Architecture with Kafka", "weeks": "27-28", "topics": [
+          {"id": "11.1", "title": "Apache Kafka: topics, partitions, consumer groups, ordering"},
+          {"id": "11.2", "title": "Spring for Apache Kafka; RabbitMQ / AMQP for comparison"},
+          {"id": "11.3", "title": "Transactional outbox, sagas and idempotent consumers"},
+          {"id": "11.4", "title": "Dead-letter topics, retries and schema evolution"}],
+          "projects": ["Event-driven order and payment processing", "Real-time transaction notifications", "Audit-logging pipeline"]},
+        {"number": 12, "slug": "12-kubernetes-helm-aws", "title": "Kubernetes, Helm & Cloud on AWS", "weeks": "29-30", "topics": [
+          {"id": "12.1", "title": "Kubernetes objects: Pods, Deployments, Services, Ingress, ConfigMaps, Secrets"},
+          {"id": "12.2", "title": "Probes, resource limits and autoscaling for JVM workloads"},
+          {"id": "12.3", "title": "Helm charts and local clusters with kind or Minikube"},
+          {"id": "12.4", "title": "AWS essentials: IAM, VPC, RDS, S3, EKS; overview of AKS, GKE and OpenShift"},
+          {"id": "12.5", "title": "Infrastructure as Code with Terraform; GitOps with Argo CD"}],
+          "projects": ["Helm chart for your microservices", "Deploy the capstone to a managed Kubernetes cluster", "Terraform module for database and storage"]},
+        {"number": 13, "slug": "13-observability-performance", "title": "Observability, Performance & Production Support", "weeks": "31-32", "topics": [
+          {"id": "13.1", "title": "Distributed tracing with OpenTelemetry; metrics with Micrometer"},
+          {"id": "13.2", "title": "Prometheus and Grafana dashboards; structured logging"},
+          {"id": "13.3", "title": "JVM profiling and heap analysis (JFR, heap dumps, memory leaks)"},
+          {"id": "13.4", "title": "Caching strategies with Redis; database tuning under load"},
+          {"id": "13.5", "title": "Load testing with k6 or JMeter; SLOs, alerts and incident response"}],
+          "projects": ["End-to-end tracing across your services", "Grafana dashboard with alert rules", "Memory-leak hunt and latency-reduction lab"]},
+        {"number": 14, "slug": "14-reactive-java", "title": "Reactive & High-Throughput Java", "weeks": "33", "topics": [
+          {"id": "14.1", "title": "Spring WebFlux and Project Reactor basics"},
+          {"id": "14.2", "title": "Reactive database access with R2DBC"},
+          {"id": "14.3", "title": "Reactive vs virtual threads: choosing the right model"}],
+          "projects": ["Non-blocking rates/quotes streaming endpoint", "Benchmark: MVC + virtual threads vs WebFlux"]},
+        {"number": 15, "slug": "15-spring-ai", "title": "AI Integration with Spring AI", "weeks": "34", "topics": [
+          {"id": "15.1", "title": "Spring AI ChatClient with hosted and open-source models"},
+          {"id": "15.2", "title": "Retrieval-augmented generation (RAG) with pgvector"},
+          {"id": "15.3", "title": "Tool calling and exposing services via MCP (Model Context Protocol)"},
+          {"id": "15.4", "title": "Guardrails, evaluation, cost and latency control"}],
+          "projects": ["Customer-support assistant grounded in your API docs", "Transaction-query agent that calls your services as tools"]},
+        {"number": 16, "slug": "16-capstone-system-design-interviews", "title": "Capstone, System Design & Interview Prep", "weeks": "35-36", "topics": [
+          {"id": "16.1", "title": "Capstone build: digital wallet, loan origination, marketplace or logistics backend"},
+          {"id": "16.2", "title": "Live deployment on Kubernetes with CI/CD; ADRs, runbook and architecture diagrams"},
+          {"id": "16.3", "title": "Observability dashboard and load-test report"},
+          {"id": "16.4", "title": "System-design interview practice and STAR stories"},
+          {"id": "16.5", "title": "Two mock interviews: technical and behavioural"}],
+          "projects": ["Digital wallet & payments platform", "Loan origination system", "Marketplace backend", "Ride-hailing / logistics backend"]}
+      ]
+    }
+  ]
+}

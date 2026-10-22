@@ -1,0 +1,14 @@
+test:
+  image: eclipse-temurin:21-jdk
+  variables:
+    MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+  cache:
+    key: maven
+    paths:
+      - .m2/repository
+  script:
+    - ./mvnw -B verify
+  artifacts:
+    when: always
+    reports:
+      junit: target/surefire-reports/TEST-*.xml

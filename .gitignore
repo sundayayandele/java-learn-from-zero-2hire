@@ -1,0 +1,14 @@
+# Build output
+target/
+build/
+.idea/
+*.iml
+.vscode/
+.DS_Store
+.env
+
+# Graded exam banks (answer keys) are kept out of the public repository.
+assessments/private/
+
+# Generated Moodle import files
+lms/moodle/out/

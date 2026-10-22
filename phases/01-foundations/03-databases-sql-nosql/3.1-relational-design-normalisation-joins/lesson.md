@@ -1,0 +1,266 @@
+## What you will be able to do
+
+- Model a business domain as tables, columns, primary keys and foreign keys, with the right data types and constraints.
+- Normalise a design to third normal form and explain when to denormalise deliberately.
+- Write `SELECT` queries with filtering, sorting, aggregation (`GROUP BY`/`HAVING`) and the four kinds of join.
+- Use subqueries, common table expressions (CTEs) and window functions for reporting questions.
+- Run PostgreSQL in Docker and work in `psql`.
+
+## Why this matters in a bank or fintech
+
+Financial data is relational to its core: customers own accounts, accounts have transactions, transactions belong to batches and settlements. Banks run on relational databases (PostgreSQL, Oracle, MySQL, SQL Server) because they enforce rules (no transaction without an account, no duplicate references) even when application code has bugs. A good schema prevents whole classes of incidents; a bad one creates "the customer's name is different on their two accounts" problems that take years to clean up. SQL is also the single most tested skill in junior backend interviews after core Java.
+
+## 1. Setting up PostgreSQL
+
+```bash
+docker run -d --name pg -e POSTGRES_PASSWORD=devpass -e POSTGRES_DB=bank \
+  -p 5432:5432 postgres:17-alpine
+docker exec -it pg psql -U postgres -d bank
+```
+
+Useful `psql` commands: `\dt` (list tables), `\d account` (describe a table), `\x` (expanded output), `\timing` (show query time), `\q` (quit). A GUI such as DBeaver, pgAdmin or IntelliJ's database tool is fine too, but be comfortable in `psql`: it is what you will have on a production bastion host.
+
+## 2. Tables, keys and constraints
+
+```sql
+CREATE TABLE customer (
+    id            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    bvn           CHAR(11)     NOT NULL UNIQUE,
+    full_name     VARCHAR(200) NOT NULL,
+    email         VARCHAR(254),
+    created_at    TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+
+CREATE TABLE account (
+    id            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    number        CHAR(10)     NOT NULL UNIQUE,
+    customer_id   BIGINT       NOT NULL REFERENCES customer(id),
+    product       VARCHAR(20)  NOT NULL CHECK (product IN ('SAVINGS', 'CURRENT', 'DOMICILIARY')),
+    currency      CHAR(3)      NOT NULL DEFAULT 'NGN',
+    status        VARCHAR(10)  NOT NULL DEFAULT 'ACTIVE',
+    opened_on     DATE         NOT NULL DEFAULT current_date
+);
+
+CREATE TABLE txn (
+    id            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    account_id    BIGINT        NOT NULL REFERENCES account(id),
+    reference     VARCHAR(40)   NOT NULL UNIQUE,
+    direction     CHAR(1)       NOT NULL CHECK (direction IN ('D', 'C')),
+    amount        NUMERIC(19,2) NOT NULL CHECK (amount > 0),
+    narration     VARCHAR(140),
+    value_date    DATE          NOT NULL,
+    posted_at     TIMESTAMPTZ   NOT NULL DEFAULT now()
+);
+```
+
+- A **primary key** uniquely identifies a row. Use a **surrogate key** (a generated `BIGINT` or UUID) rather than business data: account numbers get reissued and BVNs get corrected, but `id` never changes.
+- **Natural keys** still get `UNIQUE` constraints (`bvn`, `number`, `reference`) so duplicates are impossible.
+- A **foreign key** (`REFERENCES`) guarantees every transaction points at a real account. Decide what happens on delete: usually nothing should be deleted in banking, so the default (`RESTRICT`/`NO ACTION`) is right.
+- `NOT NULL`, `CHECK` and `UNIQUE` push business rules into the database, where they hold even if a buggy service or a manual script tries to violate them.
+
+### Data types for financial data
+
+| Data | PostgreSQL type | Why |
+| --- | --- | --- |
+| Money | `NUMERIC(19,2)` (or `BIGINT` minor units) | Exact decimal. **Never `REAL`/`DOUBLE PRECISION`/`MONEY`** |
+| Currency | `CHAR(3)` | ISO 4217 code |
+| Timestamps | `TIMESTAMPTZ` | Stored in UTC, converted on display |
+| Business date | `DATE` | Value dates, statement dates |
+| Status/enums | `VARCHAR` + `CHECK`, or a lookup table | Easy to extend and readable |
+| Identifiers with leading zeros | `CHAR`/`VARCHAR` | Account numbers and BVNs are not numbers |
+| Flexible metadata | `JSONB` | Sparingly: for data you don't query relationally |
+
+## 3. Normalisation
+
+Normalisation removes redundancy so each fact is stored in one place. Redundant data gets out of sync: if the customer's name is copied onto every account row, a name change must update every copy, and one day it won't.
+
+**First normal form (1NF):** every column holds a single atomic value; no repeating groups.
+Violation: `account.phone_numbers = '0803..., 0812...'`. Fix: a `customer_phone` table, one row per number.
+
+**Second normal form (2NF):** 1NF, and every non-key column depends on the *whole* key (matters for composite keys).
+Violation: a `loan_repayment(loan_id, instalment_no, amount_due, borrower_name)` table where `borrower_name` depends only on `loan_id`. Fix: keep borrower details on the loan/customer.
+
+**Third normal form (3NF):** 2NF, and no non-key column depends on another non-key column (no transitive dependencies).
+Violation: `account(id, branch_code, branch_name, branch_city)`: branch name and city depend on the branch code, not the account. Fix: a `branch` table; `account.branch_code` references it.
+
+The informal summary: every non-key column depends on "the key, the whole key, and nothing but the key".
+
+### Deliberate denormalisation
+
+Normalised schemas are right for **transactional (OLTP)** data. Reporting and analytics often denormalise for speed: a nightly `daily_account_summary` table, or a data warehouse star schema. Some redundancy is also legal or intentional: a transaction row records the **narration and amount as they were at posting time**, and those must never change even if other data does. Denormalise on purpose and document it; never by accident.
+
+## 4. Querying
+
+```sql
+SELECT number, product, status
+FROM account
+WHERE status = 'ACTIVE' AND product IN ('SAVINGS', 'CURRENT')
+ORDER BY opened_on DESC
+LIMIT 20;
+```
+
+Logical order of evaluation, which explains many errors: `FROM`/`JOIN` → `WHERE` → `GROUP BY` → `HAVING` → `SELECT` → `ORDER BY` → `LIMIT`. That is why you cannot use a `SELECT` alias in `WHERE`.
+
+### Aggregation
+
+```sql
+-- Debit total and count per account for October, only accounts with more than ₦1m of debits
+SELECT account_id,
+       count(*)    AS debit_count,
+       sum(amount) AS debit_total
+FROM txn
+WHERE direction = 'D'
+  AND value_date >= DATE '2026-10-01' AND value_date < DATE '2026-11-01'
+GROUP BY account_id
+HAVING sum(amount) > 1000000
+ORDER BY debit_total DESC;
+```
+
+`WHERE` filters rows before grouping; `HAVING` filters groups after. Use half-open date ranges (`>= start AND < next_start`) to avoid off-by-one and time-of-day bugs.
+
+**NULL** means "unknown". `NULL = NULL` is not true; use `IS NULL`. `count(*)` counts rows, `count(email)` counts non-null emails, and `sum` of no rows is `NULL`, not 0 (use `coalesce(sum(amount), 0)`).
+
+## 5. Joins
+
+```sql
+-- INNER JOIN: only rows that match on both sides
+SELECT c.full_name, a.number, a.product
+FROM customer c
+JOIN account a ON a.customer_id = c.id;
+
+-- LEFT JOIN: every customer, with accounts if they have any
+SELECT c.full_name, a.number
+FROM customer c
+LEFT JOIN account a ON a.customer_id = c.id;
+
+-- "Anti-join": customers with no account at all
+SELECT c.full_name
+FROM customer c
+LEFT JOIN account a ON a.customer_id = c.id
+WHERE a.id IS NULL;
+```
+
+| Join | Returns |
+| --- | --- |
+| `INNER JOIN` | Matching rows only |
+| `LEFT JOIN` | All rows from the left, matches from the right or NULLs |
+| `RIGHT JOIN` | Mirror of LEFT (rarely used; swap the tables instead) |
+| `FULL OUTER JOIN` | All rows from both sides, NULLs where no match. Great for reconciliation |
+| `CROSS JOIN` | Every combination. Rarely intended |
+
+A **self-join** joins a table to itself, for example transfers where both legs are rows in `txn`.
+
+A trap: a condition on the right table in `WHERE` turns a `LEFT JOIN` back into an inner join. Put it in the `ON` clause instead:
+
+```sql
+-- Customers and their October debits, keeping customers with none
+SELECT c.full_name, coalesce(sum(t.amount), 0) AS october_debits
+FROM customer c
+LEFT JOIN account a ON a.customer_id = c.id
+LEFT JOIN txn t ON t.account_id = a.id
+               AND t.direction = 'D'
+               AND t.value_date >= DATE '2026-10-01' AND t.value_date < DATE '2026-11-01'
+GROUP BY c.full_name;
+```
+
+Joins also **multiply rows**: joining customers to accounts to transactions and then summing an account-level column counts it once per transaction. Aggregate at the right level first (a CTE helps).
+
+## 6. Subqueries, CTEs and window functions
+
+```sql
+-- Subquery: accounts whose total activity is more than 100 times the average single transaction
+SELECT account_id FROM txn
+GROUP BY account_id
+HAVING sum(amount) > (SELECT avg(amount) * 100 FROM txn);
+
+-- EXISTS: customers who made at least one international card payment
+SELECT c.* FROM customer c
+WHERE EXISTS (SELECT 1 FROM account a JOIN txn t ON t.account_id = a.id
+              WHERE a.customer_id = c.id AND t.narration LIKE 'POS INTL%');
+```
+
+A **CTE** (`WITH`) names an intermediate result and makes long queries readable:
+
+```sql
+WITH monthly AS (
+    SELECT account_id,
+           sum(CASE WHEN direction = 'C' THEN amount ELSE 0 END) AS credits,
+           sum(CASE WHEN direction = 'D' THEN amount ELSE 0 END) AS debits
+    FROM txn
+    WHERE value_date >= DATE '2026-10-01' AND value_date < DATE '2026-11-01'
+    GROUP BY account_id
+)
+SELECT a.number, m.credits, m.debits, m.credits - m.debits AS net
+FROM monthly m JOIN account a ON a.id = m.account_id
+ORDER BY net;
+```
+
+**Window functions** compute values across related rows *without* collapsing them into one row, which makes them ideal for statements and rankings:
+
+```sql
+-- A running balance on a statement
+SELECT value_date, reference, direction, amount,
+       sum(CASE WHEN direction = 'C' THEN amount ELSE -amount END)
+           OVER (PARTITION BY account_id ORDER BY posted_at, id) AS running_balance
+FROM txn
+WHERE account_id = 42
+ORDER BY posted_at, id;
+
+-- Each customer's single largest debit
+SELECT * FROM (
+    SELECT t.*, row_number() OVER (PARTITION BY account_id ORDER BY amount DESC) AS rn
+    FROM txn t WHERE direction = 'D'
+) ranked
+WHERE rn = 1;
+```
+
+Other useful window functions: `rank`, `dense_rank`, `lag`/`lead` (previous/next row, e.g. time since the last transaction, a fraud signal), and moving averages with `ROWS BETWEEN 6 PRECEDING AND CURRENT ROW`.
+
+## Worked example: a reconciliation query
+
+The bank's ledger and the switch's settlement file should contain the same transactions. Load the file into `switch_settlement(reference, amount)` and compare:
+
+```sql
+SELECT coalesce(l.reference, s.reference) AS reference,
+       l.amount AS ledger_amount,
+       s.amount AS switch_amount,
+       CASE
+           WHEN l.reference IS NULL THEN 'MISSING_IN_LEDGER'
+           WHEN s.reference IS NULL THEN 'MISSING_IN_SWITCH'
+           WHEN l.amount <> s.amount THEN 'AMOUNT_MISMATCH'
+       END AS break_type
+FROM (SELECT reference, amount FROM txn WHERE value_date = DATE '2026-10-21') l
+FULL OUTER JOIN switch_settlement s ON s.reference = l.reference
+WHERE l.reference IS NULL OR s.reference IS NULL OR l.amount <> s.amount;
+```
+
+One query lists every break by type. This is the heart of Capstone 10.
+
+## Common mistakes
+
+- Floating-point types for money.
+- Business data (account number, email) as the primary key.
+- No `UNIQUE` constraint on references, so retries create duplicate transactions.
+- Filtering the right side of a `LEFT JOIN` in `WHERE`.
+- Summing after a join that multiplied rows.
+- `BETWEEN` on timestamps for date ranges (misses or double-counts boundary times).
+- `SELECT *` in application queries.
+
+## Practice
+
+1. Design and create the schema for a small bank: customer, branch, account, transaction, beneficiary. Check it is in 3NF and justify any denormalisation.
+2. Load 10,000 generated customers and 500,000 transactions (use `generate_series` and `random()` in SQL). Then answer: top 10 accounts by October debits; customers with no transactions in 90 days (dormancy); monthly credit and debit totals per product.
+3. Write a statement query with a running balance and an opening balance row, using a window function.
+4. Write the reconciliation query above and seed it with three deliberate breaks of each type.
+
+## Key terms
+
+Table, row, column, primary key, surrogate key, natural key, foreign key, constraint, `NUMERIC`, `TIMESTAMPTZ`, normalisation, 1NF/2NF/3NF, denormalisation, OLTP, `GROUP BY`, `HAVING`, `NULL`, inner/left/full outer join, anti-join, subquery, `EXISTS`, CTE, window function, `PARTITION BY`, `row_number`, `lag`.
+
+## Further reading
+
+- [PostgreSQL tutorial: The SQL Language](https://www.postgresql.org/docs/17/tutorial-sql.html)
+- [PostgreSQL: Data Types](https://www.postgresql.org/docs/17/datatype.html)
+- [PostgreSQL: Window Functions tutorial](https://www.postgresql.org/docs/17/tutorial-window.html)
+- [PostgreSQL: Constraints](https://www.postgresql.org/docs/17/ddl-constraints.html)
+- [Use The Index, Luke! (free SQL performance book)](https://use-the-index-luke.com/)

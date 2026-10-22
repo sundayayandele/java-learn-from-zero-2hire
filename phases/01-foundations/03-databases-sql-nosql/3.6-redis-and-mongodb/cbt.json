@@ -1,0 +1,113 @@
+{
+  "topic": "3.6",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "To cut database load, a developer proposes reading account balances for payment authorisation from a Redis cache refreshed every 30 seconds.",
+      "question": "What is the right response?",
+      "options": [
+        "Approve it; 30 seconds is fresh enough",
+        "Approve it with a 5-second TTL",
+        "Approve it if Redis persistence (AOF) is on",
+        "Reject it: authorisation must use the source-of-truth balance inside the database transaction; caching is fine for display-only summaries"
+      ],
+      "answer": 3,
+      "explanation": "A stale cached balance lets customers spend money they no longer have. Caches suit data where slight staleness is acceptable, never the authorisation decision for money."
+    },
+    {
+      "type": "single",
+      "scenario": "An account-summary cache uses cache-aside. After a deposit, customers sometimes see the old balance on the dashboard for up to an hour.",
+      "question": "What is the most likely cause, and the fix?",
+      "options": [
+        "The dashboard should poll more often",
+        "TTLs don't work for JSON values",
+        "Redis is slow; add replicas",
+        "The cache entry isn't invalidated (or is invalidated before the DB commit); delete the key after the posting commits, and keep a short TTL as a safety net"
+      ],
+      "answer": 3,
+      "explanation": "Without (correctly timed) invalidation the entry lives until its TTL. Deleting after commit means the next read reloads fresh data."
+    },
+    {
+      "type": "single",
+      "scenario": "The FX-rate keys for 3,000 currency pairs are all cached with exactly 300 seconds TTL at the same moment. Every five minutes the database CPU spikes to 100%.",
+      "question": "What is happening and how do you mitigate it?",
+      "options": [
+        "Memory fragmentation; restart Redis",
+        "Redis is single-threaded",
+        "The TTL is too long",
+        "A cache stampede from synchronised expiry; add random jitter to TTLs and/or let only one request recompute a key"
+      ],
+      "answer": 3,
+      "explanation": "Keys set together expire together, sending all misses to the database at once. Jitter spreads expiry; a short recompute lock stops many requests rebuilding the same key."
+    },
+    {
+      "type": "single",
+      "scenario": "You must allow at most 5 failed PIN attempts per account per 15 minutes, across all instances of the service.",
+      "question": "Which Redis approach is simplest and correct?",
+      "options": [
+        "GET the counter, add 1 in Java, SET it back",
+        "Use KEYS pin:* to count",
+        "INCR pin:fail:<account> and set EXPIRE 900 on the first failure; block when the value exceeds 5",
+        "Store attempts in a local HashMap"
+      ],
+      "answer": 2,
+      "explanation": "INCR is atomic on the server, so concurrent failures from different instances count correctly; the expiry defines the window. GET-then-SET is a race; a local map isn't shared."
+    },
+    {
+      "type": "single",
+      "scenario": "A MongoDB `account` document embeds every transaction in an array. After two years, writes to busy accounts fail.",
+      "question": "What modelling rule was broken?",
+      "options": [
+        "The account should be embedded in each transaction",
+        "Arrays are not allowed in MongoDB",
+        "The collection needs a TTL index",
+        "Unbounded, ever-growing data shouldn't be embedded; transactions belong in their own collection referencing the account (documents have a 16 MB limit and large documents are slow to update)"
+      ],
+      "answer": 3,
+      "explanation": "Embed bounded data that's read with the parent. Transactions grow without limit and are queried independently, so reference them instead."
+    },
+    {
+      "type": "single",
+      "scenario": "The KYC team's query `find({status: 'PENDING_REVIEW', tier: 2})` takes seconds. explain('executionStats') shows COLLSCAN over 4 million documents.",
+      "question": "What should you do?",
+      "options": [
+        "Move the data to Redis",
+        "Create a compound index such as { status: 1, tier: 1 } and confirm the plan shows IXSCAN",
+        "Add more RAM",
+        "Use aggregate instead of find"
+      ],
+      "answer": 1,
+      "explanation": "As in SQL, a query with no supporting index scans everything. A compound index on the filtered fields turns it into an index scan."
+    },
+    {
+      "type": "single",
+      "scenario": "A mobile app retries POST /payments after a timeout, using the same Idempotency-Key header. You want the retry to return the original result instead of paying twice.",
+      "question": "Which Redis command is the core of a simple idempotency check?",
+      "options": [
+        "GET idem:<key>",
+        "DEL idem:<key>",
+        "SET idem:<key> IN_PROGRESS NX EX 86400 (set only if absent, with expiry)",
+        "INCR idem:<key>"
+      ],
+      "answer": 2,
+      "explanation": "SET ... NX succeeds only for the first request; a retry finds the key and returns the stored outcome. A unique reference in the database remains the final guarantee."
+    },
+    {
+      "type": "multi",
+      "scenario": "A new onboarding service is being designed. You are asked which data belongs in which store.",
+      "question": "Which pairings are sensible?",
+      "options": [
+        "OTP codes valid for 2 minutes → Redis with a TTL",
+        "Double-entry ledger postings → Redis lists",
+        "Varying KYC case files with nested documents and history → MongoDB (or PostgreSQL JSONB)",
+        "Customer ledger and balances → PostgreSQL"
+      ],
+      "answer": [
+        0,
+        2,
+        3
+      ],
+      "explanation": "Money needs relational ACID guarantees; expiring secrets fit Redis TTLs; flexible nested case files fit a document model. A ledger in Redis lists would lose constraints and durability guarantees."
+    }
+  ]
+}

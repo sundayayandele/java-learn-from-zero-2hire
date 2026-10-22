@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: mobile-money-fraud-rules
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/app}
+    username: ${DB_USER:app}
+    password: ${DB_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  threads:
+    virtual:
+      enabled: true
+  mvc:
+    problemdetails:
+      enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+      group:
+        readiness:
+          include: readinessState,db
+    heapdump:
+      access: none
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+server:
+  shutdown: graceful
