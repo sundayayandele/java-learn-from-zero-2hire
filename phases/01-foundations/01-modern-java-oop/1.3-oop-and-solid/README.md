@@ -158,6 +158,25 @@ public class TransferService {
 
 **Favour composition over inheritance.** You can swap a `FraudCheck` at runtime or in a test; you cannot swap a superclass. Spring (Module 4) is built entirely on this idea: it constructs objects like `TransferService` and passes in their collaborators.
 
+## 4a. Enums, interface methods, nested classes and initialisers
+
+**Enums** are full classes with a fixed set of instances, and can have fields, constructors and methods:
+
+```java
+public enum Channel {
+    MOBILE("10.00"), USSD("6.98"), POS("25.00");
+
+    private final BigDecimal fee;
+    Channel(String fee) { this.fee = new BigDecimal(fee); }     // constructors are implicitly private
+    public BigDecimal fee() { return fee; }
+}
+Channel.valueOf("POS").fee();   Channel.values();   Channel.MOBILE.ordinal();   // never persist ordinals (topic 4.3)
+```
+
+**Interfaces** can contain `default` methods (inherited behaviour), `static` methods (utilities called as `FeeRule.none()`), and `private` methods (helpers shared by default methods). A class that inherits the same default method from two interfaces must override it, and can call one explicitly with `Interface.super.method()`.
+
+**Nested classes:** a `static` nested class is just a class scoped inside another (common for builders and DTOs); an inner (non-static) class holds a reference to its outer instance; local and anonymous classes are declared inside methods (lambdas replaced most anonymous classes). **Initialisers** run in order: static initialisers once when the class loads, then instance initialisers and field initialisers, then the constructor body. Since **Java 25**, *flexible constructor bodies* allow statements (such as argument validation) before `super(...)` or `this(...)`, as long as they don't use the object being constructed.
+
 ## 4. `equals`, `hashCode` and `toString`
 
 `Object` provides defaults: `equals` compares references and `toString` prints something like `Account@1b6d3586`. For value-like objects, override them, and **always override `hashCode` together with `equals`**, or `HashMap` and `HashSet` break (topic 1.4).

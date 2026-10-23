@@ -1,0 +1,82 @@
+%% Sanctions screening service: technical architecture (inside the service)
+flowchart TB
+    subgraph sg0["Clients"]
+        direction TB
+        client(["HTTP clients<br/>(apps, partners, ops)"])
+    end
+    subgraph sg1["Web layer: Spring MVC"]
+        direction TB
+        c0["ScreeningController"]
+        c1["AlertController"]
+        c2["ListAdminController"]
+        advice["ApiExceptionHandler<br/>RFC 9457 Problem Details"]
+        valid["Bean Validation<br/>(DTO records)"]
+    end
+    subgraph sg2["Service layer"]
+        direction TB
+        s0["ListImportService<br/>(versioned lists)"]
+        s1["MatchingService<br/>(normalise · trigram · Jaro-Winkler)"]
+        s2["AlertService<br/>(decisions · allow-list)"]
+    end
+    subgraph sg3["Persistence"]
+        direction TB
+        r0["ListEntryRepository<br/>(pg_trgm GIN)"]
+        r1["ScreeningRepository"]
+        r2["AlertRepository"]
+        flyway["Flyway migrations<br/>ddl-auto=validate"]
+    end
+    subgraph sg4["Cross-cutting"]
+        direction TB
+        cfg["@ConfigurationProperties<br/>(validated)"]
+        act["Actuator + Micrometer<br/>health · readiness · Prometheus"]
+        sched[["Scheduler<br/>daily list refresh"]]
+        cachec["Spring Cache<br/>(Redis)"]
+        http["RestClient<br/>timeouts · retries"]
+    end
+    subgraph sg5["Runtime dependencies"]
+        direction TB
+        pg[("PostgreSQL 17")]
+        redis[("Redis")]
+        prom["Prometheus / Grafana"]
+    end
+    subgraph sg6["External"]
+        direction TB
+        ofac[/"OFAC Sanctions List Service"/]
+        uk[/"UK Sanctions List (FCDO)"/]
+    end
+    client -->|"JSON over HTTPS"| c0
+    c0 --> s0
+    c1 --> s1
+    c2 --> s2
+    s0 --> r0
+    s1 --> r1
+    s2 --> r2
+    r0 -->|"JDBC"| pg
+    r1 -->|"JDBC"| pg
+    r2 -->|"JDBC"| pg
+    flyway -->|"migrate on start"| pg
+    prom -.->|"scrape /actuator/prometheus"| act
+    c0 -.->|"exceptions"| advice
+    c0 -.->|"@Valid"| valid
+    sched -.->|"invokes"| s0
+    s2 -->|"@Cacheable"| cachec
+    cachec --> redis
+    s0 -->|"fetch"| http
+    http -->|"HTTPS"| ofac
+    http -->|"HTTPS"| uk
+    classDef actor fill:#dae8fc,stroke:#6c8ebf,color:#000
+    classDef svc fill:#d5e8d4,stroke:#82b366,color:#000
+    classDef comp fill:#ffffff,stroke:#666666,color:#000
+    classDef db fill:#fff2cc,stroke:#d6b656,color:#000
+    classDef store fill:#f5f5f5,stroke:#666666,color:#000
+    classDef ext fill:#f8cecc,stroke:#b85450,color:#000,stroke-dasharray: 5 3
+    classDef infra fill:#e1d5e7,stroke:#9673a6,color:#000
+    classDef job fill:#ffe6cc,stroke:#d79b00,color:#000
+    class client actor
+    class c0,c1,c2,advice,valid,r0,r1,r2,flyway,cfg,act,cachec,http comp
+    class pg db
+    class ofac,uk ext
+    class prom infra
+    class sched job
+    class redis store
+    class s0,s1,s2 svc

@@ -1,0 +1,74 @@
+%% Mobile money fraud rules engine: technical architecture (inside the service)
+flowchart TB
+    subgraph sg0["Clients"]
+        direction TB
+        client(["HTTP clients<br/>(apps, partners, ops)"])
+    end
+    subgraph sg1["Web layer: Spring MVC"]
+        direction TB
+        c0["EvaluationController"]
+        c1["ReplayController"]
+        c2["RuleController"]
+        advice["ApiExceptionHandler<br/>RFC 9457 Problem Details"]
+        valid["Bean Validation<br/>(DTO records)"]
+    end
+    subgraph sg2["Service layer"]
+        direction TB
+        s0["RuleEngine<br/>(sealed FraudRule)"]
+        s1["AccountStateStore<br/>(sliding windows, bounded)"]
+        s2["ReplayService<br/>(partitioned workers)"]
+    end
+    subgraph sg3["Persistence"]
+        direction TB
+        r0["VerdictRepository (batch)"]
+        r1["RuleConfigRepository"]
+        r2["Performance queries"]
+        flyway["Flyway migrations<br/>ddl-auto=validate"]
+    end
+    subgraph sg4["Cross-cutting"]
+        direction TB
+        cfg["@ConfigurationProperties<br/>(validated)"]
+        act["Actuator + Micrometer<br/>health · readiness · Prometheus"]
+        sched[["Scheduler<br/>replays (async batch)"]]
+        cachec["Spring Cache<br/>(Redis)"]
+    end
+    subgraph sg5["Runtime dependencies"]
+        direction TB
+        pg[("PostgreSQL 17")]
+        redis[("Redis")]
+        files[("File / object storage")]
+        prom["Prometheus / Grafana"]
+    end
+    client -->|"JSON over HTTPS"| c0
+    c0 --> s0
+    c1 --> s1
+    c2 --> s2
+    s0 --> r0
+    s1 --> r1
+    s2 --> r2
+    r0 -->|"JDBC"| pg
+    r1 -->|"JDBC"| pg
+    r2 -->|"JDBC"| pg
+    flyway -->|"migrate on start"| pg
+    prom -.->|"scrape /actuator/prometheus"| act
+    c0 -.->|"exceptions"| advice
+    c0 -.->|"@Valid"| valid
+    sched -.->|"invokes"| s0
+    s2 -->|"@Cacheable"| cachec
+    cachec --> redis
+    s0 -->|"store / read"| files
+    classDef actor fill:#dae8fc,stroke:#6c8ebf,color:#000
+    classDef svc fill:#d5e8d4,stroke:#82b366,color:#000
+    classDef comp fill:#ffffff,stroke:#666666,color:#000
+    classDef db fill:#fff2cc,stroke:#d6b656,color:#000
+    classDef store fill:#f5f5f5,stroke:#666666,color:#000
+    classDef ext fill:#f8cecc,stroke:#b85450,color:#000,stroke-dasharray: 5 3
+    classDef infra fill:#e1d5e7,stroke:#9673a6,color:#000
+    classDef job fill:#ffe6cc,stroke:#d79b00,color:#000
+    class client actor
+    class c0,c1,c2,advice,valid,r0,r1,r2,flyway,cfg,act,cachec comp
+    class pg db
+    class prom infra
+    class sched job
+    class redis,files store
+    class s0,s1,s2 svc

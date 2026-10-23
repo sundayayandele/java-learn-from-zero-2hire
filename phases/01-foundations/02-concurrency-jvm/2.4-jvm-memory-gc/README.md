@@ -3,7 +3,7 @@
 
 # 2.4 The JVM memory model, heap vs stack and garbage collection
 
-← [2.3 Virtual threads (Project Loom) and structured concurrency](../2.3-virtual-threads-structured-concurrency/README.md) · [Module 2](../README.md) · [Phase 1](../../README.md) · [3.1 Relational design](../../03-databases-sql-nosql/3.1-relational-design-normalisation-joins/README.md) →
+← [2.3 Virtual threads (Project Loom) and structured concurrency](../2.3-virtual-threads-structured-concurrency/README.md) · [Module 2](../README.md) · [Phase 1](../../README.md) · [2.5 Modules, packaging and runtime images (JPMS, jars, jlink)](../2.5-modules-packaging-jlink/README.md) →
 
 > **Week 6** · Module 2: Concurrency & the JVM · Website topic covered: *JVM memory model, heap vs stack, garbage collection basics*
 
@@ -320,4 +320,4 @@ What is the most likely flaw in the test?
 
 ---
 
-← [2.3 Virtual threads (Project Loom) and structured concurrency](../2.3-virtual-threads-structured-concurrency/README.md) · [Module 2](../README.md) · [Phase 1](../../README.md) · [3.1 Relational design](../../03-databases-sql-nosql/3.1-relational-design-normalisation-joins/README.md) →
+← [2.3 Virtual threads (Project Loom) and structured concurrency](../2.3-virtual-threads-structured-concurrency/README.md) · [Module 2](../README.md) · [Phase 1](../../README.md) · [2.5 Modules, packaging and runtime images (JPMS, jars, jlink)](../2.5-modules-packaging-jlink/README.md) →

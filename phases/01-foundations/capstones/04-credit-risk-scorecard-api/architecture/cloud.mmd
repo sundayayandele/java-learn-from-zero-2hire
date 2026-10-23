@@ -1,0 +1,53 @@
+%% Credit-card default risk scorecard API: cloud architecture (AWS reference, Azure/GCP equivalents)
+flowchart LR
+    subgraph sg0["Users"]
+        direction TB
+        users(["Users and client apps"])
+    end
+    subgraph sg1["AWS: Edge"]
+        direction TB
+        alb["ECS Express Mode<br/>HTTPS Application Load Balancer"]
+    end
+    subgraph sg2["AWS: Compute (VPC)"]
+        direction TB
+        ecs["ECS Fargate service<br/>credit-risk-scorecard-api<br/>0.5–1 vCPU / 1–2 GB, 1–2 tasks"]
+    end
+    subgraph sg3["AWS: Data (private)"]
+        direction TB
+        rds[("Amazon RDS PostgreSQL 17<br/>private subnets · backups · Multi-AZ in prod")]
+        s3[("Amazon S3<br/>uploaded and imported files")]
+    end
+    subgraph sg4["AWS: Platform services"]
+        direction TB
+        ecr[("Amazon ECR<br/>images by commit SHA")]
+        sm["AWS Secrets Manager<br/>DB credentials (rotated)"]
+        cw["CloudWatch<br/>logs · metrics · alarms"]
+        sched[["EventBridge Scheduler<br/>bulk scoring runs (on demand)"]]
+    end
+    subgraph sg5["CI/CD"]
+        direction TB
+        ci["GitHub Actions / CodePipeline<br/>(OIDC, no stored keys)"]
+    end
+    users -->|"HTTPS"| alb
+    alb -->|"HTTP 8080 · readiness probe"| ecs
+    ecs -->|"JDBC + TLS"| rds
+    ecs -.->|"secret injected at start"| sm
+    ecs -.->|"logs, metrics"| cw
+    ci -->|"push image"| ecr
+    ecr -.->|"pull"| ecs
+    ecs -->|"IAM role · HTTPS"| s3
+    sched -.->|"calls admin endpoint"| alb
+    classDef actor fill:#dae8fc,stroke:#6c8ebf,color:#000
+    classDef svc fill:#d5e8d4,stroke:#82b366,color:#000
+    classDef comp fill:#ffffff,stroke:#666666,color:#000
+    classDef db fill:#fff2cc,stroke:#d6b656,color:#000
+    classDef store fill:#f5f5f5,stroke:#666666,color:#000
+    classDef ext fill:#f8cecc,stroke:#b85450,color:#000,stroke-dasharray: 5 3
+    classDef infra fill:#e1d5e7,stroke:#9673a6,color:#000
+    classDef job fill:#ffe6cc,stroke:#d79b00,color:#000
+    class users actor
+    class rds db
+    class alb,sm,cw,ci infra
+    class sched job
+    class s3,ecr store
+    class ecs svc

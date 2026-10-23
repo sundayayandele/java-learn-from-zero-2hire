@@ -1,0 +1,45 @@
+%% Sanctions screening service: logical architecture
+flowchart LR
+    subgraph sg0["List management"]
+        direction TB
+        imp["Import + normalise<br/>NFKD · tokens · suffixes"]
+        ver["List versions<br/>(immutable)"]
+    end
+    subgraph sg1["Matching"]
+        direction TB
+        cand["Candidate generation<br/>pg_trgm index"]
+        score["Scoring<br/>Jaro-Winkler + token set"]
+        dec["Decision<br/>thresholds · DOB · country"]
+    end
+    subgraph sg2["Case work"]
+        direction TB
+        alert["Alerts"]
+        allow["Allow-list<br/>(per entry version)"]
+    end
+    subgraph sg3["Data"]
+        direction TB
+        entries[("list_entry · alias<br/>(normalised)")]
+        scr[("screening<br/>(evidence, versions)")]
+        cache[("Result cache<br/>(Redis)")]
+    end
+    imp --> ver
+    ver --> entries
+    cand --> entries
+    cand --> score
+    score --> dec
+    dec --> scr
+    dec -->|"potential match"| alert
+    allow -.->|"suppress"| dec
+    dec -.-> cache
+    classDef actor fill:#dae8fc,stroke:#6c8ebf,color:#000
+    classDef svc fill:#d5e8d4,stroke:#82b366,color:#000
+    classDef comp fill:#ffffff,stroke:#666666,color:#000
+    classDef db fill:#fff2cc,stroke:#d6b656,color:#000
+    classDef store fill:#f5f5f5,stroke:#666666,color:#000
+    classDef ext fill:#f8cecc,stroke:#b85450,color:#000,stroke-dasharray: 5 3
+    classDef infra fill:#e1d5e7,stroke:#9673a6,color:#000
+    classDef job fill:#ffe6cc,stroke:#d79b00,color:#000
+    class ver,alert,allow comp
+    class entries,scr db
+    class cache store
+    class imp,cand,score,dec svc

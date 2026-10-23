@@ -1,0 +1,56 @@
+%% FX reference rates service: infrastructure architecture (VPS)
+flowchart LR
+    subgraph sg0["Internet"]
+        direction TB
+        users(["Users and client apps"])
+        dev(["Developer"])
+    end
+    subgraph sg1["GitHub (CI/CD)"]
+        direction TB
+        gha["GitHub Actions<br/>build · test · image"]
+        ghcr[("GHCR<br/>container registry")]
+    end
+    subgraph sg2["VPS: Ubuntu 24.04 LTS · 2 vCPU / 4 GB / 40 GB SSD"]
+        direction TB
+        fw["Firewall (ufw)<br/>22 / 80 / 443 only"]
+        caddy["Caddy reverse proxy<br/>TLS (Let's Encrypt)"]
+        app["fx-rates-service container<br/>Spring Boot 4 · JVM 21<br/>1 GB, MaxRAMPercentage=75"]
+        pg[("PostgreSQL 17 container<br/>Docker volume")]
+        job[["In-app scheduler<br/>weekdays 16:45 Europe/Berlin"]]
+        backup[["Cron: pg_dump daily<br/>14-day retention"]]
+    end
+    subgraph sg3["Off-site"]
+        direction TB
+        offsite[("Backup storage<br/>(object storage / other host)")]
+    end
+    subgraph sg4["External systems"]
+        direction TB
+        ecb[/"European Central Bank<br/>eurofxref-hist.zip"/]
+    end
+    users -->|"HTTPS 443"| fw
+    fw --> caddy
+    caddy -->|"HTTP 8080 (internal network)"| app
+    app -->|"JDBC 5432"| pg
+    dev -->|"git push / PR"| gha
+    gha -->|"push image:sha"| ghcr
+    gha -.->|"SSH: compose pull && up"| app
+    ghcr -.->|"docker pull"| app
+    backup -->|"pg_dump"| pg
+    backup -.->|"copy"| offsite
+    job -.->|"triggers"| app
+    app -->|"HTTPS"| ecb
+    classDef actor fill:#dae8fc,stroke:#6c8ebf,color:#000
+    classDef svc fill:#d5e8d4,stroke:#82b366,color:#000
+    classDef comp fill:#ffffff,stroke:#666666,color:#000
+    classDef db fill:#fff2cc,stroke:#d6b656,color:#000
+    classDef store fill:#f5f5f5,stroke:#666666,color:#000
+    classDef ext fill:#f8cecc,stroke:#b85450,color:#000,stroke-dasharray: 5 3
+    classDef infra fill:#e1d5e7,stroke:#9673a6,color:#000
+    classDef job fill:#ffe6cc,stroke:#d79b00,color:#000
+    class users,dev actor
+    class pg db
+    class ecb ext
+    class gha,fw,caddy infra
+    class job,backup job
+    class ghcr,offsite store
+    class app svc

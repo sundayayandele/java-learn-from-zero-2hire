@@ -4,9 +4,9 @@
 
 | | |
 | --- | --- |
-| When | Week 13, after all 26 topic CBTs are passed |
+| When | Week 13, after all 29 topic CBTs are passed |
 | Where | Moodle (itlearning.tech), "Phase 1 end-of-phase exam" quiz |
-| Format | **56 scenario-based multiple-choice questions**, each a short workplace situation with one best answer |
+| Format | **60 scenario-based multiple-choice questions**, each a short workplace situation with one best answer |
 | Time | **2 hours** (120 minutes), one sitting; the timer keeps running if you close the browser |
 | Pass mark | **70%** |
 | Attempts | 2, at least 48 hours apart; highest grade counts |
@@ -20,11 +20,11 @@ The exam samples every Phase 1 topic, weighted by how much each module matters i
 
 | Module | Questions | Weight | Topics |
 | --- | --- | --- | --- |
-| 1. Modern Java & OOP | 18 | 32% | Tooling and Linux (1.1), syntax and money types (1.2), OOP/SOLID (1.3), collections and generics (1.4), lambdas and streams (1.5), records/sealed/pattern matching (1.6), exceptions and immutability (1.7), legacy migration (1.8), Kotlin (1.9) |
-| 2. Concurrency & JVM | 9 | 16% | Executors and CompletableFuture (2.1), races, locks, atomics, deadlocks (2.2), virtual threads (2.3), memory and GC (2.4) |
-| 3. Databases | 15 | 27% | Design and joins (3.1), transactions and locking (3.2), indexing and plans (3.3), migrations (3.4), JDBC and SQL injection (3.5), Redis and MongoDB (3.6) |
-| 4. Spring Boot 4 | 14 | 25% | DI and auto-configuration (4.1), MVC, validation, Problem Details (4.2), JPA and N+1 (4.3), configuration and secrets (4.4), Actuator (4.5), Boot 3 → 4 (4.6), Kotlin with Spring (4.7) |
-| **Total** | **56** | **100%** | |
+| 1. Modern Java & OOP | 20 | 33% | Tooling and Linux (1.1), syntax and money types (1.2), OOP/SOLID (1.3), collections and generics (1.4), lambdas and streams (1.5), records/sealed/pattern matching (1.6), exceptions and immutability (1.7), legacy migration (1.8), Kotlin (1.9), I/O and NIO.2 (1.10), localization (1.11) |
+| 2. Concurrency & JVM | 11 | 18% | Executors and CompletableFuture (2.1), races, locks, atomics, deadlocks (2.2), virtual threads (2.3), memory and GC (2.4), modules and jlink (2.5) |
+| 3. Databases | 15 | 25% | Design and joins (3.1), transactions and locking (3.2), indexing and plans (3.3), migrations (3.4), JDBC and SQL injection (3.5), Redis and MongoDB (3.6) |
+| 4. Spring Boot 4 | 14 | 23% | DI and auto-configuration (4.1), MVC, validation, Problem Details (4.2), JPA and N+1 (4.3), configuration and secrets (4.4), Actuator (4.5), Boot 3 → 4 (4.6), Kotlin with Spring (4.7) |
+| **Total** | **60** | **100%** | |
 
 ## What the questions look like
 
@@ -58,7 +58,7 @@ Every question describes a realistic situation, usually from a bank or fintech, 
 
 ## How to prepare
 
-1. Retake every topic CBT without notes until you score 90%+. They use the same style.
+1. Retake all 29 topic CBTs without notes until you score 90%+. They use the same style.
 2. Re-read the "Common mistakes" section of each lesson: many exam scenarios are built on them.
 3. Explain your Capstone 1 design aloud: locking, idempotency, schema constraints. Many questions test the same reasoning.
 4. Practise under time pressure: about 2 minutes per question.

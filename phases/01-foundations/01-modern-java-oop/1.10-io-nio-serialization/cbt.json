@@ -1,0 +1,109 @@
+{
+  "topic": "1.10",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A nightly job loads a 3 GB card-scheme settlement file with `Files.readAllLines(path)` and the container is OOMKilled.",
+      "question": "What is the right way to process the file?",
+      "options": [
+        "Stream it line by line with Files.lines (closed with try-with-resources) or a BufferedReader",
+        "Increase the heap to 8 GB",
+        "Read it with Files.readString",
+        "Split the file manually first"
+      ],
+      "answer": 0,
+      "explanation": "readAllLines holds every line in memory. Streaming reads one line at a time in constant memory; the stream must be closed to release the file handle."
+    },
+    {
+      "type": "single",
+      "scenario": "An API takes a file name and serves `inbox.resolve(name)`. A tester requests `../../etc/passwd` and gets the file.",
+      "question": "What check prevents this?",
+      "options": [
+        "Reject names containing spaces",
+        "Catch NoSuchFileException",
+        "Normalise the resolved path and verify it still startsWith the inbox directory",
+        "Use Paths.get instead of Path.of"
+      ],
+      "answer": 2,
+      "explanation": "resolve followed by normalize removes ../ segments; if the result isn't under the allowed directory, reject it. This is the standard path-traversal defence."
+    },
+    {
+      "type": "single",
+      "scenario": "Customer names with accents and the ₦ symbol appear garbled in an exported CSV opened by a partner.",
+      "question": "What is the most likely cause and fix?",
+      "options": [
+        "Bytes were written or read with a different charset; specify the charset explicitly (e.g. StandardCharsets.UTF_8) on both sides and agree it with the partner",
+        "The partner's Excel is broken",
+        "Remove special characters",
+        "Use a byte stream instead of a writer"
+      ],
+      "answer": 0,
+      "explanation": "Text becomes bytes through a charset. Mismatched charsets garble non-ASCII characters; naming the charset in code and in the interface contract fixes it."
+    },
+    {
+      "type": "single",
+      "scenario": "Another system polls an outbox folder and sometimes picks up half-written statement files.",
+      "question": "Which pattern stops that?",
+      "options": [
+        "Write to a temporary file in the same file system, then Files.move it into the outbox with ATOMIC_MOVE",
+        "Use Files.copy with REPLACE_EXISTING",
+        "Make the file read-only after writing",
+        "Write more slowly"
+      ],
+      "answer": 0,
+      "explanation": "An atomic rename makes the complete file appear at once; readers never see a partial file."
+    },
+    {
+      "type": "single",
+      "scenario": "A `Session` class implements Serializable and has `private transient String accessToken`. After deserialisation the token is null.",
+      "question": "Why?",
+      "options": [
+        "The serialVersionUID changed",
+        "transient fields are not serialised and come back with their default value (null)",
+        "Serialization failed silently",
+        "Strings can't be serialised"
+      ],
+      "answer": 1,
+      "explanation": "transient excludes a field from the serial form, which is exactly right for secrets such as tokens."
+    },
+    {
+      "type": "single",
+      "scenario": "A team adds a field to a Serializable class that has no explicit serialVersionUID. Reading previously saved data now throws InvalidClassException.",
+      "question": "What prevents this in future?",
+      "options": [
+        "Use a parallel stream",
+        "Declare a private static final long serialVersionUID (annotated @Serial) and manage compatible changes deliberately",
+        "Never add fields",
+        "Mark the class final"
+      ],
+      "answer": 1,
+      "explanation": "Without an explicit UID, the JVM computes one from the class structure, so any change produces a new UID and old data is rejected."
+    },
+    {
+      "type": "single",
+      "scenario": "A partner suggests sending payment instructions to your API as Java-serialised objects 'because it's faster'.",
+      "question": "What should you answer?",
+      "options": [
+        "Accept if it uses HTTPS",
+        "Accept; Java serialization is secure",
+        "Decline: deserialising untrusted bytes can lead to remote code execution; use JSON (or Protobuf) with validation instead",
+        "Accept if the payload is compressed"
+      ],
+      "answer": 2,
+      "explanation": "Deserialisation gadget chains are a well-known attack class. Across trust boundaries use data formats that don't execute code paths on read, and validate input."
+    },
+    {
+      "type": "single",
+      "scenario": "Given `Path base = Path.of(\"/data\")` and `Path f = Path.of(\"/data/2026/10/nip.csv\")`.",
+      "question": "What does `base.relativize(f)` return?",
+      "options": [
+        "../nip.csv",
+        "/data",
+        "nip.csv",
+        "2026/10/nip.csv"
+      ],
+      "answer": 3,
+      "explanation": "relativize builds the relative path from base to f. resolve does the opposite: base.resolve(\"2026/10/nip.csv\") gives f."
+    }
+  ]
+}

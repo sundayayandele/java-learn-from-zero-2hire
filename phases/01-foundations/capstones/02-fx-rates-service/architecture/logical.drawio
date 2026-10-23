@@ -1,0 +1,33 @@
+<mxfile host="java-zero-hire" type="device">
+  <diagram id="02-fx-rates-service-logical" name="FX reference rates service: logical architecture">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="grp0" value="Ingestion" style="swimlane;whiteSpace=wrap;html=1;rounded=1;startSize=34;fillColor=#f9f9f9;strokeColor=#999999;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="40" y="40" width="220" height="414" as="geometry"/></mxCell>
+        <mxCell id="dl" value="Download&lt;br&gt;(timeouts)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="grp0"><mxGeometry x="20" y="54" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="parse" value="Parse CSV&lt;br&gt;N/A cells · line numbers" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="grp0"><mxGeometry x="20" y="146" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="load" value="Idempotent load&lt;br&gt;batched upsert" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="grp0"><mxGeometry x="20" y="238" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="log" value="Import run log" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="grp0"><mxGeometry x="20" y="330" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="grp1" value="Query" style="swimlane;whiteSpace=wrap;html=1;rounded=1;startSize=34;fillColor=#f9f9f9;strokeColor=#999999;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="350" y="40" width="220" height="322" as="geometry"/></mxCell>
+        <mxCell id="val" value="Validate codes and dates" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="grp1"><mxGeometry x="20" y="54" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="res" value="Resolve publication date&lt;br&gt;business-day fallback" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="grp1"><mxGeometry x="20" y="146" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="calc" value="Cross rate / conversion&lt;br&gt;10 dp HALF_EVEN, round once" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="grp1"><mxGeometry x="20" y="238" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="grp2" value="Data" style="swimlane;whiteSpace=wrap;html=1;rounded=1;startSize=34;fillColor=#f9f9f9;strokeColor=#999999;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="660" y="40" width="220" height="322" as="geometry"/></mxCell>
+        <mxCell id="rates" value="fx_rate&lt;br&gt;(currency, date) → per EUR" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="grp2"><mxGeometry x="20" y="54" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="runs" value="import_run" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="grp2"><mxGeometry x="20" y="146" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="cache" value="Rate cache&lt;br&gt;(Caffeine)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="grp2"><mxGeometry x="20" y="238" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="e0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="dl" target="parse"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="parse" target="load"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="load" target="rates"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="load" target="log"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="log" target="runs"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5" value="evict" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;dashed=1;" edge="1" parent="1" source="load" target="cache"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="val" target="res"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="res" target="calc"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e8" value="lookup" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="calc" target="cache"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e9" value="miss" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;dashed=1;" edge="1" parent="1" source="cache" target="rates"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

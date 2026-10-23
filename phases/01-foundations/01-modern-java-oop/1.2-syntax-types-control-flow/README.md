@@ -245,6 +245,22 @@ static void reassign(Account a) { a = new Account("999", BigDecimal.ZERO); }  //
 static void mutate(Account a)   { a.deposit(new BigDecimal("100")); }          // caller sees the change
 ```
 
+### Var-args, the Math API and evaluation rules
+
+```java
+static BigDecimal total(BigDecimal... amounts) {          // var-args: zero or more arguments, seen as an array
+    return Arrays.stream(amounts).reduce(BigDecimal.ZERO, BigDecimal::add);
+}
+total();                                                  // allowed: empty array
+total(a, b, c);
+```
+
+A var-arg parameter must be the last one, and only one is allowed. Overload resolution prefers an exact match, then widening, then boxing, and var-args last.
+
+`Math` covers everyday numeric helpers: `Math.max/min/abs`, `Math.round` (returns `long` for `double`), `Math.floorDiv`/`floorMod` (correct for negatives, unlike `/` and `%`), `Math.pow`, `Math.sqrt`, and the overflow-checking `Math.addExact`/`multiplyExact`/`toIntExact`. For money keep using `BigDecimal`.
+
+Evaluation rules the OCP exam loves: `*`, `/`, `%` bind tighter than `+` and `-`; `i++` yields the old value, `++i` the new one; compound assignment includes an implicit cast (`byte b = 10; b += 5;` compiles, `b = b + 5;` doesn't); `int` arithmetic on `byte`/`short`/`char` operands promotes them to `int`; and narrowing casts can lose information silently (`(int) 3_000_000_000L` is negative).
+
 Good methods are short, do one thing, and have names that say what they return or do: `isOverdrawn()`, `calculateFee()`, `postTransfer()`.
 
 ## Worked example: a loan repayment schedule

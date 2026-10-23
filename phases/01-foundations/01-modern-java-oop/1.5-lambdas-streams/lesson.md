@@ -186,6 +186,18 @@ Rules that reviewers enforce:
 - Never call `get()` without checking: prefer `orElse`, `orElseGet`, `orElseThrow`, `map`, `ifPresent`.
 - `orElse(expensiveCall())` evaluates the argument even when a value is present; use `orElseGet(() -> expensiveCall())` for anything costly.
 
+### Stream Gatherers (Java 24+)
+
+Java 24 finalised **gatherers** (JEP 485): custom intermediate operations, used with `stream.gather(...)`. Built-ins in `java.util.stream.Gatherers` cover common needs:
+
+```java
+transactions.stream().gather(Gatherers.windowFixed(100)).forEach(this::insertBatch);   // batches of 100
+amounts.stream().gather(Gatherers.windowSliding(7)).map(this::average).toList();       // 7-day moving windows
+amounts.stream().gather(Gatherers.scan(() -> BigDecimal.ZERO, BigDecimal::add)).toList();   // running balance
+```
+
+The baseline for this programme is Java 21, so gatherers are optional here, but the Java 25 OCP exam (1Z0-831) tests them.
+
 ## 5. Streams versus loops
 
 Streams are not always better. Prefer a plain loop when:

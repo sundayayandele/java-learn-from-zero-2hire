@@ -1,0 +1,42 @@
+%% Loan amortisation and repayment service: logical architecture
+flowchart LR
+    subgraph sg0["Origination"]
+        direction TB
+        prod["Product catalogue<br/>method · rate/tenor ranges"]
+        eng["Schedule engine<br/>reducing · flat · interest-only"]
+        quote["Quote<br/>schedule · EAR · total cost"]
+        book["Book loan"]
+    end
+    subgraph sg1["Servicing"]
+        direction TB
+        repay["Repayment allocation<br/>penalty → interest → principal"]
+        arrears[["Arrears and penalties<br/>nightly"]]
+        payoff["Early payoff"]
+    end
+    subgraph sg2["Data"]
+        direction TB
+        loan[("loan · instalment")]
+        repaydb[("repayment<br/>(unique reference)")]
+        pr[("loan_product")]
+    end
+    prod --> eng
+    quote --> eng
+    book --> eng
+    book --> loan
+    repay --> loan
+    repay --> repaydb
+    arrears -->|"age, penalise"| loan
+    payoff --> loan
+    prod --> pr
+    classDef actor fill:#dae8fc,stroke:#6c8ebf,color:#000
+    classDef svc fill:#d5e8d4,stroke:#82b366,color:#000
+    classDef comp fill:#ffffff,stroke:#666666,color:#000
+    classDef db fill:#fff2cc,stroke:#d6b656,color:#000
+    classDef store fill:#f5f5f5,stroke:#666666,color:#000
+    classDef ext fill:#f8cecc,stroke:#b85450,color:#000,stroke-dasharray: 5 3
+    classDef infra fill:#e1d5e7,stroke:#9673a6,color:#000
+    classDef job fill:#ffe6cc,stroke:#d79b00,color:#000
+    class prod comp
+    class loan,repaydb,pr db
+    class arrears job
+    class eng,quote,book,repay,payoff svc

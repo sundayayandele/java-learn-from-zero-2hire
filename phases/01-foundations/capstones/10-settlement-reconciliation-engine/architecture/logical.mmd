@@ -1,0 +1,47 @@
+%% Settlement reconciliation engine: logical architecture
+flowchart LR
+    subgraph sg0["Intake"]
+        direction TB
+        up["Upload / fetch file"]
+        ck["Checksum dedup"]
+        parse["Parse → staging"]
+    end
+    subgraph sg1["Matching"]
+        direction TB
+        p1["Pass 1: exact<br/>FULL OUTER JOIN"]
+        p2["Pass 2–4<br/>normalised ref · tolerance · date window"]
+    end
+    subgraph sg2["Exceptions and controls"]
+        direction TB
+        brk["Break classification"]
+        res["Resolution workflow<br/>audited"]
+        ctl["Control totals"]
+    end
+    subgraph sg3["Data"]
+        direction TB
+        files[("File store<br/>(object storage)")]
+        stg[("ledger_item · partner_item")]
+        mt[("match · break · resolution")]
+    end
+    up --> ck
+    ck --> files
+    ck --> parse
+    parse --> stg
+    p1 --> stg
+    p1 -->|"unmatched"| p2
+    p2 --> mt
+    brk --> mt
+    res --> mt
+    ctl --> stg
+    classDef actor fill:#dae8fc,stroke:#6c8ebf,color:#000
+    classDef svc fill:#d5e8d4,stroke:#82b366,color:#000
+    classDef comp fill:#ffffff,stroke:#666666,color:#000
+    classDef db fill:#fff2cc,stroke:#d6b656,color:#000
+    classDef store fill:#f5f5f5,stroke:#666666,color:#000
+    classDef ext fill:#f8cecc,stroke:#b85450,color:#000,stroke-dasharray: 5 3
+    classDef infra fill:#e1d5e7,stroke:#9673a6,color:#000
+    classDef job fill:#ffe6cc,stroke:#d79b00,color:#000
+    class ck,res,ctl comp
+    class stg,mt db
+    class files store
+    class up,parse,p1,p2,brk svc

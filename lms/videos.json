@@ -155,6 +155,15 @@
         "minutes": 18.1,
         "published": "2023-04-09",
         "why": "Streams in more depth, including intermediate vs terminal operations and laziness."
+      },
+      {
+        "id": "epgJm2dZTSg",
+        "title": "Better Java Streams with Gatherers - Inside Java Newscast #57",
+        "channel": "Java",
+        "minutes": 8.9,
+        "published": "2023-11-02",
+        "optional": true,
+        "why": "Stream Gatherers (Java 24+): custom intermediate operations, tested in the Java 25 OCP exam."
       }
     ],
     "1.6": [
@@ -892,6 +901,94 @@
         "published": "2021-10-21",
         "optional": true,
         "why": "Argo CD in depth: applications, sync and GitOps workflows."
+      }
+    ],
+    "1.10": [
+      {
+        "id": "ScUJx4aWRi0",
+        "title": "Java File Input/Output - It's Way Easier Than You Think",
+        "channel": "Coding with John",
+        "minutes": 8.3,
+        "published": "2021-04-26",
+        "why": "Reading and writing files with readers and writers."
+      },
+      {
+        "id": "yrMufQdr374",
+        "title": "How To Read/Write Text Files In Java NIO | Full Guide",
+        "channel": "Born To Geek",
+        "minutes": 9.2,
+        "published": "2024-05-20",
+        "why": "Reading and writing text files with java.nio Files and Path."
+      },
+      {
+        "id": "2sxK-z84Oi4",
+        "title": "Java Serialization: Spooky Action at a Distance",
+        "channel": "Java",
+        "minutes": 17.6,
+        "published": "2026-02-21",
+        "why": "The Java team on serialization: how it works and why it's dangerous."
+      },
+      {
+        "id": "DfbFTVNfkeI",
+        "title": "Java serialization is easy! 🥣",
+        "channel": "Bro Code",
+        "minutes": 21.2,
+        "published": "2020-07-28",
+        "optional": true,
+        "why": "Serialization and deserialization step by step."
+      }
+    ],
+    "1.11": [
+      {
+        "id": "h0educ2nosg",
+        "title": "Localization and Internationalization in Java Tutorial Part 1",
+        "channel": "Telusko",
+        "minutes": 3.6,
+        "published": "2015-03-08",
+        "why": "Localization and internationalization basics: Locale and resource bundles."
+      },
+      {
+        "id": "zaTXwXJW328",
+        "title": "Formatting Money & Percents in Java using the NumberFormat Class",
+        "channel": "Logic Lambda",
+        "minutes": 3.6,
+        "published": "2023-03-03",
+        "why": "Formatting money and percentages with NumberFormat."
+      },
+      {
+        "id": "L8loHaj-Bgo",
+        "title": "Java Currency Formatter Practice Program #97",
+        "channel": "Alex Lee",
+        "minutes": 19.7,
+        "published": "2019-12-26",
+        "optional": true,
+        "why": "A worked currency-formatting exercise across several locales."
+      }
+    ],
+    "2.5": [
+      {
+        "id": "3KP5YiKLkeo",
+        "title": "Introduction to Java Modules | Java for Beginners",
+        "channel": "Microsoft Developer",
+        "minutes": 12.7,
+        "published": "2022-08-31",
+        "why": "An introduction to Java modules, from Microsoft Developer."
+      },
+      {
+        "id": "fijrwxgnEro",
+        "title": "Java Platform Module System (JPMS) Overview",
+        "channel": "MyExamCloud",
+        "minutes": 13.8,
+        "published": "2023-10-23",
+        "why": "The Java Platform Module System overview: requires, exports, opens, services."
+      },
+      {
+        "id": "mJKlxqQQeyI",
+        "title": "How-to Build Custom Java Runtimes with Jlink",
+        "channel": "Java",
+        "minutes": 10.1,
+        "published": "2024-06-16",
+        "why": "Building custom Java runtimes with jlink, from the Java team."
       }
     ]
   }

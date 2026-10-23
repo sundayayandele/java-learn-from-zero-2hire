@@ -32,6 +32,8 @@ Modern Java, concurrency and the JVM, SQL and NoSQL databases, and your first Sp
 - [1.7 Exceptions, immutability and clean-code habits](phases/01-foundations/01-modern-java-oop/1.7-exceptions-immutability-clean-code/README.md)
 - [1.8 Reading legacy Java 8/11/17 code and migrating it forward](phases/01-foundations/01-modern-java-oop/1.8-legacy-java-migration/README.md)
 - [1.9 Kotlin for Java developers](phases/01-foundations/01-modern-java-oop/1.9-kotlin-for-java-developers/README.md)
+- [1.10 Java I/O, NIO.2 files and serialization](phases/01-foundations/01-modern-java-oop/1.10-io-nio-serialization/README.md)
+- [1.11 Localization: locales, number, currency and date formatting, resource bundles](phases/01-foundations/01-modern-java-oop/1.11-localization-formatting/README.md)
 
 Projects: Wallet & transfers simulator (accounts, transfers, statements); Library management CLI (loans, fines, reports); Payroll calculator with PAYE-style tax rules; Retail inventory manager with reorder alerts.
 
@@ -41,6 +43,7 @@ Projects: Wallet & transfers simulator (accounts, transfers, statements); Librar
 - [2.2 Race conditions, locks, atomics and concurrent collections](phases/01-foundations/02-concurrency-jvm/2.2-race-conditions-locks-atomics/README.md)
 - [2.3 Virtual threads (Project Loom) and structured concurrency](phases/01-foundations/02-concurrency-jvm/2.3-virtual-threads-structured-concurrency/README.md)
 - [2.4 The JVM memory model, heap vs stack and garbage collection](phases/01-foundations/02-concurrency-jvm/2.4-jvm-memory-gc/README.md)
+- [2.5 Modules, packaging and runtime images (JPMS, jars, jlink)](phases/01-foundations/02-concurrency-jvm/2.5-modules-packaging-jlink/README.md)
 
 Projects: Parallel transaction-file processor; Rate-limited API caller using virtual threads; Find-and-fix lab: deadlocks and race conditions.
 
@@ -190,4 +193,4 @@ Projects: Customer-support assistant grounded in your API docs; Transaction-quer
 
 Projects: Digital wallet & payments platform; Loan origination system; Marketplace backend; Ride-hailing / logistics backend.
 
-_81 topics in total._
+_84 topics in total._

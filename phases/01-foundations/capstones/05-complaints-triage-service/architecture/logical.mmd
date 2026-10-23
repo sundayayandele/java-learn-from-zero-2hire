@@ -1,0 +1,45 @@
+%% Consumer complaints triage and SLA service: logical architecture
+flowchart LR
+    subgraph sg0["Intake"]
+        direction TB
+        ing["Bulk ingestion<br/>streaming CSV, idempotent"]
+        new["New complaint API<br/>(bank channels)"]
+    end
+    subgraph sg1["Triage and SLA"]
+        direction TB
+        route["Routing rules<br/>product + issue + keywords"]
+        sla["SLA clock<br/>business days + holidays"]
+        wf["Workflow<br/>state machine + audit"]
+    end
+    subgraph sg2["Insight"]
+        direction TB
+        search["Search<br/>full-text (GIN)"]
+        rep["Reports<br/>breaches · monthly trends"]
+    end
+    subgraph sg3["Data"]
+        direction TB
+        cdb[("complaint · company · issue<br/>(PostgreSQL)")]
+        cal[("business_calendar")]
+        narr[("narratives<br/>(MongoDB or JSONB)")]
+    end
+    ing --> cdb
+    ing --> narr
+    new --> route
+    route --> sla
+    sla --> cal
+    wf -->|"transitions"| cdb
+    search --> cdb
+    search -.-> narr
+    rep --> cdb
+    classDef actor fill:#dae8fc,stroke:#6c8ebf,color:#000
+    classDef svc fill:#d5e8d4,stroke:#82b366,color:#000
+    classDef comp fill:#ffffff,stroke:#666666,color:#000
+    classDef db fill:#fff2cc,stroke:#d6b656,color:#000
+    classDef store fill:#f5f5f5,stroke:#666666,color:#000
+    classDef ext fill:#f8cecc,stroke:#b85450,color:#000,stroke-dasharray: 5 3
+    classDef infra fill:#e1d5e7,stroke:#9673a6,color:#000
+    classDef job fill:#ffe6cc,stroke:#d79b00,color:#000
+    class search,rep comp
+    class cdb,cal db
+    class narr store
+    class ing,new,route,sla,wf svc

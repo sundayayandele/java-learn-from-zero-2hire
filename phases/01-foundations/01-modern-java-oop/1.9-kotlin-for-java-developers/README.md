@@ -3,7 +3,7 @@
 
 # 1.9 Kotlin for Java developers
 
-← [1.8 Reading legacy Java 8/11/17 code and migrating it forward](../1.8-legacy-java-migration/README.md) · [Module 1](../README.md) · [Phase 1](../../README.md) · [2.1 Threads, ExecutorService and CompletableFuture](../../02-concurrency-jvm/2.1-threads-executors-completablefuture/README.md) →
+← [1.8 Reading legacy Java 8/11/17 code and migrating it forward](../1.8-legacy-java-migration/README.md) · [Module 1](../README.md) · [Phase 1](../../README.md) · [1.10 Java I/O, NIO.2 files and serialization](../1.10-io-nio-serialization/README.md) →
 
 > **Week 4** · Module 1: Modern Java & OOP Foundations · Website topic covered: *Kotlin (added to this programme; not listed on the website)*
 
@@ -411,4 +411,4 @@ What's the reason?
 
 ---
 
-← [1.8 Reading legacy Java 8/11/17 code and migrating it forward](../1.8-legacy-java-migration/README.md) · [Module 1](../README.md) · [Phase 1](../../README.md) · [2.1 Threads, ExecutorService and CompletableFuture](../../02-concurrency-jvm/2.1-threads-executors-completablefuture/README.md) →
+← [1.8 Reading legacy Java 8/11/17 code and migrating it forward](../1.8-legacy-java-migration/README.md) · [Module 1](../README.md) · [Phase 1](../../README.md) · [1.10 Java I/O, NIO.2 files and serialization](../1.10-io-nio-serialization/README.md) →

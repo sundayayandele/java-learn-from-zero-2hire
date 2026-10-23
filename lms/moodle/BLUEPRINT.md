@@ -63,8 +63,8 @@ Core Moodle web services can't create activities or import questions, so those a
 | # | Section | Activities |
 | --- | --- | --- |
 | 1 | Phase 1: start here | URL: Phase 1 plan; Page: how the course works (read → watch → CBT → practice → project); Forum: questions and help |
-| 2 | Module 1: Modern Java & OOP (weeks 1–4) | For each topic 1.1–1.9: **Page** + **Quiz**; URL: Module 1 projects; Assignment: Module 1 project submission |
-| 3 | Module 2: Concurrency & JVM (weeks 5–6) | Topics 2.1–2.4: Page + Quiz; URL: projects; Assignment: project 2.C `FINDINGS.md` |
+| 2 | Module 1: Modern Java & OOP (weeks 1–4) | For each topic 1.1–1.11: **Page** + **Quiz**; URL: Module 1 projects; Assignment: Module 1 project submission |
+| 3 | Module 2: Concurrency & JVM (weeks 5–6) | Topics 2.1–2.5: Page + Quiz; URL: projects; Assignment: project 2.C `FINDINGS.md` |
 | 4 | Module 3: Databases (weeks 7–9) | Topics 3.1–3.6: Page + Quiz; URL: projects; Assignments: 3.B ledger schema, 3.D `TUNING.md` |
 | 5 | Module 4: Spring Boot 4 (weeks 10–13) | Topics 4.1–4.7: Page + Quiz; URL: projects; Assignments: 4.A, 4.D `UPGRADE.md` |
 | 6 | Phase 1 capstones | URL: capstone briefs; URL: deployment guide; **Assignment per capstone** (10) |
@@ -93,9 +93,9 @@ Import `lms/moodle/out/questions/phase-1-exam.xml` (built from the private bank:
 | Grade to pass | **70%** |
 | Question order | Shuffled; shuffle within questions on; 5 questions per page |
 | Review options | Show marks only during the open period; show correct answers and feedback after the quiz closes |
-| Restrict access | All 26 topic quizzes passed (activity completion) |
+| Restrict access | All 29 topic quizzes passed (activity completion) |
 
-Add all 56 questions. The exam samples every topic (blueprint in `phases/01-foundations/exam/README.md`).
+Add all 60 questions. The exam samples every topic (blueprint in `phases/01-foundations/exam/README.md`).
 
 ### Capstone assignments
 

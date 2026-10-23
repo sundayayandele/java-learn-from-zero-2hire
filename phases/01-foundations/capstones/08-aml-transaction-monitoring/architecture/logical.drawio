@@ -1,0 +1,34 @@
+<mxfile host="java-zero-hire" type="device">
+  <diagram id="08-aml-transaction-monitoring-logical" name="AML transaction monitoring: logical architecture">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="grp0" value="Loading" style="swimlane;whiteSpace=wrap;html=1;rounded=1;startSize=34;fillColor=#f9f9f9;strokeColor=#999999;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="40" y="40" width="220" height="230" as="geometry"/></mxCell>
+        <mxCell id="stg" value="Staging (COPY)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="grp0"><mxGeometry x="20" y="54" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="tx" value="Transform&lt;br&gt;account · txn" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="grp0"><mxGeometry x="20" y="146" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="grp1" value="Detection" style="swimlane;whiteSpace=wrap;html=1;rounded=1;startSize=34;fillColor=#f9f9f9;strokeColor=#999999;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="350" y="40" width="220" height="322" as="geometry"/></mxCell>
+        <mxCell id="sc" value="Scenarios&lt;br&gt;structuring · fan-in/out · rapid · cycles" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="grp1"><mxGeometry x="20" y="54" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="run" value="Scenario run&lt;br&gt;window + thresholds" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="grp1"><mxGeometry x="20" y="146" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="al" value="Alerts&lt;br&gt;(dedup key)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="grp1"><mxGeometry x="20" y="238" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="grp2" value="Investigation" style="swimlane;whiteSpace=wrap;html=1;rounded=1;startSize=34;fillColor=#f9f9f9;strokeColor=#999999;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="660" y="40" width="220" height="322" as="geometry"/></mxCell>
+        <mxCell id="case" value="Cases" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="grp2"><mxGeometry x="20" y="54" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="dec" value="Decisions&lt;br&gt;append-only" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="grp2"><mxGeometry x="20" y="146" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="eff" value="Effectiveness&lt;br&gt;vs labels" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="grp2"><mxGeometry x="20" y="238" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="grp3" value="Data" style="swimlane;whiteSpace=wrap;html=1;rounded=1;startSize=34;fillColor=#f9f9f9;strokeColor=#999999;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="970" y="40" width="220" height="322" as="geometry"/></mxCell>
+        <mxCell id="txn" value="txn (millions)&lt;br&gt;indexed per scenario" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="grp3"><mxGeometry x="20" y="54" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="alerts" value="alert · evidence" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="grp3"><mxGeometry x="20" y="146" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="cases" value="case · decision" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="grp3"><mxGeometry x="20" y="238" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="e0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="stg" target="tx"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="tx" target="txn"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="run" target="sc"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" value="window functions, recursive CTE" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="sc" target="txn"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="sc" target="al"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="al" target="alerts"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="case" target="alerts"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="dec" target="cases"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="eff" target="alerts"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

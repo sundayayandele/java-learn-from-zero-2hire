@@ -195,6 +195,18 @@ Rules that reviewers enforce:
 - Never call `get()` without checking: prefer `orElse`, `orElseGet`, `orElseThrow`, `map`, `ifPresent`.
 - `orElse(expensiveCall())` evaluates the argument even when a value is present; use `orElseGet(() -> expensiveCall())` for anything costly.
 
+### Stream Gatherers (Java 24+)
+
+Java 24 finalised **gatherers** (JEP 485): custom intermediate operations, used with `stream.gather(...)`. Built-ins in `java.util.stream.Gatherers` cover common needs:
+
+```java
+transactions.stream().gather(Gatherers.windowFixed(100)).forEach(this::insertBatch);   // batches of 100
+amounts.stream().gather(Gatherers.windowSliding(7)).map(this::average).toList();       // 7-day moving windows
+amounts.stream().gather(Gatherers.scan(() -> BigDecimal.ZERO, BigDecimal::add)).toList();   // running balance
+```
+
+The baseline for this programme is Java 21, so gatherers are optional here, but the Java 25 OCP exam (1Z0-831) tests them.
+
 ## 5. Streams versus loops
 
 Streams are not always better. Prefer a plain loop when:
@@ -265,6 +277,10 @@ All videos are in English with English captions and were checked on 2026-10-23. 
 - [Lambda Expressions in Java - Full Simple Tutorial](https://www.youtube.com/watch?v=tj5sLSFjVj4) · Coding with John · 13 min. Lambdas and functional interfaces from scratch.
 - [Java Streams Crash Course: Everything You Need to Know](https://www.youtube.com/watch?v=yv9Q2E39kJM) · camelCase · 9 min. A fast tour of filter, map, reduce and collect.
 - [Java Streams API Explained (with examples)](https://www.youtube.com/watch?v=2StXP1XaU04) · Visual Computer Science · 18 min. Streams in more depth, including intermediate vs terminal operations and laziness.
+
+**Want more depth? (longer, optional)**
+
+- [Better Java Streams with Gatherers - Inside Java Newscast #57](https://www.youtube.com/watch?v=epgJm2dZTSg) · Java · 9 min. Stream Gatherers (Java 24+): custom intermediate operations, tested in the Java 25 OCP exam.
 
 ## Check your understanding
 

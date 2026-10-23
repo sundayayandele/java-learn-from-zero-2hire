@@ -1,0 +1,38 @@
+%% KYB legal entity lookup service: logical architecture
+flowchart LR
+    subgraph sg0["Ingestion"]
+        direction TB
+        full["Full load<br/>COPY → staging"]
+        delta["Delta apply<br/>newer-wins upsert"]
+    end
+    subgraph sg1["Serving"]
+        direction TB
+        valid["Validate LEI<br/>check digits + status"]
+        look["Lookup by LEI"]
+        search["Search<br/>name (trigram) · country · status"]
+    end
+    subgraph sg2["Data"]
+        direction TB
+        rec[("lei_record<br/>2.5M+ rows")]
+        rel[("relationship<br/>(parents, stretch)")]
+        cache[("Lookup cache")]
+    end
+    full --> rec
+    delta --> rec
+    delta -.->|"invalidate"| cache
+    look --> cache
+    cache -.->|"miss"| rec
+    search --> rec
+    valid --> rec
+    full -.-> rel
+    classDef actor fill:#dae8fc,stroke:#6c8ebf,color:#000
+    classDef svc fill:#d5e8d4,stroke:#82b366,color:#000
+    classDef comp fill:#ffffff,stroke:#666666,color:#000
+    classDef db fill:#fff2cc,stroke:#d6b656,color:#000
+    classDef store fill:#f5f5f5,stroke:#666666,color:#000
+    classDef ext fill:#f8cecc,stroke:#b85450,color:#000,stroke-dasharray: 5 3
+    classDef infra fill:#e1d5e7,stroke:#9673a6,color:#000
+    classDef job fill:#ffe6cc,stroke:#d79b00,color:#000
+    class rec,rel db
+    class cache store
+    class full,delta,valid,look,search svc

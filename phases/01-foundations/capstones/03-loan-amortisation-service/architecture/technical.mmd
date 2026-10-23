@@ -1,0 +1,77 @@
+%% Loan amortisation and repayment service: technical architecture (inside the service)
+flowchart TB
+    subgraph sg0["Clients"]
+        direction TB
+        client(["HTTP clients<br/>(apps, partners, ops)"])
+    end
+    subgraph sg1["Web layer: Spring MVC"]
+        direction TB
+        c0["ProductController"]
+        c1["QuoteController"]
+        c2["LoanController"]
+        c3["PortfolioController"]
+        advice["ApiExceptionHandler<br/>RFC 9457 Problem Details"]
+        valid["Bean Validation<br/>(DTO records)"]
+    end
+    subgraph sg2["Service layer"]
+        direction TB
+        s0["ScheduleEngine<br/>(sealed RepaymentMethod)"]
+        s1["LoanService<br/>(booking · repayments)"]
+        s2["ArrearsService<br/>(penalties · buckets)"]
+    end
+    subgraph sg3["Persistence"]
+        direction TB
+        r0["LoanProductRepository"]
+        r1["LoanRepository · InstalmentRepository"]
+        r2["Portfolio queries (SQL)"]
+        flyway["Flyway migrations<br/>ddl-auto=validate"]
+    end
+    subgraph sg4["Cross-cutting"]
+        direction TB
+        cfg["@ConfigurationProperties<br/>(validated)"]
+        act["Actuator + Micrometer<br/>health · readiness · Prometheus"]
+        sched[["Scheduler<br/>nightly arrears and penalties"]]
+        http["RestClient<br/>timeouts · retries"]
+    end
+    subgraph sg5["Runtime dependencies"]
+        direction TB
+        pg[("PostgreSQL 17")]
+        prom["Prometheus / Grafana"]
+    end
+    subgraph sg6["External"]
+        direction TB
+        wb[/"World Bank WDI API<br/>lending rates"/]
+    end
+    client -->|"JSON over HTTPS"| c0
+    c0 --> s0
+    c1 --> s1
+    c2 --> s2
+    c3 --> s2
+    s0 --> r0
+    s1 --> r1
+    s2 --> r2
+    r0 -->|"JDBC"| pg
+    r1 -->|"JDBC"| pg
+    r2 -->|"JDBC"| pg
+    flyway -->|"migrate on start"| pg
+    prom -.->|"scrape /actuator/prometheus"| act
+    c0 -.->|"exceptions"| advice
+    c0 -.->|"@Valid"| valid
+    sched -.->|"invokes"| s0
+    s0 -->|"fetch"| http
+    http -->|"HTTPS"| wb
+    classDef actor fill:#dae8fc,stroke:#6c8ebf,color:#000
+    classDef svc fill:#d5e8d4,stroke:#82b366,color:#000
+    classDef comp fill:#ffffff,stroke:#666666,color:#000
+    classDef db fill:#fff2cc,stroke:#d6b656,color:#000
+    classDef store fill:#f5f5f5,stroke:#666666,color:#000
+    classDef ext fill:#f8cecc,stroke:#b85450,color:#000,stroke-dasharray: 5 3
+    classDef infra fill:#e1d5e7,stroke:#9673a6,color:#000
+    classDef job fill:#ffe6cc,stroke:#d79b00,color:#000
+    class client actor
+    class c0,c1,c2,c3,advice,valid,r0,r1,r2,flyway,cfg,act,http comp
+    class pg db
+    class wb ext
+    class prom infra
+    class sched job
+    class s0,s1,s2 svc

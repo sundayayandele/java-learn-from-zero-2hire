@@ -1,0 +1,44 @@
+%% Credit-card default risk scorecard API: logical architecture
+flowchart LR
+    subgraph sg0["Inputs"]
+        direction TB
+        imp["Dataset import<br/>(xls → CSV, idempotent)"]
+        rules["Rule management<br/>versioned · validated · audited"]
+    end
+    subgraph sg1["Scoring"]
+        direction TB
+        eng["Scoring engine<br/>pure function"]
+        run[["Scoring run<br/>virtual threads · batches"]]
+        explain["Reason codes<br/>(explainability)"]
+    end
+    subgraph sg2["Analytics"]
+        direction TB
+        perf["Performance<br/>default rate per grade · Gini/KS"]
+    end
+    subgraph sg3["Data"]
+        direction TB
+        cust[("customer_profile")]
+        rs[("rule_set · rule<br/>(versioned)")]
+        score[("score<br/>(rule_set_version)")]
+    end
+    imp --> cust
+    rules --> rs
+    run --> eng
+    eng --> explain
+    eng -->|"read version"| rs
+    run --> cust
+    run -->|"batch insert"| score
+    perf --> score
+    perf -->|"default label"| cust
+    classDef actor fill:#dae8fc,stroke:#6c8ebf,color:#000
+    classDef svc fill:#d5e8d4,stroke:#82b366,color:#000
+    classDef comp fill:#ffffff,stroke:#666666,color:#000
+    classDef db fill:#fff2cc,stroke:#d6b656,color:#000
+    classDef store fill:#f5f5f5,stroke:#666666,color:#000
+    classDef ext fill:#f8cecc,stroke:#b85450,color:#000,stroke-dasharray: 5 3
+    classDef infra fill:#e1d5e7,stroke:#9673a6,color:#000
+    classDef job fill:#ffe6cc,stroke:#d79b00,color:#000
+    class explain comp
+    class cust,rs,score db
+    class run job
+    class imp,rules,eng,perf svc

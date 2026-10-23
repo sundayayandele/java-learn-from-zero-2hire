@@ -13,6 +13,7 @@
 | [2.2 Race conditions, locks, atomics and concurrent collections](2.2-race-conditions-locks-atomics/README.md) | 5 | Race conditions, locks, atomics and concurrent collections |
 | [2.3 Virtual threads (Project Loom) and structured concurrency](2.3-virtual-threads-structured-concurrency/README.md) | 6 | Virtual threads (Project Loom) and structured concurrency concepts |
 | [2.4 The JVM memory model, heap vs stack and garbage collection](2.4-jvm-memory-gc/README.md) | 6 | JVM memory model, heap vs stack, garbage collection basics |
+| [2.5 Modules, packaging and runtime images (JPMS, jars, jlink)](2.5-modules-packaging-jlink/README.md) | 6 | Added for the Oracle OCP Java SE 21/25 exam: packaging and deploying Java code |
 
 ## What this module gives you
 

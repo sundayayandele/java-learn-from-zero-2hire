@@ -26,9 +26,9 @@ Then do the topic's **practice** tasks and, each module, at least one **module p
 | 1 | 1 Modern Java & OOP | 1.1 Toolkit, 1.2 Syntax and types | JDK, IntelliJ, Git and GitHub set up; first Maven build |
 | 2 | 1 | 1.3 OOP and SOLID, 1.4 Collections and generics | |
 | 3 | 1 | 1.5 Lambdas and streams, 1.6 Records, sealed types, pattern matching | |
-| 4 | 1 | 1.7 Exceptions and clean code, 1.8 Legacy Java migration, 1.9 Kotlin | Module 1 project pushed with green CI |
+| 4 | 1 | 1.7 Exceptions and clean code, 1.8 Legacy Java migration, 1.9 Kotlin, 1.10 I/O and NIO.2, 1.11 Localization | Module 1 project pushed with green CI |
 | 5 | 2 Concurrency & JVM | 2.1 Threads and executors, 2.2 Races and locks | Start Capstone 1 design |
-| 6 | 2 | 2.3 Virtual threads, 2.4 JVM memory and GC | Module 2 find-and-fix lab |
+| 6 | 2 | 2.3 Virtual threads, 2.4 JVM memory and GC, 2.5 Modules and jlink | Module 2 find-and-fix lab |
 | 7 | 3 Databases | 3.1 Relational design and joins, 3.2 Transactions and locking | Ledger schema (project 3.B) |
 | 8 | 3 | 3.3 Indexing and plans, 3.4 Migrations, 3.5 JDBC | Query-tuning lab (project 3.D) |
 | 9 | 3 | 3.6 Redis and MongoDB | Capstone 1 core logic complete |
@@ -58,6 +58,10 @@ Every capstone ships with the same pipeline on six platforms: GitHub Actions (pr
 
 → [Deployment guide](deploy/README.md) · [CI/CD guide: GitHub Actions, GitLab, Azure DevOps, AWS, Jenkins, Argo CD](cicd/README.md)
 
+## Oracle certification
+
+Phase 1 Modules 1–2 cover every objective of the **Oracle Certified Professional: Java SE 21 (1Z0-830)** and **Java SE 25 (1Z0-831)** exams. See the [objective-by-objective mapping](../../docs/certifications.md) and take the OCP after week 13.
+
 ## End-of-phase exam
 
 A 2-hour, 50-question scenario-based CBT covering every Phase 1 topic, taken on Moodle in week 13. Pass mark 70%.
@@ -72,7 +76,7 @@ What a Phase 1 graduate can credibly apply for, how to present your capstones, a
 
 ## Phase 1 exit criteria
 
-- [ ] All 26 topic CBTs passed (70%+)
+- [ ] All 29 topic CBTs passed (70%+)
 - [ ] One project per module, each on GitHub with README, tests and green CI
 - [ ] Three capstones (including Capstone 1), at least one deployed with a public health endpoint
 - [ ] End-of-phase exam passed (70%+)

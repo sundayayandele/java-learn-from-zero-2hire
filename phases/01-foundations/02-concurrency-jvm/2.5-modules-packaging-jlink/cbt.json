@@ -1,0 +1,96 @@
+{
+  "topic": "2.5",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "Module `ng.itlearning.fx` has a public class `ng.itlearning.fx.internal.Cache`. Another module requires `ng.itlearning.fx` but fails to compile when it uses `Cache`.",
+      "question": "Why?",
+      "options": [
+        "The class needs a public constructor",
+        "Cache must be final",
+        "requires must be transitive",
+        "Only exported packages are accessible to other modules; ng.itlearning.fx.internal isn't exported"
+      ],
+      "answer": 3,
+      "explanation": "Strong encapsulation: public is not enough across modules. The package must be exported, possibly only to specific modules."
+    },
+    {
+      "type": "single",
+      "scenario": "Jackson throws InaccessibleObjectException when deserialising into DTOs in package `ng.itlearning.fx.dto`, which is exported.",
+      "question": "What does the module need?",
+      "options": [
+        "requires transitive tools.jackson.databind",
+        "exports ng.itlearning.fx.dto twice",
+        "opens ng.itlearning.fx.dto (ideally only to the Jackson module, tools.jackson.databind in Jackson 3) to allow deep reflection",
+        "provides Jackson with the DTOs"
+      ],
+      "answer": 2,
+      "explanation": "exports allows access to public members only; reflective access to private fields needs opens."
+    },
+    {
+      "type": "single",
+      "scenario": "A consumer module should discover any number of RateProvider implementations at runtime without referencing their classes.",
+      "question": "Which pair of directives and API achieves this?",
+      "options": [
+        "exports and Class.forName",
+        "requires static and reflection",
+        "opens and new Impl()",
+        "uses RateProvider in the consumer, provides RateProvider with Impl in each provider, and ServiceLoader.load(RateProvider.class)"
+      ],
+      "answer": 3,
+      "explanation": "The service loader mechanism decouples consumers from providers; adding a provider module adds an implementation without recompiling the consumer."
+    },
+    {
+      "type": "single",
+      "scenario": "During migration, a plain (non-modular) library jar is placed on the module path next to your named application module.",
+      "question": "How is the library treated?",
+      "options": [
+        "As an automatic module: named from Automatic-Module-Name or the file name, reading all modules and exporting all its packages",
+        "As the unnamed module",
+        "It is ignored",
+        "It causes a split-package error"
+      ],
+      "answer": 0,
+      "explanation": "Automatic modules bridge the classpath world and named modules during top-down migration. Jars on the classpath form the unnamed module instead."
+    },
+    {
+      "type": "single",
+      "scenario": "The security team wants smaller container images with fewer JDK components for a Spring Boot service.",
+      "question": "Which tools produce a trimmed runtime?",
+      "options": [
+        "jcmd",
+        "javadoc and jar",
+        "jdeps to find the required modules, then jlink to build a runtime image containing only those modules",
+        "jshell"
+      ],
+      "answer": 2,
+      "explanation": "jdeps --print-module-deps lists what the application uses; jlink assembles a custom runtime with just those modules."
+    },
+    {
+      "type": "single",
+      "scenario": "A module's public API returns types from module `ng.itlearning.money`. Every consumer has to add `requires ng.itlearning.money` themselves.",
+      "question": "How can the API module spare its consumers that step?",
+      "options": [
+        "requires transitive ng.itlearning.money",
+        "opens ng.itlearning.money",
+        "exports ng.itlearning.money",
+        "requires static ng.itlearning.money"
+      ],
+      "answer": 0,
+      "explanation": "requires transitive grants implied readability: anyone who requires the API module can also read the money module."
+    },
+    {
+      "type": "single",
+      "scenario": "On a Java 25 JDK, a file `Hello.java` contains only `void main() { IO.println(\"hi\"); }`.",
+      "question": "What happens with `java Hello.java`?",
+      "options": [
+        "It needs --enable-preview",
+        "It needs a module-info.java",
+        "It runs and prints hi: compact source files and instance main methods are standard in Java 25",
+        "Compilation error: no class declared"
+      ],
+      "answer": 2,
+      "explanation": "JEP 512 finalised compact source files, instance main methods and java.lang.IO in Java 25."
+    }
+  ]
+}

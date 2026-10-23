@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="category">
+    <category><text>$course$/top/Java Zero-to-Hired/Phase 1/1.10 Java I/O, NIO.2 files and serialization</text></category>
+  </question>
+  <question type="multichoice">
+    <name><text>1.10-Q01</text></name>
+    <questiontext format="html"><text><![CDATA[<p>A nightly job loads a 3 GB card-scheme settlement file with <code>Files.readAllLines(path)</code> and the container is OOMKilled.</p><p><strong>What is the right way to process the file?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>readAllLines holds every line in memory. Streaming reads one line at a time in constant memory; the stream must be closed to release the file handle.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="100" format="html"><text><![CDATA[Stream it line by line with Files.lines (closed with try-with-resources) or a BufferedReader]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Increase the heap to 8 GB]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Read it with Files.readString]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Split the file manually first]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>1.10-Q02</text></name>
+    <questiontext format="html"><text><![CDATA[<p>An API takes a file name and serves <code>inbox.resolve(name)</code>. A tester requests <code>../../etc/passwd</code> and gets the file.</p><p><strong>What check prevents this?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>resolve followed by normalize removes ../ segments; if the result isn't under the allowed directory, reject it. This is the standard path-traversal defence.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[Reject names containing spaces]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Catch NoSuchFileException]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[Normalise the resolved path and verify it still startsWith the inbox directory]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Use Paths.get instead of Path.of]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>1.10-Q03</text></name>
+    <questiontext format="html"><text><![CDATA[<p>Customer names with accents and the ₦ symbol appear garbled in an exported CSV opened by a partner.</p><p><strong>What is the most likely cause and fix?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Text becomes bytes through a charset. Mismatched charsets garble non-ASCII characters; naming the charset in code and in the interface contract fixes it.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="100" format="html"><text><![CDATA[Bytes were written or read with a different charset; specify the charset explicitly (e.g. StandardCharsets.UTF_8) on both sides and agree it with the partner]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[The partner's Excel is broken]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Remove special characters]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Use a byte stream instead of a writer]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>1.10-Q04</text></name>
+    <questiontext format="html"><text><![CDATA[<p>Another system polls an outbox folder and sometimes picks up half-written statement files.</p><p><strong>Which pattern stops that?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>An atomic rename makes the complete file appear at once; readers never see a partial file.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="100" format="html"><text><![CDATA[Write to a temporary file in the same file system, then Files.move it into the outbox with ATOMIC_MOVE]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Use Files.copy with REPLACE_EXISTING]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Make the file read-only after writing]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Write more slowly]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>1.10-Q05</text></name>
+    <questiontext format="html"><text><![CDATA[<p>A <code>Session</code> class implements Serializable and has <code>private transient String accessToken</code>. After deserialisation the token is null.</p><p><strong>Why?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>transient excludes a field from the serial form, which is exactly right for secrets such as tokens.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[The serialVersionUID changed]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[transient fields are not serialised and come back with their default value (null)]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Serialization failed silently]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Strings can't be serialised]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>1.10-Q06</text></name>
+    <questiontext format="html"><text><![CDATA[<p>A team adds a field to a Serializable class that has no explicit serialVersionUID. Reading previously saved data now throws InvalidClassException.</p><p><strong>What prevents this in future?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Without an explicit UID, the JVM computes one from the class structure, so any change produces a new UID and old data is rejected.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[Use a parallel stream]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[Declare a private static final long serialVersionUID (annotated @Serial) and manage compatible changes deliberately]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Never add fields]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Mark the class final]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>1.10-Q07</text></name>
+    <questiontext format="html"><text><![CDATA[<p>A partner suggests sending payment instructions to your API as Java-serialised objects 'because it's faster'.</p><p><strong>What should you answer?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Deserialisation gadget chains are a well-known attack class. Across trust boundaries use data formats that don't execute code paths on read, and validate input.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[Accept if it uses HTTPS]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Accept; Java serialization is secure]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[Decline: deserialising untrusted bytes can lead to remote code execution; use JSON (or Protobuf) with validation instead]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Accept if the payload is compressed]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>1.10-Q08</text></name>
+    <questiontext format="html"><text><![CDATA[<p>Given <code>Path base = Path.of("/data")</code> and <code>Path f = Path.of("/data/2026/10/nip.csv")</code>.</p><p><strong>What does <code>base.relativize(f)</code> return?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>relativize builds the relative path from base to f. resolve does the opposite: base.resolve("2026/10/nip.csv") gives f.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[../nip.csv]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[/data]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[nip.csv]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[2026/10/nip.csv]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="category">
+    <category><text>$course$/top/Java Zero-to-Hired/Phase 1/1.11 Localization</text></category>
+  </question>
+  <question type="multichoice">
+    <name><text>1.11-Q01</text></name>
+    <questiontext format="html"><text><![CDATA[<p>A CSV export for a partner works in development, but in production the amounts appear as <code>1 250 000,50</code>, and the partner's parser rejects the file. The production JVM's default locale is French.</p><p><strong>What is the fix?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Locale-sensitive formatting uses the JVM default when none is given. Machine formats must be locale-independent; display formats use the customer's locale explicitly.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[Ask the partner to accept French numbers]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Change the server's locale to en_US]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[Format machine-readable output with an explicit locale (e.g. Locale.ROOT or Locale.US, or BigDecimal.toPlainString), never the default]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Use double instead of BigDecimal]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>1.11-Q02</text></name>
+    <questiontext format="html"><text><![CDATA[<p>A French-speaking customer of a Lagos remittance service sees their naira transfer formatted as <code>1 250 000,50 €</code>.</p><p><strong>What went wrong?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Locale controls separators and symbol placement; the currency itself must come from the transaction.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="100" format="html"><text><![CDATA[The currency formatter takes its currency from the locale (fr_FR → EUR); set the transfer's currency explicitly with setCurrency(Currency.getInstance("NGN"))]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[MessageFormat converted the currency]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[French locales can't show naira]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[The amount is wrong]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>1.11-Q03</text></name>
+    <questiontext format="html"><text><![CDATA[<p>Statements generated on 29–31 December show the following year in the header. The pattern is <code>dd MMM YYYY</code>.</p><p><strong>What is the bug?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Week-based year can differ from the calendar year around New Year. Use yyyy (or uuuu).</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[MMM should be MM]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[The time zone is wrong]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[YYYY is the week-based year; use yyyy for the calendar year]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[dd should be DD]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>1.11-Q04</text></name>
+    <questiontext format="html"><text><![CDATA[<p><code>ResourceBundle.getBundle("messages", Locale.of("fr", "CI"))</code> is called. Files exist for <code>messages.properties</code> and <code>messages_fr.properties</code> only; the JVM default locale is en_US.</p><p><strong>Which file supplies the keys?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Lookup tries fr_CI, then fr (found). Missing keys are resolved through the parent chain up to the base bundle.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[An exception, because messages_fr_CI is missing]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[messages.properties only]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[messages_en_US.properties]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[messages_fr.properties, falling back to messages.properties for keys it lacks]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>1.11-Q05</text></name>
+    <questiontext format="html"><text><![CDATA[<p>A static <code>NumberFormat</code> used by all request threads occasionally produces corrupted amounts under load.</p><p><strong>Why, and what's the fix?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>NumberFormat and DecimalFormat keep mutable internal state. DateTimeFormatter, by contrast, is immutable and safe to share.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[Make the field volatile]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Use a parallel stream]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[NumberFormat isn't thread-safe; create one per use (or per thread), or format with a thread-safe alternative]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[NumberFormat is immutable; the bug is elsewhere]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>1.11-Q06</text></name>
+    <questiontext format="html"><text><![CDATA[<p>A message pattern <code>Today's rate is {0}</code> renders as <code>Todays rate is {0}</code> with the placeholder unreplaced.</p><p><strong>What's wrong?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>In MessageFormat patterns, ' quotes text literally, so everything after it, including {0}, is treated as literal text.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[The argument index must start at 1]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[The bundle must be UTF-16]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[MessageFormat doesn't support numbers]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[A single quote starts a quoted section in MessageFormat; write two single quotes (Today''s) for a literal apostrophe]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="category">
+    <category><text>$course$/top/Java Zero-to-Hired/Phase 1/2.5 Modules, packaging and runtime images (JPMS, jars, jlink)</text></category>
+  </question>
+  <question type="multichoice">
+    <name><text>2.5-Q01</text></name>
+    <questiontext format="html"><text><![CDATA[<p>Module <code>ng.itlearning.fx</code> has a public class <code>ng.itlearning.fx.internal.Cache</code>. Another module requires <code>ng.itlearning.fx</code> but fails to compile when it uses <code>Cache</code>.</p><p><strong>Why?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Strong encapsulation: public is not enough across modules. The package must be exported, possibly only to specific modules.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[The class needs a public constructor]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Cache must be final]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[requires must be transitive]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[Only exported packages are accessible to other modules; ng.itlearning.fx.internal isn't exported]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>2.5-Q02</text></name>
+    <questiontext format="html"><text><![CDATA[<p>Jackson throws InaccessibleObjectException when deserialising into DTOs in package <code>ng.itlearning.fx.dto</code>, which is exported.</p><p><strong>What does the module need?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>exports allows access to public members only; reflective access to private fields needs opens.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[requires transitive tools.jackson.databind]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[exports ng.itlearning.fx.dto twice]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[opens ng.itlearning.fx.dto (ideally only to the Jackson module, tools.jackson.databind in Jackson 3) to allow deep reflection]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[provides Jackson with the DTOs]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>2.5-Q03</text></name>
+    <questiontext format="html"><text><![CDATA[<p>A consumer module should discover any number of RateProvider implementations at runtime without referencing their classes.</p><p><strong>Which pair of directives and API achieves this?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>The service loader mechanism decouples consumers from providers; adding a provider module adds an implementation without recompiling the consumer.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[exports and Class.forName]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[requires static and reflection]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[opens and new Impl()]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[uses RateProvider in the consumer, provides RateProvider with Impl in each provider, and ServiceLoader.load(RateProvider.class)]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>2.5-Q04</text></name>
+    <questiontext format="html"><text><![CDATA[<p>During migration, a plain (non-modular) library jar is placed on the module path next to your named application module.</p><p><strong>How is the library treated?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Automatic modules bridge the classpath world and named modules during top-down migration. Jars on the classpath form the unnamed module instead.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="100" format="html"><text><![CDATA[As an automatic module: named from Automatic-Module-Name or the file name, reading all modules and exporting all its packages]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[As the unnamed module]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[It is ignored]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[It causes a split-package error]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>2.5-Q05</text></name>
+    <questiontext format="html"><text><![CDATA[<p>The security team wants smaller container images with fewer JDK components for a Spring Boot service.</p><p><strong>Which tools produce a trimmed runtime?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>jdeps --print-module-deps lists what the application uses; jlink assembles a custom runtime with just those modules.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[jcmd]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[javadoc and jar]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[jdeps to find the required modules, then jlink to build a runtime image containing only those modules]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[jshell]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>2.5-Q06</text></name>
+    <questiontext format="html"><text><![CDATA[<p>A module's public API returns types from module <code>ng.itlearning.money</code>. Every consumer has to add <code>requires ng.itlearning.money</code> themselves.</p><p><strong>How can the API module spare its consumers that step?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>requires transitive grants implied readability: anyone who requires the API module can also read the money module.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="100" format="html"><text><![CDATA[requires transitive ng.itlearning.money]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[opens ng.itlearning.money]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[exports ng.itlearning.money]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[requires static ng.itlearning.money]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>2.5-Q07</text></name>
+    <questiontext format="html"><text><![CDATA[<p>On a Java 25 JDK, a file <code>Hello.java</code> contains only <code>void main() { IO.println("hi"); }</code>.</p><p><strong>What happens with <code>java Hello.java</code>?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>JEP 512 finalised compact source files, instance main methods and java.lang.IO in Java 25.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[It needs --enable-preview]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[It needs a module-info.java]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[It runs and prints hi: compact source files and instance main methods are standard in Java 25]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Compilation error: no class declared]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+</quiz>

@@ -1,0 +1,39 @@
+%% Settlement reconciliation engine: solution architecture
+flowchart LR
+    subgraph sg0["Users and clients"]
+        direction TB
+        ops(["Reconciliation operations"])
+        fin(["Finance"])
+    end
+    subgraph sg1["Settlement reconciliation engine (system boundary)"]
+        direction TB
+        api["Reconciliation API"]
+        db[("Recon DB")]
+        obj[("File storage")]
+    end
+    subgraph sg2["External systems"]
+        direction TB
+        partner[/"Partner settlement files"/]
+        ledger[/"Core ledger (Capstone 1)<br/>extract"/]
+        paysim[/"PaySim base data<br/>(CC BY-SA 4.0)"/]
+    end
+    partner -->|"daily files"| api
+    ledger -->|"extract"| api
+    paysim -.->|"test data generator"| api
+    ops -->|"runs, breaks"| api
+    fin -->|"reports"| api
+    api --> db
+    api --> obj
+    classDef actor fill:#dae8fc,stroke:#6c8ebf,color:#000
+    classDef svc fill:#d5e8d4,stroke:#82b366,color:#000
+    classDef comp fill:#ffffff,stroke:#666666,color:#000
+    classDef db fill:#fff2cc,stroke:#d6b656,color:#000
+    classDef store fill:#f5f5f5,stroke:#666666,color:#000
+    classDef ext fill:#f8cecc,stroke:#b85450,color:#000,stroke-dasharray: 5 3
+    classDef infra fill:#e1d5e7,stroke:#9673a6,color:#000
+    classDef job fill:#ffe6cc,stroke:#d79b00,color:#000
+    class ops,fin actor
+    class db db
+    class partner,ledger,paysim ext
+    class obj store
+    class api svc
