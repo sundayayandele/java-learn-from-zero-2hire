@@ -146,10 +146,24 @@ def combine_topic_banks() -> None:
                       encoding="utf-8")
 
 
+START_HERE = """<h2>How this course works on ITLearning</h2>
+<ol>
+<li><strong>Work through the modules in order.</strong> Each topic has a <em>Lesson</em> page (read it and type the code yourself, then watch the embedded videos) followed by a <em>Check your understanding</em> quiz.</li>
+<li><strong>Pass every topic quiz at 70%.</strong> Attempts are unlimited and you see feedback straight away, so use the explanations to learn. A topic counts as complete when you've viewed the lesson and passed its quiz.</li>
+<li><strong>Do the practice tasks and module projects</strong> listed at the end of each lesson and module.</li>
+<li><strong>Build at least three capstones from week 5</strong>: Capstone 1 plus two others. Each capstone page has the brief, the architecture diagrams and a step-by-step build guide. Submit each one in its <em>Submission</em> assignment; it is marked out of 20 with the rubric, and 14 is a pass.</li>
+<li><strong>Sit the end-of-phase exam</strong> once you've passed all 29 topic quizzes: 60 questions, 2 hours, pass mark 70%, two attempts at least 48 hours apart.</li>
+<li><strong>Get hired</strong>: work through the Getting hired section and submit your checklist.</li>
+</ol>
+<p>Stuck? Ask in the <em>Questions and help</em> forum in this section. Say which topic or capstone, what you tried, and paste the error message.</p>
+<hr>
+"""
+
+
 def publish_pages() -> None:
     """Copy lesson and capstone pages to lms/moodle/import/ (committed, public: the same content is in the
     Markdown), so the LMS can load them from raw.githubusercontent.com."""
-    for kind in ("pages", "capstones"):
+    for kind in ("pages", "capstones", "guides"):
         target = ROOT / "lms" / "moodle" / "import" / kind
         if target.exists():
             shutil.rmtree(target)
@@ -167,6 +181,7 @@ def main() -> int:
     (OUT / "questions").mkdir(parents=True)
     (OUT / "pages").mkdir(parents=True)
     (OUT / "capstones").mkdir(parents=True)
+    (OUT / "guides").mkdir(parents=True)
 
     structure = {"category": COURSE_CATEGORY, "phases": []}
     for phase in cur["phases"]:
@@ -204,6 +219,17 @@ def main() -> int:
             sections.append({"name": f"Module {mod['number']}: {mod['title']} (weeks {mod['weeks']})",
                              "summary": f"Topics, videos and graded checks for Module {mod['number']}.",
                              "activities": activities})
+        guides = {"start-here": (pdir / "phase.md", None), "getting-hired": (pdir / "getting-hired" / "guide.md", "getting-hired"),
+                  "deploy": (pdir / "deploy" / "guide.md", "deploy"), "cicd": (pdir / "cicd" / "guide.md", "cicd"),
+                  "exam": (pdir / "exam" / "README.md", None)}
+        for name, (src, video_key) in guides.items():
+            md = src.read_text(encoding="utf-8") if name != "start-here" else (pdir / "README.md").read_text(encoding="utf-8")
+            body = absolutise(lesson_html(md), src.parent if name != "start-here" else pdir)
+            body = re.sub(r"<p>←.*?</p>", "", body, count=1, flags=re.S)
+            if name == "start-here":
+                body = START_HERE + re.sub(r"<!--.*?-->", "", body, flags=re.S)
+            (OUT / "guides" / f"{name}.html").write_text(body + "\n" + videos_html(videos.get(video_key, []) if video_key else []),
+                                                        encoding="utf-8")
         overview = pdir / "capstones"
         (OUT / "capstones" / "00-overview.html").write_text(
             absolutise(lesson_html((overview / "README.md").read_text(encoding="utf-8")), overview), encoding="utf-8")

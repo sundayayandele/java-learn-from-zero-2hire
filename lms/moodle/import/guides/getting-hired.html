@@ -1,0 +1,240 @@
+<h1 id="getting-hired-after-phase-1-week-13-then-ongoing">Getting hired
+after Phase 1 (week 13, then ongoing)</h1>
+
+<p>Phase 1 doesn't make you a finished backend engineer; Phases 2 and 3
+do. But by week 13 you can credibly compete for <strong>Java
+internships, graduate trainee programmes, junior support-engineering
+roles on Java systems, and some junior backend roles</strong> at
+fintechs and banks, especially if your three capstones are deployed and
+well documented. Start the visibility work now so it compounds by month
+6.</p>
+<h2 id="what-you-can-honestly-claim-after-phase-1">What you can honestly
+claim after Phase 1</h2>
+<table>
+<thead>
+<tr>
+<th>You can say</th>
+<th>Evidence they'll check</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"I write modern Java 21: records, sealed types, streams, virtual
+threads"</td>
+<td>Capstone code; topic CBTs; a 20-minute live-coding exercise</td>
+</tr>
+<tr>
+<td>"I design relational schemas and write correct, fast SQL"</td>
+<td>Capstone 1 schema with constraints; a <code>TUNING.md</code> with
+before/after query plans</td>
+</tr>
+<tr>
+<td>"I understand transactions and concurrency in payment systems"</td>
+<td>Capstone 1's concurrency test, and explaining it out loud</td>
+</tr>
+<tr>
+<td>"I build and deploy Spring Boot 4 services with tests and CI"</td>
+<td>A green GitHub Actions badge and a live
+<code>/actuator/health</code> URL</td>
+</tr>
+<tr>
+<td>"I can read and upgrade legacy Java and Spring Boot 3 code"</td>
+<td>Project 4.D's <code>UPGRADE.md</code></td>
+</tr>
+</tbody>
+</table>
+<p>Don't claim Kafka, Kubernetes, microservices or Spring Security yet.
+Interviewers probe what's on your CV, and Phase 2 and 3 will give you
+those honestly.</p>
+<h2 id="portfolio-and-visibility">Portfolio and visibility</h2>
+<ul>
+<li><strong>One GitHub profile README</strong> that works as your
+portfolio page: a two-line summary ("Java backend engineer in training,
+building payment and banking systems with Java 21 and Spring Boot 4"),
+then your three capstones, each with a one-line <em>result</em>, for
+example "Double-entry ledger: 50 concurrent transfers, zero balance
+drift, deployed on a VPS with CI/CD."</li>
+<li><strong>Every capstone README</strong> passes the three-minute test
+from the <a
+href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/capstones/README.md#what-every-capstone-must-have">capstone
+standards</a>: problem, architecture diagram, how to run it, decisions
+and trade-offs, live link, data licence.</li>
+<li><strong>Pin</strong> your three capstones and keep commit history
+honest: small commits, clear messages, no "final final v3".</li>
+<li><strong>Public writing:</strong> one short technical post (LinkedIn
+article, Hashnode, dev.to or Medium) about something you actually
+learned, such as "How I made a ledger safe under concurrent transfers"
+or "Reading my first PostgreSQL query plan". Hiring managers read
+these.</li>
+<li><strong>Open source:</strong> one small contribution to a library
+you used (a documentation fix in a Spring guide, a Testcontainers
+example, a typo in an OpenRewrite recipe). It shows you can work in
+someone else's codebase.</li>
+<li><strong>LinkedIn:</strong> headline with the stack ("Java · Spring
+Boot · PostgreSQL · Docker"), the capstones under <em>Projects</em> with
+links, and the ITLearning certificate when you earn it.</li>
+</ul>
+<h2 id="cv-for-a-phase-1-graduate">CV for a Phase 1 graduate</h2>
+<ul>
+<li><strong>One page.</strong> Contact details, GitHub, LinkedIn and
+portfolio links at the top.</li>
+<li><strong>Projects before education</strong> if you're changing
+careers. Each project: what it does, the stack, and one measurable or
+verifiable result.</li>
+<li><strong>Skills grouped and honest:</strong> Languages (Java 21,
+Kotlin basics, SQL); Frameworks (Spring Boot 4, Spring Data JPA, JUnit,
+Testcontainers); Data (PostgreSQL, MySQL, Redis, MongoDB, Flyway); Tools
+(Git, Maven, Docker, GitHub Actions, GitLab CI, Linux).</li>
+<li><strong>Previous career counts.</strong> A former bank teller who
+understands reconciliation, a teacher who explains clearly, an
+accountant who knows double entry: say so, briefly. Domain knowledge is
+a genuine advantage in fintech hiring.</li>
+<li>Tailor the top three bullet points to each job ad. Use their words
+where they're true for you.</li>
+</ul>
+<h2 id="interview-loop-preparation">Interview loop preparation</h2>
+<p>Junior Java interviews in Lagos fintechs, banks and international
+remote teams usually look like this:</p>
+<table>
+<thead>
+<tr>
+<th>Round</th>
+<th>What it tests</th>
+<th>How to prepare</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Recruiter / HR screen</td>
+<td>Motivation, communication, availability, salary expectations</td>
+<td>A 60-second story: where you're coming from, why Java backend, what
+you've built (lead with Capstone 1)</td>
+</tr>
+<tr>
+<td>Online assessment</td>
+<td>Core Java, SQL, sometimes a HackerRank/Codility coding task</td>
+<td>Timed practice: 2 easy and 1 medium problem per week in Java; 20 SQL
+exercises (joins, group by, window functions)</td>
+</tr>
+<tr>
+<td>Technical interview: core Java</td>
+<td>OOP and SOLID, collections and complexity,
+<code>equals</code>/<code>hashCode</code>, exceptions, immutability,
+streams, Java 8–21 features, basic concurrency</td>
+<td>Re-take the topic CBTs from Modules 1–2 without notes; explain each
+answer aloud</td>
+</tr>
+<tr>
+<td>Technical interview: Spring and SQL</td>
+<td>DI and auto-configuration, REST and status codes, validation,
+<code>@Transactional</code>, N+1, transactions and isolation,
+indexes</td>
+<td>Walk through your capstone's controller → service → repository → SQL
+path and justify every choice</td>
+</tr>
+<tr>
+<td>Take-home or live coding</td>
+<td>Build a small REST API or fix a bug, with tests</td>
+<td>Use your starter; practise a 90-minute "build a wallet API with
+tests" exercise twice</td>
+</tr>
+<tr>
+<td>Project deep-dive</td>
+<td>Depth on one thing you built: trade-offs, failures, numbers</td>
+<td>Rehearse Capstone 1: why double entry, how locking works, what you'd
+change at 100× volume</td>
+</tr>
+<tr>
+<td>Behavioural</td>
+<td>Ownership, learning, teamwork, handling mistakes</td>
+<td>Five STAR stories (below)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="questions-you-should-be-able-to-answer-cold">Questions you
+should be able to answer cold</h3>
+<ol type="1">
+<li>Why shouldn't you use <code>double</code> for money, and what do you
+use instead?</li>
+<li>What happens if you override <code>equals</code> but not
+<code>hashCode</code>?</li>
+<li><code>ArrayList</code> vs <code>LinkedList</code> vs
+<code>HashSet</code>: when and why?</li>
+<li>Checked vs unchecked exceptions, and how do you handle
+<code>InterruptedException</code>?</li>
+<li>What does <code>synchronized</code> guarantee? Why doesn't it
+protect a balance across two service instances?</li>
+<li>What are virtual threads good for, and what aren't they good
+for?</li>
+<li>What's the N+1 problem and how do you fix it?</li>
+<li>What do the four isolation levels prevent? What does PostgreSQL's
+default allow?</li>
+<li>How would you make a payment API idempotent?</li>
+<li>What changed in Spring Boot 4, and how would you upgrade a Boot 3
+service?</li>
+</ol>
+<h3 id="five-star-stories-to-prepare">Five STAR stories to prepare</h3>
+<p>Use Situation, Task, Action, Result, and keep each under two
+minutes:</p>
+<ol type="1">
+<li><strong>A bug you found and fixed</strong>, for example the race
+condition in the find-and-fix lab or a failing CI build.</li>
+<li><strong>Something you learned fast</strong>: Kotlin, query plans or
+Testcontainers, with what you shipped afterwards.</li>
+<li><strong>A trade-off you made</strong>: pessimistic vs optimistic
+locking, or caching vs freshness.</li>
+<li><strong>Working with others</strong>: a code review you gave or
+received, or helping a cohort peer.</li>
+<li><strong>A mistake and what changed afterwards</strong>, such as a
+committed secret you rotated, or a migration you had to redo.</li>
+</ol>
+<h2 id="applications">Applications</h2>
+<ol type="1">
+<li><strong>Shortlist 15–20 roles</strong>: Java internships and
+graduate programmes at banks and fintechs, junior Java developer and
+application support roles, and remote junior roles that list Java +
+Spring Boot + SQL.</li>
+<li><strong>Map each job ad to evidence</strong> before applying: for
+every requirement, which capstone, project or CBT shows it? Skip roles
+where fewer than half match; apply where 60%+ match.</li>
+<li><strong>Seek referrals</strong>: engage with engineers from target
+companies on LinkedIn by commenting usefully on their technical posts,
+attend Java and fintech meetups (Lagos Java User Group, Google Developer
+Groups, fintech events), and ask cohort alumni.</li>
+<li><strong>Track everything</strong> in a spreadsheet: company, role,
+date, contact, stage, feedback, next step.</li>
+<li><strong>Apply in waves of 4–5</strong> so interviews cluster and you
+can compare offers. After each rejection, ask for feedback and redo one
+practice exercise in that area.</li>
+<li>Keep building: Phase 2 starts in week 14. Each new module adds a
+line to your CV.</li>
+</ol>
+<h2 id="phase-1-getting-hired-checklist">Phase 1 Getting Hired
+checklist</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" />GitHub profile README with three
+pinned, deployed capstones</label></li>
+<li><label><input type="checkbox" />One-page CV reviewed by a mentor or
+peer</label></li>
+<li><label><input type="checkbox" />LinkedIn updated with headline,
+projects and skills</label></li>
+<li><label><input type="checkbox" />One technical post
+published</label></li>
+<li><label><input type="checkbox" />10 core questions answered aloud and
+recorded once</label></li>
+<li><label><input type="checkbox" />Five STAR stories written
+down</label></li>
+<li><label><input type="checkbox" />Shortlist of 15 roles with
+job-ad-to-evidence mapping</label></li>
+<li><label><input type="checkbox" />Mock technical interview completed
+(mentor or peer) with written feedback</label></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>The Java Developer Roadmap You Need in the AI Era</h3><p>Amigoscode · 22 min. What the Java job market asks for now, and where AI fits.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/na3gWTOBJEE" title="The Java Developer Roadmap You Need in the AI Era" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Ex-Google Recruiter Explains: 6 Résumé Secrets That Get You Hired</h3><p>Farah Sharghi · 10 min. Résumé advice from an ex-Google recruiter.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/eGmZZFJ-8PY" title="Ex-Google Recruiter Explains: 6 Résumé Secrets That Get You Hired" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>I Made a Custom GitHub Profile README Portfolio (and you can, too)</h3><p>ForrestKnight · 9 min. Building a GitHub profile README that works as a portfolio page.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/9A8sQZDRn5o" title="I Made a Custom GitHub Profile README Portfolio (and you can, too)" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Top 10 Spring Boot Interview Questions and Answers [2025]</h3><p>Amigoscode · 12 min. Ten Spring Boot interview questions and how to answer them.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/cNzFPWuju8k" title="Top 10 Spring Boot Interview Questions and Answers [2025]" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>How to NOT Fail a Technical Interview</h3><p>Fireship · 8 min. How to behave in a technical interview so your thinking is visible.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/1t1_a1BZ04o" title="How to NOT Fail a Technical Interview" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>STAR Method - How to Ace Your Amazon Interview</h3><p>Inside Amazon · 6 min. The STAR method for behavioural answers, from Amazon.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/UQrTMxouDUY" title="STAR Method - How to Ace Your Amazon Interview" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>MUST KNOW junior role JAVA interview questions (optional, longer)</h3><p>Keep On Coding · 42 min. Core Java interview questions for junior roles, answered.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/auCdqGdn2as" title="MUST KNOW junior role JAVA interview questions" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>

@@ -1,0 +1,158 @@
+<h1 id="phase-1-end-of-phase-exam">Phase 1 end-of-phase exam</h1>
+
+<table>
+<tbody>
+<tr>
+<td>When</td>
+<td>Week 13, after all 29 topic CBTs are passed</td>
+</tr>
+<tr>
+<td>Where</td>
+<td>Moodle (itlearning.tech), "Phase 1 end-of-phase exam" quiz</td>
+</tr>
+<tr>
+<td>Format</td>
+<td><strong>60 scenario-based multiple-choice questions</strong>, each a
+short workplace situation with one best answer</td>
+</tr>
+<tr>
+<td>Time</td>
+<td><strong>2 hours</strong> (120 minutes), one sitting; the timer keeps
+running if you close the browser</td>
+</tr>
+<tr>
+<td>Pass mark</td>
+<td><strong>70%</strong></td>
+</tr>
+<tr>
+<td>Attempts</td>
+<td>2, at least 48 hours apart; highest grade counts</td>
+</tr>
+<tr>
+<td>Order</td>
+<td>Questions and answer options are shuffled for every attempt</td>
+</tr>
+<tr>
+<td>Resources</td>
+<td>Closed book. No IDE, no AI assistants, no notes</td>
+</tr>
+<tr>
+<td>Review</td>
+<td>Correct answers and explanations are shown after the exam closes for
+the cohort</td>
+</tr>
+</tbody>
+</table>
+<h2 id="blueprint">Blueprint</h2>
+<p>The exam samples every Phase 1 topic, weighted by how much each
+module matters in junior interviews and on the job.</p>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Questions</th>
+<th>Weight</th>
+<th>Topics</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. Modern Java &amp; OOP</td>
+<td>20</td>
+<td>33%</td>
+<td>Tooling and Linux (1.1), syntax and money types (1.2), OOP/SOLID
+(1.3), collections and generics (1.4), lambdas and streams (1.5),
+records/sealed/pattern matching (1.6), exceptions and immutability
+(1.7), legacy migration (1.8), Kotlin (1.9), I/O and NIO.2 (1.10),
+localization (1.11)</td>
+</tr>
+<tr>
+<td>2. Concurrency &amp; JVM</td>
+<td>11</td>
+<td>18%</td>
+<td>Executors and CompletableFuture (2.1), races, locks, atomics,
+deadlocks (2.2), virtual threads (2.3), memory and GC (2.4), modules and
+jlink (2.5)</td>
+</tr>
+<tr>
+<td>3. Databases</td>
+<td>15</td>
+<td>25%</td>
+<td>Design and joins (3.1), transactions and locking (3.2), indexing and
+plans (3.3), migrations (3.4), JDBC and SQL injection (3.5), Redis and
+MongoDB (3.6)</td>
+</tr>
+<tr>
+<td>4. Spring Boot 4</td>
+<td>14</td>
+<td>23%</td>
+<td>DI and auto-configuration (4.1), MVC, validation, Problem Details
+(4.2), JPA and N+1 (4.3), configuration and secrets (4.4), Actuator
+(4.5), Boot 3 → 4 (4.6), Kotlin with Spring (4.7)</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>60</strong></td>
+<td><strong>100%</strong></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="what-the-questions-look-like">What the questions look like</h2>
+<p>Every question describes a realistic situation, usually from a bank
+or fintech, and asks for the best action, diagnosis or design. Two
+examples in the exam's style (these two are not in the exam):</p>
+<p><strong>Example 1.</strong> A nightly job reads 4 million
+transactions and checks each reference against a
+<code>List&lt;String&gt;</code> of already-processed references. It
+takes six hours. What single change helps most?</p>
+<ul>
+<li>A. Sort the list before checking</li>
+<li>B. Use a <code>HashSet&lt;String&gt;</code> for processed
+references</li>
+<li>C. Run the job on a server with more RAM</li>
+<li>D. Use a <code>LinkedList</code></li>
+</ul>
+<details><summary>Answer</summary>
+
+<p><strong>B.</strong> <code>List.contains</code> is O(n), so the job is
+O(n²). A <code>HashSet</code> makes each check O(1) on average.</p>
+</details>
+
+<p><strong>Example 2.</strong> After upgrading to Spring Boot 4, a
+service starts normally, but its new database tables never appear. The
+POM contains <code>flyway-core</code> and no Flyway starter. What's
+wrong?</p>
+<ul>
+<li>A. Flyway isn't supported in Spring Boot 4</li>
+<li>B. The migration files must be renamed for Boot 4</li>
+<li>C. Boot 4's modular auto-configuration needs
+<code>spring-boot-starter-flyway</code></li>
+<li>D. <code>ddl-auto</code> must be set to <code>update</code></li>
+</ul>
+<details><summary>Answer</summary>
+
+<p><strong>C.</strong> In Boot 4, technologies that used to activate
+from the bare library need their starter, otherwise migrations silently
+don't run.</p>
+</details>
+
+<h2 id="how-to-prepare">How to prepare</h2>
+<ol type="1">
+<li>Retake all 29 topic CBTs without notes until you score 90%+. They
+use the same style.</li>
+<li>Re-read the "Common mistakes" section of each lesson: many exam
+scenarios are built on them.</li>
+<li>Explain your Capstone 1 design aloud: locking, idempotency, schema
+constraints. Many questions test the same reasoning.</li>
+<li>Practise under time pressure: about 2 minutes per question.</li>
+</ol>
+<h2 id="for-instructors">For instructors</h2>
+<p>The question bank (with answers and explanations) is
+<strong>not</strong> stored in this public repository. It lives in the
+private repository
+<code>sundayayandele/java-zero-hire-assessments</code> (access on
+request). Clone it into <code>assessments/private/</code> (git-ignored
+here) and run <code>scripts/moodle/build_moodle.py</code> to produce the
+Moodle XML.</p>
+

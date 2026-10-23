@@ -1,0 +1,606 @@
+<h1 id="deployment-and-cicd-guide-phase-1">Deployment and CI/CD guide
+(Phase 1)</h1>
+
+<p>Every Phase 1 capstone is a Spring Boot 4 service in one container
+plus a PostgreSQL database. This guide takes you from a green build to a
+public HTTPS health endpoint on four targets: a <strong>VPS</strong>
+(for example SSDNodes), <strong>AWS</strong>, <strong>Azure</strong> and
+<strong>GCP</strong>. Start with the VPS: it is the cheapest, and it
+teaches you what the managed platforms do for you.</p>
+<blockquote>
+<p><strong>Costs and clean-up.</strong> Cloud free tiers and trial
+credits change; check each provider's current terms before you create
+anything. Set a billing alert on day one, and delete resources when
+you're done. Commands below create billable resources.</p>
+</blockquote>
+<h2 id="contents">Contents</h2>
+<ol type="1">
+<li><a href="#1-infrastructure-sizing">Infrastructure sizing</a></li>
+<li><a href="#2-cicd">CI/CD: GitHub Actions (primary) and GitLab CI
+(secondary)</a></li>
+<li><a href="#3-deploy-to-a-vps">Deploy to a VPS (SSDNodes or any Ubuntu
+VPS)</a></li>
+<li><a href="#4-deploy-to-aws">Deploy to AWS (ECS Express Mode +
+RDS)</a></li>
+<li><a href="#5-deploy-to-azure">Deploy to Azure (Container Apps +
+PostgreSQL Flexible Server)</a></li>
+<li><a href="#6-deploy-to-gcp">Deploy to GCP (Cloud Run + Cloud
+SQL)</a></li>
+<li><a href="#7-production-checklist">Production checklist</a></li>
+</ol>
+<h2 id="1-infrastructure-sizing">1. Infrastructure sizing</h2>
+<h3 id="how-to-size-a-spring-boot-service">How to size a Spring Boot
+service</h3>
+<ul>
+<li><strong>Memory:</strong> a typical Phase 1 service uses 250–450 MB
+of heap under load. The JVM also needs metaspace, thread stacks and
+native memory (topic 2.4). Give the container <strong>1 GB</strong> and
+set <code>-XX:MaxRAMPercentage=75</code> (the Dockerfile already does).
+Below 512 MB, expect trouble.</li>
+<li><strong>CPU:</strong> 0.5 vCPU serves light traffic; 1 vCPU makes
+startup and JIT warm-up much faster. Batch-heavy capstones (4, 7, 10)
+benefit from 2 vCPU while running jobs.</li>
+<li><strong>Database connections:</strong> HikariCP defaults to 10 per
+instance. Keep <code>instances × pool size</code> well under the
+database's <code>max_connections</code> (topic 3.5).</li>
+<li><strong>Storage:</strong> the ledger and FX capstones need under 5
+GB. Data-heavy capstones (5, 8, 9) need 20–50 GB while loading, or a
+filtered dataset.</li>
+</ul>
+<h3 id="recommended-sizes">Recommended sizes</h3>
+<table>
+<thead>
+<tr>
+<th>Target</th>
+<th>Application</th>
+<th>Database</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Laptop</td>
+<td>Docker Desktop with 4+ GB allocated (8 GB RAM machine minimum, 16 GB
+recommended)</td>
+<td><code>postgres:17-alpine</code> container</td>
+<td><code>docker compose up --build</code></td>
+</tr>
+<tr>
+<td><strong>VPS</strong></td>
+<td>One VM: <strong>2 vCPU / 4 GB RAM / 40+ GB SSD</strong>, Ubuntu
+24.04 LTS, runs app + PostgreSQL + Caddy in Docker Compose</td>
+<td>Same VM (PostgreSQL container with a volume)</td>
+<td>4 vCPU / 8 GB if you run data-heavy capstones or several services on
+one box</td>
+</tr>
+<tr>
+<td><strong>AWS</strong></td>
+<td>ECS Express Mode (Fargate) service: <strong>0.5–1 vCPU / 1–2
+GB</strong>, min 1 task</td>
+<td>RDS for PostgreSQL 17, <strong>db.t4g.micro</strong>, 20 GB gp3,
+single-AZ for learning</td>
+<td>Express Mode adds an Application Load Balancer, which has an hourly
+cost</td>
+</tr>
+<tr>
+<td><strong>Azure</strong></td>
+<td>Container Apps: <strong>0.5 vCPU / 1 GiB</strong>, min replicas 1 (0
+to save money if no scheduled jobs)</td>
+<td>Azure Database for PostgreSQL Flexible Server, <strong>Burstable
+B1ms</strong>, 32 GB</td>
+<td>Use the same region for both</td>
+</tr>
+<tr>
+<td><strong>GCP</strong></td>
+<td>Cloud Run: <strong>1 vCPU / 1 GiB</strong>, min instances 0–1</td>
+<td>Cloud SQL for PostgreSQL 17, <strong>db-f1-micro</strong> or
+<strong>db-g1-small</strong> (shared core, Enterprise edition), 10 GB
+SSD</td>
+<td>Shared-core tiers are for learning only; no SLA</td>
+</tr>
+</tbody>
+</table>
+<h2 id="2-cicd">2. CI/CD</h2>
+<p>Every starter already contains both pipelines. You don't need to
+write them, but you must understand them.</p>
+<h3 id="github-actions-primary">GitHub Actions (primary)</h3>
+<p><code>.github/workflows/ci.yml</code> has two jobs:</p>
+<ol type="1">
+<li><strong>build</strong> (every push and pull request): checks out the
+code, installs Temurin 21 with Maven caching, and runs
+<code>./mvnw -B verify</code>. Testcontainers works out of the box
+because GitHub's Ubuntu runners have Docker. Test reports are uploaded
+when the build fails.</li>
+<li><strong>image</strong> (pushes to <code>main</code> only, after
+<code>build</code> passes): builds the Docker image with Buildx (with a
+layer cache) and pushes it to <strong>GitHub Container Registry</strong>
+as <code>ghcr.io/&lt;owner&gt;/&lt;repo&gt;:&lt;commit-sha&gt;</code>
+and <code>:latest</code>, authenticating with the built-in
+<code>GITHUB_TOKEN</code>.</li>
+</ol>
+<p>Recommended repository settings:</p>
+<ul>
+<li><strong>Branch protection on <code>main</code></strong>: require the
+<code>build</code> check to pass and require pull requests.</li>
+<li><strong>Secret scanning and push protection</strong> (Settings →
+Code security), so committed secrets are blocked (topic 4.4).</li>
+<li><strong>Package visibility:</strong> make the GHCR package public
+(Package settings → Change visibility) if your deployment target should
+pull without credentials, or create a read-only token for the
+target.</li>
+</ul>
+<p><strong>Continuous deployment (optional):</strong> add a third job
+that deploys after <code>image</code>, for example SSH to your VPS and
+run <code>docker compose pull &amp;&amp; docker compose up -d</code>
+(section 3.7), or call your cloud's CLI (sections 4–6). Store
+credentials as <strong>GitHub Actions secrets</strong>, never in the
+workflow file. For AWS, Azure and GCP prefer <strong>OIDC
+federation</strong> (<code>aws-actions/configure-aws-credentials</code>,
+<code>azure/login</code>, <code>google-github-actions/auth</code>) over
+long-lived keys.</p>
+<h3 id="gitlab-ci-secondary">GitLab CI (secondary)</h3>
+<p>Create a free account at <a href="https://gitlab.com">gitlab.com</a>,
+create an empty project, and push the same repository as a second
+remote:</p>
+<pre class="bash"><code>git remote add gitlab git@gitlab.com:&lt;you&gt;/&lt;repo&gt;.git
+git push gitlab main</code></pre>
+<p><code>.gitlab-ci.yml</code> runs the same tests in a
+<code>test</code> stage (Temurin 21 image plus a
+<code>docker:27-dind</code> service so Testcontainers can start
+PostgreSQL), publishes JUnit reports to the merge request UI, and on the
+default branch builds and pushes the image to the project's
+<strong>GitLab Container Registry</strong>
+(<code>registry.gitlab.com/&lt;you&gt;/&lt;repo&gt;</code>) using the
+built-in <code>CI_JOB_TOKEN</code>. Shared runners on gitlab.com have a
+monthly compute-minute allowance on the free tier; a typical capstone
+pipeline takes a few minutes.</p>
+<p>Why both? Many banks and consultancies run GitLab (often self-hosted)
+rather than GitHub. Being able to read and fix either pipeline is a
+practical, interview-relevant skill.</p>
+<h2 id="3-deploy-to-a-vps">3. Deploy to a VPS</h2>
+<p>This works on any Ubuntu 24.04 VPS (SSDNodes, Hetzner, DigitalOcean,
+Contabo, a bank's own VM...). You'll end up with Docker Compose running
+your app, PostgreSQL and <a href="https://caddyserver.com/">Caddy</a> (a
+reverse proxy with automatic HTTPS certificates).</p>
+<h3 id="31-create-the-server">3.1 Create the server</h3>
+<p>Order a VPS with at least <strong>2 vCPU / 4 GB RAM / 40 GB
+SSD</strong> and <strong>Ubuntu 24.04 LTS</strong>, in the region
+closest to your users. Add your <strong>SSH public key</strong> during
+ordering if offered (generate one locally with
+<code>ssh-keygen -t ed25519</code> if you don't have one). Note the
+server's public IP.</p>
+<p>Optional but recommended: point a domain or subdomain at the IP with
+a DNS <code>A</code> record (for example
+<code>ledger.yourname.dev</code>). Caddy needs a domain to obtain a
+certificate; without one you can still use
+<code>http://&lt;ip&gt;</code> for testing.</p>
+<h3 id="32-secure-the-server">3.2 Secure the server</h3>
+<pre class="bash"><code>ssh root@&lt;server-ip&gt;
+
+adduser deploy                                  # your day-to-day user
+usermod -aG sudo deploy
+mkdir -p /home/deploy/.ssh &amp;&amp; cp ~/.ssh/authorized_keys /home/deploy/.ssh/
+chown -R deploy:deploy /home/deploy/.ssh &amp;&amp; chmod 700 /home/deploy/.ssh &amp;&amp; chmod 600 /home/deploy/.ssh/authorized_keys
+
+# Key-only SSH, no root login
+sed -i &#39;s/^#\?PasswordAuthentication .*/PasswordAuthentication no/; s/^#\?PermitRootLogin .*/PermitRootLogin no/&#39; /etc/ssh/sshd_config
+systemctl restart ssh
+
+# Firewall: SSH, HTTP, HTTPS only. PostgreSQL is NOT exposed.
+ufw allow OpenSSH &amp;&amp; ufw allow 80/tcp &amp;&amp; ufw allow 443/tcp &amp;&amp; ufw --force enable
+
+# Automatic security updates
+apt update &amp;&amp; apt -y upgrade &amp;&amp; apt -y install unattended-upgrades fail2ban
+exit</code></pre>
+<p>From now on, <code>ssh deploy@&lt;server-ip&gt;</code>. Check that
+you can log in as <code>deploy</code> <em>before</em> closing the root
+session.</p>
+<h3 id="33-install-docker">3.3 Install Docker</h3>
+<p>Follow Docker's official instructions for Ubuntu (apt repository),
+then let <code>deploy</code> use Docker:</p>
+<pre class="bash"><code>sudo apt -y install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+echo &quot;deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release &amp;&amp; echo &quot;$VERSION_CODENAME&quot;) stable&quot; \
+  | sudo tee /etc/apt/sources.list.d/docker.list &gt; /dev/null
+sudo apt update &amp;&amp; sudo apt -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo usermod -aG docker deploy &amp;&amp; exit      # log in again for the group to apply</code></pre>
+<p>Note: Docker publishes container ports through its own iptables
+rules, which bypass <code>ufw</code>. That's why the Compose file below
+publishes <strong>only Caddy's</strong> ports and keeps the app and
+database on the internal network.</p>
+<h3 id="34-production-compose-file">3.4 Production Compose file</h3>
+<p>On the server, create <code>~/app/compose.yaml</code>:</p>
+<pre class="yaml"><code>services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: app
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?missing}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [&quot;CMD-SHELL&quot;, &quot;pg_isready -U app -d app&quot;]
+      interval: 10s
+      retries: 10
+
+  app:
+    image: ghcr.io/&lt;owner&gt;/&lt;repo&gt;:latest        # pushed by GitHub Actions
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/app
+      DB_USER: app
+      DB_PASSWORD: ${DB_PASSWORD:?missing}
+    # no &quot;ports:&quot; — only Caddy can reach the app
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - &quot;80:80&quot;
+      - &quot;443:443&quot;
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    depends_on:
+      - app
+
+volumes:
+  pgdata:
+  caddy_data:</code></pre>
+<p><code>~/app/Caddyfile</code> (replace the domain, or use
+<code>:80</code> for IP-only testing):</p>
+<pre class="text"><code>ledger.yourname.dev {
+    encode gzip
+    # Public: the API and the health probes. Everything else under /actuator stays private.
+    @blockedActuator {
+        path /actuator/*
+        not path /actuator/health /actuator/health/*
+    }
+    respond @blockedActuator 404
+    reverse_proxy app:8080
+}</code></pre>
+<p><code>~/app/.env</code> (secrets only on the server, readable only by
+<code>deploy</code>):</p>
+<pre class="bash"><code>cd ~/app
+umask 077
+echo &quot;DB_PASSWORD=$(openssl rand -base64 32 | tr -d &#39;/+=&#39;)&quot; &gt; .env</code></pre>
+<h3 id="35-start-it">3.5 Start it</h3>
+<pre class="bash"><code>cd ~/app
+# Only needed if your GHCR package is private: a GitHub token with read:packages scope
+# echo &quot;&lt;token&gt;&quot; | docker login ghcr.io -u &lt;github-username&gt; --password-stdin
+docker compose pull
+docker compose up -d
+docker compose ps
+docker compose logs -f app          # watch Flyway migrate and Spring Boot start
+curl -s https://ledger.yourname.dev/actuator/health/readiness</code></pre>
+<h3 id="36-backups">3.6 Backups</h3>
+<p>The database lives in a Docker volume on one machine. Back it up
+daily, and copy backups off the server:</p>
+<pre class="bash"><code>mkdir -p ~/backups
+crontab -e
+# 02:30 every day: compressed dump, keep 14 days
+30 2 * * * cd ~/app &amp;&amp; docker compose exec -T postgres pg_dump -U app -Fc app &gt; ~/backups/app-$(date +\%F).dump &amp;&amp; find ~/backups -name &#39;*.dump&#39; -mtime +14 -delete</code></pre>
+<p>Test a restore at least once
+(<code>pg_restore -d &lt;db&gt; &lt;file&gt;</code> into a scratch
+database). An untested backup isn't a backup. Many VPS providers also
+sell whole-server snapshots; they're a useful addition, not a
+replacement.</p>
+<h3 id="37-deploy-updates">3.7 Deploy updates</h3>
+<p>Manual:
+<code>docker compose pull app &amp;&amp; docker compose up -d app</code>.
+Automated from GitHub Actions, add a job after <code>image</code>:</p>
+<pre class="yaml"><code>  deploy:
+    needs: image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}          # a dedicated deploy key, not your personal key
+          HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          install -m 600 /dev/null key &amp;&amp; echo &quot;$SSH_KEY&quot; &gt; key
+          ssh -i key -o StrictHostKeyChecking=accept-new deploy@&quot;$HOST&quot; \
+            &#39;cd ~/app &amp;&amp; docker compose pull app &amp;&amp; docker compose up -d app&#39;</code></pre>
+<p>Because the app has a readiness probe and Flyway runs before it
+serves traffic, a bad migration stops the new container from becoming
+ready; check <code>docker compose logs app</code> and roll back by
+pinning the previous image tag.</p>
+<h2 id="4-deploy-to-aws">4. Deploy to AWS</h2>
+<p>AWS's simplest container hosting for new accounts is <strong>Amazon
+ECS Express Mode</strong>: you give it an image and two IAM roles, and
+it creates a Fargate service, an HTTPS Application Load Balancer, auto
+scaling and a URL. (AWS App Runner, the previous recommendation, <a
+href="https://docs.aws.amazon.com/apprunner/latest/dg/apprunner-availability-change.html">closed
+to new customers on 30 April 2026</a>; AWS points new users to ECS
+Express Mode.)</p>
+<p>Prerequisites: an AWS account with a billing alert, the AWS CLI v2
+configured (<code>aws configure</code> or SSO), Docker, and a
+<strong>default VPC</strong> in your region. Examples use
+<code>eu-west-2</code> (London); <code>af-south-1</code> (Cape Town) is
+closer to Nigeria but must be enabled in your account first. Set:</p>
+<pre class="bash"><code>export AWS_REGION=eu-west-2
+export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+export APP=core-banking-ledger</code></pre>
+<h3 id="41-push-the-image-to-ecr">4.1 Push the image to ECR</h3>
+<pre class="bash"><code>aws ecr create-repository --repository-name $APP
+aws ecr get-login-password | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+docker build -t $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$APP:v1 .
+docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$APP:v1</code></pre>
+<p>(On an Apple Silicon Mac, either build with
+<code>--platform linux/amd64</code>, or keep the native ARM image and
+pass <code>--cpu-architecture ARM64</code> when creating the
+service.)</p>
+<h3 id="42-create-the-database-rds-for-postgresql">4.2 Create the
+database (RDS for PostgreSQL)</h3>
+<pre class="bash"><code>aws rds create-db-instance \
+  --db-instance-identifier $APP-db \
+  --engine postgres --engine-version 17 \
+  --db-instance-class db.t4g.micro \
+  --allocated-storage 20 --storage-type gp3 \
+  --master-username app_admin --manage-master-user-password \
+  --db-name app \
+  --backup-retention-period 7 \
+  --no-publicly-accessible
+aws rds wait db-instance-available --db-instance-identifier $APP-db
+aws rds describe-db-instances --db-instance-identifier $APP-db \
+  --query &#39;DBInstances[0].[Endpoint.Address,MasterUserSecret.SecretArn]&#39; --output text</code></pre>
+<p><code>--manage-master-user-password</code> stores the password in
+<strong>AWS Secrets Manager</strong> (rotated by RDS) instead of you
+choosing one. The output gives you the endpoint and the secret's ARN.
+The secret's value is JSON
+(<code>{"username":...,"password":...}</code>); ECS can inject a single
+JSON key with <code>&lt;secret-arn&gt;:password::</code>.</p>
+<p>For a real system, create a separate least-privilege application user
+rather than using the master user.</p>
+<h3 id="43-create-the-iam-roles">4.3 Create the IAM roles</h3>
+<p>Follow the <a
+href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/express-service-getting-started.html">Express
+Mode getting-started guide</a> step 1 to create
+<code>ecsTaskExecutionRole</code> (with
+<code>AmazonECSTaskExecutionRolePolicy</code>) and
+<code>ecsInfrastructureRoleForExpressServices</code> (with
+<code>AmazonECSInfrastructureRoleforExpressGatewayServices</code>). Then
+allow the execution role to read the database secret:</p>
+<pre class="bash"><code>aws iam put-role-policy --role-name ecsTaskExecutionRole --policy-name read-db-secret \
+  --policy-document &quot;{\&quot;Version\&quot;:\&quot;2012-10-17\&quot;,\&quot;Statement\&quot;:[{\&quot;Effect\&quot;:\&quot;Allow\&quot;,\&quot;Action\&quot;:\&quot;secretsmanager:GetSecretValue\&quot;,\&quot;Resource\&quot;:\&quot;&lt;secret-arn&gt;\&quot;}]}&quot;</code></pre>
+<h3 id="44-create-the-service">4.4 Create the service</h3>
+<pre class="bash"><code>aws ecs create-express-gateway-service \
+  --service-name $APP \
+  --execution-role-arn arn:aws:iam::$ACCOUNT_ID:role/ecsTaskExecutionRole \
+  --infrastructure-role-arn arn:aws:iam::$ACCOUNT_ID:role/ecsInfrastructureRoleForExpressServices \
+  --cpu 1 --memory 2 \
+  --health-check-path /actuator/health/readiness \
+  --scaling-target &#39;{&quot;minTaskCount&quot;:1,&quot;maxTaskCount&quot;:2}&#39; \
+  --primary-container &#39;{
+      &quot;image&quot;: &quot;&#39;$ACCOUNT_ID&#39;.dkr.ecr.&#39;$AWS_REGION&#39;.amazonaws.com/&#39;$APP&#39;:v1&quot;,
+      &quot;containerPort&quot;: 8080,
+      &quot;environment&quot;: [
+        {&quot;name&quot;: &quot;DB_URL&quot;,  &quot;value&quot;: &quot;jdbc:postgresql://&lt;rds-endpoint&gt;:5432/app?sslmode=require&quot;},
+        {&quot;name&quot;: &quot;DB_USER&quot;, &quot;value&quot;: &quot;app_admin&quot;}
+      ],
+      &quot;secrets&quot;: [
+        {&quot;name&quot;: &quot;DB_PASSWORD&quot;, &quot;valueFrom&quot;: &quot;&lt;secret-arn&gt;:password::&quot;}
+      ]
+    }&#39; \
+  --monitor-resources</code></pre>
+<p>When the status is <code>ACTIVE</code>, the output includes the HTTPS
+URL
+(<code>https://&lt;service&gt;.ecs.&lt;region&gt;.on.aws/</code>).</p>
+<h3 id="45-allow-the-service-to-reach-the-database">4.5 Allow the
+service to reach the database</h3>
+<p>The RDS instance's security group must accept PostgreSQL traffic from
+the service's tasks. Find the security group Express Mode created for
+the tasks
+(<code>aws ecs describe-express-gateway-service --service-arn &lt;arn&gt;</code>,
+or the ECS console), then:</p>
+<pre class="bash"><code>aws ec2 authorize-security-group-ingress --group-id &lt;rds-security-group-id&gt; \
+  --protocol tcp --port 5432 --source-group &lt;task-security-group-id&gt;</code></pre>
+<p>The task will retry its database connection on restart; check
+<code>/actuator/health/readiness</code> through the URL. Logs are in
+CloudWatch Logs.</p>
+<h3 id="46-update-and-clean-up">4.6 Update and clean up</h3>
+<ul>
+<li>New version: push <code>:v2</code> and run
+<code>aws ecs update-express-gateway-service</code> with the new image
+(Express Mode performs a canary-style rollout), or automate it from
+GitHub Actions with OIDC
+(<code>aws-actions/configure-aws-credentials</code>).</li>
+<li>Clean up:
+<code>aws ecs delete-express-gateway-service --service-arn &lt;arn&gt;</code>,
+<code>aws rds delete-db-instance --db-instance-identifier $APP-db --skip-final-snapshot</code>
+(only for learning databases!), delete the ECR repository.</li>
+</ul>
+<h2 id="5-deploy-to-azure">5. Deploy to Azure</h2>
+<p><strong>Azure Container Apps</strong> runs containers with HTTPS
+ingress, revisions and scaling, without managing a cluster.
+<strong>Azure Database for PostgreSQL Flexible Server</strong> is the
+managed database.</p>
+<p>Prerequisites: an Azure subscription with a budget alert, the Azure
+CLI (<code>az login</code>), and the Container Apps extension
+(<code>az extension add --name containerapp --upgrade</code>). Choose a
+region (examples use <code>uksouth</code>; <code>southafricanorth</code>
+is closer to Nigeria).</p>
+<pre class="bash"><code>RG=jzh-capstones
+LOC=uksouth
+APP=core-banking-ledger
+PG=$APP-pg-$RANDOM                    # server names must be globally unique
+az group create -n $RG -l $LOC</code></pre>
+<h3 id="51-database">5.1 Database</h3>
+<pre class="bash"><code>DB_PASSWORD=$(openssl rand -base64 32 | tr -d &#39;/+=&#39;)     # keep it in your password manager; never commit it
+az postgres flexible-server create -g $RG -n $PG -l $LOC \
+  --tier Burstable --sku-name Standard_B1ms --storage-size 32 \
+  --version 17 --admin-user app_admin --admin-password &quot;$DB_PASSWORD&quot; \
+  --public-access 0.0.0.0                                 # allows access from Azure services only
+az postgres flexible-server db create -g $RG -s $PG -d app</code></pre>
+<p><code>--public-access 0.0.0.0</code> creates a firewall rule allowing
+connections from Azure services (any subscription), which is acceptable
+for learning. For production, use private networking (VNet integration)
+with the Container Apps environment.</p>
+<h3 id="52-container-image">5.2 Container image</h3>
+<p>Either make your GHCR package public and use
+<code>ghcr.io/&lt;owner&gt;/&lt;repo&gt;:&lt;tag&gt;</code> directly, or
+use Azure Container Registry:</p>
+<pre class="bash"><code>ACR=jzhacr$RANDOM
+az acr create -g $RG -n $ACR --sku Basic
+az acr build -r $ACR -t $APP:v1 .                         # builds in Azure; no local Docker needed</code></pre>
+<h3 id="53-container-app">5.3 Container App</h3>
+<pre class="bash"><code>az containerapp env create -g $RG -n jzh-env -l $LOC
+
+az containerapp create -g $RG -n $APP --environment jzh-env \
+  --image $ACR.azurecr.io/$APP:v1 --registry-server $ACR.azurecr.io --registry-identity system \
+  --target-port 8080 --ingress external \
+  --cpu 0.5 --memory 1.0Gi --min-replicas 1 --max-replicas 2 \
+  --secrets db-password=&quot;$DB_PASSWORD&quot; \
+  --env-vars DB_URL=&quot;jdbc:postgresql://$PG.postgres.database.azure.com:5432/app?sslmode=require&quot; \
+             DB_USER=app_admin DB_PASSWORD=secretref:db-password
+
+az containerapp show -g $RG -n $APP --query properties.configuration.ingress.fqdn -o tsv</code></pre>
+<p>Then open
+<code>https://&lt;fqdn&gt;/actuator/health/readiness</code>. Add health
+probes pointing at <code>/actuator/health/liveness</code> and
+<code>/actuator/health/readiness</code> (portal: Container App → Health
+probes, or a YAML definition with
+<code>az containerapp update --yaml</code>).</p>
+<p>Secrets stored with <code>--secrets</code> are encrypted and
+referenced with <code>secretref:</code>. For stronger control, store the
+password in <strong>Azure Key Vault</strong> and reference it from the
+Container App with a managed identity.</p>
+<p>Logs:
+<code>az containerapp logs show -g $RG -n $APP --follow</code>.</p>
+<h3 id="54-scheduled-jobs-and-scale-to-zero">5.4 Scheduled jobs and
+scale-to-zero</h3>
+<p>With <code>--min-replicas 0</code> the app costs nothing when idle,
+but <code>@Scheduled</code> jobs won't run while it's scaled to zero.
+Keep <code>--min-replicas 1</code> for capstones with schedulers, or
+move the job to a <strong>Container Apps job</strong>
+(<code>az containerapp job create --trigger-type Schedule --cron-expression ...</code>)
+that calls your admin endpoint.</p>
+<h3 id="55-update-and-clean-up">5.5 Update and clean up</h3>
+<ul>
+<li>New version:
+<code>az acr build -r $ACR -t $APP:v2 . &amp;&amp; az containerapp update -g $RG -n $APP --image $ACR.azurecr.io/$APP:v2</code>
+(a new revision is created). Automate with <code>azure/login</code>
+(OIDC) in GitHub Actions.</li>
+<li>Clean up everything: <code>az group delete -n $RG --yes</code>.</li>
+</ul>
+<h2 id="6-deploy-to-gcp">6. Deploy to GCP</h2>
+<p><strong>Cloud Run</strong> runs containers with HTTPS, scaling to
+zero, per-request billing. <strong>Cloud SQL</strong> is the managed
+PostgreSQL.</p>
+<p>Prerequisites: a GCP project with billing and a budget alert, the
+<code>gcloud</code> CLI (<code>gcloud init</code>). Examples use
+<code>europe-west2</code> (London); <code>africa-south1</code>
+(Johannesburg) is closer to Nigeria.</p>
+<pre class="bash"><code>PROJECT=$(gcloud config get-value project)
+REGION=europe-west2
+APP=core-banking-ledger
+gcloud services enable run.googleapis.com sqladmin.googleapis.com artifactregistry.googleapis.com \
+  secretmanager.googleapis.com cloudbuild.googleapis.com</code></pre>
+<h3 id="61-add-the-cloud-sql-connector-to-your-app">6.1 Add the Cloud
+SQL connector to your app</h3>
+<p>Cloud Run connects to Cloud SQL through the Cloud SQL Java connector
+(IAM-authorised, encrypted, no IP allow-listing). Add it as a runtime
+dependency (only needed for GCP; a Maven profile works well):</p>
+<pre class="xml"><code>&lt;dependency&gt;
+    &lt;groupId&gt;com.google.cloud.sql&lt;/groupId&gt;
+    &lt;artifactId&gt;postgres-socket-factory&lt;/artifactId&gt;
+    &lt;version&gt;1.30.1&lt;/version&gt;
+    &lt;scope&gt;runtime&lt;/scope&gt;
+&lt;/dependency&gt;</code></pre>
+<h3 id="62-database">6.2 Database</h3>
+<pre class="bash"><code>gcloud sql instances create $APP-db --database-version=POSTGRES_17 \
+  --edition=ENTERPRISE --tier=db-f1-micro --region=$REGION \
+  --storage-size=10 --backup-start-time=02:00
+gcloud sql databases create app --instance=$APP-db
+DB_PASSWORD=$(openssl rand -base64 32 | tr -d &#39;/+=&#39;)
+gcloud sql users create app --instance=$APP-db --password=&quot;$DB_PASSWORD&quot;
+printf &#39;%s&#39; &quot;$DB_PASSWORD&quot; | gcloud secrets create db-password --data-file=-
+INSTANCE=$(gcloud sql instances describe $APP-db --format=&#39;value(connectionName)&#39;)   # project:region:instance</code></pre>
+<p>Grant the Cloud Run runtime service account access to the secret and
+to Cloud SQL (by default the Compute Engine default service account;
+better, create a dedicated one and pass
+<code>--service-account</code>):</p>
+<pre class="bash"><code>SA=$(gcloud projects describe $PROJECT --format=&#39;value(projectNumber)&#39;)-compute@developer.gserviceaccount.com
+gcloud secrets add-iam-policy-binding db-password --member=serviceAccount:$SA --role=roles/secretmanager.secretAccessor
+gcloud projects add-iam-policy-binding $PROJECT --member=serviceAccount:$SA --role=roles/cloudsql.client</code></pre>
+<h3 id="63-image">6.3 Image</h3>
+<p>Cloud Run deploys from <strong>Artifact Registry</strong>:</p>
+<pre class="bash"><code>gcloud artifacts repositories create apps --repository-format=docker --location=$REGION
+gcloud builds submit --tag $REGION-docker.pkg.dev/$PROJECT/apps/$APP:v1 .</code></pre>
+<h3 id="64-deploy">6.4 Deploy</h3>
+<pre class="bash"><code>gcloud run deploy $APP \
+  --image $REGION-docker.pkg.dev/$PROJECT/apps/$APP:v1 \
+  --region $REGION --port 8080 --cpu 1 --memory 1Gi \
+  --min-instances 0 --max-instances 2 \
+  --allow-unauthenticated \
+  --set-env-vars &quot;DB_URL=jdbc:postgresql:///app?cloudSqlInstance=$INSTANCE&amp;socketFactory=com.google.cloud.sql.postgres.SocketFactory,DB_USER=app&quot; \
+  --set-secrets DB_PASSWORD=db-password:latest</code></pre>
+<p>The command prints the service URL. Check
+<code>&lt;url&gt;/actuator/health/readiness</code>.</p>
+<p>Notes:</p>
+<ul>
+<li><strong>Startup:</strong> Cloud Run sends traffic once the container
+listens on the port; set a startup probe on
+<code>/actuator/health/readiness</code> (<code>--startup-probe</code> or
+the console) so traffic waits for Flyway and Spring to finish.</li>
+<li><strong>Scale to zero</strong> saves money but the first request
+after idle pays the JVM startup cost (a few seconds), and
+<code>@Scheduled</code> jobs won't run while scaled to zero. Use
+<code>--min-instances 1</code> for schedulers, or <strong>Cloud
+Scheduler</strong> calling your admin endpoint.</li>
+<li><strong>CPU allocation:</strong> by default CPU is only allocated
+during requests; background work needs instance-based billing
+(<code>--no-cpu-throttling</code>).</li>
+<li>Logs: Cloud Logging
+(<code>gcloud run services logs read $APP --region $REGION</code>).</li>
+</ul>
+<h3 id="65-update-and-clean-up">6.5 Update and clean up</h3>
+<ul>
+<li>New version:
+<code>gcloud builds submit --tag ...:v2 . &amp;&amp; gcloud run deploy $APP --image ...:v2 --region $REGION</code>.
+Automate with <code>google-github-actions/auth</code> (Workload Identity
+Federation) and <code>google-github-actions/deploy-cloudrun</code>.</li>
+<li>Clean up:
+<code>gcloud run services delete $APP --region $REGION</code>,
+<code>gcloud sql instances delete $APP-db</code>,
+<code>gcloud artifacts repositories delete apps --location $REGION</code>,
+<code>gcloud secrets delete db-password</code>.</li>
+</ul>
+<h2 id="7-production-checklist">7. Production checklist</h2>
+<p>Before you call a capstone "deployed":</p>
+<ul class="task-list">
+<li><label><input type="checkbox" />HTTPS only; health endpoint public,
+other Actuator endpoints not reachable from the internet.</label></li>
+<li><label><input type="checkbox" />No secrets in Git, images or
+workflow files; secrets come from <code>.env</code> (VPS) or the
+platform's secret store.</label></li>
+<li><label><input type="checkbox" />Database not publicly reachable
+(VPS: no published port; cloud: private access or service-only
+firewall).</label></li>
+<li><label><input type="checkbox" />Automated daily backups, and one
+tested restore.</label></li>
+<li><label><input type="checkbox" />Readiness/startup probes point at
+<code>/actuator/health/readiness</code>; liveness at
+<code>/actuator/health/liveness</code>.</label></li>
+<li><label><input type="checkbox" /><code>MaxRAMPercentage</code> set;
+container memory at least 1 GB.</label></li>
+<li><label><input type="checkbox" />Logs visible (Compose logs,
+CloudWatch, Log Analytics or Cloud Logging) and you know how to read
+them.</label></li>
+<li><label><input type="checkbox" />Billing alert set; unused cloud
+resources deleted.</label></li>
+<li><label><input type="checkbox" />README links to the live health URL
+and documents how to deploy.</label></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>How To Dockerize Spring Boot Application &amp; PostgreSQL Database</h3><p>CodeVice · 15 min. Dockerising a Spring Boot app with PostgreSQL.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/3fALfjlkfuU" title="How To Dockerize Spring Boot Application &amp; PostgreSQL Database" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>CI/CD Tutorial using GitHub Actions - Automated Testing &amp; Automated Deployments</h3><p>Tom Shaw · 6 min. CI/CD with GitHub Actions in six minutes.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/YLtlz88zrLg" title="CI/CD Tutorial using GitHub Actions - Automated Testing &amp; Automated Deployments" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>GitLab CI/CD Pipeline Tutorial for Beginners</h3><p>Valentin Despa · 20 min. GitLab CI/CD pipelines for beginners.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/z7nLsJvEyMY" title="GitLab CI/CD Pipeline Tutorial for Beginners" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Full Guide to Auto-Deploy a Spring Boot Backend (VPS Server, GitHub Actions, HTTPS, Security) (optional, longer)</h3><p>Philipp Lackner · 95 min. Auto-deploying a Spring Boot backend to a VPS with GitHub Actions and HTTPS.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/8X6uvKymTkM" title="Full Guide to Auto-Deploy a Spring Boot Backend (VPS Server, GitHub Actions, HTTPS, Security)" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>

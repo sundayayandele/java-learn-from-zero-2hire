@@ -1,0 +1,276 @@
+<h1 id="cicd-guide-six-platforms-one-pipeline-design-phase-1">CI/CD
+guide: six platforms, one pipeline design (Phase 1)</h1>
+
+<p>Banks and fintechs don't agree on one CI/CD tool. Lagos fintechs
+often run GitHub Actions or GitLab, banks and consultancies run Jenkins
+and Azure DevOps, AWS-first teams use CodePipeline, and Kubernetes
+platform teams deploy with Argo CD. Every Phase 1 starter therefore
+ships <strong>the same pipeline on six platforms</strong>, so you can
+learn the design once and recognise it anywhere.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Platform</th>
+<th>File in every starter</th>
+<th>Recommended use in this programme</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>GitHub Actions</strong></td>
+<td><code>.github/workflows/ci.yml</code></td>
+<td><strong>Primary.</strong> Every capstone must be green here</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>GitLab CI/CD</strong></td>
+<td><code>.gitlab-ci.yml</code></td>
+<td><strong>Secondary.</strong> Mirror to a free gitlab.com account</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Azure DevOps Pipelines</strong></td>
+<td><code>azure-pipelines.yml</code></td>
+<td>Optional; common in banks and Microsoft shops</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>AWS CodeBuild + CodePipeline</strong></td>
+<td><code>buildspec.yml</code></td>
+<td>Optional; for AWS-first teams (pairs with the AWS deployment)</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Jenkins</strong></td>
+<td><code>Jenkinsfile</code></td>
+<td>Optional; still the most common tool in enterprises and banks</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>Argo CD (GitOps)</strong></td>
+<td><code>deploy/k8s/…</code>,
+<code>deploy/argocd/application.yaml</code></td>
+<td>Preview of Phase 3 (Kubernetes); try it on a local cluster</td>
+</tr>
+</tbody>
+</table>
+<p>How these files were checked: the GitHub Actions and GitLab files
+validate against their official JSON schemas. The Jenkinsfile passes
+Jenkins' own declarative linter. The Kubernetes manifests build with
+Kustomize and validate with kubeconform, and so does the Argo CD
+Application (against its CRD schema). The Azure Pipelines and CodeBuild
+files were reviewed against Microsoft and AWS documentation; you prove
+them the first time you connect a project.</p>
+<h2 id="1-the-pipeline-design-same-everywhere">1. The pipeline design
+(same everywhere)</h2>
+<pre class="mermaid"><code>flowchart LR
+    dev[Push or pull request] --&gt; build[Build and test&lt;br/&gt;./mvnw verify&lt;br/&gt;unit + Testcontainers]
+    build --&gt;|PR| report[Test report and status check]
+    build --&gt;|main only| image[Build Docker image&lt;br/&gt;tag = commit SHA]
+    image --&gt; registry[(Container registry&lt;br/&gt;GHCR / GitLab / ACR / ECR)]
+    registry --&gt; deploy{Deploy}
+    deploy --&gt;|push-based| target[VPS / ECS / Container Apps / Cloud Run]
+    deploy --&gt;|GitOps| git[Update image tag in Git] --&gt; argocd[Argo CD syncs the cluster]</code></pre>
+<p>Principles every implementation follows, and that interviewers ask
+about:</p>
+<ol type="1">
+<li><strong>One command builds and tests</strong>:
+<code>./mvnw verify</code>, identical on laptops and CI. No "CI-only"
+scripts.</li>
+<li><strong>Real integration tests</strong>: Testcontainers starts
+PostgreSQL inside CI (every platform here provides Docker).</li>
+<li><strong>Fast feedback on pull requests; artefacts only from
+<code>main</code>.</strong> PRs run tests; only <code>main</code>
+publishes images.</li>
+<li><strong>Immutable, traceable images</strong>: tagged with the commit
+SHA (plus a moving <code>latest</code> for convenience). Deploy SHAs,
+never <code>latest</code>, to production.</li>
+<li><strong>Secrets come from the platform</strong> (GitHub secrets,
+GitLab CI variables, Azure service connections, AWS IAM roles, Jenkins
+credentials, Kubernetes Secrets). Never in the pipeline file.</li>
+<li><strong>Test reports are published</strong>, so failures are
+readable in the UI.</li>
+<li><strong>Caching</strong> of the Maven repository keeps builds to a
+few minutes.</li>
+</ol>
+<h2 id="2-github-actions-primary">2. GitHub Actions (primary)</h2>
+<p>Already covered in the <a
+href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/deploy/README.md#2-cicd">deployment guide</a>. In short: push
+to GitHub, and the <code>build</code> job runs on every push and pull
+request. On <code>main</code>, the <code>image</code> job pushes to
+<code>ghcr.io/&lt;owner&gt;/&lt;repo&gt;</code>. Turn on branch
+protection requiring the <code>build</code> check.</p>
+<h2 id="3-gitlab-cicd-secondary">3. GitLab CI/CD (secondary)</h2>
+<p>Also covered in the <a
+href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/deploy/README.md#gitlab-ci-secondary">deployment guide</a>. The
+<code>test</code> job uses a <code>docker:27-dind</code> service for
+Testcontainers; the <code>build-image</code> job pushes to the project's
+GitLab Container Registry on the default branch. (A job can't be called
+<code>image</code>: that's a reserved GitLab keyword.)</p>
+<h2 id="4-azure-devops-pipelines">4. Azure DevOps Pipelines</h2>
+<ol type="1">
+<li>Create a free organisation and project at <a
+href="https://dev.azure.com">dev.azure.com</a>. The free tier includes
+Microsoft-hosted parallel jobs for public and private projects (new
+organisations may have to request the free grant).</li>
+<li><strong>Connect your code:</strong> <em>Pipelines → New pipeline →
+GitHub</em> (or Azure Repos), pick the repository, choose
+<strong>Existing Azure Pipelines YAML file</strong>, and select
+<code>/azure-pipelines.yml</code>.</li>
+<li><strong>Create the registry connection</strong> the
+<code>Image</code> stage uses: <em>Project settings → Service
+connections → New → Docker Registry</em>. Choose <strong>Azure Container
+Registry</strong> (or "Others" for GHCR/Docker Hub) and name it exactly
+<code>container-registry</code>.</li>
+<li>Run the pipeline. Stage <strong>Test</strong> runs
+<code>./mvnw verify</code> with Maven caching and publishes JUnit
+results to the <em>Tests</em> tab. Stage <strong>Image</strong> (only on
+<code>main</code>) builds and pushes
+<code>&lt;registry&gt;/&lt;repository&gt;:&lt;commit&gt;</code> and
+<code>:latest</code> with the <code>Docker@2</code> task.</li>
+<li>Add <strong>branch policies</strong> on <code>main</code> (<em>Repos
+→ Branches → Branch policies → Build validation</em>) if your code lives
+in Azure Repos, or use GitHub branch protection with the Azure Pipelines
+check.</li>
+<li>To deploy, add a stage using <code>AzureContainerApps@1</code> (or
+<code>AzureCLI@2</code> running the commands from <a
+href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/deploy/README.md#5-deploy-to-azure">deployment guide section
+5</a>) with an Azure Resource Manager service connection that uses
+<strong>workload identity federation</strong> (no stored secrets).</li>
+</ol>
+<h2 id="5-aws-codebuild-and-codepipeline">5. AWS CodeBuild and
+CodePipeline</h2>
+<ol type="1">
+<li><strong>ECR repository:</strong>
+<code>aws ecr create-repository --repository-name &lt;artifactId&gt;</code>
+(name must match <code>IMAGE_REPO_NAME</code> in
+<code>buildspec.yml</code>).</li>
+<li><strong>CodeBuild project:</strong> <em>CodeBuild → Create build
+project</em>. Source: GitHub through an <strong>AWS
+CodeConnections</strong> connection; environment: managed image,
+<em>Amazon Linux</em>, <em>Standard</em> runtime (supports
+<code>corretto21</code>), <strong>Privileged</strong> enabled (needed
+for Docker); buildspec: <em>Use a buildspec file</em>. Let it create a
+service role, then attach permissions to push to ECR
+(<code>AmazonEC2ContainerRegistryPowerUser</code> or a narrower inline
+policy).</li>
+<li><strong>CodePipeline:</strong> <em>CodePipeline → Create pipeline
+(V2)</em>. Source stage: the same GitHub connection, branch
+<code>main</code> (add a pull-request trigger if you want PR builds).
+Build stage: the CodeBuild project. Deploy stage (optional):
+<strong>Amazon ECS</strong> using <code>imageDetail.json</code>, or a
+CodeBuild action that runs
+<code>aws ecs update-express-gateway-service</code> for the ECS Express
+Mode service from <a
+href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/deploy/README.md#4-deploy-to-aws">deployment guide section
+4</a>.</li>
+<li>Test results appear under <em>CodeBuild → Report groups</em> (from
+the <code>reports</code> section of the buildspec).</li>
+<li>Cost note: CodeBuild bills per build minute and CodePipeline per
+active pipeline; check the current free tier, and delete both when
+you're done.</li>
+</ol>
+<h2 id="6-jenkins">6. Jenkins</h2>
+<p>Run Jenkins locally to learn it (in a bank you'll use the team's
+server):</p>
+<pre class="bash"><code>docker network create jenkins
+docker run -d --name jenkins --network jenkins -p 8080:8080 -v jenkins_home:/var/jenkins_home \
+  -v /var/run/docker.sock:/var/run/docker.sock jenkins/jenkins:lts-jdk21
+docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword     # unlock the setup wizard</code></pre>
+<p>(Mounting the Docker socket lets builds use Docker. It effectively
+gives Jenkins root on your machine, which is fine for a laptop lab and
+never acceptable on a shared server, where you'd use dedicated
+Docker-capable agents.)</p>
+<ol type="1">
+<li>Finish the setup wizard with the suggested plugins (they include
+Pipeline, Git, JUnit and Credentials Binding). Install the Docker CLI
+inside the container, or attach an agent with Docker, so
+<code>docker build</code> works.</li>
+<li><em>Manage Jenkins → Tools → JDK installations</em>: add one named
+<strong><code>temurin-21</code></strong> (install automatically from
+Adoptium, or point at an existing JDK 21).</li>
+<li><em>Manage Jenkins → Credentials</em>: add a username/password (or
+token) credential with ID
+<strong><code>container-registry</code></strong>.</li>
+<li>Set a global environment variable
+<strong><code>REGISTRY</code></strong> (e.g.
+<code>ghcr.io/&lt;owner&gt;</code>) under <em>Manage Jenkins →
+System</em>.</li>
+<li><em>New Item → Multibranch Pipeline</em>, add your GitHub repository
+as a branch source. Jenkins finds the <code>Jenkinsfile</code>, builds
+every branch and pull request, publishes JUnit results, and runs the
+<code>Image</code> stage only on <code>main</code>.</li>
+<li>Validate changes to the Jenkinsfile before pushing, with the
+declarative linter:
+<code>curl -X POST -F "jenkinsfile=&lt;Jenkinsfile" http://localhost:8080/pipeline-model-converter/validate</code>
+(add your user and API token if security is on).</li>
+</ol>
+<h2 id="7-argo-cd-and-gitops-on-kubernetes">7. Argo CD and GitOps on
+Kubernetes</h2>
+<p>GitOps flips deployment around: instead of CI pushing to the cluster,
+<strong>the cluster pulls its desired state from Git</strong>. Argo CD
+watches a path in your repository and keeps the cluster in sync, so
+every change is a reviewed commit and rollbacks are
+<code>git revert</code>. Kubernetes itself is taught in Phase 3 (Module
+12); this section is a guided preview.</p>
+<p>What's in each starter:</p>
+<pre class="text"><code>deploy/
+├── k8s/
+│   ├── base/                 Deployment (probes, resource limits, non-root, read-only filesystem) + Service
+│   └── overlays/
+│       ├── local/            namespace, in-cluster PostgreSQL, local-only DB secret, image name
+│       └── production/       2 replicas, pinned image SHA; secret supplied by the platform, not Git
+└── argocd/application.yaml   Argo CD Application pointing at overlays/local, auto-sync with prune + self-heal</code></pre>
+<p>Try it on a local cluster (Docker Desktop's Kubernetes, kind or
+minikube):</p>
+<pre class="bash"><code>kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+kubectl -n argocd rollout status deploy/argocd-server
+# Edit deploy/k8s/overlays/local/kustomization.yaml: set newName to your image (e.g. ghcr.io/&lt;you&gt;/&lt;repo&gt;)
+# Edit deploy/argocd/application.yaml: set repoURL to your repository. Commit and push both.
+kubectl apply -n argocd -f deploy/argocd/application.yaml
+kubectl -n argocd port-forward svc/argocd-server 8081:443     # UI at https://localhost:8081
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath=&#39;{.data.password}&#39; | base64 -d   # admin password (yours; don&#39;t share it)</code></pre>
+<p>The image must be pullable by the cluster: make the GHCR package
+public, or add an image pull secret. Local images aren't visible to most
+local clusters.</p>
+<p><strong>Closing the loop:</strong> add a step to your GitHub Actions
+<code>image</code> job that updates the image tag in Git, for example
+<code>cd deploy/k8s/overlays/production &amp;&amp; kustomize edit set image &lt;name&gt;=&lt;image&gt;:${GITHUB_SHA}</code>,
+then commit it (directly, or better, open a pull request). Argo CD sees
+the commit and rolls out the new version. Argo CD Image Updater can
+automate this.</p>
+<p><strong>Secrets in GitOps:</strong> never commit real secrets. Use
+the External Secrets Operator (reading AWS Secrets Manager, Azure Key
+Vault or GCP Secret Manager) or Sealed Secrets. The <code>local</code>
+overlay's password is a local-cluster placeholder, in the same spirit as
+<code>.env.example</code>.</p>
+<h2 id="8-which-should-you-learn-first">8. Which should you learn
+first?</h2>
+<ol type="1">
+<li><strong>GitHub Actions</strong>, required for your capstones.</li>
+<li><strong>GitLab CI/CD</strong>: mirror one capstone and get it
+green.</li>
+<li>One of <strong>Jenkins</strong> or <strong>Azure DevOps</strong>,
+whichever appears more in the job ads you're targeting (Jenkins for most
+Nigerian banks and consultancies, Azure DevOps for Microsoft-heavy
+employers).</li>
+<li><strong>AWS CodePipeline</strong> if you deploy to AWS.</li>
+<li><strong>Argo CD</strong> in Phase 3, when you run Kubernetes
+properly.</li>
+</ol>
+<p>Interview tip: be able to draw section 1's diagram and explain where
+secrets live, why images are tagged by SHA, and how a failed deployment
+is rolled back on two different platforms.</p>
+
+<h2>Watch</h2>
+<h3>Create Your First Azure Pipeline using YAML | Azure DevOps Tutorial | An IT Professional</h3><p>An IT Professional · 12 min. Your first Azure DevOps YAML pipeline, step by step.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/Nc_jITa2qYE" title="Create Your First Azure Pipeline using YAML | Azure DevOps Tutorial | An IT Professional" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>(Simple?) Real World Azure Pipelines YAML Walkthrough</h3><p>Julie Ng · 22 min. A real-world Azure Pipelines YAML file walked through stage by stage.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/e0bF1LlclEs" title="(Simple?) Real World Azure Pipelines YAML Walkthrough" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Build a CI/CD Pipeline with AWS CodePipeline | Training and Demo</h3><p>Digital Cloud Training · 15 min. AWS CodePipeline with CodeBuild: how the pieces connect.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/E-YanBx38Cs" title="Build a CI/CD Pipeline with AWS CodePipeline | Training and Demo" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>How to Write a Pipeline Script in Jenkins</h3><p>CloudBeesTV · 9 min. Writing a Jenkins pipeline script, from CloudBees (the company behind Jenkins&#x27; enterprise edition).</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/TiTrcFEsj7A" title="How to Write a Pipeline Script in Jenkins" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Let&#x27;s do GitOps in Kubernetes! ArgoCD Tutorial</h3><p>Christian Lempa · 18 min. GitOps on Kubernetes with Argo CD, hands-on.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/Yb3_4PZX0B0" title="Let&#x27;s do GitOps in Kubernetes! ArgoCD Tutorial" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Azure DevOps Tutorial for Beginners | CI/CD with Azure Pipelines (optional, longer)</h3><p>TechWorld with Nana · 36 min. Azure DevOps and Azure Pipelines end to end.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/4BibQ69MD8c" title="Azure DevOps Tutorial for Beginners | CI/CD with Azure Pipelines" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Complete Jenkins Pipeline Tutorial | Jenkinsfile explained (optional, longer)</h3><p>TechWorld with Nana · 35 min. The complete Jenkinsfile explained.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/7KCS70sCoK0" title="Complete Jenkins Pipeline Tutorial | Jenkinsfile explained" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>ArgoCD Tutorial for Beginners | GitOps CD for Kubernetes (optional, longer)</h3><p>TechWorld with Nana · 48 min. Argo CD in depth: applications, sync and GitOps workflows.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/MeU5_k9ssrs" title="ArgoCD Tutorial for Beginners | GitOps CD for Kubernetes" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
