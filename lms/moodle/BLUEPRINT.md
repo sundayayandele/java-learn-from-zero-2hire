@@ -109,13 +109,15 @@ Completion requires: all topic quizzes passed, Module project assignments submit
 
 Done (24 October 2026):
 
-- 29 topic **pages** (lesson text, embedded YouTube videos, official references) placed before their quizzes; completion on view.
-- 29 topic **quizzes** with all 211 questions; pass mark 7/10 (70%), immediate feedback, completion on passing grade.
-- **End-of-phase exam** quiz: 60 questions, 120 minutes, 2 attempts, pass mark 70%.
-- Question bank (qbank activity, cmid 171): topic bank and exam bank imported.
-- Section 6: capstones overview page plus a page per capstone (brief, architecture diagrams, step-by-step build guide).
+| Section | Live activities |
+| --- | --- |
+| 1 Start here | Page: how the course works and the Phase 1 plan; Forum: Questions and help |
+| 2–5 Modules 1–4 | 29 lesson pages (text, embedded YouTube videos, official references; completion on view) each before its topic quiz (211 questions in all; pass 7/10, unlimited attempts, immediate feedback; completion on pass) |
+| 6 Capstones | Overview and rubric page; per capstone a page (brief, five architecture diagrams, step-by-step guide) followed by its **submission assignment** (online text, 20 points, pass 14, unlimited resubmission until pass, rubric with five criteria scored 1–4 and "minimum score" option off so the rubric total equals the grade); deployment and CI/CD guide pages |
+| 7 Exam | Exam information page; exam quiz: 60 questions shuffled, 5 per page, 120 minutes, 2 attempts with 48 hours between them, pass 70%, review shows marks only (answers and feedback only after a close date, if one is set), available only after all 29 topic quizzes are passed |
+| 8 Getting hired | Getting hired page with videos; URL: Oracle certification map; Getting Hired checklist assignment (online text, ungraded, completion on submit) |
 
-Still to do by hand: capstone and module-project assignments with the rubric, exam extras (48-hour delay between attempts, shuffled order, review options, restrict access to "all topic quizzes passed"), the "start here" page and forum, Getting Hired URL and checklist assignment, and the certificate. Lesson and capstone pages load from `lms/moodle/import/pages/` and `lms/moodle/import/capstones/` (regenerate with `build_moodle.py`, then replace a page's content to update it).
+Still to do by hand: module-project assignments, course completion criteria, and the certificate (`mod_customcert`). Pages load from `lms/moodle/import/{pages,capstones,guides}/` (regenerate with `build_moodle.py`, then replace a page's content to update it).
 
 ## 6. Updating content
 
