@@ -267,6 +267,8 @@ Record, component, compact constructor, canonical constructor, value equality, s
 - [JEP 441: Pattern Matching for switch](https://openjdk.org/jeps/441)
 - [JEP 378: Text Blocks](https://openjdk.org/jeps/378)
 - [Brian Goetz: Data-Oriented Programming in Java (InfoQ)](https://www.infoq.com/articles/data-oriented-programming-java/)
+- [dev.java (Oracle): Records](https://dev.java/learn/language/oop/records/)
+- [Oracle: Java SE 21 language changes](https://docs.oracle.com/en/java/javase/21/language/java-language-changes.html)
 
 ## Watch
 

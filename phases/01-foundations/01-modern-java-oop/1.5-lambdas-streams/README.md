@@ -269,6 +269,9 @@ Functional interface, lambda, effectively final, method reference, `Predicate`, 
 - [`java.util.stream` package summary (Java 21)](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/stream/package-summary.html)
 - [`Collectors` API (Java 21)](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/stream/Collectors.html)
 - [Stuart Marks: Optional — the mother of all bikesheds (talk slides and guidance)](https://stuartmarks.wordpress.com/2016/09/27/vjug24-session-on-optional/)
+- [dev.java (Oracle): Lambda Expressions](https://dev.java/learn/language/fp/lambdas/)
+- [dev.java (Oracle): The Stream API](https://dev.java/learn/api/collections-and-streams/streams/)
+- [JEP 485: Stream Gatherers](https://openjdk.org/jeps/485)
 
 ## Watch
 

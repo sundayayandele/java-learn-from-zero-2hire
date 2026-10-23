@@ -234,6 +234,7 @@ Spring Framework 7, Jakarta EE 11, modular starters, test starters, classic star
 - [Spring Boot 4.1 Release Notes](https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.1-Release-Notes)
 - [Spring Framework 7: What's New](https://github.com/spring-projects/spring-framework/wiki/What%27s-New-in-Spring-Framework-7.x)
 - [OpenRewrite: Spring Boot migration recipes](https://docs.openrewrite.org/recipes/java/spring)
+- [Spring Boot: Supported versions and support timeline](https://spring.io/projects/spring-boot#support)
 
 ## Watch
 

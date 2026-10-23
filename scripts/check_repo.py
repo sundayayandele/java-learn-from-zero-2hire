@@ -5,7 +5,8 @@
 
 1. Generated READMEs are up to date (scripts/build.py --check).
 2. Capstone starters match the template (scripts/new_starter.py --check).
-3. Capstone architecture outputs match scripts/architecture (scripts/architecture/generate.py --check).
+3. Capstone architecture outputs match scripts/architecture (scripts/architecture/generate.py --check),
+   and capstone build guides match scripts/capstone_guides.py.
 4. lms/videos.json is well-formed, and every built topic has videos.
 5. Every cbt.json is valid: 5-10 questions, answers in range, no duplicate options.
 6. Every relative Markdown link points to an existing file.
@@ -79,6 +80,7 @@ def main() -> int:
     ok &= run("scripts/new_starter.py", "--check")
     ok &= run("lms/check_videos.py", "--schema")
     ok &= run("scripts/architecture/generate.py", "--check")
+    ok &= run("scripts/capstone_guides.py", "--check")
     problems = check_cbts() + check_links()
     for p in problems:
         print(p, file=sys.stderr)

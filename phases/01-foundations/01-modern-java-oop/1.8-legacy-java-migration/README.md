@@ -202,6 +202,8 @@ LTS, end of support, JPMS, strong encapsulation, `jdeps`, `--add-opens`, Jakarta
 - [OpenRewrite: Migrate to Java 21](https://docs.openrewrite.org/recipes/java/migrate/upgradetojava21)
 - [`jdeps` tool reference](https://docs.oracle.com/en/java/javase/21/docs/specs/man/jdeps.html)
 - [Jakarta EE: the javax to jakarta namespace change (Eclipse Foundation)](https://jakarta.ee/blogs/javax-jakartaee-namespace-ecosystem-progress/)
+- [Oracle: Java SE Support Roadmap](https://www.oracle.com/java/technologies/java-se-support-roadmap.html)
+- [dev.java (Oracle): Java release history and new features](https://dev.java/evolution/)
 
 ## Watch
 

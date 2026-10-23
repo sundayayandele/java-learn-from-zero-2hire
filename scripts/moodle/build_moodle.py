@@ -24,6 +24,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "lms" / "moodle" / "out"
 REPO_URL = "https://github.com/sundayayandele/java-zero-hire/blob/main"
+RAW_URL = "https://raw.githubusercontent.com/sundayayandele/java-zero-hire/main"
 COURSE_CATEGORY = "Java Zero-to-Hired"
 
 # Moodle only accepts these grade fractions for multichoice answers.
@@ -92,6 +93,30 @@ def lesson_html(md: str) -> str:
     return result.stdout
 
 
+def absolutise(page: str, src_dir: Path) -> str:
+    """Point relative links at GitHub and relative images at raw files, so they work inside Moodle."""
+    def fix(m: re.Match) -> str:
+        attr, target = m.group(1), m.group(2)
+        if re.match(r"^([a-z]+:|#|//)", target):
+            return m.group(0)
+        path, _, anchor = target.partition("#")
+        rel = (src_dir / path).resolve().relative_to(ROOT).as_posix()
+        base = RAW_URL if attr == "src" else REPO_URL
+        return f'{attr}="{base}/{rel}' + (f"#{anchor}" if anchor else "") + '"'
+    return re.sub(r'(href|src)="([^"]+)"', fix, page)
+
+
+def capstone_html(cdir: Path) -> str:
+    brief = absolutise(lesson_html((cdir / "README.md").read_text(encoding="utf-8")), cdir)
+    brief = re.sub(r'(src="[^"]*/architecture/[^"]*)\.svg"', r'\1.png" style="max-width:100%"', brief)
+    guide = absolutise(lesson_html((cdir / "GUIDE.md").read_text(encoding="utf-8")), cdir)
+    guide = re.sub(r"<p>←.*?</p>", "", guide, count=1, flags=re.S)
+    return (brief + '\n<hr>\n' + guide +
+            f'\n<p>Source on GitHub: <a href="{REPO_URL}/{cdir.relative_to(ROOT).as_posix()}/README.md">brief</a> · '
+            f'<a href="{REPO_URL}/{cdir.relative_to(ROOT).as_posix()}/GUIDE.md">build guide</a> · '
+            f'<a href="{REPO_URL}/{cdir.relative_to(ROOT).as_posix()}/starter/README.md">starter</a></p>')
+
+
 def videos_html(videos: list[dict]) -> str:
     if not videos:
         return ""
@@ -131,6 +156,7 @@ def main() -> int:
         shutil.rmtree(OUT)
     (OUT / "questions").mkdir(parents=True)
     (OUT / "pages").mkdir(parents=True)
+    (OUT / "capstones").mkdir(parents=True)
 
     structure = {"category": COURSE_CATEGORY, "phases": []}
     for phase in cur["phases"]:
@@ -147,7 +173,7 @@ def main() -> int:
             activities = []
             for t in mod["topics"]:
                 tdir = pdir / mod["slug"] / t["slug"]
-                body = lesson_html((tdir / "lesson.md").read_text(encoding="utf-8"))
+                body = absolutise(lesson_html((tdir / "lesson.md").read_text(encoding="utf-8")), tdir)
                 page = (f"<p><em>Week {t['week']} · Module {mod['number']}: {html.escape(mod['title'])}</em></p>\n"
                         f"{body}\n{videos_html(videos.get(t['id'], []))}\n"
                         f'<p>Source on GitHub: <a href="{REPO_URL}/phases/{phase["slug"]}/{mod["slug"]}/{t["slug"]}/README.md">'
@@ -168,6 +194,8 @@ def main() -> int:
             sections.append({"name": f"Module {mod['number']}: {mod['title']} (weeks {mod['weeks']})",
                              "summary": f"Topics, videos and graded checks for Module {mod['number']}.",
                              "activities": activities})
+        for cdir in sorted(p for p in (pdir / "capstones").iterdir() if (p / "GUIDE.md").exists()):
+            (OUT / "capstones" / f"{cdir.name}.html").write_text(capstone_html(cdir), encoding="utf-8")
         sections.append({"name": f"Phase {phase['number']} capstones",
                          "summary": "Ten financial-institution capstones; complete at least three, including Capstone 1.",
                          "activities": [{"type": "url", "name": "Capstone briefs",

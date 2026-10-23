@@ -6,6 +6,8 @@ Ten capstones built on the problems Nigerian and international financial institu
 
 **Every capstone starts with its architecture and system design**: five views (solution, logical, technical, infrastructure and cloud) as Mermaid, draw.io, SVG and PNG, plus architecture decision records, in its `architecture/` folder. Study them before you code, adapt them to what you build, and use them in interviews. The goal is system thinking: how the service fits its users, data, integrations and platform.
 
+**Every capstone has a step-by-step build guide** (`GUIDE.md`, linked at the top of each brief): setup from the starter, data download commands, build steps that each end with a "done when" check, then CI, deployment, architecture pack, README and submission.
+
 **Complete at least three by the end of week 13: Capstone 1 plus any two others.** Pick the two that best match the jobs you will apply for (see "Good for" below). Capstones 1 and 2 come with complete reference solutions; look at them only after you have built your own version.
 
 | # | Capstone | Core skills | Data (licence) | Good for | Reference solution |

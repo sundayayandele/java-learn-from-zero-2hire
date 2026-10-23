@@ -294,3 +294,4 @@ IoC, dependency injection, `ApplicationContext`, bean, constructor injection, st
 - [Spring Boot reference: Auto-configuration](https://docs.spring.io/spring-boot/reference/using/auto-configuration.html)
 - [Spring Boot reference: Structuring your code](https://docs.spring.io/spring-boot/reference/using/structuring-your-code.html)
 - [Spring Boot reference: Spring Beans and Dependency Injection](https://docs.spring.io/spring-boot/reference/using/spring-beans-and-dependency-injection.html)
+- [Spring guide: Building an Application with Spring Boot](https://spring.io/guides/gs/spring-boot)

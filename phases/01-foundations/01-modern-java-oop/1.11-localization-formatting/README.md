@@ -153,6 +153,8 @@ Locale, BCP 47 language tag, default locale, `NumberFormat`, currency instance, 
 - [`NumberFormat` API (Java 21)](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/text/NumberFormat.html)
 - [`DateTimeFormatter` API (Java 21)](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/time/format/DateTimeFormatter.html)
 - [`ResourceBundle.getBundle` lookup rules (Java 21)](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/ResourceBundle.html)
+- [Oracle: Java SE 21 Internationalization Guide](https://docs.oracle.com/en/java/javase/21/intl/internationalization-overview.html)
+- [dev.java (Oracle): Date and Time](https://dev.java/learn/api/date-time-regex/date-time/)
 
 ## Watch
 

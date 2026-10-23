@@ -230,3 +230,5 @@ Byte stream, character stream, decorator, charset, `BufferedReader`, `InputStrea
 - [`java.nio.file.Files` API (Java 21)](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/file/Files.html)
 - [JEP 400: UTF-8 by Default](https://openjdk.org/jeps/400)
 - [Oracle: Serialization Filtering](https://docs.oracle.com/en/java/javase/21/core/serialization-filtering1.html)
+- [dev.java (Oracle): Java I/O](https://dev.java/learn/api/io/java-io/)
+- [Oracle: Java Object Serialization Specification](https://docs.oracle.com/en/java/javase/21/docs/specs/serialization/index.html)

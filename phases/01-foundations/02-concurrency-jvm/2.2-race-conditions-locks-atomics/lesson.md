@@ -309,3 +309,4 @@ Race condition, check-then-act, read-modify-write, critical section, atomicity, 
 - [The Java Tutorials: High Level Concurrency Objects](https://docs.oracle.com/javase/tutorial/essential/concurrency/highlevel.html)
 - [`java.util.concurrent` package summary (Java 21)](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/concurrent/package-summary.html)
 - [JSR-133 (Java Memory Model) FAQ](https://www.cs.umd.edu/~pugh/java/memoryModel/jsr-133-faq.html)
+- [The Java Language Specification, Java SE 21, Chapter 17: Threads and Locks](https://docs.oracle.com/javase/specs/jls/se21/html/jls-17.html)

@@ -289,6 +289,8 @@ Checked exception, unchecked exception, `Error`, `throws`, multi-catch, `finally
 - [The Java Tutorials: Date-Time](https://docs.oracle.com/javase/tutorial/datetime/index.html)
 - [OWASP Logging Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html)
 - Robert C. Martin, *Clean Code*, chapters 2–4 and 7 (book)
+- [dev.java (Oracle): Exceptions](https://dev.java/learn/language/annotations-exceptions/exceptions/)
+- [dev.java (Oracle): Date and Time](https://dev.java/learn/api/date-time-regex/date-time/)
 
 ## Watch
 

@@ -298,6 +298,8 @@ JDK, JRE, JVM, bytecode, LTS, `JAVA_HOME`, GAV coordinates, lifecycle phase, dep
 - [Gradle: Building Java projects](https://docs.gradle.org/current/userguide/building_java_projects.html)
 - [IntelliJ IDEA: Getting started](https://www.jetbrains.com/help/idea/getting-started.html)
 - [The Linux command line for beginners (Ubuntu tutorial)](https://ubuntu.com/tutorials/command-line-for-beginners)
+- [dev.java (Oracle): Getting Started with Java](https://dev.java/learn/first-steps/first-java-code/)
+- [Oracle: Java SE 21 documentation home](https://docs.oracle.com/en/java/javase/21/)
 
 ## Watch
 

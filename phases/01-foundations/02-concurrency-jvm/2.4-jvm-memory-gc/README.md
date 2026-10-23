@@ -200,6 +200,7 @@ Class loader, bytecode verification, interpreter, JIT, C1/C2, warm-up, stack, fr
 - [`jcmd` reference (Java 21)](https://docs.oracle.com/en/java/javase/21/docs/specs/man/jcmd.html)
 - [JEP 439: Generational ZGC](https://openjdk.org/jeps/439)
 - [Eclipse Memory Analyzer (MAT)](https://eclipse.dev/mat/)
+- [Oracle: The java command (heap and GC options)](https://docs.oracle.com/en/java/javase/21/docs/specs/man/java.html)
 
 ## Watch
 

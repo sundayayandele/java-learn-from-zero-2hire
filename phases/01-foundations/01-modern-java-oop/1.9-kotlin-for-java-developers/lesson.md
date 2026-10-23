@@ -282,3 +282,4 @@ Kotlin, `val`/`var`, type inference, null safety, nullable type, safe call `?.`,
 - [Kotlin docs: Calling Java from Kotlin](https://kotlinlang.org/docs/java-interop.html)
 - [Kotlin docs: Calling Kotlin from Java](https://kotlinlang.org/docs/java-to-kotlin-interop.html)
 - [Kotlin docs: Maven](https://kotlinlang.org/docs/maven.html)
+- [Kotlin docs: Null safety](https://kotlinlang.org/docs/null-safety.html)

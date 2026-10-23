@@ -219,6 +219,7 @@ Process, thread, concurrency, parallelism, CPU-bound, I/O-bound, thread states, 
 - [`ExecutorService` API (Java 21)](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/concurrent/ExecutorService.html)
 - [`CompletableFuture` API (Java 21)](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/concurrent/CompletableFuture.html)
 - Brian Goetz et al., *Java Concurrency in Practice*, chapters 6–8 (book; still the reference)
+- [Oracle: Java SE 21 Core Libraries, Concurrency](https://docs.oracle.com/en/java/javase/21/core/concurrency.html)
 
 ## Watch
 

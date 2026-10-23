@@ -325,6 +325,9 @@ Class, object, constructor, encapsulation, abstraction, inheritance, polymorphis
 - [The Java Tutorials: Interfaces and Inheritance](https://docs.oracle.com/javase/tutorial/java/IandI/index.html)
 - [`Object.equals` and `hashCode` contract (Java 21 API)](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Object.html)
 - Joshua Bloch, *Effective Java* (3rd edition), items 10–11 and 18 (book)
+- [dev.java (Oracle): Classes and Objects](https://dev.java/learn/language/oop/classes-objects/)
+- [dev.java (Oracle): Inheritance](https://dev.java/learn/language/oop/inheritance/)
+- [dev.java (Oracle): Interfaces](https://dev.java/learn/language/oop/interfaces/)
 
 ## Watch
 

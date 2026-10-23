@@ -225,6 +225,7 @@ Transaction, ACID, commit, rollback, savepoint, WAL, isolation level, dirty read
 - [PostgreSQL: Explicit Locking](https://www.postgresql.org/docs/17/explicit-locking.html)
 - [PostgreSQL: Concurrency Control (MVCC introduction)](https://www.postgresql.org/docs/17/mvcc-intro.html)
 - [MySQL 8.4: InnoDB Transaction Isolation Levels](https://dev.mysql.com/doc/refman/8.4/en/innodb-transaction-isolation-levels.html)
+- [Oracle: java.sql.Connection API (transaction isolation, Java 21)](https://docs.oracle.com/en/java/javase/21/docs/api/java.sql/java/sql/Connection.html)
 
 ## Watch
 

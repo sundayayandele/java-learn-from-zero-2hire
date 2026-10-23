@@ -259,3 +259,4 @@ NoSQL, key-value store, document store, Redis, TTL, `NX`, atomic command, cache-
 - [Spring Data Redis reference](https://docs.spring.io/spring-data/redis/reference/)
 - [MongoDB Manual: Data Modeling](https://www.mongodb.com/docs/manual/data-modeling/)
 - [MongoDB Manual: Aggregation](https://www.mongodb.com/docs/manual/aggregation/)
+- [Spring Data MongoDB reference](https://docs.spring.io/spring-data/mongodb/reference/)

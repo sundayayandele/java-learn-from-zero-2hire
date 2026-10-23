@@ -327,6 +327,7 @@ JPA, Hibernate, Spring Data JPA, entity, `@Id`, `@GeneratedValue`, `@Enumerated(
 - [Hibernate ORM User Guide](https://docs.hibernate.org/orm/7.0/userguide/html_single/)
 - [Spring Framework reference: Declarative transaction management](https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative.html)
 - [Vlad Mihalcea: N+1 query problem with JPA and Hibernate](https://vladmihalcea.com/n-plus-1-query-problem/)
+- [Jakarta Persistence 3.2 specification](https://jakarta.ee/specifications/persistence/3.2/)
 
 ## Watch
 

@@ -290,3 +290,5 @@ Collection, List, Set, Map, Queue, Deque, sequenced collection, Big-O, hash tabl
 - [The Java Tutorials: Collections](https://docs.oracle.com/javase/tutorial/collections/index.html)
 - [JEP 431: Sequenced Collections](https://openjdk.org/jeps/431)
 - [The Java Tutorials: Generics](https://docs.oracle.com/javase/tutorial/java/generics/index.html)
+- [dev.java (Oracle): The Collections Framework](https://dev.java/learn/api/collections-and-streams/collections-framework/)
+- [dev.java (Oracle): Generics](https://dev.java/learn/language/fp/generics/)

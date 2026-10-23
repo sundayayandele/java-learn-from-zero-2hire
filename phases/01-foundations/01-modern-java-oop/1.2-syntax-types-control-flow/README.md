@@ -308,6 +308,8 @@ Static typing, primitive, reference, wrapper class, autoboxing, overflow, `BigDe
 - [`BigDecimal` API (Java 21)](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/math/BigDecimal.html)
 - [JEP 361: Switch Expressions](https://openjdk.org/jeps/361)
 - [JEP 286: Local-Variable Type Inference (`var`)](https://openjdk.org/jeps/286)
+- [dev.java (Oracle): Language Basics](https://dev.java/learn/language/constructs/basics/)
+- [The Java Language Specification, Java SE 21](https://docs.oracle.com/javase/specs/jls/se21/html/index.html)
 
 ## Watch
 

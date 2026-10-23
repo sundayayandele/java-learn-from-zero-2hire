@@ -342,3 +342,4 @@ The controller does three things: validate (annotations), delegate (one service 
 - [Spring Framework reference: Validation](https://docs.spring.io/spring-framework/reference/core/validation/beanvalidation.html)
 - [RFC 9457: Problem Details for HTTP APIs](https://www.rfc-editor.org/rfc/rfc9457)
 - [Hibernate Validator reference](https://docs.jboss.org/hibernate/stable/validator/reference/en-US/html_single/)
+- [Spring guide: Building a RESTful Web Service](https://spring.io/guides/gs/rest-service)

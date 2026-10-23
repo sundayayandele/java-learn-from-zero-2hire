@@ -178,6 +178,8 @@ Classpath, module path, source launcher, compact source file, instance main meth
 - [`jlink` tool reference (Java 21)](https://docs.oracle.com/en/java/javase/21/docs/specs/man/jlink.html)
 - [JEP 458: Launch Multi-File Source-Code Programs](https://openjdk.org/jeps/458)
 - [JEP 512: Compact Source Files and Instance Main Methods](https://openjdk.org/jeps/512)
+- [dev.java (Oracle): Modules](https://dev.java/learn/organizing/modules/)
+- [Oracle: jar tool reference (Java 21)](https://docs.oracle.com/en/java/javase/21/docs/specs/man/jar.html)
 
 ## Watch
 

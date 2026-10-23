@@ -242,3 +242,4 @@ Property source, precedence, relaxed binding, placeholder, `@ConfigurationProper
 - [The Twelve-Factor App: Config](https://12factor.net/config)
 - [OWASP Secrets Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html)
 - [GitHub: About push protection](https://docs.github.com/en/code-security/secret-scanning/introduction/about-push-protection)
+- [Spring Boot reference: Common application properties](https://docs.spring.io/spring-boot/appendix/application-properties/index.html)

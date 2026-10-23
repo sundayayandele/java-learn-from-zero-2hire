@@ -296,6 +296,7 @@ Actuator, endpoint, exposure, management port, health indicator, health group, l
 - [Spring Boot reference: Metrics](https://docs.spring.io/spring-boot/reference/actuator/metrics.html)
 - [Micrometer documentation: Concepts](https://docs.micrometer.io/micrometer/reference/concepts.html)
 - [Kubernetes: Configure liveness, readiness and startup probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/)
+- [Prometheus: Metric types](https://prometheus.io/docs/concepts/metric_types/)
 
 ## Watch
 

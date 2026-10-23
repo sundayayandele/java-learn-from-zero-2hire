@@ -324,6 +324,7 @@ JDBC, driver, `DataSource`, `DriverManager`, `Connection`, `PreparedStatement`, 
 - [HikariCP: About Pool Sizing](https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing)
 - [OWASP: SQL Injection Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html)
 - [PostgreSQL: Error codes (SQLSTATE)](https://www.postgresql.org/docs/17/errcodes-appendix.html)
+- [Oracle: java.sql package summary (Java 21)](https://docs.oracle.com/en/java/javase/21/docs/api/java.sql/java/sql/package-summary.html)
 
 ## Watch
 
