@@ -112,12 +112,12 @@ Done (24 October 2026):
 | Section | Live activities |
 | --- | --- |
 | 1 Start here | Page: how the course works and the Phase 1 plan; Forum: Questions and help |
-| 2–5 Modules 1–4 | 29 lesson pages (text, embedded YouTube videos, official references; completion on view) each before its topic quiz (211 questions in all; pass 7/10, unlimited attempts, immediate feedback; completion on pass) |
+| 2–5 Modules 1–4 | 29 lesson pages (text, embedded YouTube videos, official references; completion on view) each before its topic quiz (211 questions in all; pass 7/10, unlimited attempts, immediate feedback; completion on pass); per module a **project submission** assignment (online text, rubric from the module's assessment table: five criteria scored Not yet 1 / Competent 2 / Strong 3, 15 points, pass 10, resubmit until pass) |
 | 6 Capstones | Overview and rubric page; per capstone a page (brief, five architecture diagrams, step-by-step guide) followed by its **submission assignment** (online text, 20 points, pass 14, unlimited resubmission until pass, rubric with five criteria scored 1–4 and "minimum score" option off so the rubric total equals the grade); deployment and CI/CD guide pages |
 | 7 Exam | Exam information page; exam quiz: 60 questions shuffled, 5 per page, 120 minutes, 2 attempts with 48 hours between them, pass 70%, review shows marks only (answers and feedback only after a close date, if one is set), available only after all 29 topic quizzes are passed |
-| 8 Getting hired | Getting hired page with videos; URL: Oracle certification map; Getting Hired checklist assignment (online text, ungraded, completion on submit) |
+| 8 Getting hired | Getting hired page with videos; URL: Oracle certification map; Getting Hired checklist assignment (online text, ungraded, completion on submit); **Phase 1 certificate** (`mod_customcert`, A4 landscape, name, issue date, verification code and QR; issued and emailed automatically; available only when all 29 topic quizzes, the exam, the four module projects, Capstone 1 and any two other capstones are passed, expressed as 36 OR-ed capstone pairs) |
 
-Still to do by hand: module-project assignments, course completion criteria, and the certificate (`mod_customcert`). Pages load from `lms/moodle/import/{pages,capstones,guides}/` (regenerate with `build_moodle.py`, then replace a page's content to update it).
+**Course completion**: all of 37 activities: the 29 topic quizzes, the exam, the four module projects, Capstone 1, the Getting Hired checklist and the certificate (whose restriction enforces the "two other capstones" rule). Pages load from `lms/moodle/import/{pages,capstones,guides}/` (regenerate with `build_moodle.py`, then replace a page's content to update it).
 
 ## 6. Updating content
 
