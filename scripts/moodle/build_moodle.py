@@ -204,6 +204,9 @@ def main() -> int:
             sections.append({"name": f"Module {mod['number']}: {mod['title']} (weeks {mod['weeks']})",
                              "summary": f"Topics, videos and graded checks for Module {mod['number']}.",
                              "activities": activities})
+        overview = pdir / "capstones"
+        (OUT / "capstones" / "00-overview.html").write_text(
+            absolutise(lesson_html((overview / "README.md").read_text(encoding="utf-8")), overview), encoding="utf-8")
         for cdir in sorted(p for p in (pdir / "capstones").iterdir() if (p / "GUIDE.md").exists()):
             (OUT / "capstones" / f"{cdir.name}.html").write_text(capstone_html(cdir), encoding="utf-8")
         sections.append({"name": f"Phase {phase['number']} capstones",
