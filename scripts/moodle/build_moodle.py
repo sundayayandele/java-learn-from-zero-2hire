@@ -190,7 +190,7 @@ def main() -> int:
                         f"{html.escape(t['id'] + ' ' + t['title'])}</a></p>")
                 (OUT / "pages" / f"{t['id']}.html").write_text(page, encoding="utf-8")
                 cbt = load(tdir / "cbt.json")
-                category = f"{COURSE_CATEGORY}/Phase {phase['number']}/{t['id']} {t['title'].split(':')[0][:60]}"
+                category = f"{COURSE_CATEGORY}/Phase {phase['number']}/{t['id']} {t['title'].split(':')[0][:60].replace('/', '-')}"
                 (OUT / "questions" / f"topic-{t['id']}.xml").write_text(
                     bank_xml(category, t["id"], cbt["questions"]), encoding="utf-8")
                 activities += [

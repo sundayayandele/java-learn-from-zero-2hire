@@ -67,7 +67,7 @@ Core Moodle web services can't create activities or import questions, so those a
 | 3 | Module 2: Concurrency & JVM (weeks 5–6) | Topics 2.1–2.5: Page + Quiz; URL: projects; Assignment: project 2.C `FINDINGS.md` |
 | 4 | Module 3: Databases (weeks 7–9) | Topics 3.1–3.6: Page + Quiz; URL: projects; Assignments: 3.B ledger schema, 3.D `TUNING.md` |
 | 5 | Module 4: Spring Boot 4 (weeks 10–13) | Topics 4.1–4.7: Page + Quiz; URL: projects; Assignments: 4.A, 4.D `UPGRADE.md` |
-| 6 | Phase 1 capstones | URL: capstone briefs; URL: deployment guide; **Assignment per capstone** (10) |
+| 6 | Phase 1 capstones | **Page: capstones overview and rubric**; **Page per capstone** (brief, five architecture diagrams, step-by-step build guide); URL: deployment guide; **Assignment per capstone** (10) |
 | 7 | End-of-phase exam | URL: exam information; **Quiz: Phase 1 end-of-phase exam** |
 | 8 | Getting hired | URL: Getting hired guide; Assignment: Getting Hired checklist; optional BigBlueButton room for mock interviews |
 
@@ -105,6 +105,18 @@ One assignment per capstone: online text submission (repository URL, deployed he
 
 Completion requires: all topic quizzes passed, Module project assignments submitted, Capstone 1 plus two other capstone assignments passed, and the exam passed. Issue the ITLearning Phase 1 certificate (`mod_customcert`) on course completion.
 
-## 5. Updating content
+## 5. Status on itlearning.tech (course id 4)
+
+Done (24 October 2026):
+
+- 29 topic **pages** (lesson text, embedded YouTube videos, official references) placed before their quizzes; completion on view.
+- 29 topic **quizzes** with all 211 questions; pass mark 7/10 (70%), immediate feedback, completion on passing grade.
+- **End-of-phase exam** quiz: 60 questions, 120 minutes, 2 attempts, pass mark 70%.
+- Question bank (qbank activity, cmid 171): topic bank and exam bank imported.
+- Section 6: capstones overview page plus a page per capstone (brief, architecture diagrams, step-by-step build guide).
+
+Still to do by hand: capstone and module-project assignments with the rubric, exam extras (48-hour delay between attempts, shuffled order, review options, restrict access to "all topic quizzes passed"), the "start here" page and forum, Getting Hired URL and checklist assignment, and the certificate. Lesson and capstone pages load from `lms/moodle/import/pages/` and `lms/moodle/import/capstones/` (regenerate with `build_moodle.py`, then replace a page's content to update it).
+
+## 6. Updating content
 
 Edit the source in the repository (`lesson.md`, `cbt.json`, `lms/videos.json`, `assessments/private/...`), run `python scripts/build.py`, `python scripts/check_repo.py` and `python scripts/moodle/build_moodle.py`, then replace the Page content and re-import changed question banks (import into the same category, then swap questions in the quiz). Run `python lms/check_videos.py --quick` monthly to catch removed videos.

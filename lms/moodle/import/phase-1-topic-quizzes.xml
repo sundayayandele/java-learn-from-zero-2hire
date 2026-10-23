@@ -802,7 +802,7 @@
     <answer fraction="33.33333" format="html"><text><![CDATA[Copy lines with List.copyOf in the constructor and return the unmodifiable list from the getter]]></text><feedback format="html"><text></text></feedback></answer>
   </question>
   <question type="category">
-    <category><text>$course$/top/Java Zero-to-Hired/Phase 1/1.8 Reading legacy Java 8/11/17 code and migrating it forward</text></category>
+    <category><text>$course$/top/Java Zero-to-Hired/Phase 1/1.8 Reading legacy Java 8-11-17 code and migrating it forward</text></category>
   </question>
   <question type="multichoice">
     <name><text>1.8-Q01</text></name>
@@ -1018,7 +1018,7 @@
     <answer fraction="0" format="html"><text><![CDATA[Spring cannot read Kotlin bytecode]]></text><feedback format="html"><text></text></feedback></answer>
   </question>
   <question type="category">
-    <category><text>$course$/top/Java Zero-to-Hired/Phase 1/1.10 Java I/O, NIO.2 files and serialization</text></category>
+    <category><text>$course$/top/Java Zero-to-Hired/Phase 1/1.10 Java I-O, NIO.2 files and serialization</text></category>
   </question>
   <question type="multichoice">
     <name><text>1.10-Q01</text></name>
