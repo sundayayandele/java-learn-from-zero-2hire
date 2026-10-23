@@ -1,0 +1,455 @@
+<p><em>Week 8 · Module 3: Databases: SQL &amp; NoSQL</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Connect to PostgreSQL from Java with JDBC and explain the roles of
+<code>DriverManager</code>, <code>DataSource</code>,
+<code>Connection</code>, <code>PreparedStatement</code> and
+<code>ResultSet</code>.</li>
+<li>Write safe, parameterised queries and explain how SQL injection
+works and why <code>PreparedStatement</code> stops it.</li>
+<li>Map rows to Java records, including <code>NUMERIC</code> →
+<code>BigDecimal</code> and <code>TIMESTAMPTZ</code> →
+<code>Instant</code>/<code>OffsetDateTime</code>.</li>
+<li>Control transactions from JDBC, handle <code>SQLException</code>s by
+SQLSTATE, and batch inserts efficiently.</li>
+<li>Configure a connection pool (HikariCP) and explain why every
+production app uses one.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Every Java persistence tool, including JPA, Hibernate, Spring Data,
+jOOQ and MyBatis, sits on top of JDBC. When something goes wrong
+underneath them (a leaked connection, a pool timeout, a slow batch
+insert, a transaction that didn't commit), you can only debug it if you
+understand the layer below. Also, SQL injection remains one of the most
+common and damaging vulnerabilities in financial applications; this
+topic makes you immune to it.</p>
+<h2 id="1-the-moving-parts">1. The moving parts</h2>
+<pre class="text"><code>Your code ──&gt; JDBC API (java.sql, javax.sql) ──&gt; JDBC driver (org.postgresql) ──&gt; PostgreSQL over TCP</code></pre>
+<ul>
+<li><strong>Driver</strong>: the vendor library that speaks the
+database's network protocol. Add it as a <code>runtime</code>
+dependency: <code>org.postgresql:postgresql</code>.</li>
+<li><strong><code>DataSource</code></strong>: a factory for connections,
+configured once (URL, user, password, pool settings). Prefer it to
+<code>DriverManager</code>.</li>
+<li><strong><code>Connection</code></strong>: one session with the
+database. Expensive to open (TCP, TLS, authentication, backend process).
+Not thread-safe: one thread at a time.</li>
+<li><strong><code>PreparedStatement</code></strong>: a precompiled SQL
+statement with <code>?</code> placeholders.</li>
+<li><strong><code>ResultSet</code></strong>: a cursor over the rows a
+query returns.</li>
+</ul>
+<p>JDBC URL format:
+<code>jdbc:postgresql://host:5432/bank?sslmode=require</code>.</p>
+<h2 id="2-a-first-query">2. A first query</h2>
+<pre class="java"><code>import java.sql.*;
+
+public record AccountRow(long id, String number, BigDecimal balance, String currency) { }
+
+public Optional&lt;AccountRow&gt; findByNumber(String number) throws SQLException {
+    String sql = &quot;&quot;&quot;
+            SELECT id, number, balance, currency
+            FROM account
+            WHERE number = ?
+            &quot;&quot;&quot;;
+    try (Connection conn = dataSource.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setString(1, number);                          // parameters are 1-based
+        try (ResultSet rs = ps.executeQuery()) {
+            if (!rs.next()) return Optional.empty();      // rs starts BEFORE the first row
+            return Optional.of(new AccountRow(
+                    rs.getLong(&quot;id&quot;),
+                    rs.getString(&quot;number&quot;),
+                    rs.getBigDecimal(&quot;balance&quot;),          // NUMERIC → BigDecimal, exact
+                    rs.getString(&quot;currency&quot;)));
+        }
+    }
+}</code></pre>
+<p>The essentials:</p>
+<ul>
+<li><strong>try-with-resources</strong> for <code>Connection</code>,
+<code>PreparedStatement</code> and <code>ResultSet</code> (topic 1.7).
+With a pool, <code>close()</code> returns the connection to the pool
+rather than closing it, and forgetting it leaks a pooled
+connection.</li>
+<li><code>executeQuery()</code> for <code>SELECT</code>;
+<code>executeUpdate()</code> for
+<code>INSERT</code>/<code>UPDATE</code>/<code>DELETE</code>, returning
+the <strong>affected row count</strong>; <code>execute()</code> for
+anything.</li>
+<li><code>rs.next()</code> moves to the next row and returns
+<code>false</code> at the end.</li>
+<li><code>getLong</code>/<code>getInt</code> return <code>0</code> for
+SQL <code>NULL</code>; check <code>rs.wasNull()</code> or use
+<code>rs.getObject("col", Long.class)</code>, which returns
+<code>null</code>.</li>
+</ul>
+<h3 id="type-mapping">Type mapping</h3>
+<table>
+<thead>
+<tr>
+<th>PostgreSQL</th>
+<th>Java</th>
+<th>JDBC getter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BIGINT</code></td>
+<td><code>long</code> / <code>Long</code></td>
+<td><code>getLong</code> / <code>getObject(col, Long.class)</code></td>
+</tr>
+<tr>
+<td><code>NUMERIC</code></td>
+<td><code>BigDecimal</code></td>
+<td><code>getBigDecimal</code></td>
+</tr>
+<tr>
+<td><code>VARCHAR</code>, <code>CHAR</code>, <code>TEXT</code></td>
+<td><code>String</code></td>
+<td><code>getString</code></td>
+</tr>
+<tr>
+<td><code>BOOLEAN</code></td>
+<td><code>boolean</code></td>
+<td><code>getBoolean</code></td>
+</tr>
+<tr>
+<td><code>DATE</code></td>
+<td><code>LocalDate</code></td>
+<td><code>getObject(col, LocalDate.class)</code></td>
+</tr>
+<tr>
+<td><code>TIMESTAMPTZ</code></td>
+<td><code>OffsetDateTime</code> (or <code>Instant</code>)</td>
+<td><code>getObject(col, OffsetDateTime.class)</code> then
+<code>.toInstant()</code></td>
+</tr>
+<tr>
+<td><code>UUID</code></td>
+<td><code>UUID</code></td>
+<td><code>getObject(col, UUID.class)</code></td>
+</tr>
+<tr>
+<td><code>JSONB</code></td>
+<td><code>String</code> (then parse)</td>
+<td><code>getString</code></td>
+</tr>
+</tbody>
+</table>
+<p>Use the <code>java.time</code> types with
+<code>getObject</code>/<code>setObject</code> (JDBC 4.2). Avoid the
+legacy <code>java.sql.Date</code>/<code>Timestamp</code> in new
+code.</p>
+<h2 id="3-sql-injection-and-why--placeholders-stop-it">3. SQL injection,
+and why <code>?</code> placeholders stop it</h2>
+<p>Never build SQL by concatenating input:</p>
+<pre class="java"><code>// VULNERABLE
+String sql = &quot;SELECT * FROM account WHERE number = &#39;&quot; + number + &quot;&#39;&quot;;</code></pre>
+<p>If an attacker sends <code>number = "' OR '1'='1"</code>, the
+database receives:</p>
+<pre class="sql"><code>SELECT * FROM account WHERE number = &#39;&#39; OR &#39;1&#39;=&#39;1&#39;</code></pre>
+<p>which returns every account. Worse inputs can modify or delete data,
+or read other tables with <code>UNION SELECT</code>.</p>
+<p>With a <code>PreparedStatement</code>, the SQL text and the parameter
+values travel <strong>separately</strong>. The database parses the
+statement with a placeholder first, then binds the value as data; it can
+never be interpreted as SQL. <code>' OR '1'='1</code> is simply an
+account number that matches nothing.</p>
+<p>Placeholders only work for <strong>values</strong>. Table names,
+column names and <code>ORDER BY</code> directions cannot be parameters.
+When those come from user input (a "sort by" column in an API), validate
+them against an allow-list:</p>
+<pre class="java"><code>private static final Map&lt;String, String&gt; SORTABLE = Map.of(
+        &quot;date&quot;, &quot;posted_at&quot;, &quot;amount&quot;, &quot;amount&quot;);
+
+String column = Optional.ofNullable(SORTABLE.get(sortParam))
+        .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Unsupported sort: &quot; + sortParam));
+String sql = &quot;SELECT ... FROM txn WHERE account_id = ? ORDER BY &quot; + column + &quot; DESC LIMIT ?&quot;;</code></pre>
+<p>SQL injection is #3 ("Injection") in the OWASP Top 10 (2021), and
+Module 6 returns to it.</p>
+<h2 id="4-writes-generated-keys-and-transactions">4. Writes, generated
+keys and transactions</h2>
+<pre class="java"><code>public long insertTxn(Connection conn, long accountId, String ref, char dir, BigDecimal amount,
+                      LocalDate valueDate) throws SQLException {
+    String sql = &quot;&quot;&quot;
+            INSERT INTO txn (account_id, reference, direction, amount, value_date)
+            VALUES (?, ?, ?, ?, ?)
+            &quot;&quot;&quot;;
+    try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        ps.setLong(1, accountId);
+        ps.setString(2, ref);
+        ps.setString(3, String.valueOf(dir));
+        ps.setBigDecimal(4, amount);
+        ps.setObject(5, valueDate);
+        ps.executeUpdate();
+        try (ResultSet keys = ps.getGeneratedKeys()) {
+            keys.next();
+            return keys.getLong(1);
+        }
+    }
+}</code></pre>
+<p>(In PostgreSQL you can also write
+<code>INSERT ... RETURNING id</code> and call
+<code>executeQuery()</code>.)</p>
+<p>By default a JDBC connection is in <strong>auto-commit</strong> mode:
+every statement commits immediately. For a multi-statement unit of work,
+switch it off and commit or roll back yourself:</p>
+<pre class="java"><code>public void transfer(long fromId, long toId, BigDecimal amount, String ref) throws SQLException {
+    try (Connection conn = dataSource.getConnection()) {
+        conn.setAutoCommit(false);
+        try {
+            int debited = update(conn, &quot;&quot;&quot;
+                    UPDATE account SET balance = balance - ?
+                    WHERE id = ? AND balance &gt;= ?
+                    &quot;&quot;&quot;, amount, fromId, amount);
+            if (debited != 1) throw new InsufficientFundsException(fromId, amount);
+            update(conn, &quot;UPDATE account SET balance = balance + ? WHERE id = ?&quot;, amount, toId);
+            insertLedgerEntries(conn, ref, fromId, toId, amount);
+            conn.commit();
+        } catch (SQLException | RuntimeException e) {
+            conn.rollback();
+            throw e;
+        }
+    }   // with a pool, Hikari resets auto-commit when the connection is returned
+}</code></pre>
+<p>Spring's <code>@Transactional</code> (Module 4) does exactly this for
+you: get a connection, disable auto-commit, run your code, commit or
+roll back. Knowing the JDBC version makes <code>@Transactional</code>
+behaviour easy to reason about.</p>
+<p><code>conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE)</code>
+sets the isolation level from topic 3.2.</p>
+<h2 id="5-handling-sqlexception">5. Handling SQLException</h2>
+<p><code>SQLException</code> carries a vendor-independent
+<strong>SQLSTATE</strong> code, which is better to switch on than
+message text:</p>
+<table>
+<thead>
+<tr>
+<th>SQLSTATE</th>
+<th>Meaning</th>
+<th>Typical action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>23505</code></td>
+<td>Unique violation</td>
+<td>Duplicate reference: treat as "already processed" (idempotency)</td>
+</tr>
+<tr>
+<td><code>23503</code></td>
+<td>Foreign key violation</td>
+<td>Referenced account doesn't exist: client error</td>
+</tr>
+<tr>
+<td><code>23514</code></td>
+<td>Check violation</td>
+<td>Business rule in the schema (e.g. negative balance)</td>
+</tr>
+<tr>
+<td><code>40001</code></td>
+<td>Serialization failure</td>
+<td>Retry the transaction</td>
+</tr>
+<tr>
+<td><code>40P01</code></td>
+<td>Deadlock detected</td>
+<td>Retry the transaction</td>
+</tr>
+<tr>
+<td><code>08xxx</code></td>
+<td>Connection exception</td>
+<td>Database unreachable: fail fast, alert</td>
+</tr>
+<tr>
+<td><code>57014</code></td>
+<td>Query cancelled (statement timeout)</td>
+<td>Investigate the slow query</td>
+</tr>
+</tbody>
+</table>
+<pre class="java"><code>catch (SQLException e) {
+    if (&quot;23505&quot;.equals(e.getSQLState())) {
+        return TransferResult.duplicate(ref);
+    }
+    throw new LedgerException(&quot;Failed to post transfer &quot; + ref, e);   // keep the cause
+}</code></pre>
+<p>Spring translates these into a <code>DataAccessException</code>
+hierarchy (<code>DuplicateKeyException</code>,
+<code>CannotAcquireLockException</code>, and so on), so you will rarely
+see raw <code>SQLException</code> in Spring code.</p>
+<h2 id="6-batching">6. Batching</h2>
+<p>Inserting 100,000 rows one statement at a time means 100,000 network
+round trips. Batching sends many in one go:</p>
+<pre class="java"><code>String sql = &quot;INSERT INTO txn (account_id, reference, direction, amount, value_date) VALUES (?, ?, ?, ?, ?)&quot;;
+try (Connection conn = dataSource.getConnection();
+     PreparedStatement ps = conn.prepareStatement(sql)) {
+    conn.setAutoCommit(false);
+    int count = 0;
+    for (TxnRow r : rows) {
+        ps.setLong(1, r.accountId());
+        ps.setString(2, r.reference());
+        ps.setString(3, r.direction());
+        ps.setBigDecimal(4, r.amount());
+        ps.setObject(5, r.valueDate());
+        ps.addBatch();
+        if (++count % 1_000 == 0) ps.executeBatch();   // flush every 1,000 rows
+    }
+    ps.executeBatch();
+    conn.commit();
+}</code></pre>
+<p>With the PostgreSQL driver, add
+<code>reWriteBatchedInserts=true</code> to the JDBC URL so it rewrites
+the batch into multi-row <code>INSERT</code>s: often another 2–5×
+faster. For very large loads, PostgreSQL's <code>COPY</code> (available
+through the driver's <code>CopyManager</code>) is fastest of all.</p>
+<h2 id="7-connection-pooling-with-hikaricp">7. Connection pooling with
+HikariCP</h2>
+<p>Opening a PostgreSQL connection takes several milliseconds and
+creates a server process. A <strong>connection pool</strong> keeps a set
+of open connections and lends them out. HikariCP is the standard (and
+Spring Boot's default).</p>
+<pre class="java"><code>HikariConfig cfg = new HikariConfig();
+cfg.setJdbcUrl(&quot;jdbc:postgresql://localhost:5432/bank?reWriteBatchedInserts=true&quot;);
+cfg.setUsername(&quot;bank_app&quot;);
+cfg.setPassword(System.getenv(&quot;DB_PASSWORD&quot;));     // never hard-code secrets (topic 4.4)
+cfg.setMaximumPoolSize(10);
+cfg.setConnectionTimeout(3_000);                   // ms to wait for a free connection before failing
+cfg.setLeakDetectionThreshold(20_000);             // log a stack trace if a connection is held &gt; 20 s
+cfg.setPoolName(&quot;bank-pool&quot;);
+HikariDataSource dataSource = new HikariDataSource(cfg);</code></pre>
+<p>How big? Smaller than people expect. A database server can only do a
+limited number of things at once (roughly its CPU cores plus some for
+I/O wait). HikariCP's guidance starts from
+<code>connections ≈ (cores × 2) + effective spindles</code>, so a pool
+of 10–20 per service instance is typical. Remember to multiply by the
+number of instances: 8 pods × 50 connections = 400 PostgreSQL backends,
+which is too many. If threads wait for connections, the fix is usually
+faster queries, not a bigger pool.</p>
+<p>Symptoms of trouble:
+<code>Connection is not available, request timed out after 3000ms</code>
+means the pool is exhausted: connections are leaking (missing
+<code>close</code>) or held too long (slow queries, transactions
+spanning remote calls).</p>
+<h2 id="8-beyond-plain-jdbc">8. Beyond plain JDBC</h2>
+<p>Plain JDBC is verbose. You will use higher-level tools, all built on
+it:</p>
+<ul>
+<li><p><strong>Spring <code>JdbcClient</code></strong> (Spring 6.1+):
+fluent, plain-SQL, no boilerplate. Excellent for reporting queries and
+simple services.</p>
+<pre class="java"><code>Optional&lt;AccountRow&gt; acc = jdbcClient.sql(&quot;SELECT id, number, balance, currency FROM account WHERE number = :n&quot;)
+        .param(&quot;n&quot;, number)
+        .query(AccountRow.class)       // maps columns to record components by name
+        .optional();</code></pre></li>
+<li><p><strong>Spring Data JDBC / JPA with Hibernate</strong> (topic
+4.3): map objects to tables.</p></li>
+<li><p><strong>jOOQ</strong>: type-safe SQL generated from your
+schema.</p></li>
+<li><p><strong>MyBatis</strong>: SQL in XML or annotations, common in
+some banks.</p></li>
+</ul>
+<h2 id="worked-example-a-statement-importer">Worked example: a statement
+importer</h2>
+<p>A partner bank sends a daily CSV of 250,000 settlement lines. The
+importer reads it, validates each line, batch-inserts valid lines in one
+transaction, and records rejects:</p>
+<pre class="java"><code>public ImportReport importFile(Path file) throws IOException, SQLException {
+    var rejects = new ArrayList&lt;String&gt;();
+    try (var reader = Files.newBufferedReader(file);
+         var conn = dataSource.getConnection();
+         var ps = conn.prepareStatement(&quot;&quot;&quot;
+                 INSERT INTO switch_settlement (reference, amount, value_date)
+                 VALUES (?, ?, ?)
+                 ON CONFLICT (reference) DO NOTHING
+                 &quot;&quot;&quot;)) {
+        conn.setAutoCommit(false);
+        String line; int lineNo = 0, batched = 0;
+        reader.readLine();                                   // skip header
+        while ((line = reader.readLine()) != null) {
+            lineNo++;
+            var cols = line.split(&quot;,&quot;, -1);
+            try {
+                ps.setString(1, cols[0].strip());
+                ps.setBigDecimal(2, new BigDecimal(cols[1].strip()));
+                ps.setObject(3, LocalDate.parse(cols[2].strip()));
+                ps.addBatch();
+                if (++batched % 1_000 == 0) ps.executeBatch();
+            } catch (RuntimeException e) {
+                rejects.add(&quot;line &quot; + lineNo + &quot;: &quot; + e.getMessage());
+            }
+        }
+        ps.executeBatch();
+        conn.commit();
+        return new ImportReport(lineNo, rejects);
+    }
+}</code></pre>
+<p><code>ON CONFLICT (reference) DO NOTHING</code> makes the import
+<strong>idempotent</strong>: re-running the same file inserts nothing
+new. That property is what lets operations safely retry a failed nightly
+job.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Concatenating user input into SQL.</li>
+<li>Forgetting to close connections, statements or result sets.</li>
+<li>Calling <code>getLong</code> on a nullable column and silently
+getting 0.</li>
+<li>Auto-commit left on for multi-statement work.</li>
+<li>Not checking <code>executeUpdate()</code>'s affected row count.</li>
+<li>Huge pools "to be safe", multiplied across many instances.</li>
+<li>Inserting large files row by row without batching.</li>
+<li>Using <code>double</code> (<code>getDouble</code>) for
+<code>NUMERIC</code> money columns.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Write <code>AccountDao</code> with <code>findByNumber</code>,
+<code>insert</code>, and <code>listByCustomer</code> using plain JDBC
+and a HikariCP <code>DataSource</code>. Test it against PostgreSQL in
+Docker.</li>
+<li>Prove SQL injection: write a deliberately vulnerable login-style
+query, exploit it with <code>' OR '1'='1</code>, then fix it with a
+<code>PreparedStatement</code> and show the attack fails.</li>
+<li>Insert 200,000 rows three ways (one by one with auto-commit,
+batched, batched with <code>reWriteBatchedInserts=true</code>) and
+record the timings.</li>
+<li>Implement <code>transfer</code> with manual transaction control,
+then force a failure after the debit (throw an exception) and prove the
+debit was rolled back.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>JDBC, driver, <code>DataSource</code>, <code>DriverManager</code>,
+<code>Connection</code>, <code>PreparedStatement</code>,
+<code>ResultSet</code>, placeholder, SQL injection, allow-list,
+auto-commit, commit, rollback, generated keys, <code>RETURNING</code>,
+SQLSTATE, batch, <code>reWriteBatchedInserts</code>, <code>COPY</code>,
+connection pool, HikariCP, leak detection, <code>JdbcClient</code>,
+idempotent import.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://docs.oracle.com/javase/tutorial/jdbc/basics/index.html">The
+Java Tutorials: JDBC Database Access</a></li>
+<li><a href="https://jdbc.postgresql.org/documentation/">PostgreSQL JDBC
+driver documentation</a></li>
+<li><a
+href="https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing">HikariCP:
+About Pool Sizing</a></li>
+<li><a
+href="https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html">OWASP:
+SQL Injection Prevention Cheat Sheet</a></li>
+<li><a
+href="https://www.postgresql.org/docs/17/errcodes-appendix.html">PostgreSQL:
+Error codes (SQLSTATE)</a></li>
+<li><a
+href="https://docs.oracle.com/en/java/javase/21/docs/api/java.sql/java/sql/package-summary.html">Oracle:
+java.sql package summary (Java 21)</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>JDBC Tutorial - Crash Course</h3><p>Marco Codes · 24 min. JDBC end to end: connections, statements, result sets and transactions.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/KgXq2UBNEhA" title="JDBC Tutorial - Crash Course" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Java Database Connectivity | JDBC</h3><p>Telusko · 21 min. A second walkthrough of the JDBC steps, slower and beginner-friendly.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/7v2OnUti2eM" title="Java Database Connectivity | JDBC" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/03-databases-sql-nosql/3.5-jdbc-fundamentals/README.md">3.5 JDBC fundamentals</a></p>

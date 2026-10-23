@@ -1,0 +1,421 @@
+<p><em>Week 4 · Module 1: Modern Java &amp; OOP Foundations</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Recognise code written for Java 8, 11 and 17 and translate it into
+modern Java 21 idioms.</li>
+<li>Explain the main changes between LTS releases that affect existing
+code: modules and strong encapsulation, removed APIs, <code>javax</code>
+→ <code>jakarta</code>, new garbage collectors.</li>
+<li>Plan and execute a migration safely: tests first,
+<code>jdeps</code>, compiler warnings, OpenRewrite recipes, one step at
+a time.</li>
+<li>Read unfamiliar legacy code methodically.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Banks run Java code written over twenty years. Many of your first
+tickets will be in a service still on Java 8 or 11: fixing a bug, adding
+a field, or upgrading it because the old JDK is out of support and fails
+a security audit. Job ads say "Java 8/11/17/21" for exactly this reason.
+Engineers who can read old code without fear, and move it forward
+without breaking it, are the ones teams trust with critical systems.</p>
+<h2 id="1-a-timeline-you-should-know">1. A timeline you should know</h2>
+<table>
+<thead>
+<tr>
+<th>Release</th>
+<th>Year</th>
+<th>LTS</th>
+<th>Changes you will see in code</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Java 8</td>
+<td>2014</td>
+<td>yes</td>
+<td>Lambdas, streams, <code>Optional</code>, <code>java.time</code>,
+default methods</td>
+</tr>
+<tr>
+<td>Java 9</td>
+<td>2017</td>
+<td></td>
+<td>Module system (JPMS), <code>List.of</code>/<code>Map.of</code>,
+<code>jshell</code>, private interface methods</td>
+</tr>
+<tr>
+<td>Java 10</td>
+<td>2018</td>
+<td></td>
+<td><code>var</code></td>
+</tr>
+<tr>
+<td>Java 11</td>
+<td>2018</td>
+<td>yes</td>
+<td><code>HttpClient</code>,
+<code>String.isBlank/strip/lines/repeat</code>,
+<code>Files.readString</code>, single-file launch; <strong>Java EE
+modules removed</strong> (JAXB, JAX-WS, CORBA)</td>
+</tr>
+<tr>
+<td>Java 14–16</td>
+<td>2020–21</td>
+<td></td>
+<td>Switch expressions, records, text blocks, <code>instanceof</code>
+patterns, <code>Stream.toList()</code>, helpful NPEs</td>
+</tr>
+<tr>
+<td>Java 17</td>
+<td>2021</td>
+<td>yes</td>
+<td>Sealed classes; <strong>strong encapsulation of JDK
+internals</strong> (no more <code>--illegal-access</code>); Security
+Manager deprecated</td>
+</tr>
+<tr>
+<td>Java 21</td>
+<td>2023</td>
+<td>yes</td>
+<td>Virtual threads, record patterns, pattern matching for switch,
+sequenced collections, generational ZGC</td>
+</tr>
+<tr>
+<td>Java 25</td>
+<td>2025</td>
+<td>yes</td>
+<td>Scoped values and module imports final; compact source files;
+Security Manager gone; 32-bit x86 removed</td>
+</tr>
+</tbody>
+</table>
+<p>Oracle, Adoptium and other vendors patch LTS releases for years, but
+each eventually reaches end of support. Running an unsupported JDK means
+unpatched vulnerabilities, which auditors and regulators flag.</p>
+<h2 id="2-reading-legacy-code-translation-table">2. Reading legacy code:
+translation table</h2>
+<p>When you open a Java 8 codebase you will see patterns like the left
+column. Recognise them, and use the right column in new code.</p>
+<table>
+<thead>
+<tr>
+<th>Legacy idiom</th>
+<th>Modern equivalent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>List&lt;String&gt; l = new ArrayList&lt;String&gt;();</code></td>
+<td><code>var l = new ArrayList&lt;String&gt;();</code> or
+<code>List.of(...)</code> for constants</td>
+</tr>
+<tr>
+<td><code>Arrays.asList("a", "b")</code> for constants</td>
+<td><code>List.of("a", "b")</code> (truly unmodifiable, no nulls)</td>
+</tr>
+<tr>
+<td><code>Collections.unmodifiableList(new ArrayList&lt;&gt;(x))</code></td>
+<td><code>List.copyOf(x)</code></td>
+</tr>
+<tr>
+<td>Anonymous inner class
+<code>new Comparator&lt;Txn&gt;() { public int compare(...) {...} }</code></td>
+<td><code>Comparator.comparing(Txn::date)</code></td>
+</tr>
+<tr>
+<td><code>for</code> loop building a filtered list</td>
+<td><code>stream().filter(...).toList()</code></td>
+</tr>
+<tr>
+<td><code>.collect(Collectors.toList())</code></td>
+<td><code>.toList()</code> (unmodifiable; check callers don't mutate the
+result)</td>
+</tr>
+<tr>
+<td><code>if (o instanceof Card) { Card c = (Card) o; ... }</code></td>
+<td><code>if (o instanceof Card c) { ... }</code></td>
+</tr>
+<tr>
+<td>Long <code>if/else if</code> on a type or enum</td>
+<td>Switch expression, pattern matching over a sealed type</td>
+</tr>
+<tr>
+<td><code>switch</code> with <code>case X: ... break;</code></td>
+<td><code>case X -&gt; ...</code></td>
+</tr>
+<tr>
+<td>POJO with constructor, getters, <code>equals</code>,
+<code>hashCode</code>, <code>toString</code> (or Lombok
+<code>@Value</code>)</td>
+<td><code>record</code></td>
+</tr>
+<tr>
+<td>String concatenation with <code>"\n" +</code></td>
+<td>Text block</td>
+</tr>
+<tr>
+<td><code>new Date()</code>, <code>Calendar</code>,
+<code>SimpleDateFormat</code> (not thread-safe!)</td>
+<td><code>Instant.now()</code>, <code>LocalDate</code>,
+<code>DateTimeFormatter</code></td>
+</tr>
+<tr>
+<td><code>str.trim().isEmpty()</code></td>
+<td><code>str.isBlank()</code></td>
+</tr>
+<tr>
+<td><code>new String(Files.readAllBytes(p), UTF_8)</code></td>
+<td><code>Files.readString(p)</code></td>
+</tr>
+<tr>
+<td>Apache <code>HttpClient</code> / <code>HttpURLConnection</code>
+boilerplate</td>
+<td><code>java.net.http.HttpClient</code> (or Spring's
+<code>RestClient</code>)</td>
+</tr>
+<tr>
+<td><code>Executors.newFixedThreadPool(200)</code> for blocking I/O</td>
+<td>Virtual threads (topic 2.3)</td>
+</tr>
+<tr>
+<td><code>new Integer(5)</code>, <code>new BigDecimal(0.1)</code></td>
+<td><code>Integer.valueOf(5)</code>,
+<code>new BigDecimal("0.1")</code></td>
+</tr>
+<tr>
+<td><code>Optional</code> returned and then <code>.get()</code></td>
+<td><code>.orElseThrow()</code>, <code>.map(...)</code></td>
+</tr>
+</tbody>
+</table>
+<p>A small before/after:</p>
+<pre class="java"><code>// Java 8 style
+public List&lt;String&gt; largeDebitReferences(List&lt;Transaction&gt; txs) {
+    List&lt;String&gt; refs = new ArrayList&lt;String&gt;();
+    for (Transaction tx : txs) {
+        if (tx instanceof DebitTransaction) {
+            DebitTransaction d = (DebitTransaction) tx;
+            if (d.getAmount().compareTo(new BigDecimal(&quot;1000000&quot;)) &gt; 0) {
+                refs.add(d.getReference());
+            }
+        }
+    }
+    Collections.sort(refs);
+    return Collections.unmodifiableList(refs);
+}
+
+// Java 21 style
+public List&lt;String&gt; largeDebitReferences(List&lt;Transaction&gt; txs) {
+    return txs.stream()
+            .filter(tx -&gt; tx instanceof DebitTransaction d &amp;&amp; d.amount().compareTo(LARGE) &gt; 0)
+            .map(Transaction::reference)
+            .sorted()
+            .toList();
+}</code></pre>
+<p><strong>Do not modernise for its own sake.</strong> Rewriting working
+legacy code without tests is how outages happen. Modernise code you are
+already changing, behind tests, in small commits.</p>
+<h2 id="3-what-actually-breaks-when-you-upgrade">3. What actually breaks
+when you upgrade</h2>
+<h3 id="from-java-8-to-11">From Java 8 to 11</h3>
+<ul>
+<li><strong>Removed Java EE modules.</strong>
+<code>javax.xml.bind</code> (JAXB), <code>javax.xml.ws</code> (JAX-WS),
+<code>javax.annotation</code>, <code>javax.activation</code> and CORBA
+were deleted from the JDK. Code that compiled on 8 fails with
+<code>package javax.xml.bind does not exist</code>. Fix: add the
+libraries as normal Maven dependencies (now under the
+<code>jakarta.*</code> names; see below).</li>
+<li><strong>Internal APIs.</strong> Code (or old libraries) using
+<code>sun.misc.BASE64Encoder</code> and similar internals. Fix:
+<code>java.util.Base64</code>, and upgrade the library.</li>
+<li><strong>Module system warnings</strong> about illegal reflective
+access, from old versions of libraries such as Spring, Hibernate,
+Mockito, Lombok and ASM. Fix: upgrade those libraries first.</li>
+<li><code>ClassLoader</code> changes: the system class loader is no
+longer a <code>URLClassLoader</code>; hacks that cast it break.</li>
+</ul>
+<h3 id="from-11-to-17">From 11 to 17</h3>
+<ul>
+<li><strong>Strong encapsulation of JDK internals.</strong> The
+<code>--illegal-access</code> escape hatch is gone. Reflection into
+<code>java.*</code> private fields fails with
+<code>InaccessibleObjectException</code>. Old Lombok, Mockito, Byte
+Buddy, Groovy and Gradle versions are typical culprits. Fix: upgrade
+them; use <code>--add-opens</code> only as a documented, temporary
+workaround.</li>
+<li>Removed: Nashorn JavaScript engine, RMI activation, experimental
+AOT/Graal JIT.</li>
+</ul>
+<h3 id="from-17-to-21">From 17 to 21</h3>
+<p>Usually smooth for application code. Watch for: libraries that need a
+version bump to understand Java 21 class files (ASM, Byte Buddy, Jacoco,
+Mockito, Lombok); deprecation of finalisation; and behaviour changes
+such as <code>Thread.stop</code> now always throwing. Default GC remains
+G1; consider Generational ZGC for low-latency services after
+measuring.</p>
+<h3 id="javax--jakarta"><code>javax</code> → <code>jakarta</code></h3>
+<p>Not a JDK change but the biggest migration in enterprise Java. When
+Oracle handed Java EE to the Eclipse Foundation, it became
+<strong>Jakarta EE</strong>, and from Jakarta EE 9 the package names
+changed from <code>javax.*</code> to <code>jakarta.*</code>:
+<code>javax.persistence.Entity</code> →
+<code>jakarta.persistence.Entity</code>, <code>javax.servlet</code> →
+<code>jakarta.servlet</code>, <code>javax.validation</code> →
+<code>jakarta.validation</code>. Spring Boot 3 moved to Jakarta EE 9/10,
+and Spring Boot 4 to Jakarta EE 11. Note that <code>javax.sql</code>,
+<code>javax.crypto</code> and other packages that are part of the JDK
+itself did <strong>not</strong> change. Topic 4.6 covers the Spring
+side.</p>
+<h2 id="4-a-safe-migration-process">4. A safe migration process</h2>
+<ol type="1">
+<li><p><strong>Get a green build on the current version.</strong> If
+tests are missing, write characterisation tests that pin down current
+behaviour, especially around money calculations and date
+handling.</p></li>
+<li><p><strong>Inventory.</strong> <code>./mvnw dependency:tree</code>
+for library versions; <code>jdeps --jdk-internals target/app.jar</code>
+to find uses of JDK internals;
+<code>jdeps --multi-release 21 --print-module-deps</code> to see which
+JDK modules the code needs.</p></li>
+<li><p><strong>Upgrade build tooling and plugins first</strong>: Maven
+3.9+, <code>maven-compiler-plugin</code> with
+<code>&lt;release&gt;21&lt;/release&gt;</code>, Surefire/Failsafe,
+JaCoCo, and Lombok/Mockito/Byte Buddy to versions that support Java
+21.</p></li>
+<li><p><strong>Move one LTS at a time</strong> when the jump is large (8
+→ 11 → 17 → 21), getting the build green at each step. Run on the new
+JDK with the old <code>release</code> level first, then raise the
+language level.</p></li>
+<li><p><strong>Automate the mechanical parts with OpenRewrite.</strong>
+Recipes such as
+<code>org.openrewrite.java.migrate.UpgradeToJava21</code> and
+<code>org.openrewrite.java.migrate.jakarta.JavaxMigrationToJakarta</code>
+rewrite imports, deprecated APIs and build files across the codebase in
+one reviewed commit:</p>
+<pre class="bash"><code>./mvnw -U org.openrewrite.maven:rewrite-maven-plugin:run \
+  -Drewrite.recipeArtifactCoordinates=org.openrewrite.recipe:rewrite-migrate-java:RELEASE \
+  -Drewrite.activeRecipes=org.openrewrite.java.migrate.UpgradeToJava21</code></pre>
+<p>Run it on a branch, read the whole diff, and run every test before
+merging.</p></li>
+<li><p><strong>Fix compiler warnings</strong> with
+<code>-Xlint:all</code>: deprecations often become removals in the next
+LTS.</p></li>
+<li><p><strong>Test in a production-like environment</strong>:
+performance, memory (GC defaults and container awareness changed between
+8 and 11), TLS (older protocols and ciphers are disabled by default),
+time zones and locales.</p></li>
+<li><p><strong>Roll out gradually</strong> and keep the previous build
+ready for rollback.</p></li>
+</ol>
+<h2 id="5-how-to-read-an-unfamiliar-legacy-codebase">5. How to read an
+unfamiliar legacy codebase</h2>
+<ul>
+<li>Start from the <strong>entry points</strong>: <code>main</code>, web
+controllers, scheduled jobs, message listeners. Follow one real request
+end to end in the debugger.</li>
+<li>Read the <strong>tests</strong> (if any) to learn what the code is
+supposed to do.</li>
+<li>Use <strong>Find Usages</strong> and <strong>Call Hierarchy</strong>
+in IntelliJ instead of guessing.</li>
+<li>Check <strong>Git history</strong>
+(<code>git log -p --follow File.java</code>, <code>git blame</code>) to
+see why something odd was done: the commit message often references a
+ticket or a regulator.</li>
+<li>Keep a short <strong>notes file</strong> of what you learn, and turn
+it into README content or an architecture decision record for the next
+person.</li>
+<li>Change one thing at a time, behind a test.</li>
+</ul>
+<h2 id="worked-example-modernising-a-statement-formatter">Worked
+example: modernising a statement formatter</h2>
+<p>Legacy (Java 8):</p>
+<pre class="java"><code>public class StatementLine {
+    private final Date date; private final String narration; private final BigDecimal amount;
+    public StatementLine(Date date, String narration, BigDecimal amount) { ... }
+    public Date getDate() { return date; }            // leaks a mutable Date
+    // getters, equals, hashCode, toString: 60 more lines
+}
+
+public static String format(List&lt;StatementLine&gt; lines) {
+    SimpleDateFormat fmt = new SimpleDateFormat(&quot;dd/MM/yyyy&quot;);   // not thread-safe if made static
+    StringBuilder sb = new StringBuilder();
+    for (StatementLine l : lines) {
+        sb.append(fmt.format(l.getDate())).append(&quot; | &quot;).append(l.getNarration())
+          .append(&quot; | &quot;).append(l.getAmount()).append(&quot;\n&quot;);
+    }
+    return sb.toString();
+}</code></pre>
+<p>Modern (Java 21):</p>
+<pre class="java"><code>public record StatementLine(LocalDate date, String narration, BigDecimal amount) { }
+
+private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern(&quot;dd/MM/yyyy&quot;);  // immutable, thread-safe
+
+public static String format(List&lt;StatementLine&gt; lines) {
+    return lines.stream()
+            .map(l -&gt; &quot;%s | %s | %s&quot;.formatted(DATE.format(l.date()), l.narration(), l.amount()))
+            .collect(Collectors.joining(&quot;\n&quot;, &quot;&quot;, &quot;\n&quot;));
+}</code></pre>
+<p>Before changing it, write a test that formats three known lines and
+asserts the exact output string; run it before and after.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Upgrading the JDK and all libraries and the framework in one giant
+commit.</li>
+<li>Treating <code>--add-opens</code> flags as a permanent fix.</li>
+<li>Replacing <code>.collect(Collectors.toList())</code> with
+<code>.toList()</code> where callers later add to the list (it is
+unmodifiable).</li>
+<li>Running a global find-and-replace of <code>javax.</code> →
+<code>jakarta.</code> and breaking
+<code>javax.sql</code>/<code>javax.crypto</code> imports.</li>
+<li>Modernising untested code that works.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Take the Java 8 <code>largeDebitReferences</code> and
+<code>StatementLine</code> examples, write tests for them, then
+modernise them and keep the tests green.</li>
+<li>Clone any open-source Java 8 or 11 project, run
+<code>jdeps --jdk-internals</code> on its jar, and write a short
+migration risk list.</li>
+<li>Create a small Java 11 Maven project that uses
+<code>javax.xml.bind.DatatypeConverter</code>, then migrate it to Java
+21 (replacing it with <code>java.util.HexFormat</code> or
+<code>Base64</code>). Document each error and fix.</li>
+<li>Run the OpenRewrite <code>UpgradeToJava21</code> recipe on a
+practice project and review the diff line by line. Which changes would
+you accept, and which would you question?</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>LTS, end of support, JPMS, strong encapsulation, <code>jdeps</code>,
+<code>--add-opens</code>, Jakarta EE, <code>javax</code> →
+<code>jakarta</code>, OpenRewrite, recipe, characterisation test,
+<code>release</code> flag.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://docs.oracle.com/en/java/javase/21/migrate/getting-started.html">Oracle
+JDK Migration Guide (Java 21)</a></li>
+<li><a
+href="https://docs.openrewrite.org/recipes/java/migrate/upgradetojava21">OpenRewrite:
+Migrate to Java 21</a></li>
+<li><a
+href="https://docs.oracle.com/en/java/javase/21/docs/specs/man/jdeps.html"><code>jdeps</code>
+tool reference</a></li>
+<li><a
+href="https://jakarta.ee/blogs/javax-jakartaee-namespace-ecosystem-progress/">Jakarta
+EE: the javax to jakarta namespace change (Eclipse Foundation)</a></li>
+<li><a
+href="https://www.oracle.com/java/technologies/java-se-support-roadmap.html">Oracle:
+Java SE Support Roadmap</a></li>
+<li><a href="https://dev.java/evolution/">dev.java (Oracle): Java
+release history and new features</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Ranking Java Features Added from Versions 8 to 21!</h3><p>Tales from the jar side · 27 min. Every major language and API change from Java 8 to 21, ranked by how much it matters day to day.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/RuMogS3ycKs" title="Ranking Java Features Added from Versions 8 to 21!" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Migrate to Java 21 using OpenRewrite</h3><p>Moderne and OpenRewrite · 7 min. Automating a Java 21 migration with OpenRewrite recipes.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/uViRlX-RahA" title="Migrate to Java 21 using OpenRewrite" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>All New Java Language Features Since Java 21 #RoadTo25 (optional, longer)</h3><p>Java · 35 min. The Java team on what changed after 21, so you know what Java 25 adds.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/X0-TGhktFnE" title="All New Java Language Features Since Java 21 #RoadTo25" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/01-modern-java-oop/1.8-legacy-java-migration/README.md">1.8 Reading legacy Java 8/11/17 code and migrating it forward</a></p>

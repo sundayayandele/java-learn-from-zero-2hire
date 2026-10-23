@@ -1,0 +1,336 @@
+<p><em>Week 4 · Module 1: Modern Java &amp; OOP Foundations</em></p>
+<blockquote>
+<p><strong>Why this topic is here.</strong> File and stream I/O, NIO.2
+and serialization are a full objective group in the Oracle OCP Java SE
+21 and 25 exams ("Performing Input and Output Operations Using the Java
+I/O API"). They're also everyday backend work: settlement files,
+statement exports and log processing. See the <a
+href="https://github.com/sundayayandele/java-zero-hire/blob/main/docs/certifications.md">certification mapping</a>.</p>
+</blockquote>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Read and write text and binary data with I/O streams, readers and
+writers, choosing buffered and character-set-aware classes.</li>
+<li>Use the NIO.2 <code>Path</code> and <code>Files</code> API to build,
+normalise, resolve, traverse, create, copy, move, read and write files
+and their attributes.</li>
+<li>Process large files line by line without loading them into
+memory.</li>
+<li>Read and write console input and output.</li>
+<li>Serialise and deserialise objects, explain
+<code>serialVersionUID</code> and <code>transient</code>, and explain
+why Java serialization is a security risk for untrusted data.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Banks still exchange a lot of data as files: card-scheme settlement
+files, NIBSS reports, partner statements, regulatory returns. Engineers
+who stream a 2 GB file safely, handle character sets correctly (an
+<code>₦</code> sign or a customer's accented name), clean up file
+handles and never deserialise untrusted bytes avoid real incidents. The
+import code in Capstones 2, 5, 9 and 10 depends on this topic.</p>
+<h2 id="1-two-families-byte-streams-and-character-streams">1. Two
+families: byte streams and character streams</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Byte streams (binary)</th>
+<th>Character streams (text)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Base classes</td>
+<td><code>InputStream</code>, <code>OutputStream</code></td>
+<td><code>Reader</code>, <code>Writer</code></td>
+</tr>
+<tr>
+<td>Files</td>
+<td><code>FileInputStream</code>, <code>FileOutputStream</code></td>
+<td><code>FileReader</code>, <code>FileWriter</code> (prefer
+<code>Files.newBufferedReader/Writer</code>)</td>
+</tr>
+<tr>
+<td>Buffering</td>
+<td><code>BufferedInputStream</code>,
+<code>BufferedOutputStream</code></td>
+<td><code>BufferedReader</code>, <code>BufferedWriter</code></td>
+</tr>
+<tr>
+<td>Bridges</td>
+<td><code>InputStreamReader</code> / <code>OutputStreamWriter</code>
+turn bytes into characters <strong>with a charset</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>Formatting</td>
+<td><code>PrintStream</code> (<code>System.out</code>)</td>
+<td><code>PrintWriter</code></td>
+</tr>
+<tr>
+<td>Objects</td>
+<td><code>ObjectInputStream</code>, <code>ObjectOutputStream</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>The classes are <strong>decorators</strong>: you wrap a low-level
+stream in higher-level ones to add buffering, character decoding or
+formatting:</p>
+<pre class="java"><code>try (var reader = new BufferedReader(
+        new InputStreamReader(new FileInputStream(&quot;settlement.csv&quot;), StandardCharsets.UTF_8))) {
+    String line;
+    while ((line = reader.readLine()) != null) {
+        process(line);
+    }
+}</code></pre>
+<p>Always specify the <strong>charset</strong>
+(<code>StandardCharsets.UTF_8</code>). Since Java 18 the default charset
+is UTF-8 everywhere (JEP 400), but files from partners can still be
+ISO-8859-1 or Windows-1252, and naming the charset documents your
+assumption. Always use <strong>try-with-resources</strong> (topic 1.7)
+so handles are released even on exceptions.</p>
+<p>Key methods to know:</p>
+<ul>
+<li><code>InputStream.read()</code> returns the next byte as an
+<code>int</code> (0–255) or <strong>-1</strong> at end of stream;
+<code>read(byte[])</code> returns the count read.</li>
+<li><code>Reader.read()</code> returns a <code>char</code> as an
+<code>int</code>, or -1; <code>BufferedReader.readLine()</code> returns
+<code>null</code> at the end.</li>
+<li><code>OutputStream.write(...)</code>,
+<code>Writer.write(...)</code>, <code>flush()</code> pushes buffered
+data out, and <code>close()</code> flushes then releases.</li>
+<li><code>InputStream.transferTo(OutputStream)</code> copies everything
+(Java 9+).</li>
+</ul>
+<h2 id="2-nio2-path-and-files">2. NIO.2: <code>Path</code> and
+<code>Files</code></h2>
+<p><code>java.nio.file</code> (Java 7+) is the modern API, and the one
+to use in new code.</p>
+<pre class="java"><code>Path base = Path.of(&quot;/data/settlement&quot;);                 // or Paths.get(...) in older code
+Path file = base.resolve(&quot;2026-10-21/nip.csv&quot;);          // /data/settlement/2026-10-21/nip.csv
+Path rel  = Path.of(&quot;reports/../reports/./daily.csv&quot;).normalize();   // reports/daily.csv
+Path abs  = rel.toAbsolutePath();
+Path between = base.relativize(file);                    // 2026-10-21/nip.csv
+
+file.getFileName();        // nip.csv
+file.getParent();          // /data/settlement/2026-10-21
+file.getNameCount();       // 4
+file.getName(0);           // data
+file.startsWith(base);     // true</code></pre>
+<p>A <code>Path</code> is just a name; it doesn't have to exist.
+<code>resolve</code>, <code>relativize</code> and <code>normalize</code>
+are pure path manipulation. That's useful for <strong>path traversal
+checks</strong>: after resolving a user-supplied file name, normalise
+and verify the result still <code>startsWith</code> your allowed
+directory, or an attacker sends <code>../../etc/passwd</code>.</p>
+<h3 id="reading-and-writing">Reading and writing</h3>
+<pre class="java"><code>String all = Files.readString(file);                               // small files only
+List&lt;String&gt; lines = Files.readAllLines(file);                     // small files only
+Files.writeString(out, report, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+Files.write(out, lines);                                           // writes lines with the platform line separator
+
+try (Stream&lt;String&gt; lines = Files.lines(file, StandardCharsets.UTF_8)) {   // lazy: large files
+    BigDecimal total = lines.skip(1)
+            .map(l -&gt; l.split(&quot;,&quot;)[2])
+            .map(BigDecimal::new)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+}
+
+try (BufferedWriter w = Files.newBufferedWriter(out, StandardCharsets.UTF_8)) {
+    w.write(&quot;reference,amount&quot;);
+    w.newLine();
+}</code></pre>
+<p><code>Files.lines</code> returns a stream that holds an open file:
+<strong>close it</strong> (try-with-resources), or you leak file
+handles.</p>
+<h3 id="creating-copying-moving-deleting">Creating, copying, moving,
+deleting</h3>
+<pre class="java"><code>Files.createDirectories(base.resolve(&quot;archive/2026&quot;));    // creates missing parents; no error if it exists
+Files.createFile(p);                                      // FileAlreadyExistsException if it exists
+Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
+Files.move(tmp, finalPath, StandardCopyOption.ATOMIC_MOVE);   // write-then-rename: readers never see half a file
+Files.delete(p);                                          // NoSuchFileException if missing
+Files.deleteIfExists(p);</code></pre>
+<p>The <strong>write to a temporary file, then atomic move</strong>
+pattern is how you publish files other systems poll for (for example, a
+statement export picked up by an SFTP job): they never read a partial
+file.</p>
+<h3 id="attributes-and-traversal">Attributes and traversal</h3>
+<pre class="java"><code>Files.exists(p); Files.isDirectory(p); Files.isRegularFile(p); Files.isReadable(p);
+Files.size(p);
+Files.getLastModifiedTime(p);
+BasicFileAttributes attrs = Files.readAttributes(p, BasicFileAttributes.class);
+
+try (Stream&lt;Path&gt; files = Files.walk(base, 2)) {          // depth-limited recursive traversal
+    files.filter(Files::isRegularFile).filter(f -&gt; f.toString().endsWith(&quot;.csv&quot;)).forEach(this::importFile);
+}
+try (Stream&lt;Path&gt; found = Files.find(base, 5, (path, a) -&gt; a.isRegularFile() &amp;&amp; a.size() &gt; 100_000_000)) { ... }
+try (Stream&lt;Path&gt; children = Files.list(base)) { ... }    // one level</code></pre>
+<p><code>Files.walk</code> and <code>Files.list</code> streams must be
+closed too. <code>Files.walkFileTree</code> with a
+<code>FileVisitor</code> gives full control (for example, deleting a
+directory tree in post-order).</p>
+<h2 id="3-console-input-and-output">3. Console input and output</h2>
+<pre class="java"><code>System.out.println(&quot;Statement generated&quot;);          // PrintStream, buffered
+System.err.println(&quot;Warning: 3 rejected lines&quot;);    // separate error stream
+
+var in = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
+String account = in.readLine();
+
+Console console = System.console();                 // null when there&#39;s no interactive terminal (IDE, CI, pipes)
+if (console != null) {
+    char[] pin = console.readPassword(&quot;PIN: &quot;);     // not echoed; clear the array after use
+    Arrays.fill(pin, &#39; &#39;);
+}</code></pre>
+<p>Java 25 adds <code>java.lang.IO</code> with
+<code>IO.println(...)</code> and <code>IO.readln(...)</code> for simple
+programs and compact source files. Backend services write to logs
+(SLF4J), not <code>System.out</code>.</p>
+<h2 id="4-serialization">4. Serialization</h2>
+<p>Java serialization turns an object graph into bytes and back:</p>
+<pre class="java"><code>public record Snapshot(String account, BigDecimal balance) implements Serializable { }
+
+class Session implements Serializable {
+    @Serial private static final long serialVersionUID = 1L;    // version of the serial form
+    private final String customerId;
+    private transient String accessToken;                       // not serialised: comes back as null
+    ...
+}
+
+try (var out = new ObjectOutputStream(Files.newOutputStream(p))) {
+    out.writeObject(session);
+}
+try (var in = new ObjectInputStream(Files.newInputStream(p))) {
+    Session s = (Session) in.readObject();
+}</code></pre>
+<p>Rules the exam and real code rely on:</p>
+<ul>
+<li>The class (and every non-transient field's type) must implement
+<code>Serializable</code>, or you get
+<code>NotSerializableException</code>.</li>
+<li><code>transient</code> and <code>static</code> fields aren't
+serialised; transient fields come back as default values
+(<code>null</code>, 0, false).</li>
+<li><code>serialVersionUID</code> identifies compatible versions. If
+it's missing, the JVM computes one from the class shape, so any change
+breaks old data (<code>InvalidClassException</code>).</li>
+<li>On deserialisation, <strong>constructors of
+<code>Serializable</code> classes don't run</strong>. The first
+non-serializable superclass's no-arg constructor does. Records are the
+exception: they are deserialised through their canonical constructor, so
+validation in the compact constructor runs. That's one more reason to
+prefer records.</li>
+<li><code>Externalizable</code> gives full control over the format.</li>
+</ul>
+<h3 id="security-never-deserialise-untrusted-data">Security: never
+deserialise untrusted data</h3>
+<p>Deserialising attacker-controlled bytes has caused many
+remote-code-execution vulnerabilities (gadget chains in common
+libraries). In backend services:</p>
+<ul>
+<li>Exchange data as <strong>JSON</strong> (Jackson, topic 4.2), CSV or
+Protobuf, never Java serialization, across trust boundaries.</li>
+<li>If you must deserialise, configure an <code>ObjectInputFilter</code>
+allow-list (JEP 290 / 415).</li>
+<li>This is listed under "Software and Data Integrity Failures" in the
+OWASP Top 10; Module 6 returns to it.</li>
+</ul>
+<h2 id="worked-example-importing-a-settlement-file-safely">Worked
+example: importing a settlement file safely</h2>
+<pre class="java"><code>public ImportSummary importSettlement(Path inbox, String fileName) throws IOException {
+    Path file = inbox.resolve(fileName).normalize();
+    if (!file.startsWith(inbox)) {
+        throw new IllegalArgumentException(&quot;Invalid file name&quot;);          // blocks ../ traversal
+    }
+    long lines = 0, rejected = 0;
+    BigDecimal total = BigDecimal.ZERO;
+    try (BufferedReader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
+        reader.readLine();                                                // header
+        String line;
+        while ((line = reader.readLine()) != null) {
+            lines++;
+            try {
+                total = total.add(new BigDecimal(line.split(&quot;,&quot;, -1)[2].strip()));
+            } catch (RuntimeException e) {
+                rejected++;
+            }
+        }
+    }
+    Path archive = inbox.resolveSibling(&quot;archive&quot;).resolve(LocalDate.now() + &quot;-&quot; + file.getFileName());
+    Files.createDirectories(archive.getParent());
+    Files.move(file, archive, StandardCopyOption.ATOMIC_MOVE);           // processed files leave the inbox atomically
+    return new ImportSummary(lines, rejected, total);
+}</code></pre>
+<p>Constant memory regardless of file size, explicit charset, no
+traversal, handles always closed, and an atomic archive move so the file
+is never processed twice.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Relying on the default charset, or <code>new String(bytes)</code>
+without one.</li>
+<li><code>Files.readAllLines</code> on multi-gigabyte files.</li>
+<li>Not closing <code>Files.lines</code>, <code>Files.list</code> or
+<code>Files.walk</code> streams.</li>
+<li>Building paths from user input without normalising and checking
+<code>startsWith</code>.</li>
+<li>Forgetting <code>serialVersionUID</code>, or expecting a
+<code>Serializable</code> class's constructor to run on
+deserialisation.</li>
+<li>Using Java serialization for data from outside your trust
+boundary.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Write <code>CsvTotals</code> that streams a 1-million-line CSV with
+<code>Files.lines</code> and with <code>BufferedReader</code>, totals a
+<code>BigDecimal</code> column, and reports rejected lines. Compare
+memory use with <code>readAllLines</code> (watch with
+<code>jcmd &lt;pid&gt; GC.heap_info</code>).</li>
+<li>Implement the safe import above, and write a test proving
+<code>../secret.csv</code> is rejected.</li>
+<li>Write a statement export that writes to a temp file and atomically
+moves it into an <code>outbox</code> folder.</li>
+<li>Serialise a class with a <code>transient</code> field and no
+<code>serialVersionUID</code>, add a field, and observe the
+<code>InvalidClassException</code> when reading old data. Repeat with an
+explicit <code>serialVersionUID</code>.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Byte stream, character stream, decorator, charset,
+<code>BufferedReader</code>, <code>InputStreamReader</code>,
+try-with-resources, NIO.2, <code>Path</code>, <code>Files</code>,
+<code>resolve</code>, <code>normalize</code>, <code>relativize</code>,
+path traversal, atomic move, <code>Files.lines</code>,
+<code>Files.walk</code>, attributes, <code>Console</code>,
+serialization, <code>Serializable</code>, <code>transient</code>,
+<code>serialVersionUID</code>, <code>Externalizable</code>,
+deserialization filter.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://docs.oracle.com/javase/tutorial/essential/io/index.html">The
+Java Tutorials: Basic I/O</a></li>
+<li><a
+href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/file/Files.html"><code>java.nio.file.Files</code>
+API (Java 21)</a></li>
+<li><a href="https://openjdk.org/jeps/400">JEP 400: UTF-8 by
+Default</a></li>
+<li><a
+href="https://docs.oracle.com/en/java/javase/21/core/serialization-filtering1.html">Oracle:
+Serialization Filtering</a></li>
+<li><a href="https://dev.java/learn/api/io/java-io/">dev.java (Oracle):
+Java I/O</a></li>
+<li><a
+href="https://docs.oracle.com/en/java/javase/21/docs/specs/serialization/index.html">Oracle:
+Java Object Serialization Specification</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Java File Input/Output - It&#x27;s Way Easier Than You Think</h3><p>Coding with John · 8 min. Reading and writing files with readers and writers.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/ScUJx4aWRi0" title="Java File Input/Output - It&#x27;s Way Easier Than You Think" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>How To Read/Write Text Files In Java NIO | Full Guide</h3><p>Born To Geek · 9 min. Reading and writing text files with java.nio Files and Path.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/yrMufQdr374" title="How To Read/Write Text Files In Java NIO | Full Guide" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Java Serialization: Spooky Action at a Distance</h3><p>Java · 18 min. The Java team on serialization: how it works and why it&#x27;s dangerous.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/2sxK-z84Oi4" title="Java Serialization: Spooky Action at a Distance" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Java serialization is easy! 🥣 (optional, longer)</h3><p>Bro Code · 21 min. Serialization and deserialization step by step.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/DfbFTVNfkeI" title="Java serialization is easy! 🥣" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/01-modern-java-oop/1.10-io-nio-serialization/README.md">1.10 Java I/O, NIO.2 files and serialization</a></p>

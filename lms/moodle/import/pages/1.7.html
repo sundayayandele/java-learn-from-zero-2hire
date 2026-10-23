@@ -1,0 +1,356 @@
+<p><em>Week 4 · Module 1: Modern Java &amp; OOP Foundations</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Explain the exception hierarchy and choose between checked and
+unchecked exceptions.</li>
+<li>Throw, catch, wrap and translate exceptions without losing
+information.</li>
+<li>Release resources reliably with try-with-resources.</li>
+<li>Design domain exceptions that carry useful context and are safe to
+log.</li>
+<li>Build immutable classes and explain why immutability makes code
+safer.</li>
+<li>Apply everyday clean-code habits: naming, small functions, guard
+clauses, no magic numbers, comments that explain <em>why</em>.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>When a transfer fails, the customer, the support agent, the auditor
+and the on-call engineer all need a precise, honest answer: was the
+money debited? Swallowed exceptions, vague
+<code>catch (Exception e) {}</code> blocks and log messages like "error
+occurred" are how banks end up with debited customers and no record of
+why. Immutability prevents a different class of incident: a shared
+object changed by one part of the code while another is still using it.
+Clean code is what lets the next engineer fix all of this at 3 a.m.</p>
+<h2 id="1-the-exception-hierarchy">1. The exception hierarchy</h2>
+<pre class="text"><code>Throwable
+ ├── Error                    serious JVM problems: OutOfMemoryError, StackOverflowError. Don&#39;t catch.
+ └── Exception
+      ├── IOException, SQLException, ...     CHECKED: the compiler forces you to handle or declare them
+      └── RuntimeException                   UNCHECKED: no compile-time obligation
+           ├── NullPointerException
+           ├── IllegalArgumentException
+           ├── IllegalStateException
+           ├── ArithmeticException
+           └── your domain exceptions (usually)</code></pre>
+<p><strong>Checked exceptions</strong> must be caught or declared with
+<code>throws</code> in the method signature. They model failures the
+caller can reasonably be expected to recover from, typically I/O.
+<strong>Unchecked exceptions</strong> model programming errors (a null
+where none should be) or business rule violations that bubble up to a
+central handler.</p>
+<p>Modern Java practice, and Spring's in particular, leans towards
+unchecked exceptions for application code: they do not pollute every
+signature, and they work with lambdas, which cannot throw checked
+exceptions. Use checked exceptions sparingly, for recoverable conditions
+at clear boundaries.</p>
+<h2 id="2-throwing-and-catching">2. Throwing and catching</h2>
+<pre class="java"><code>public void withdraw(Money amount) {
+    if (amount.amount().signum() &lt;= 0) {
+        throw new IllegalArgumentException(&quot;Withdrawal must be positive: &quot; + amount);
+    }
+    if (status != Status.ACTIVE) {
+        throw new IllegalStateException(&quot;Account &quot; + number + &quot; is &quot; + status);
+    }
+    if (balance.amount().compareTo(amount.amount()) &lt; 0) {
+        throw new InsufficientFundsException(number, amount, balance);
+    }
+    balance = balance.minus(amount);
+}</code></pre>
+<p>Standard exceptions have meanings that reviewers expect:
+<code>IllegalArgumentException</code> for a bad argument,
+<code>IllegalStateException</code> when the object is in the wrong state
+for the call, <code>NullPointerException</code> (via
+<code>Objects.requireNonNull</code>) for forbidden nulls,
+<code>UnsupportedOperationException</code> for operations an
+implementation does not support.</p>
+<pre class="java"><code>try {
+    gateway.charge(card, amount);
+} catch (GatewayTimeoutException e) {          // most specific first
+    retryQueue.add(payment);
+} catch (GatewayDeclinedException | CardExpiredException e) {   // multi-catch
+    payment.markFailed(e.getMessage());
+} finally {
+    metrics.recordAttempt();                   // runs whether or not an exception occurred
+}</code></pre>
+<h3 id="catch-only-what-you-can-handle">Catch only what you can
+handle</h3>
+<p>The rule: catch an exception only if you can do something meaningful
+(retry, fall back, translate it to a better exception, or report it at a
+boundary). Otherwise, let it propagate.</p>
+<pre class="java"><code>// Anti-pattern 1: swallowing. The transfer silently does nothing.
+try { ledger.post(entry); } catch (Exception e) { }
+
+// Anti-pattern 2: log and rethrow. The same error is logged five times as it bubbles up.
+catch (SQLException e) { log.error(&quot;failed&quot;, e); throw new RuntimeException(e); }
+
+// Anti-pattern 3: losing the cause. The root SQL error is gone forever.
+catch (SQLException e) { throw new LedgerException(&quot;Posting failed&quot;); }
+
+// Correct: translate, keep the cause, add context, log once at the boundary.
+catch (SQLException e) {
+    throw new LedgerException(&quot;Posting failed for entry &quot; + entry.id(), e);   // e becomes getCause()
+}</code></pre>
+<p><strong>Exception translation</strong> keeps layers clean: the
+service layer should throw <code>LedgerException</code>, not leak
+<code>SQLException</code> from the database driver to the web layer.</p>
+<h2 id="3-try-with-resources">3. try-with-resources</h2>
+<p>Anything that holds a connection, file handle or socket must be
+closed, even when an exception is thrown. Any class implementing
+<code>AutoCloseable</code> can be used in try-with-resources, which
+closes resources automatically in reverse order:</p>
+<pre class="java"><code>try (Connection conn = dataSource.getConnection();
+     PreparedStatement ps = conn.prepareStatement(&quot;SELECT balance FROM account WHERE number = ?&quot;)) {
+    ps.setString(1, number);
+    try (ResultSet rs = ps.executeQuery()) {
+        return rs.next() ? rs.getBigDecimal(1) : null;
+    }
+}   // rs, ps and conn are closed here, whatever happened</code></pre>
+<p>Before Java 7 this needed nested <code>finally</code> blocks that
+were easy to get wrong, and leaked connections are still a classic cause
+of production outages ("connection pool exhausted"). If closing itself
+throws while another exception is in flight, the close failure is
+attached as a <strong>suppressed</strong> exception
+(<code>e.getSuppressed()</code>) rather than hiding the original.</p>
+<h2 id="4-designing-domain-exceptions">4. Designing domain
+exceptions</h2>
+<pre class="java"><code>public class InsufficientFundsException extends RuntimeException {
+    private final String accountNumber;
+    private final Money requested;
+    private final Money available;
+
+    public InsufficientFundsException(String accountNumber, Money requested, Money available) {
+        super(&quot;Insufficient funds in account %s: requested %s, available %s&quot;
+                .formatted(mask(accountNumber), requested, available));
+        this.accountNumber = accountNumber;
+        this.requested = requested;
+        this.available = available;
+    }
+
+    public Money requested() { return requested; }
+    public Money available() { return available; }
+
+    private static String mask(String acc) { return &quot;******&quot; + acc.substring(acc.length() - 4); }
+}</code></pre>
+<p>Good domain exceptions:</p>
+<ul>
+<li>have a name that states the business problem
+(<code>InsufficientFundsException</code>,
+<code>DailyLimitExceededException</code>,
+<code>AccountFrozenException</code>);</li>
+<li>carry structured context as fields so a handler can turn them into
+an HTTP response or an error code (Module 4 maps them to HTTP 422 with
+Problem Details);</li>
+<li>have messages that are safe to log: <strong>mask account numbers and
+never include PINs, passwords, full card numbers or
+tokens</strong>;</li>
+<li>are usually unchecked, sometimes grouped under a base class
+(<code>BankingException</code>) so a handler can catch the family.</li>
+</ul>
+<p>Do not use exceptions for normal control flow. "Account not found"
+for a lookup that is expected to miss is better expressed with
+<code>Optional</code> (topic 1.5) or a sealed result type (topic 1.6).
+Exceptions are for the exceptional, and creating one is relatively
+expensive because it captures a stack trace.</p>
+<h2 id="5-immutability">5. Immutability</h2>
+<p>An immutable object's state cannot change after construction.
+<code>String</code>, <code>BigDecimal</code>, <code>LocalDate</code> and
+records are immutable.</p>
+<h3 id="how-to-make-a-class-immutable">How to make a class
+immutable</h3>
+<ol type="1">
+<li>Make the class <code>final</code> (or use a record) so subclasses
+cannot add mutable state.</li>
+<li>Make every field <code>private final</code>.</li>
+<li>Set every field in the constructor and validate there.</li>
+<li>Provide no setters; "modifying" methods return a new instance.</li>
+<li>Defensively copy mutable inputs and outputs (lists, arrays,
+<code>Date</code>).</li>
+</ol>
+<pre class="java"><code>public final class ExchangeRate {
+    private final Currency base;
+    private final Currency quote;
+    private final BigDecimal rate;
+    private final LocalDate asOf;
+
+    public ExchangeRate(Currency base, Currency quote, BigDecimal rate, LocalDate asOf) {
+        if (rate.signum() &lt;= 0) throw new IllegalArgumentException(&quot;rate must be positive&quot;);
+        this.base = base; this.quote = quote; this.rate = rate; this.asOf = asOf;
+    }
+
+    public Money convert(Money m) {
+        if (!m.currency().equals(base)) throw new IllegalArgumentException(&quot;Expected &quot; + base);
+        return new Money(m.amount().multiply(rate).setScale(2, RoundingMode.HALF_EVEN), quote);
+    }
+
+    public ExchangeRate inverse() {
+        return new ExchangeRate(quote, base, BigDecimal.ONE.divide(rate, 10, RoundingMode.HALF_EVEN), asOf);
+    }
+}</code></pre>
+<p>(As a record this would be four lines plus the validation. Use a
+class when you need to hide fields or control the API more tightly.)</p>
+<h3 id="why-immutability-pays-off">Why immutability pays off</h3>
+<ul>
+<li><strong>Thread safety for free.</strong> Immutable objects can be
+shared across threads with no locks (Module 2).</li>
+<li><strong>Safe sharing and caching.</strong> An exchange rate handed
+to ten services cannot be changed by one of them.</li>
+<li><strong>Valid for life.</strong> Validated once in the constructor,
+always valid afterwards.</li>
+<li><strong>Safe map keys and set members</strong> (topic 1.4).</li>
+<li><strong>Easier reasoning and testing.</strong> No hidden state
+changes between two lines of code.</li>
+</ul>
+<p>The cost is creating new objects for every change, which the JVM
+handles cheaply for short-lived objects (topic 2.4). Keep mutable state
+where it genuinely belongs (an entity's lifecycle, a builder, a
+performance-critical buffer) and make everything else immutable by
+default. Also prefer <code>final</code> local variables and parameters
+in long methods: they tell the reader "this never changes".</p>
+<h3 id="date-and-time-use-javatime">Date and time: use
+<code>java.time</code></h3>
+<p>The old <code>java.util.Date</code> and <code>Calendar</code> are
+mutable and confusing. Always use the immutable <code>java.time</code>
+types: <code>LocalDate</code> (value date), <code>LocalDateTime</code>
+(no zone), <code>Instant</code> (a point on the timeline, for
+timestamps), <code>ZonedDateTime</code> with
+<code>ZoneId.of("Africa/Lagos")</code>, <code>Duration</code> and
+<code>Period</code>. Store timestamps as <code>Instant</code> in UTC and
+convert to local time only for display.</p>
+<h2 id="6-clean-code-habits">6. Clean-code habits</h2>
+<p><strong>Names reveal intent.</strong></p>
+<pre class="java"><code>int d;                                 // elapsed days? days until due? a discount?
+int daysPastDue;                       // clear
+List&lt;Account&gt; list1;                   // meaningless
+List&lt;Account&gt; dormantAccounts;         // clear
+boolean flag;  →  boolean isOverdrawn;
+void process(); →  void postEndOfDayInterest();</code></pre>
+<p><strong>Small functions that do one thing</strong>, at one level of
+abstraction. If you need "and" to describe a method, it probably does
+two things.</p>
+<p><strong>Guard clauses instead of deep nesting.</strong></p>
+<pre class="java"><code>// Arrow-shaped code
+if (account != null) {
+    if (account.isActive()) {
+        if (amount.signum() &gt; 0) { ... }
+    }
+}
+
+// Guard clauses: fail fast, then the happy path at the left margin
+if (account == null) throw new AccountNotFoundException(number);
+if (!account.isActive()) throw new AccountInactiveException(number);
+if (amount.signum() &lt;= 0) throw new IllegalArgumentException(&quot;amount must be positive&quot;);
+...</code></pre>
+<p><strong>No magic numbers.</strong></p>
+<pre class="java"><code>if (amount.compareTo(new BigDecimal(&quot;5000000&quot;)) &gt; 0)           // why five million?
+private static final BigDecimal CTR_THRESHOLD_INDIVIDUAL = new BigDecimal(&quot;5000000&quot;);  // name the rule
+if (amount.compareTo(CTR_THRESHOLD_INDIVIDUAL) &gt; 0) reportCashTransaction(tx);</code></pre>
+<p><strong>Comments explain why, not what.</strong>
+<code>// increment i</code> is noise.
+<code>// CBN requires reversal within 24h; we use 23h to leave a buffer for the batch window</code>
+is gold. If you need a comment to explain <em>what</em> code does, try
+renaming and extracting first.</p>
+<p><strong>Other habits reviewers look for:</strong> no commented-out
+code (Git remembers it); no unused imports or variables; consistent
+formatting (let the IDE or a formatter do it); methods under about 20
+lines; classes under a few hundred; tests named after behaviour
+(<code>withdraw_rejectsAmountAboveBalance</code>). Leave code a little
+cleaner than you found it (the "boy scout rule"), but do big refactors
+in their own pull request.</p>
+<h2 id="worked-example-a-transfer-with-honest-failure-handling">Worked
+example: a transfer with honest failure handling</h2>
+<pre class="java"><code>public TransferReceipt transfer(TransferRequest req) {
+    Objects.requireNonNull(req, &quot;request&quot;);
+    Account source = accounts.findByNumber(req.from())
+            .orElseThrow(() -&gt; new AccountNotFoundException(req.from()));
+    Account target = accounts.findByNumber(req.to())
+            .orElseThrow(() -&gt; new AccountNotFoundException(req.to()));
+
+    limits.check(source, req.amount());          // throws DailyLimitExceededException
+    source.withdraw(req.amount());               // throws InsufficientFundsException
+    target.deposit(req.amount());
+
+    try {
+        ledger.record(source, target, req.amount(), req.reference());
+    } catch (LedgerUnavailableException e) {
+        throw new TransferFailedException(req.reference(), &quot;ledger unavailable&quot;, e);  // keep the cause
+    }
+    return new TransferReceipt(req.reference(), Instant.now(), req.amount());
+}</code></pre>
+<p>Each failure has a specific, named exception with context, causes are
+preserved, nothing is swallowed, and logging happens once in the web
+layer's handler (Module 4). In Module 3 a database transaction will make
+sure the withdraw and deposit either both happen or neither does.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li><code>catch (Exception e) {}</code> or
+<code>e.printStackTrace()</code> in production code.</li>
+<li>Throwing a new exception without passing the original as the
+cause.</li>
+<li>Logging the same exception at every layer.</li>
+<li>Exception messages containing PINs, tokens, full PANs or
+passwords.</li>
+<li>Closing resources manually in <code>finally</code> (or not at all)
+instead of try-with-resources.</li>
+<li>"Immutable" classes with a getter returning an internal mutable
+list.</li>
+<li>Using <code>java.util.Date</code> in new code.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Create <code>BankingException</code> and three subclasses with
+structured fields. Write a small <code>main</code> that triggers each
+and prints <code>getMessage()</code> and <code>getCause()</code>.</li>
+<li>Write a method that reads a CSV statement file line by line with
+<code>Files.newBufferedReader</code> in try-with-resources, and
+translates <code>IOException</code> into a
+<code>StatementImportException</code> that includes the file name and
+line number.</li>
+<li>Make <code>ExchangeRate</code> above a record with the same
+validation. Then write a test proving that <code>convert</code> and
+<code>inverse</code> round-trip within one kobo.</li>
+<li>Take any 40-line method you wrote in topics 1.2–1.6, rename unclear
+variables, extract two methods, replace nesting with guard clauses, and
+name every magic number.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Checked exception, unchecked exception, <code>Error</code>,
+<code>throws</code>, multi-catch, <code>finally</code>,
+try-with-resources, <code>AutoCloseable</code>, suppressed exception,
+exception chaining (cause), exception translation, domain exception,
+immutability, defensive copy, <code>java.time</code>, guard clause,
+magic number.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://docs.oracle.com/javase/tutorial/essential/exceptions/index.html">The
+Java Tutorials: Exceptions</a></li>
+<li><a
+href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">The
+Java Tutorials: The try-with-resources Statement</a></li>
+<li><a
+href="https://docs.oracle.com/javase/tutorial/essential/concurrency/immutable.html">The
+Java Tutorials: Immutable Objects</a></li>
+<li><a
+href="https://docs.oracle.com/javase/tutorial/datetime/index.html">The
+Java Tutorials: Date-Time</a></li>
+<li><a
+href="https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html">OWASP
+Logging Cheat Sheet</a></li>
+<li>Robert C. Martin, <em>Clean Code</em>, chapters 2–4 and 7
+(book)</li>
+<li><a
+href="https://dev.java/learn/language/annotations-exceptions/exceptions/">dev.java
+(Oracle): Exceptions</a></li>
+<li><a
+href="https://dev.java/learn/api/date-time-regex/date-time/">dev.java
+(Oracle): Date and Time</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Exception Handling in Java Tutorial</h3><p>Coding with John · 13 min. try / catch / finally and how exceptions travel up the call stack.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/1XAfapkBQjk" title="Exception Handling in Java Tutorial" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Checked vs. Unchecked Exceptions in Java Tutorial - What&#x27;s The Difference?</h3><p>Coding with John · 10 min. Checked vs unchecked exceptions, and when each is the right choice.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/bCPClyGsVhc" title="Checked vs. Unchecked Exceptions in Java Tutorial - What&#x27;s The Difference?" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Immutable Classes and Objects in Java</h3><p>Neso Academy · 5 min. The rules for writing an immutable class.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/qbNMAJvv7qI" title="Immutable Classes and Objects in Java" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>My 10 “Clean” Code Principles (Start These Now)</h3><p>Conner Ardman · 15 min. Ten clean-code habits that make code easier to review and change.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/wSDyiEjhp8k" title="My 10 “Clean” Code Principles (Start These Now)" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/01-modern-java-oop/1.7-exceptions-immutability-clean-code/README.md">1.7 Exceptions, immutability and clean-code habits</a></p>

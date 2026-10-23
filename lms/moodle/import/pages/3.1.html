@@ -1,0 +1,381 @@
+<p><em>Week 7 · Module 3: Databases: SQL &amp; NoSQL</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Model a business domain as tables, columns, primary keys and foreign
+keys, with the right data types and constraints.</li>
+<li>Normalise a design to third normal form and explain when to
+denormalise deliberately.</li>
+<li>Write <code>SELECT</code> queries with filtering, sorting,
+aggregation (<code>GROUP BY</code>/<code>HAVING</code>) and the four
+kinds of join.</li>
+<li>Use subqueries, common table expressions (CTEs) and window functions
+for reporting questions.</li>
+<li>Run PostgreSQL in Docker and work in <code>psql</code>.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Financial data is relational to its core: customers own accounts,
+accounts have transactions, transactions belong to batches and
+settlements. Banks run on relational databases (PostgreSQL, Oracle,
+MySQL, SQL Server) because they enforce rules (no transaction without an
+account, no duplicate references) even when application code has bugs. A
+good schema prevents whole classes of incidents; a bad one creates "the
+customer's name is different on their two accounts" problems that take
+years to clean up. SQL is also the single most tested skill in junior
+backend interviews after core Java.</p>
+<h2 id="1-setting-up-postgresql">1. Setting up PostgreSQL</h2>
+<pre class="bash"><code>docker run -d --name pg -e POSTGRES_PASSWORD=devpass -e POSTGRES_DB=bank \
+  -p 5432:5432 postgres:17-alpine
+docker exec -it pg psql -U postgres -d bank</code></pre>
+<p>Useful <code>psql</code> commands: <code>\dt</code> (list tables),
+<code>\d account</code> (describe a table), <code>\x</code> (expanded
+output), <code>\timing</code> (show query time), <code>\q</code> (quit).
+A GUI such as DBeaver, pgAdmin or IntelliJ's database tool is fine too,
+but be comfortable in <code>psql</code>: it is what you will have on a
+production bastion host.</p>
+<h2 id="2-tables-keys-and-constraints">2. Tables, keys and
+constraints</h2>
+<pre class="sql"><code>CREATE TABLE customer (
+    id            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    bvn           CHAR(11)     NOT NULL UNIQUE,
+    full_name     VARCHAR(200) NOT NULL,
+    email         VARCHAR(254),
+    created_at    TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+
+CREATE TABLE account (
+    id            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    number        CHAR(10)     NOT NULL UNIQUE,
+    customer_id   BIGINT       NOT NULL REFERENCES customer(id),
+    product       VARCHAR(20)  NOT NULL CHECK (product IN (&#39;SAVINGS&#39;, &#39;CURRENT&#39;, &#39;DOMICILIARY&#39;)),
+    currency      CHAR(3)      NOT NULL DEFAULT &#39;NGN&#39;,
+    status        VARCHAR(10)  NOT NULL DEFAULT &#39;ACTIVE&#39;,
+    opened_on     DATE         NOT NULL DEFAULT current_date
+);
+
+CREATE TABLE txn (
+    id            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    account_id    BIGINT        NOT NULL REFERENCES account(id),
+    reference     VARCHAR(40)   NOT NULL UNIQUE,
+    direction     CHAR(1)       NOT NULL CHECK (direction IN (&#39;D&#39;, &#39;C&#39;)),
+    amount        NUMERIC(19,2) NOT NULL CHECK (amount &gt; 0),
+    narration     VARCHAR(140),
+    value_date    DATE          NOT NULL,
+    posted_at     TIMESTAMPTZ   NOT NULL DEFAULT now()
+);</code></pre>
+<ul>
+<li>A <strong>primary key</strong> uniquely identifies a row. Use a
+<strong>surrogate key</strong> (a generated <code>BIGINT</code> or UUID)
+rather than business data: account numbers get reissued and BVNs get
+corrected, but <code>id</code> never changes.</li>
+<li><strong>Natural keys</strong> still get <code>UNIQUE</code>
+constraints (<code>bvn</code>, <code>number</code>,
+<code>reference</code>) so duplicates are impossible.</li>
+<li>A <strong>foreign key</strong> (<code>REFERENCES</code>) guarantees
+every transaction points at a real account. Decide what happens on
+delete: usually nothing should be deleted in banking, so the default
+(<code>RESTRICT</code>/<code>NO ACTION</code>) is right.</li>
+<li><code>NOT NULL</code>, <code>CHECK</code> and <code>UNIQUE</code>
+push business rules into the database, where they hold even if a buggy
+service or a manual script tries to violate them.</li>
+</ul>
+<h3 id="data-types-for-financial-data">Data types for financial
+data</h3>
+<table>
+<thead>
+<tr>
+<th>Data</th>
+<th>PostgreSQL type</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Money</td>
+<td><code>NUMERIC(19,2)</code> (or <code>BIGINT</code> minor units)</td>
+<td>Exact decimal. <strong>Never
+<code>REAL</code>/<code>DOUBLE PRECISION</code>/<code>MONEY</code></strong></td>
+</tr>
+<tr>
+<td>Currency</td>
+<td><code>CHAR(3)</code></td>
+<td>ISO 4217 code</td>
+</tr>
+<tr>
+<td>Timestamps</td>
+<td><code>TIMESTAMPTZ</code></td>
+<td>Stored in UTC, converted on display</td>
+</tr>
+<tr>
+<td>Business date</td>
+<td><code>DATE</code></td>
+<td>Value dates, statement dates</td>
+</tr>
+<tr>
+<td>Status/enums</td>
+<td><code>VARCHAR</code> + <code>CHECK</code>, or a lookup table</td>
+<td>Easy to extend and readable</td>
+</tr>
+<tr>
+<td>Identifiers with leading zeros</td>
+<td><code>CHAR</code>/<code>VARCHAR</code></td>
+<td>Account numbers and BVNs are not numbers</td>
+</tr>
+<tr>
+<td>Flexible metadata</td>
+<td><code>JSONB</code></td>
+<td>Sparingly: for data you don't query relationally</td>
+</tr>
+</tbody>
+</table>
+<h2 id="3-normalisation">3. Normalisation</h2>
+<p>Normalisation removes redundancy so each fact is stored in one place.
+Redundant data gets out of sync: if the customer's name is copied onto
+every account row, a name change must update every copy, and one day it
+won't.</p>
+<p><strong>First normal form (1NF):</strong> every column holds a single
+atomic value; no repeating groups. Violation:
+<code>account.phone_numbers = '0803..., 0812...'</code>. Fix: a
+<code>customer_phone</code> table, one row per number.</p>
+<p><strong>Second normal form (2NF):</strong> 1NF, and every non-key
+column depends on the <em>whole</em> key (matters for composite keys).
+Violation: a
+<code>loan_repayment(loan_id, instalment_no, amount_due, borrower_name)</code>
+table where <code>borrower_name</code> depends only on
+<code>loan_id</code>. Fix: keep borrower details on the
+loan/customer.</p>
+<p><strong>Third normal form (3NF):</strong> 2NF, and no non-key column
+depends on another non-key column (no transitive dependencies).
+Violation:
+<code>account(id, branch_code, branch_name, branch_city)</code>: branch
+name and city depend on the branch code, not the account. Fix: a
+<code>branch</code> table; <code>account.branch_code</code> references
+it.</p>
+<p>The informal summary: every non-key column depends on "the key, the
+whole key, and nothing but the key".</p>
+<h3 id="deliberate-denormalisation">Deliberate denormalisation</h3>
+<p>Normalised schemas are right for <strong>transactional
+(OLTP)</strong> data. Reporting and analytics often denormalise for
+speed: a nightly <code>daily_account_summary</code> table, or a data
+warehouse star schema. Some redundancy is also legal or intentional: a
+transaction row records the <strong>narration and amount as they were at
+posting time</strong>, and those must never change even if other data
+does. Denormalise on purpose and document it; never by accident.</p>
+<h2 id="4-querying">4. Querying</h2>
+<pre class="sql"><code>SELECT number, product, status
+FROM account
+WHERE status = &#39;ACTIVE&#39; AND product IN (&#39;SAVINGS&#39;, &#39;CURRENT&#39;)
+ORDER BY opened_on DESC
+LIMIT 20;</code></pre>
+<p>Logical order of evaluation, which explains many errors:
+<code>FROM</code>/<code>JOIN</code> → <code>WHERE</code> →
+<code>GROUP BY</code> → <code>HAVING</code> → <code>SELECT</code> →
+<code>ORDER BY</code> → <code>LIMIT</code>. That is why you cannot use a
+<code>SELECT</code> alias in <code>WHERE</code>.</p>
+<h3 id="aggregation">Aggregation</h3>
+<pre class="sql"><code>-- Debit total and count per account for October, only accounts with more than ₦1m of debits
+SELECT account_id,
+       count(*)    AS debit_count,
+       sum(amount) AS debit_total
+FROM txn
+WHERE direction = &#39;D&#39;
+  AND value_date &gt;= DATE &#39;2026-10-01&#39; AND value_date &lt; DATE &#39;2026-11-01&#39;
+GROUP BY account_id
+HAVING sum(amount) &gt; 1000000
+ORDER BY debit_total DESC;</code></pre>
+<p><code>WHERE</code> filters rows before grouping; <code>HAVING</code>
+filters groups after. Use half-open date ranges
+(<code>&gt;= start AND &lt; next_start</code>) to avoid off-by-one and
+time-of-day bugs.</p>
+<p><strong>NULL</strong> means "unknown". <code>NULL = NULL</code> is
+not true; use <code>IS NULL</code>. <code>count(*)</code> counts rows,
+<code>count(email)</code> counts non-null emails, and <code>sum</code>
+of no rows is <code>NULL</code>, not 0 (use
+<code>coalesce(sum(amount), 0)</code>).</p>
+<h2 id="5-joins">5. Joins</h2>
+<pre class="sql"><code>-- INNER JOIN: only rows that match on both sides
+SELECT c.full_name, a.number, a.product
+FROM customer c
+JOIN account a ON a.customer_id = c.id;
+
+-- LEFT JOIN: every customer, with accounts if they have any
+SELECT c.full_name, a.number
+FROM customer c
+LEFT JOIN account a ON a.customer_id = c.id;
+
+-- &quot;Anti-join&quot;: customers with no account at all
+SELECT c.full_name
+FROM customer c
+LEFT JOIN account a ON a.customer_id = c.id
+WHERE a.id IS NULL;</code></pre>
+<table>
+<thead>
+<tr>
+<th>Join</th>
+<th>Returns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>INNER JOIN</code></td>
+<td>Matching rows only</td>
+</tr>
+<tr>
+<td><code>LEFT JOIN</code></td>
+<td>All rows from the left, matches from the right or NULLs</td>
+</tr>
+<tr>
+<td><code>RIGHT JOIN</code></td>
+<td>Mirror of LEFT (rarely used; swap the tables instead)</td>
+</tr>
+<tr>
+<td><code>FULL OUTER JOIN</code></td>
+<td>All rows from both sides, NULLs where no match. Great for
+reconciliation</td>
+</tr>
+<tr>
+<td><code>CROSS JOIN</code></td>
+<td>Every combination. Rarely intended</td>
+</tr>
+</tbody>
+</table>
+<p>A <strong>self-join</strong> joins a table to itself, for example
+transfers where both legs are rows in <code>txn</code>.</p>
+<p>A trap: a condition on the right table in <code>WHERE</code> turns a
+<code>LEFT JOIN</code> back into an inner join. Put it in the
+<code>ON</code> clause instead:</p>
+<pre class="sql"><code>-- Customers and their October debits, keeping customers with none
+SELECT c.full_name, coalesce(sum(t.amount), 0) AS october_debits
+FROM customer c
+LEFT JOIN account a ON a.customer_id = c.id
+LEFT JOIN txn t ON t.account_id = a.id
+               AND t.direction = &#39;D&#39;
+               AND t.value_date &gt;= DATE &#39;2026-10-01&#39; AND t.value_date &lt; DATE &#39;2026-11-01&#39;
+GROUP BY c.full_name;</code></pre>
+<p>Joins also <strong>multiply rows</strong>: joining customers to
+accounts to transactions and then summing an account-level column counts
+it once per transaction. Aggregate at the right level first (a CTE
+helps).</p>
+<h2 id="6-subqueries-ctes-and-window-functions">6. Subqueries, CTEs and
+window functions</h2>
+<pre class="sql"><code>-- Subquery: accounts whose total activity is more than 100 times the average single transaction
+SELECT account_id FROM txn
+GROUP BY account_id
+HAVING sum(amount) &gt; (SELECT avg(amount) * 100 FROM txn);
+
+-- EXISTS: customers who made at least one international card payment
+SELECT c.* FROM customer c
+WHERE EXISTS (SELECT 1 FROM account a JOIN txn t ON t.account_id = a.id
+              WHERE a.customer_id = c.id AND t.narration LIKE &#39;POS INTL%&#39;);</code></pre>
+<p>A <strong>CTE</strong> (<code>WITH</code>) names an intermediate
+result and makes long queries readable:</p>
+<pre class="sql"><code>WITH monthly AS (
+    SELECT account_id,
+           sum(CASE WHEN direction = &#39;C&#39; THEN amount ELSE 0 END) AS credits,
+           sum(CASE WHEN direction = &#39;D&#39; THEN amount ELSE 0 END) AS debits
+    FROM txn
+    WHERE value_date &gt;= DATE &#39;2026-10-01&#39; AND value_date &lt; DATE &#39;2026-11-01&#39;
+    GROUP BY account_id
+)
+SELECT a.number, m.credits, m.debits, m.credits - m.debits AS net
+FROM monthly m JOIN account a ON a.id = m.account_id
+ORDER BY net;</code></pre>
+<p><strong>Window functions</strong> compute values across related rows
+<em>without</em> collapsing them into one row, which makes them ideal
+for statements and rankings:</p>
+<pre class="sql"><code>-- A running balance on a statement
+SELECT value_date, reference, direction, amount,
+       sum(CASE WHEN direction = &#39;C&#39; THEN amount ELSE -amount END)
+           OVER (PARTITION BY account_id ORDER BY posted_at, id) AS running_balance
+FROM txn
+WHERE account_id = 42
+ORDER BY posted_at, id;
+
+-- Each customer&#39;s single largest debit
+SELECT * FROM (
+    SELECT t.*, row_number() OVER (PARTITION BY account_id ORDER BY amount DESC) AS rn
+    FROM txn t WHERE direction = &#39;D&#39;
+) ranked
+WHERE rn = 1;</code></pre>
+<p>Other useful window functions: <code>rank</code>,
+<code>dense_rank</code>, <code>lag</code>/<code>lead</code>
+(previous/next row, e.g. time since the last transaction, a fraud
+signal), and moving averages with
+<code>ROWS BETWEEN 6 PRECEDING AND CURRENT ROW</code>.</p>
+<h2 id="worked-example-a-reconciliation-query">Worked example: a
+reconciliation query</h2>
+<p>The bank's ledger and the switch's settlement file should contain the
+same transactions. Load the file into
+<code>switch_settlement(reference, amount)</code> and compare:</p>
+<pre class="sql"><code>SELECT coalesce(l.reference, s.reference) AS reference,
+       l.amount AS ledger_amount,
+       s.amount AS switch_amount,
+       CASE
+           WHEN l.reference IS NULL THEN &#39;MISSING_IN_LEDGER&#39;
+           WHEN s.reference IS NULL THEN &#39;MISSING_IN_SWITCH&#39;
+           WHEN l.amount &lt;&gt; s.amount THEN &#39;AMOUNT_MISMATCH&#39;
+       END AS break_type
+FROM (SELECT reference, amount FROM txn WHERE value_date = DATE &#39;2026-10-21&#39;) l
+FULL OUTER JOIN switch_settlement s ON s.reference = l.reference
+WHERE l.reference IS NULL OR s.reference IS NULL OR l.amount &lt;&gt; s.amount;</code></pre>
+<p>One query lists every break by type. This is the heart of Capstone
+10.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Floating-point types for money.</li>
+<li>Business data (account number, email) as the primary key.</li>
+<li>No <code>UNIQUE</code> constraint on references, so retries create
+duplicate transactions.</li>
+<li>Filtering the right side of a <code>LEFT JOIN</code> in
+<code>WHERE</code>.</li>
+<li>Summing after a join that multiplied rows.</li>
+<li><code>BETWEEN</code> on timestamps for date ranges (misses or
+double-counts boundary times).</li>
+<li><code>SELECT *</code> in application queries.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Design and create the schema for a small bank: customer, branch,
+account, transaction, beneficiary. Check it is in 3NF and justify any
+denormalisation.</li>
+<li>Load 10,000 generated customers and 500,000 transactions (use
+<code>generate_series</code> and <code>random()</code> in SQL). Then
+answer: top 10 accounts by October debits; customers with no
+transactions in 90 days (dormancy); monthly credit and debit totals per
+product.</li>
+<li>Write a statement query with a running balance and an opening
+balance row, using a window function.</li>
+<li>Write the reconciliation query above and seed it with three
+deliberate breaks of each type.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Table, row, column, primary key, surrogate key, natural key, foreign
+key, constraint, <code>NUMERIC</code>, <code>TIMESTAMPTZ</code>,
+normalisation, 1NF/2NF/3NF, denormalisation, OLTP,
+<code>GROUP BY</code>, <code>HAVING</code>, <code>NULL</code>,
+inner/left/full outer join, anti-join, subquery, <code>EXISTS</code>,
+CTE, window function, <code>PARTITION BY</code>,
+<code>row_number</code>, <code>lag</code>.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://www.postgresql.org/docs/17/tutorial-sql.html">PostgreSQL
+tutorial: The SQL Language</a></li>
+<li><a
+href="https://www.postgresql.org/docs/17/datatype.html">PostgreSQL: Data
+Types</a></li>
+<li><a
+href="https://www.postgresql.org/docs/17/tutorial-window.html">PostgreSQL:
+Window Functions tutorial</a></li>
+<li><a
+href="https://www.postgresql.org/docs/17/ddl-constraints.html">PostgreSQL:
+Constraints</a></li>
+<li><a href="https://use-the-index-luke.com/">Use The Index, Luke! (free
+SQL performance book)</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Learn Database Normalization - 1NF, 2NF, 3NF, 4NF, 5NF</h3><p>Decomplexify · 29 min. The clearest explanation of 1NF through 5NF, with one running example.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/GFQaEYEc8_8" title="Learn Database Normalization - 1NF, 2NF, 3NF, 4NF, 5NF" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>6 SQL Joins you MUST know! (Animated + Practice)</h3><p>Anton Putra · 10 min. Six joins animated, with practice queries.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/Yh4CrPHVBdE" title="6 SQL Joins you MUST know! (Animated + Practice)" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>SQL Joins Explained  |¦| Joins in SQL |¦| SQL Tutorial</h3><p>Socratica · 10 min. Inner vs outer joins and what NULLs mean in the result.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/9yeOJ0ZMUYw" title="SQL Joins Explained  |¦| Joins in SQL |¦| SQL Tutorial" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/03-databases-sql-nosql/3.1-relational-design-normalisation-joins/README.md">3.1 Relational design: normalisation and joins</a></p>

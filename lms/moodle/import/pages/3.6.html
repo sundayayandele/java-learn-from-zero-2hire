@@ -1,0 +1,383 @@
+<p><em>Week 9 · Module 3: Databases: SQL &amp; NoSQL</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Explain when a non-relational store is the right tool, and when
+PostgreSQL is still the better choice.</li>
+<li>Use Redis data structures (strings, hashes, lists, sets, sorted
+sets) and TTLs from the CLI and from Java.</li>
+<li>Implement cache-aside caching with sensible keys, expiry and
+invalidation, and avoid stampedes and stale data.</li>
+<li>Use Redis for rate limiting, idempotency keys and short-lived
+tokens.</li>
+<li>Model documents in MongoDB, run queries and aggregations, create
+indexes, and decide between embedding and referencing.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>The source of truth for money stays in a relational database with
+ACID transactions (topics 3.1–3.2). Around it, banks and fintechs use
+Redis for things that must be fast and are allowed to expire: cached FX
+rates and account summaries, OTPs, session data, rate limits on login
+attempts and transfer APIs, and idempotency keys that stop a retried
+payment from posting twice. MongoDB appears where data is naturally
+document-shaped and varies a lot: KYC documents and onboarding journeys,
+customer-support case histories, audit trails of API payloads. Job ads
+from Lagos fintechs and international banks list both. The skill they
+are testing is judgement: which store for which data.</p>
+<h2 id="1-choosing-a-store">1. Choosing a store</h2>
+<table>
+<thead>
+<tr>
+<th>Need</th>
+<th>Good fit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Balances, ledgers, transfers: anything needing multi-row ACID and
+constraints</td>
+<td><strong>PostgreSQL / MySQL</strong></td>
+</tr>
+<tr>
+<td>Sub-millisecond reads of hot data, counters, expiring keys, rate
+limits</td>
+<td><strong>Redis</strong></td>
+</tr>
+<tr>
+<td>Flexible, nested, evolving records read as a whole (KYC file,
+onboarding state, case history)</td>
+<td><strong>MongoDB</strong> (or PostgreSQL <code>JSONB</code> for
+modest needs)</td>
+</tr>
+<tr>
+<td>Full-text search over narrations and documents</td>
+<td>Elasticsearch/OpenSearch, or PostgreSQL full-text</td>
+</tr>
+<tr>
+<td>Analytics over billions of rows</td>
+<td>A columnar warehouse (BigQuery, Redshift, ClickHouse)</td>
+</tr>
+</tbody>
+</table>
+<p>"NoSQL" is not one thing: key-value (Redis), document (MongoDB),
+wide-column (Cassandra), graph (Neo4j). They trade some relational
+guarantees (joins, multi-table transactions, rigid schemas) for scale,
+speed or flexibility. Many teams now start with PostgreSQL for
+everything and add a specialised store only when there is a measured
+need.</p>
+<h2 id="2-redis-basics">2. Redis basics</h2>
+<p>Redis is an in-memory data-structure server. Every operation on a
+single key is atomic, and commands run one at a time (single-threaded
+execution), which makes many concurrency problems simple.</p>
+<pre class="bash"><code>docker run -d --name redis -p 6379:6379 redis:8-alpine
+docker exec -it redis redis-cli</code></pre>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Commands</th>
+<th>Banking use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>String</td>
+<td><code>SET</code>, <code>GET</code>, <code>INCR</code>,
+<code>SET key value EX 300 NX</code></td>
+<td>Cached JSON, counters, OTPs, locks</td>
+</tr>
+<tr>
+<td>Hash</td>
+<td><code>HSET</code>, <code>HGET</code>, <code>HGETALL</code>,
+<code>HINCRBY</code></td>
+<td>Account summary fields</td>
+</tr>
+<tr>
+<td>List</td>
+<td><code>LPUSH</code>, <code>RPOP</code>, <code>LRANGE</code></td>
+<td>Simple queues, recent-activity feeds</td>
+</tr>
+<tr>
+<td>Set</td>
+<td><code>SADD</code>, <code>SISMEMBER</code>,
+<code>SMEMBERS</code></td>
+<td>Blocked device IDs, feature flags per segment</td>
+</tr>
+<tr>
+<td>Sorted set</td>
+<td><code>ZADD</code>, <code>ZRANGEBYSCORE</code>,
+<code>ZREMRANGEBYSCORE</code></td>
+<td>Sliding-window rate limits, leaderboards, scheduled jobs</td>
+</tr>
+<tr>
+<td>Stream</td>
+<td><code>XADD</code>, <code>XREADGROUP</code></td>
+<td>Lightweight event log (Kafka is covered in Module 11)</td>
+</tr>
+</tbody>
+</table>
+<pre class="text"><code>SET fx:USD:NGN &quot;1532.40&quot; EX 300        # expires in 300 seconds
+GET fx:USD:NGN
+TTL fx:USD:NGN                          # seconds left
+INCR login:fail:0123456789              # atomic increment
+EXPIRE login:fail:0123456789 900
+SET otp:txn-8841 &quot;482913&quot; EX 120 NX     # only set if absent: one OTP per transaction
+HSET acct:0123456789 balance 150000.00 currency NGN status ACTIVE
+HGETALL acct:0123456789</code></pre>
+<p><strong>Key naming</strong>: use a consistent namespace such as
+<code>service:entity:id[:field]</code>
+(<code>wallet:balance:0123456789</code>). Never put secrets or full PII
+in key names, since they appear in monitoring tools.</p>
+<p><strong>Persistence</strong>: Redis can snapshot (RDB) and log writes
+(AOF) to disk, but treat it as a cache unless you have deliberately
+configured it as a durable store. Plan for "Redis restarted and is
+empty".</p>
+<h2 id="3-caching-patterns">3. Caching patterns</h2>
+<h3 id="cache-aside-lazy-loading">Cache-aside (lazy loading)</h3>
+<p>The application owns the logic:</p>
+<ol type="1">
+<li>Look in the cache.</li>
+<li>On a <strong>hit</strong>, return it.</li>
+<li>On a <strong>miss</strong>, read from the database, write it to the
+cache with a TTL, and return it.</li>
+<li>On <strong>update</strong>, write to the database, then
+<strong>delete</strong> (not update) the cache key.</li>
+</ol>
+<pre class="java"><code>public AccountSummary summary(String number) {
+    String key = &quot;acct:summary:&quot; + number;
+    String cached = redis.opsForValue().get(key);
+    if (cached != null) return json.readValue(cached, AccountSummary.class);
+
+    AccountSummary fresh = repository.loadSummary(number);          // database: source of truth
+    redis.opsForValue().set(key, json.writeValueAsString(fresh), Duration.ofSeconds(60));
+    return fresh;
+}
+
+public void onTransactionPosted(String number) {
+    redis.delete(&quot;acct:summary:&quot; + number);                          // invalidate after the DB commit
+}</code></pre>
+<p>Deleting rather than updating avoids races where two writers put
+values into the cache in the wrong order. Spring's
+<code>@Cacheable</code>/<code>@CacheEvict</code> implement this pattern
+declaratively (you will use them in Module 4 and Module 13).</p>
+<h3 id="what-to-cache-and-for-how-long">What to cache, and for how
+long</h3>
+<ul>
+<li>Good candidates: data read far more than it changes, and where
+slightly stale is acceptable: FX reference rates, bank lists, product
+catalogues, fee schedules, account summaries for a dashboard.</li>
+<li><strong>Do not</strong> serve balances used for authorising payments
+from a cache. Authorisation must read the source of truth inside the
+transaction (topic 3.2).</li>
+<li>Every entry gets a <strong>TTL</strong>. A TTL is your safety net
+when invalidation is missed.</li>
+<li>Add a little <strong>random jitter</strong> to TTLs so thousands of
+keys don't expire at the same second.</li>
+</ul>
+<h3 id="problems-to-recognise">Problems to recognise</h3>
+<ul>
+<li><strong>Cache stampede</strong>: a hot key expires and 5,000
+requests hit the database at once. Mitigations: jittered TTLs, a short
+lock so only one request recomputes
+(<code>SET lock:key 1 NX EX 5</code>), or refreshing popular keys ahead
+of expiry.</li>
+<li><strong>Stale data</strong>: invalidation missed, or done before the
+database commit. Invalidate <em>after</em> commit.</li>
+<li><strong>Cache penetration</strong>: repeated lookups for keys that
+don't exist (often an attack) always miss. Cache "not found" briefly
+too.</li>
+<li><strong>Memory pressure</strong>: configure <code>maxmemory</code>
+and an eviction policy (<code>allkeys-lru</code> for pure caches).</li>
+</ul>
+<h2 id="4-redis-beyond-caching">4. Redis beyond caching</h2>
+<h3 id="rate-limiting">Rate limiting</h3>
+<p>A fixed-window limit of 5 failed PIN attempts per 15 minutes:</p>
+<pre class="text"><code>INCR pin:fail:0123456789
+EXPIRE pin:fail:0123456789 900 NX      # set the window only on the first failure</code></pre>
+<p>If the counter exceeds 5, block. A <strong>sliding window</strong>
+uses a sorted set of timestamps: <code>ZADD</code> the current time,
+<code>ZREMRANGEBYSCORE</code> anything older than the window,
+<code>ZCARD</code> to count, all in one
+<code>MULTI</code>/<code>EXEC</code> transaction or a Lua script so the
+steps are atomic.</p>
+<h3 id="idempotency-keys">Idempotency keys</h3>
+<p>A client sends <code>Idempotency-Key: 7f3c...</code> with a payment.
+The server records it before processing:</p>
+<pre class="text"><code>SET idem:7f3c... &quot;IN_PROGRESS&quot; NX EX 86400</code></pre>
+<p>If <code>SET ... NX</code> fails, the key exists: this is a retry, so
+return the stored result instead of paying twice. Module 5 builds this
+properly. (The database <code>UNIQUE</code> reference from topic 3.1
+remains the final guarantee.)</p>
+<h3 id="distributed-locks-with-caution">Distributed locks, with
+caution</h3>
+<p><code>SET lock:eod-job &lt;instanceId&gt; NX EX 600</code> lets one
+instance run the end-of-day job. A lock with an expiry can be lost if
+the holder pauses longer than the TTL, so for correctness-critical work
+prefer database locks (advisory locks or
+<code>SELECT ... FOR UPDATE</code>, topic 3.2).</p>
+<h2 id="5-redis-from-java">5. Redis from Java</h2>
+<p>With Spring Data Redis (Spring Boot starter
+<code>spring-boot-starter-data-redis</code>, which uses the Lettuce
+client):</p>
+<pre class="properties"><code>spring.data.redis.host=localhost
+spring.data.redis.port=6379</code></pre>
+<pre class="java"><code>@Service
+public class FxRateCache {
+    private final StringRedisTemplate redis;
+    public FxRateCache(StringRedisTemplate redis) { this.redis = redis; }
+
+    public Optional&lt;BigDecimal&gt; get(String base, String quote) {
+        return Optional.ofNullable(redis.opsForValue().get(&quot;fx:&quot; + base + &quot;:&quot; + quote)).map(BigDecimal::new);
+    }
+
+    public void put(String base, String quote, BigDecimal rate) {
+        long jitter = ThreadLocalRandom.current().nextLong(0, 30);
+        redis.opsForValue().set(&quot;fx:&quot; + base + &quot;:&quot; + quote, rate.toPlainString(), Duration.ofSeconds(300 + jitter));
+    }
+}</code></pre>
+<p>Store <code>BigDecimal</code> as a plain string
+(<code>toPlainString()</code>), never as a double.</p>
+<h2 id="6-mongodb-basics">6. MongoDB basics</h2>
+<p>MongoDB stores <strong>documents</strong> (BSON, a binary JSON) in
+<strong>collections</strong>. Documents in one collection can have
+different shapes, and can nest objects and arrays.</p>
+<pre class="bash"><code>docker run -d --name mongo -p 27017:27017 mongo:8
+docker exec -it mongo mongosh</code></pre>
+<p>A KYC onboarding case:</p>
+<pre class="javascript"><code>db.kyc_cases.insertOne({
+  caseId: &quot;KYC-2026-000913&quot;,
+  customer: { bvn: &quot;22212345678&quot;, fullName: &quot;Ada Okafor&quot;, dob: ISODate(&quot;1994-03-02&quot;) },
+  tier: 2,
+  status: &quot;PENDING_REVIEW&quot;,
+  documents: [
+    { type: &quot;NIN_SLIP&quot;, fileRef: &quot;s3://kyc/913/nin.pdf&quot;, verified: true },
+    { type: &quot;UTILITY_BILL&quot;, fileRef: &quot;s3://kyc/913/bill.pdf&quot;, verified: false, rejectReason: &quot;older than 3 months&quot; }
+  ],
+  checks: { bvnMatch: true, sanctionsHit: false, pepHit: false },
+  history: [
+    { at: ISODate(&quot;2026-10-20T09:12:00Z&quot;), by: &quot;system&quot;, action: &quot;CREATED&quot; },
+    { at: ISODate(&quot;2026-10-20T09:15:00Z&quot;), by: &quot;officer.bello&quot;, action: &quot;REQUESTED_DOCUMENT&quot; }
+  ]
+})</code></pre>
+<p>Queries and updates:</p>
+<pre class="javascript"><code>db.kyc_cases.find({ status: &quot;PENDING_REVIEW&quot;, tier: { $gte: 2 } }).sort({ &quot;history.0.at&quot;: 1 }).limit(20)
+db.kyc_cases.find({ &quot;documents.type&quot;: &quot;UTILITY_BILL&quot;, &quot;documents.verified&quot;: false })   // matches inside arrays
+db.kyc_cases.updateOne(
+  { caseId: &quot;KYC-2026-000913&quot; },
+  { $set: { status: &quot;APPROVED&quot; },
+    $push: { history: { at: new Date(), by: &quot;officer.bello&quot;, action: &quot;APPROVED&quot; } } })</code></pre>
+<p>Aggregation pipelines are MongoDB's <code>GROUP BY</code>:</p>
+<pre class="javascript"><code>db.kyc_cases.aggregate([
+  { $match: { &quot;history.0.at&quot;: { $gte: ISODate(&quot;2026-10-01&quot;) } } },
+  { $group: { _id: &quot;$status&quot;, cases: { $sum: 1 } } },
+  { $sort: { cases: -1 } }
+])</code></pre>
+<p><strong>Indexes</strong> matter exactly as in topic 3.3, and
+<code>explain("executionStats")</code> shows whether a query used one
+(<code>IXSCAN</code>) or scanned the whole collection
+(<code>COLLSCAN</code>):</p>
+<pre class="javascript"><code>db.kyc_cases.createIndex({ status: 1, tier: 1 })
+db.kyc_cases.createIndex({ caseId: 1 }, { unique: true })
+db.kyc_cases.find({ status: &quot;PENDING_REVIEW&quot;, tier: 2 }).explain(&quot;executionStats&quot;)</code></pre>
+<h3 id="modelling-embed-or-reference">Modelling: embed or
+reference?</h3>
+<ul>
+<li><strong>Embed</strong> data that is read together, owned by the
+parent, and bounded in size: a case's documents and checks.</li>
+<li><strong>Reference</strong> (store an ID) when data is shared, large,
+unbounded or updated independently: the customer master record, or an
+account's transactions (which grow forever: never embed them in an
+account document; documents are limited to 16 MB).</li>
+<li>Design around your <strong>queries</strong>, not around
+normalisation. Some duplication is normal in document models, so decide
+which copy is authoritative.</li>
+</ul>
+<p>MongoDB supports multi-document ACID transactions on replica sets,
+but if your design needs them constantly, the data is probably
+relational. Schema validation (<code>$jsonSchema</code> validators) lets
+you enforce required fields, which is wise for regulated data.</p>
+<p>With Spring Boot, <code>spring-boot-starter-data-mongodb</code> gives
+you <code>MongoTemplate</code> and repository interfaces like Spring
+Data JPA's (topic 4.3). Note that Spring Boot 4 changed how
+<code>UUID</code> and <code>BigDecimal</code> are represented in MongoDB
+by default; check the migration notes before upgrading an existing
+app.</p>
+<h2 id="worked-example-an-fx-rate-service-with-a-cache">Worked example:
+an FX-rate service with a cache</h2>
+<p>The service exposes <code>GET /rates/{base}/{quote}</code>. Rates
+come from the ECB daily reference file (Capstone 2), stored in
+PostgreSQL. The read path:</p>
+<ol type="1">
+<li>Check Redis <code>fx:{date}:{base}:{quote}</code>; on a hit, return
+(sub-millisecond).</li>
+<li>On a miss, query PostgreSQL, cache with a TTL that ends shortly
+after the next ECB publication (~16:00 CET), plus jitter.</li>
+<li>When the daily import job loads new rates, it deletes the affected
+keys after committing.</li>
+<li>If Redis is down, log a warning and serve from PostgreSQL: the cache
+is an optimisation, never a dependency that can take the service
+down.</li>
+</ol>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Treating Redis as the source of truth for balances.</li>
+<li>Caching without a TTL.</li>
+<li>Updating the cache instead of invalidating it, or invalidating
+before the DB commit.</li>
+<li>Storing money as floating point in caches or documents.</li>
+<li><code>KEYS *</code> on a production Redis (blocks the server; use
+<code>SCAN</code>).</li>
+<li>Embedding unbounded arrays in MongoDB documents.</li>
+<li>No indexes on MongoDB query fields (<code>COLLSCAN</code>
+everywhere).</li>
+<li>Choosing MongoDB "because it's flexible" for data that is relational
+and transactional.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>In <code>redis-cli</code>, implement a 5-attempts-per-15-minutes PIN
+lockout with <code>INCR</code> and <code>EXPIRE</code>, and verify the
+key expires.</li>
+<li>Add cache-aside to a Java <code>AccountSummaryService</code> with
+<code>StringRedisTemplate</code>. Write a test that proves a second call
+doesn't hit the database, and that posting a transaction invalidates the
+entry.</li>
+<li>Build a sliding-window rate limiter (10 transfer requests per minute
+per customer) with a sorted set inside
+<code>MULTI</code>/<code>EXEC</code>.</li>
+<li>Load 1,000 KYC case documents into MongoDB, write the "oldest
+pending tier-2 cases" query, check it with <code>explain</code> before
+and after adding an index, and write an aggregation counting cases per
+status per day.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>NoSQL, key-value store, document store, Redis, TTL, <code>NX</code>,
+atomic command, cache-aside, cache hit/miss, invalidation, jitter, cache
+stampede, cache penetration, eviction policy, rate limiting, idempotency
+key, distributed lock, MongoDB, BSON, collection, document, embedded vs
+referenced, aggregation pipeline,
+<code>COLLSCAN</code>/<code>IXSCAN</code>, schema validation.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a href="https://redis.io/docs/latest/develop/data-types/">Redis
+docs: Data types</a></li>
+<li><a
+href="https://redis.io/docs/latest/develop/clients/client-side-caching/">Redis
+docs: Caching patterns (client-side and server-side)</a></li>
+<li><a href="https://docs.spring.io/spring-data/redis/reference/">Spring
+Data Redis reference</a></li>
+<li><a href="https://www.mongodb.com/docs/manual/data-modeling/">MongoDB
+Manual: Data Modeling</a></li>
+<li><a href="https://www.mongodb.com/docs/manual/aggregation/">MongoDB
+Manual: Aggregation</a></li>
+<li><a
+href="https://docs.spring.io/spring-data/mongodb/reference/">Spring Data
+MongoDB reference</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Redis in 100 Seconds</h3><p>Fireship · 2 min. Redis in 100 seconds.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/G1rOthIU-uo" title="Redis in 100 Seconds" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>What is Redis Cache?</h3><p>Redis · 6 min. What a cache is and the cache-aside pattern, from Redis.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/Tqaqdfxi-J4" title="What is Redis Cache?" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>MongoDB in 100 Seconds</h3><p>Fireship · 2 min. MongoDB in 100 seconds.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/-bt_y4Loofg" title="MongoDB in 100 Seconds" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>MongoDB Explained in 10 Minutes | SQL vs NoSQL | Jumpstart</h3><p>MongoDB · 9 min. Documents vs rows: when MongoDB fits better than SQL, from MongoDB.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/GV9VBwH_h1U" title="MongoDB Explained in 10 Minutes | SQL vs NoSQL | Jumpstart" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/03-databases-sql-nosql/3.6-redis-and-mongodb/README.md">3.6 Redis for caching and MongoDB for document data</a></p>

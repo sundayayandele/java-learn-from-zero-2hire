@@ -1,0 +1,407 @@
+<p><em>Week 1 · Module 1: Modern Java &amp; OOP Foundations</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Declare variables with the right primitive or reference type, and
+explain how each is stored.</li>
+<li>Represent money correctly with <code>BigDecimal</code> and explain
+why <code>double</code> is wrong for it.</li>
+<li>Write decisions and loops with <code>if</code>, <code>switch</code>
+expressions, <code>for</code>, enhanced <code>for</code>,
+<code>while</code> and <code>do-while</code>.</li>
+<li>Write small, well-named methods with parameters and return values,
+and understand pass-by-value.</li>
+<li>Use <code>String</code>, <code>StringBuilder</code>, arrays and
+<code>var</code> appropriately.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Most production incidents in financial software are not exotic. They
+are an <code>int</code> that overflowed when transaction volume grew, a
+<code>double</code> that turned ₦0.30 into ₦0.29999999999999998, a
+string compared with <code>==</code> instead of <code>equals</code>, or
+an off-by-one in a loop over a statement. This topic is about getting
+the basics exactly right, because in finance "almost right" is a
+reconciliation break.</p>
+<h2 id="1-anatomy-of-a-java-program">1. Anatomy of a Java program</h2>
+<pre class="java"><code>package ng.itlearning.bank;              // the namespace; matches the folder path
+
+import java.math.BigDecimal;             // use a class from another package
+
+public class Account {                   // one public class per file, same name as the file
+    private final String number;         // a field: state that belongs to each object
+    private BigDecimal balance;
+
+    public Account(String number, BigDecimal opening) {   // a constructor
+        this.number = number;
+        this.balance = opening;
+    }
+
+    public BigDecimal balance() {        // a method
+        return balance;
+    }
+
+    public static void main(String[] args) {   // the program&#39;s entry point
+        Account acc = new Account(&quot;0123456789&quot;, new BigDecimal(&quot;1500.00&quot;));
+        System.out.println(acc.balance());
+    }
+}</code></pre>
+<p>Statements end with <code>;</code>, blocks live inside
+<code>{ }</code>, and Java is case-sensitive. Names follow conventions
+that every reviewer checks: <code>PascalCase</code> for classes,
+<code>camelCase</code> for methods and variables,
+<code>UPPER_SNAKE_CASE</code> for constants, all-lowercase for
+packages.</p>
+<h2 id="2-types-primitives-and-references">2. Types: primitives and
+references</h2>
+<p>Java is <strong>statically typed</strong>: every variable has a type
+the compiler knows, and it refuses to compile code that mixes types
+incorrectly. That catches whole classes of bugs before the code ever
+runs.</p>
+<h3 id="the-eight-primitives">The eight primitives</h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Size</th>
+<th>Range / notes</th>
+<th>Use for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>byte</code></td>
+<td>8 bit</td>
+<td>-128 to 127</td>
+<td>raw binary data</td>
+</tr>
+<tr>
+<td><code>short</code></td>
+<td>16 bit</td>
+<td>±32 thousand</td>
+<td>rarely used</td>
+</tr>
+<tr>
+<td><code>int</code></td>
+<td>32 bit</td>
+<td>about ±2.1 billion</td>
+<td>counts, indexes</td>
+</tr>
+<tr>
+<td><code>long</code></td>
+<td>64 bit</td>
+<td>about ±9.2 quintillion</td>
+<td>IDs, timestamps, amounts in minor units (kobo, cents)</td>
+</tr>
+<tr>
+<td><code>float</code></td>
+<td>32 bit</td>
+<td>~7 decimal digits</td>
+<td>almost never</td>
+</tr>
+<tr>
+<td><code>double</code></td>
+<td>64 bit</td>
+<td>~15 decimal digits, binary fraction</td>
+<td>scientific values, ratios, <strong>never money</strong></td>
+</tr>
+<tr>
+<td><code>char</code></td>
+<td>16 bit</td>
+<td>one UTF-16 code unit</td>
+<td>single characters</td>
+</tr>
+<tr>
+<td><code>boolean</code></td>
+<td>—</td>
+<td><code>true</code> / <code>false</code></td>
+<td>flags</td>
+</tr>
+</tbody>
+</table>
+<p>Primitives hold their value directly. Everything else
+(<code>String</code>, <code>BigDecimal</code>, arrays, your own classes)
+is a <strong>reference type</strong>: the variable holds a reference (an
+address) to an object on the heap. A reference can be <code>null</code>,
+which means "points to nothing", and calling a method on
+<code>null</code> throws <code>NullPointerException</code>.</p>
+<p>Each primitive has a <strong>wrapper class</strong>
+(<code>Integer</code>, <code>Long</code>, <code>Double</code>,
+<code>Boolean</code>...) so it can live in collections. Java converts
+between them automatically (autoboxing), which has a trap:
+<code>Integer</code> values compared with <code>==</code> compare
+references, and only small values (-128 to 127) are cached.</p>
+<pre class="java"><code>Integer a = 127, b = 127;   a == b   // true (cached)
+Integer c = 1000, d = 1000; c == d   // false! different objects
+c.equals(d)                          // true: compare values with equals</code></pre>
+<h3 id="overflow-the-silent-bug">Overflow: the silent bug</h3>
+<pre class="java"><code>int dailyVolumeKobo = 2_000_000_000;      // ₦20 million in kobo
+dailyVolumeKobo += 500_000_000;            // wraps to a negative number. No error.
+long safe = 2_000_000_000L + 500_000_000L; // use long
+Math.addExact(2_000_000_000, 500_000_000); // or throw ArithmeticException on overflow</code></pre>
+<p>Underscores in numeric literals (<code>1_000_000</code>) are only for
+readability.</p>
+<h3 id="money-bigdecimal-never-double">Money: <code>BigDecimal</code>,
+never <code>double</code></h3>
+<p><code>double</code> stores numbers in binary, and most decimal
+fractions (0.1, 0.3) have no exact binary representation:</p>
+<pre class="java"><code>System.out.println(0.1 + 0.2);            // 0.30000000000000004</code></pre>
+<p>Over millions of transactions those errors add up, and a ledger that
+does not balance to the kobo is a failed audit. Use
+<code>java.math.BigDecimal</code>:</p>
+<pre class="java"><code>import java.math.BigDecimal;
+import java.math.RoundingMode;
+
+BigDecimal price = new BigDecimal(&quot;0.10&quot;);      // ALWAYS construct from a String
+BigDecimal wrong = new BigDecimal(0.1);          // 0.1000000000000000055511151231257827...
+BigDecimal total = price.add(new BigDecimal(&quot;0.20&quot;));         // 0.30 exactly
+
+BigDecimal principal = new BigDecimal(&quot;250000.00&quot;);
+BigDecimal monthlyRate = new BigDecimal(&quot;0.18&quot;)
+        .divide(new BigDecimal(&quot;12&quot;), 10, RoundingMode.HALF_EVEN);  // must give scale + rounding
+BigDecimal interest = principal.multiply(monthlyRate)
+        .setScale(2, RoundingMode.HALF_EVEN);    // round to kobo: 3750.00</code></pre>
+<p>Rules to remember:</p>
+<ul>
+<li>Construct from <code>String</code> (or
+<code>BigDecimal.valueOf(long)</code>), never from a <code>double</code>
+literal.</li>
+<li><code>BigDecimal</code> is immutable: <code>a.add(b)</code> returns
+a new value; it does not change <code>a</code>.</li>
+<li><code>divide</code> needs a scale and a <code>RoundingMode</code>,
+or it throws for non-terminating results like 1/3.</li>
+<li><code>HALF_EVEN</code> ("banker's rounding") is the usual choice in
+finance because it does not bias totals upward.</li>
+<li>Compare with <code>compareTo</code>, not <code>equals</code>:
+<code>new BigDecimal("2.0").equals(new BigDecimal("2.00"))</code> is
+<code>false</code> because the scales differ, while
+<code>compareTo</code> returns 0.</li>
+</ul>
+<p>The alternative many payment systems use is a <code>long</code>
+holding <strong>minor units</strong> (kobo, cents), which is fast and
+exact for addition. Either way, the currency travels with the amount;
+you will model that properly in topic 1.6.</p>
+<h3 id="var-local-type-inference"><code>var</code>: local type
+inference</h3>
+<pre class="java"><code>var accounts = new ArrayList&lt;Account&gt;();   // the compiler infers ArrayList&lt;Account&gt;
+var rate = new BigDecimal(&quot;0.18&quot;);</code></pre>
+<p><code>var</code> works only for local variables with an initialiser.
+The variable is still statically typed. Use it when the type is obvious
+from the right-hand side; spell the type out when it is not
+(<code>var x = service.process();</code> hides what <code>x</code>
+is).</p>
+<h3 id="strings">Strings</h3>
+<p><code>String</code> is an immutable sequence of characters. Every
+"modification" creates a new string.</p>
+<pre class="java"><code>String name = &quot;Ada&quot;;
+name.toUpperCase();            // returns &quot;ADA&quot;; name is still &quot;Ada&quot;
+String a = new String(&quot;NGN&quot;);
+a == &quot;NGN&quot;                     // false: different objects
+a.equals(&quot;NGN&quot;)                // true: compare strings with equals, always
+&quot;NGN&quot;.equals(currency)         // null-safe: works even if currency is null
+String.format(&quot;%s owes ₦%,.2f&quot;, name, 1234.5)   // &quot;Ada owes ₦1,234.50&quot;
+&quot;  0123456789 &quot;.strip()        // trim whitespace (Unicode-aware)</code></pre>
+<p>Building a long string in a loop with <code>+</code> creates
+thousands of throwaway objects; use <code>StringBuilder</code>:</p>
+<pre class="java"><code>var sb = new StringBuilder();
+for (var line : statementLines) sb.append(line).append(&#39;\n&#39;);
+String statement = sb.toString();</code></pre>
+<h3 id="arrays">Arrays</h3>
+<pre class="java"><code>long[] dailyTotals = new long[31];            // fixed size, filled with 0
+String[] currencies = {&quot;NGN&quot;, &quot;USD&quot;, &quot;GBP&quot;};
+currencies.length                              // 3 (a field, not a method)
+currencies[3]                                  // ArrayIndexOutOfBoundsException</code></pre>
+<p>Arrays have a fixed size. You will mostly use <code>List</code>
+instead (topic 1.4), but arrays still appear in method signatures
+(<code>main(String[] args)</code>) and performance-sensitive code.</p>
+<h2 id="3-operators">3. Operators</h2>
+<p>Arithmetic <code>+ - * / %</code>, comparison
+<code>== != &lt; &gt; &lt;= &gt;=</code>, logical
+<code>&amp;&amp; || !</code> and assignment <code>+= -=</code> work as
+you would expect, with three traps:</p>
+<ul>
+<li><strong>Integer division truncates</strong>: <code>7 / 2</code> is
+<code>3</code>. <code>7 / 2.0</code> is <code>3.5</code>.</li>
+<li><strong><code>%</code> is remainder</strong>, useful for "every 10th
+transaction" (<code>i % 10 == 0</code>) or check digits.</li>
+<li><strong><code>&amp;&amp;</code> and <code>||</code>
+short-circuit</strong>: in
+<code>acc != null &amp;&amp; acc.isActive()</code> the second part runs
+only if the first is true, which is how you avoid a
+<code>NullPointerException</code>.</li>
+</ul>
+<h2 id="4-control-flow">4. Control flow</h2>
+<h3 id="if--else">if / else</h3>
+<pre class="java"><code>if (amount.compareTo(BigDecimal.ZERO) &lt;= 0) {
+    throw new IllegalArgumentException(&quot;Amount must be positive&quot;);
+} else if (amount.compareTo(dailyLimit) &gt; 0) {
+    return Decision.REQUIRES_APPROVAL;
+} else {
+    return Decision.APPROVED;
+}</code></pre>
+<p>Always use braces, even for one line. The famous "goto fail" security
+bug was an <code>if</code> without braces.</p>
+<h3 id="switch-expressions-java-14">switch expressions (Java 14+)</h3>
+<p>The modern <code>switch</code> is an <em>expression</em>: it returns
+a value, uses <code>-&gt;</code> with no fall-through, and the compiler
+checks you covered every case of an enum.</p>
+<pre class="java"><code>enum Channel { MOBILE, USSD, POS, BRANCH }
+
+BigDecimal feeFor(Channel channel) {
+    return switch (channel) {
+        case MOBILE, USSD -&gt; new BigDecimal(&quot;10.00&quot;);
+        case POS -&gt; new BigDecimal(&quot;25.00&quot;);
+        case BRANCH -&gt; {
+            log(&quot;branch fee applied&quot;);
+            yield new BigDecimal(&quot;50.00&quot;);     // yield returns a value from a block
+        }
+    };   // no default needed: all enum constants covered, so a new constant becomes a compile error
+}</code></pre>
+<p>You will still read the old statement form with <code>case X:</code>
+and <code>break;</code> in legacy code. Forgetting <code>break</code>
+makes execution "fall through" to the next case, a classic bug that the
+arrow form eliminates. Topic 1.6 extends <code>switch</code> with
+pattern matching.</p>
+<h3 id="loops">Loops</h3>
+<pre class="java"><code>for (int i = 0; i &lt; transactions.size(); i++) { ... }   // classic: when you need the index
+
+for (Transaction tx : transactions) { ... }              // enhanced for: most of the time
+
+while (retries &lt; 3 &amp;&amp; !sent) { sent = trySend(); retries++; }   // condition checked first
+
+do { pin = prompt(); } while (!isValid(pin));            // body runs at least once</code></pre>
+<p><code>break</code> leaves a loop; <code>continue</code> skips to the
+next iteration. Watch the boundaries: <code>i &lt;= list.size()</code>
+reads one element past the end.</p>
+<h2 id="5-methods">5. Methods</h2>
+<p>A method is a named, reusable block with inputs (parameters) and an
+optional output (return value):</p>
+<pre class="java"><code>static BigDecimal monthlyInstalment(BigDecimal principal, BigDecimal annualRate, int months) {
+    BigDecimal r = annualRate.divide(BigDecimal.valueOf(12), 10, RoundingMode.HALF_EVEN);
+    BigDecimal onePlusRPowN = BigDecimal.ONE.add(r).pow(months);
+    return principal.multiply(r).multiply(onePlusRPowN)
+            .divide(onePlusRPowN.subtract(BigDecimal.ONE), 2, RoundingMode.HALF_EVEN);
+}</code></pre>
+<ul>
+<li><strong>Overloading</strong>: several methods may share a name if
+their parameter lists differ (<code>deposit(BigDecimal)</code> and
+<code>deposit(BigDecimal, String reference)</code>).</li>
+<li><strong><code>static</code></strong> methods belong to the class,
+not to an object; call them as
+<code>LoanMath.monthlyInstalment(...)</code>. Instance methods need an
+object.</li>
+<li><strong>Java is always pass-by-value.</strong> For a primitive the
+value is copied. For an object, the <em>reference</em> is copied: the
+method can change the object it points to, but reassigning the parameter
+does not affect the caller's variable.</li>
+</ul>
+<pre class="java"><code>static void reassign(Account a) { a = new Account(&quot;999&quot;, BigDecimal.ZERO); }  // caller unaffected
+static void mutate(Account a)   { a.deposit(new BigDecimal(&quot;100&quot;)); }          // caller sees the change</code></pre>
+<h3 id="var-args-the-math-api-and-evaluation-rules">Var-args, the Math
+API and evaluation rules</h3>
+<pre class="java"><code>static BigDecimal total(BigDecimal... amounts) {          // var-args: zero or more arguments, seen as an array
+    return Arrays.stream(amounts).reduce(BigDecimal.ZERO, BigDecimal::add);
+}
+total();                                                  // allowed: empty array
+total(a, b, c);</code></pre>
+<p>A var-arg parameter must be the last one, and only one is allowed.
+Overload resolution prefers an exact match, then widening, then boxing,
+and var-args last.</p>
+<p><code>Math</code> covers everyday numeric helpers:
+<code>Math.max/min/abs</code>, <code>Math.round</code> (returns
+<code>long</code> for <code>double</code>),
+<code>Math.floorDiv</code>/<code>floorMod</code> (correct for negatives,
+unlike <code>/</code> and <code>%</code>), <code>Math.pow</code>,
+<code>Math.sqrt</code>, and the overflow-checking
+<code>Math.addExact</code>/<code>multiplyExact</code>/<code>toIntExact</code>.
+For money keep using <code>BigDecimal</code>.</p>
+<p>Evaluation rules the OCP exam loves: <code>*</code>, <code>/</code>,
+<code>%</code> bind tighter than <code>+</code> and <code>-</code>;
+<code>i++</code> yields the old value, <code>++i</code> the new one;
+compound assignment includes an implicit cast
+(<code>byte b = 10; b += 5;</code> compiles, <code>b = b + 5;</code>
+doesn't); <code>int</code> arithmetic on
+<code>byte</code>/<code>short</code>/<code>char</code> operands promotes
+them to <code>int</code>; and narrowing casts can lose information
+silently (<code>(int) 3_000_000_000L</code> is negative).</p>
+<p>Good methods are short, do one thing, and have names that say what
+they return or do: <code>isOverdrawn()</code>,
+<code>calculateFee()</code>, <code>postTransfer()</code>.</p>
+<h2 id="worked-example-a-loan-repayment-schedule">Worked example: a loan
+repayment schedule</h2>
+<pre class="java"><code>public static void printSchedule(BigDecimal principal, BigDecimal annualRate, int months) {
+    BigDecimal instalment = monthlyInstalment(principal, annualRate, months);
+    BigDecimal r = annualRate.divide(BigDecimal.valueOf(12), 10, RoundingMode.HALF_EVEN);
+    BigDecimal balance = principal;
+    for (int month = 1; month &lt;= months; month++) {
+        BigDecimal interest = balance.multiply(r).setScale(2, RoundingMode.HALF_EVEN);
+        BigDecimal principalPart = (month == months) ? balance : instalment.subtract(interest);
+        balance = balance.subtract(principalPart);
+        System.out.printf(&quot;%2d  interest %10s  principal %10s  balance %12s%n&quot;,
+                month, interest, principalPart, balance);
+    }
+}</code></pre>
+<p>The last month pays off whatever is left, so rounding pennies never
+leave a non-zero balance. That one line is the difference between a toy
+and a real amortisation schedule, and you will build the full version in
+Capstone 3.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Using <code>double</code> or <code>float</code> for money, or
+<code>new BigDecimal(0.1)</code>.</li>
+<li>Comparing <code>String</code>, <code>Integer</code> or
+<code>BigDecimal</code> values with <code>==</code>.</li>
+<li><code>int</code> overflow on counters and amounts that grow with
+business volume.</li>
+<li>Missing braces on <code>if</code>, or forgetting <code>break</code>
+in an old-style <code>switch</code>.</li>
+<li>Off-by-one loop bounds (<code>&lt;=</code> vs
+<code>&lt;</code>).</li>
+<li>Methods that do three things and are named after none of them.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Write <code>FeeCalculator.fee(Channel, BigDecimal amount)</code>: a
+flat fee per channel, plus 0.5% for amounts over ₦100,000, capped at
+₦2,000. Round to kobo with <code>HALF_EVEN</code>.</li>
+<li>Print <code>0.1 + 0.2</code> as a <code>double</code> and as a
+<code>BigDecimal</code>, then explain the difference to a non-engineer
+in two sentences.</li>
+<li>Write <code>isValidNuban(String)</code> that checks a 10-digit
+account number contains only digits. Stretch: research the NUBAN
+check-digit algorithm and implement it with a loop and
+<code>%</code>.</li>
+<li>Build the repayment schedule above for ₦500,000 at 24% over 6 months
+and check that the final balance is exactly <code>0.00</code>.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Static typing, primitive, reference, wrapper class, autoboxing,
+overflow, <code>BigDecimal</code>, scale, rounding mode, immutability,
+switch expression, <code>yield</code>, enhanced for, pass-by-value,
+overloading, <code>static</code>.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://docs.oracle.com/javase/tutorial/java/nutsandbolts/index.html">The
+Java Tutorials: Language Basics</a> (written for Java 8, still accurate
+for the basics)</li>
+<li><a
+href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/math/BigDecimal.html"><code>BigDecimal</code>
+API (Java 21)</a></li>
+<li><a href="https://openjdk.org/jeps/361">JEP 361: Switch
+Expressions</a></li>
+<li><a href="https://openjdk.org/jeps/286">JEP 286: Local-Variable Type
+Inference (<code>var</code>)</a></li>
+<li><a
+href="https://dev.java/learn/language/constructs/basics/">dev.java
+(Oracle): Language Basics</a></li>
+<li><a
+href="https://docs.oracle.com/javase/specs/jls/se21/html/index.html">The
+Java Language Specification, Java SE 21</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Variables in Java ✘【12 minutes】</h3><p>Bro Code · 12 min. Variables, primitive types and String, explained slowly with examples.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/so1iUWaLmKA" title="Variables in Java ✘【12 minutes】" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Java if statements 🚧【6 minutes】</h3><p>Bro Code · 6 min. if / else if / else decisions in six minutes.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/MY03bt_0JQI" title="Java if statements 🚧【6 minutes】" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Java methods explained in 10+ minutes! 📞</h3><p>Bro Code · 11 min. Defining and calling methods, parameters and return values.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/v5p_SUfi710" title="Java methods explained in 10+ minutes! 📞" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Java Main Method Explained - What Does All That Stuff Mean?</h3><p>Coding with John · 7 min. What every word in `public static void main(String[] args)` actually means.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/P-_Nzi_mCRo" title="Java Main Method Explained - What Does All That Stuff Mean?" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/01-modern-java-oop/1.2-syntax-types-control-flow/README.md">1.2 Java syntax, types, control flow and methods</a></p>

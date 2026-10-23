@@ -1,0 +1,362 @@
+<p><em>Week 5 · Module 2: Concurrency &amp; the JVM</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Explain processes, threads, concurrency and parallelism, and why
+backend servers are concurrent by nature.</li>
+<li>Create threads and understand their lifecycle, <code>join</code>,
+interruption and daemon threads.</li>
+<li>Run work on thread pools with <code>ExecutorService</code>,
+<code>Callable</code> and <code>Future</code>, and shut pools down
+correctly.</li>
+<li>Compose asynchronous work with <code>CompletableFuture</code>:
+chaining, combining, timeouts and error handling.</li>
+<li>Pick sensible pool sizes for CPU-bound and I/O-bound work.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>A payment API serves thousands of customers at once; a statement
+batch processes millions of rows overnight; a balance enquiry may call
+the core banking system, a fraud score and a loyalty service at the same
+time. All of that is concurrency. Get it right and the end-of-day batch
+finishes in 20 minutes instead of three hours. Get it wrong and you get
+the bugs in topic 2.2: double debits, lost updates and frozen services.
+Concurrency questions are standard in interviews for Lagos fintechs and
+banks alike.</p>
+<h2 id="1-concepts">1. Concepts</h2>
+<ul>
+<li>A <strong>process</strong> is a running program with its own memory.
+Your Spring Boot application is one JVM process.</li>
+<li>A <strong>thread</strong> is an independent path of execution
+<em>inside</em> a process. Threads share the process's heap memory,
+which is what makes them powerful and dangerous.</li>
+<li><strong>Concurrency</strong> means dealing with many things at once
+(interleaving them); <strong>parallelism</strong> means doing many
+things at the same instant on multiple CPU cores. A web server handling
+500 requests on 8 cores is concurrent, and partly parallel.</li>
+<li>Work is <strong>CPU-bound</strong> (calculating interest for a
+million accounts) or <strong>I/O-bound</strong> (waiting on a database,
+an HTTP call or a file). Most backend work is I/O-bound: threads spend
+most of their time waiting.</li>
+</ul>
+<h2 id="2-threads">2. Threads</h2>
+<pre class="java"><code>Runnable task = () -&gt; System.out.println(&quot;Running on &quot; + Thread.currentThread().getName());
+
+Thread t = new Thread(task, &quot;statement-worker-1&quot;);
+t.start();          // start() creates a new thread; run() would just call the method on the current one
+t.join();           // wait for it to finish</code></pre>
+<p>Java 21 also offers builders:
+<code>Thread.ofPlatform().name("worker-", 0).start(task)</code> and, for
+virtual threads, <code>Thread.ofVirtual().start(task)</code> (topic
+2.3).</p>
+<p>A thread moves through states: <code>NEW</code> →
+<code>RUNNABLE</code> → (<code>BLOCKED</code> / <code>WAITING</code> /
+<code>TIMED_WAITING</code>) → <code>TERMINATED</code>. You will see
+these names in thread dumps (<code>jstack &lt;pid&gt;</code> or
+<code>jcmd &lt;pid&gt; Thread.print</code>) when diagnosing a stuck
+service.</p>
+<h3 id="interruption-how-to-ask-a-thread-to-stop">Interruption: how to
+ask a thread to stop</h3>
+<p>Java has no safe way to kill a thread. Instead you
+<strong>interrupt</strong> it, and well-written code checks for that and
+exits:</p>
+<pre class="java"><code>Thread poller = new Thread(() -&gt; {
+    while (!Thread.currentThread().isInterrupted()) {
+        try {
+            pollSettlementFile();
+            Thread.sleep(Duration.ofSeconds(30));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();   // restore the flag, then exit the loop
+            return;
+        }
+    }
+});
+poller.start();
+// later, on shutdown:
+poller.interrupt();</code></pre>
+<p><strong>Never swallow <code>InterruptedException</code>.</strong>
+Either rethrow it or restore the interrupt flag, otherwise shutdowns
+hang.</p>
+<p><strong>Daemon threads</strong> (<code>t.setDaemon(true)</code>) do
+not keep the JVM alive. Use them only for background helpers whose work
+can be abandoned.</p>
+<p>Creating raw threads by hand is rare in application code. Threads are
+expensive to create (a platform thread reserves around 1 MB of stack and
+an OS thread), and unbounded thread creation will exhaust memory. You
+use pools.</p>
+<h2 id="3-executorservice-thread-pools">3. ExecutorService: thread
+pools</h2>
+<p>An <code>ExecutorService</code> owns a pool of threads and a queue of
+tasks. You submit work; it schedules it.</p>
+<pre class="java"><code>ExecutorService pool = Executors.newFixedThreadPool(8);
+
+Future&lt;BigDecimal&gt; f = pool.submit(() -&gt; interestFor(account));   // Callable returns a value
+BigDecimal interest = f.get(5, TimeUnit.SECONDS);                  // blocks until done or times out
+
+pool.shutdown();                                     // stop accepting tasks; finish queued ones
+if (!pool.awaitTermination(30, TimeUnit.SECONDS)) {
+    pool.shutdownNow();                              // interrupt running tasks
+}</code></pre>
+<ul>
+<li><code>Runnable</code> returns nothing;
+<code>Callable&lt;V&gt;</code> returns a value and may throw checked
+exceptions.</li>
+<li><code>Future.get()</code> blocks. If the task threw,
+<code>get()</code> throws <code>ExecutionException</code> wrapping the
+cause.</li>
+<li><code>invokeAll(tasks)</code> submits a batch and waits for all;
+<code>invokeAny</code> returns the first success.</li>
+<li>Since Java 19, <code>ExecutorService</code> is
+<code>AutoCloseable</code>:
+<code>try (var pool = Executors.newFixedThreadPool(8)) { ... }</code>
+waits for submitted tasks when the block ends.</li>
+</ul>
+<h3 id="factory-methods-and-their-traps">Factory methods and their
+traps</h3>
+<table>
+<thead>
+<tr>
+<th>Factory</th>
+<th>Behaviour</th>
+<th>Trap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>newFixedThreadPool(n)</code></td>
+<td>n threads, <strong>unbounded</strong> queue</td>
+<td>Queue grows forever under overload → OutOfMemoryError</td>
+</tr>
+<tr>
+<td><code>newCachedThreadPool()</code></td>
+<td>creates threads on demand, reuses idle ones</td>
+<td><strong>Unbounded threads</strong> under load</td>
+</tr>
+<tr>
+<td><code>newSingleThreadExecutor()</code></td>
+<td>one thread, tasks run in order</td>
+<td>Unbounded queue</td>
+</tr>
+<tr>
+<td><code>newScheduledThreadPool(n)</code></td>
+<td>delayed and periodic tasks</td>
+<td>Exceptions silently cancel a periodic task</td>
+</tr>
+<tr>
+<td><code>newVirtualThreadPerTaskExecutor()</code></td>
+<td>one virtual thread per task (Java 21)</td>
+<td>See topic 2.3</td>
+</tr>
+</tbody>
+</table>
+<p>For production pools, construct a <code>ThreadPoolExecutor</code>
+directly with a <strong>bounded queue</strong> and an explicit
+<strong>rejection policy</strong>, and give threads meaningful names so
+thread dumps make sense:</p>
+<pre class="java"><code>ExecutorService pool = new ThreadPoolExecutor(
+        8, 16,                                       // core and maximum threads
+        60, TimeUnit.SECONDS,                        // idle time before extra threads die
+        new ArrayBlockingQueue&lt;&gt;(1_000),             // bounded queue: back-pressure
+        Thread.ofPlatform().name(&quot;recon-&quot;, 0).factory(),
+        new ThreadPoolExecutor.CallerRunsPolicy());  // when full, the caller runs the task (slows producers)</code></pre>
+<p>In Spring (Module 4) you will usually configure pools through
+properties rather than by hand, but the same ideas apply.</p>
+<h3 id="how-big-should-a-pool-be">How big should a pool be?</h3>
+<ul>
+<li><strong>CPU-bound</strong> work: about the number of cores
+(<code>Runtime.getRuntime().availableProcessors()</code>). More threads
+just fight over the same cores.</li>
+<li><strong>I/O-bound</strong> work: more threads, roughly
+<code>cores × (1 + wait time / compute time)</code>. A task that waits
+90 ms on the database for every 10 ms of CPU could use about
+<code>8 × 10 = 80</code> threads on 8 cores.</li>
+<li>Measure, then tune. And note the downstream limit: 200 threads
+hitting a database pool of 20 connections just queue at the database.
+Virtual threads (topic 2.3) change this arithmetic for I/O-bound
+work.</li>
+</ul>
+<h2 id="4-completablefuture-composing-asynchronous-work">4.
+CompletableFuture: composing asynchronous work</h2>
+<p><code>Future</code> can only be waited on.
+<code>CompletableFuture</code> can be <strong>chained and
+combined</strong> without blocking, which is how you express "call three
+services in parallel, then combine the results".</p>
+<pre class="java"><code>ExecutorService io = Executors.newFixedThreadPool(32);
+
+CompletableFuture&lt;Account&gt; account = CompletableFuture.supplyAsync(() -&gt; core.account(number), io);
+CompletableFuture&lt;Integer&gt; fraudScore = CompletableFuture.supplyAsync(() -&gt; fraud.score(number), io);
+CompletableFuture&lt;Integer&gt; points = CompletableFuture.supplyAsync(() -&gt; loyalty.points(number), io);
+
+CompletableFuture&lt;Dashboard&gt; dashboard = account
+        .thenCombine(fraudScore, (acc, score) -&gt; new Partial(acc, score))
+        .thenCombine(points, (partial, pts) -&gt; new Dashboard(partial.acc(), partial.score(), pts))
+        .orTimeout(2, TimeUnit.SECONDS)
+        .exceptionally(ex -&gt; Dashboard.degraded(number, ex));
+
+Dashboard d = dashboard.join();   // total latency ≈ the slowest call, not the sum</code></pre>
+<p>The key methods, grouped by what they do:</p>
+<table>
+<thead>
+<tr>
+<th>Purpose</th>
+<th>Methods</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Start</td>
+<td><code>supplyAsync(supplier, executor)</code>,
+<code>runAsync(runnable, executor)</code>,
+<code>completedFuture(value)</code></td>
+</tr>
+<tr>
+<td>Transform the result</td>
+<td><code>thenApply(fn)</code> (like <code>map</code>)</td>
+</tr>
+<tr>
+<td>Chain another async step</td>
+<td><code>thenCompose(fn)</code> (like <code>flatMap</code>: fn returns
+a CompletableFuture)</td>
+</tr>
+<tr>
+<td>Combine two independent futures</td>
+<td><code>thenCombine(other, fn)</code></td>
+</tr>
+<tr>
+<td>Consume</td>
+<td><code>thenAccept(consumer)</code>,
+<code>thenRun(runnable)</code></td>
+</tr>
+<tr>
+<td>Wait for many</td>
+<td><code>allOf(f1, f2, f3)</code>, <code>anyOf(...)</code></td>
+</tr>
+<tr>
+<td>Errors</td>
+<td><code>exceptionally(fn)</code>,
+<code>handle((value, ex) -&gt; ...)</code>,
+<code>whenComplete(...)</code></td>
+</tr>
+<tr>
+<td>Time limits</td>
+<td><code>orTimeout(d, unit)</code>,
+<code>completeOnTimeout(fallback, d, unit)</code></td>
+</tr>
+<tr>
+<td>Get the result</td>
+<td><code>join()</code> (unchecked exception) or <code>get()</code>
+(checked)</td>
+</tr>
+</tbody>
+</table>
+<p><code>thenApply</code> versus <code>thenCompose</code> is the classic
+interview question. If the next step returns a plain value, use
+<code>thenApply</code>. If it returns another
+<code>CompletableFuture</code> (another async call), use
+<code>thenCompose</code>, or you will end up with
+<code>CompletableFuture&lt;CompletableFuture&lt;T&gt;&gt;</code>.</p>
+<pre class="java"><code>CompletableFuture&lt;Receipt&gt; receipt = validate(request)          // CF&lt;ValidatedRequest&gt;
+        .thenCompose(valid -&gt; debit(valid))                     // debit returns CF&lt;DebitResult&gt;
+        .thenCompose(debit -&gt; credit(debit))                    // credit returns CF&lt;Receipt&gt;
+        .thenApply(r -&gt; r.withChannel(&quot;MOBILE&quot;));               // plain transformation</code></pre>
+<p><strong>Always pass an executor.</strong> Without one,
+<code>supplyAsync</code> runs on the shared
+<code>ForkJoinPool.commonPool()</code>, which is sized for CPU work.
+Blocking I/O there starves everything else in the JVM that uses it,
+including parallel streams.</p>
+<p><strong>Handle failures explicitly.</strong> An exception inside a
+stage completes the future exceptionally; later <code>thenApply</code>
+stages are skipped; <code>join()</code> throws
+<code>CompletionException</code> wrapping the cause. If nobody calls
+<code>join</code> or attaches
+<code>exceptionally</code>/<code>handle</code>, the error vanishes
+silently.</p>
+<h2 id="worked-example-a-parallel-statement-generator">Worked example: a
+parallel statement generator</h2>
+<p>A bank needs PDF statements for 50,000 accounts. Each takes about 100
+ms, mostly waiting on the database.</p>
+<pre class="java"><code>List&lt;String&gt; accounts = repo.accountsForStatementRun(runDate);
+
+try (ExecutorService pool = Executors.newFixedThreadPool(32)) {
+    List&lt;CompletableFuture&lt;StatementResult&gt;&gt; futures = accounts.stream()
+            .map(acc -&gt; CompletableFuture
+                    .supplyAsync(() -&gt; generator.generate(acc, runDate), pool)
+                    .orTimeout(30, TimeUnit.SECONDS)
+                    .handle((ok, ex) -&gt; ex == null
+                            ? StatementResult.ok(acc, ok)
+                            : StatementResult.failed(acc, ex.getMessage())))
+            .toList();
+
+    CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
+
+    Map&lt;Boolean, Long&gt; outcome = futures.stream()
+            .map(CompletableFuture::join)
+            .collect(Collectors.partitioningBy(StatementResult::isOk, Collectors.counting()));
+    log.info(&quot;Statements: {} ok, {} failed&quot;, outcome.get(true), outcome.get(false));
+}</code></pre>
+<p>Sequentially: 50,000 × 100 ms ≈ 83 minutes. With 32 threads: about 3
+minutes, as long as the database can serve 32 concurrent queries.
+Failures are collected per account instead of aborting the run, so
+operations can re-run just the failures.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Calling <code>run()</code> instead of <code>start()</code>.</li>
+<li>Swallowing <code>InterruptedException</code>.</li>
+<li>Unbounded pools or queues (<code>newCachedThreadPool</code>,
+<code>newFixedThreadPool</code> under overload).</li>
+<li>Forgetting to shut down executors, so the JVM never exits or threads
+leak on redeploy.</li>
+<li>Blocking I/O on the common ForkJoinPool via <code>supplyAsync</code>
+with no executor.</li>
+<li><code>thenApply</code> where <code>thenCompose</code> is
+needed.</li>
+<li><code>CompletableFuture</code> chains with no error handling.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Write a program that computes simple interest for 1,000,000
+synthetic accounts sequentially and with a fixed pool of
+<code>availableProcessors()</code> threads. Compare the timings. Then
+add <code>Thread.sleep(1)</code> to each task to simulate I/O and
+compare a pool of 8 with a pool of 64.</li>
+<li>Build the dashboard example with three fake services that sleep 300
+ms, 500 ms and 800 ms. Show the total time is about 800 ms, not 1.6 s.
+Make the fraud service throw and return a degraded dashboard
+instead.</li>
+<li>Write a <code>ScheduledExecutorService</code> job that "polls" a
+settlement folder every 10 seconds, shuts down cleanly on Ctrl+C (add a
+shutdown hook), and survives an exception in one poll.</li>
+<li>Configure a <code>ThreadPoolExecutor</code> with a queue of 10 and
+<code>AbortPolicy</code>, submit 100 slow tasks, and catch the
+<code>RejectedExecutionException</code>. Then switch to
+<code>CallerRunsPolicy</code> and explain the difference.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Process, thread, concurrency, parallelism, CPU-bound, I/O-bound,
+thread states, interrupt, daemon thread, <code>ExecutorService</code>,
+thread pool, <code>Callable</code>, <code>Future</code>, bounded queue,
+rejection policy, <code>CompletableFuture</code>,
+<code>thenApply</code>, <code>thenCompose</code>,
+<code>thenCombine</code>, <code>allOf</code>, common ForkJoinPool.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://docs.oracle.com/javase/tutorial/essential/concurrency/index.html">The
+Java Tutorials: Concurrency</a></li>
+<li><a
+href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/concurrent/ExecutorService.html"><code>ExecutorService</code>
+API (Java 21)</a></li>
+<li><a
+href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/concurrent/CompletableFuture.html"><code>CompletableFuture</code>
+API (Java 21)</a></li>
+<li>Brian Goetz et al., <em>Java Concurrency in Practice</em>, chapters
+6–8 (book; still the reference)</li>
+<li><a
+href="https://docs.oracle.com/en/java/javase/21/core/concurrency.html">Oracle:
+Java SE 21 Core Libraries, Concurrency</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Multithreading in Java Explained in 10 Minutes</h3><p>Coding with John · 10 min. Threads, Runnable and join() explained in ten minutes.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/r_MbozD32eo" title="Multithreading in Java Explained in 10 Minutes" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Java ExecutorService - Part 1 - Introduction</h3><p>Defog Tech · 10 min. Why thread pools exist and how ExecutorService manages them.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/6Oo-9Can3H8" title="Java ExecutorService - Part 1 - Introduction" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>A Guide To CompletableFuture in Java with Examples | Asynchronous Operations in Java | Geekific</h3><p>Geekific · 10 min. Composing asynchronous work with CompletableFuture.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/xpjvY45Hbyg" title="A Guide To CompletableFuture in Java with Examples | Asynchronous Operations in Java | Geekific" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/02-concurrency-jvm/2.1-threads-executors-completablefuture/README.md">2.1 Threads, ExecutorService and CompletableFuture</a></p>

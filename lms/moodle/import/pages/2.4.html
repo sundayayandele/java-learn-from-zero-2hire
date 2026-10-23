@@ -1,0 +1,346 @@
+<p><em>Week 6 · Module 2: Concurrency &amp; the JVM</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Describe what happens from <code>java -jar app.jar</code> to running
+code: class loading, bytecode interpretation and JIT compilation.</li>
+<li>Explain the JVM's memory areas: heap, thread stacks, metaspace and
+native memory, and what lives where.</li>
+<li>Explain how garbage collection works (reachability, generations) and
+compare G1, ZGC, Parallel and Serial collectors.</li>
+<li>Size the heap for a container, read GC logs at a basic level, and
+diagnose <code>OutOfMemoryError</code> and
+<code>StackOverflowError</code>.</li>
+<li>Use the basic JDK diagnostic tools: <code>jcmd</code>,
+<code>jstat</code>, heap dumps and Java Flight Recorder.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Payment services have latency targets: a card authorisation must
+answer within a couple of seconds end to end, and your service gets a
+small slice of that. A 2-second garbage-collection pause, or a container
+killed for exceeding its memory limit during the month-end batch, turns
+directly into declined transactions and incident reports. Senior Lagos
+fintech postings list "JVM tuning" and "heap analysis" explicitly;
+juniors who can read a GC log and explain heap versus stack stand
+out.</p>
+<h2 id="1-how-java-runs-your-code">1. How Java runs your code</h2>
+<ol type="1">
+<li><strong>Class loading.</strong> The JVM loads <code>.class</code>
+files on demand through class loaders (bootstrap → platform →
+application), then <strong>verifies</strong> the bytecode is safe and
+<strong>links</strong> it.</li>
+<li><strong>Interpretation.</strong> Methods first run in the bytecode
+interpreter, which starts quickly but runs slowly.</li>
+<li><strong>JIT compilation.</strong> The JVM profiles which methods are
+"hot" and compiles them to optimised machine code. HotSpot uses tiered
+compilation: the quick C1 compiler first, then the aggressive C2
+compiler for the hottest code, with optimisations such as inlining and
+escape analysis.</li>
+</ol>
+<p>That is why a freshly started service is slower for its first minute
+or so (<strong>warm-up</strong>), and why performance tests must warm up
+before measuring. Projects such as CDS/AOT caches (improved in Java
+24–25) and GraalVM native images reduce startup time; you will meet them
+later.</p>
+<h2 id="2-memory-areas">2. Memory areas</h2>
+<pre class="text"><code>JVM process memory
+├── Heap (shared by all threads)                    -Xmx / -XX:MaxRAMPercentage
+│    ├── Young generation: Eden + Survivor spaces   new objects
+│    └── Old generation                              long-lived objects
+├── Thread stacks (one per platform thread)         -Xss, ~1 MB default
+├── Metaspace (native)                              class metadata
+├── Code cache (native)                             JIT-compiled machine code
+└── Other native memory                              direct buffers, GC structures, threads, JNI</code></pre>
+<h3 id="stack">Stack</h3>
+<p>Each thread has its own <strong>stack</strong> of
+<strong>frames</strong>: one frame per method call, holding that call's
+local variables, parameters and return address. A frame is pushed when a
+method is called and popped when it returns. Stack memory is fast,
+automatically managed and private to the thread.</p>
+<p>Local variables of primitive types live in the frame. For objects,
+the <strong>reference</strong> lives in the frame and the
+<strong>object</strong> lives on the heap:</p>
+<pre class="java"><code>void post(Transaction tx) {
+    long amountKobo = tx.amountKobo();           // primitive: in post()&#39;s stack frame
+    BigDecimal fee = calculateFee(amountKobo);   // reference in the frame, BigDecimal object on the heap
+}</code></pre>
+<p>Infinite or very deep recursion overflows the stack:
+<code>StackOverflowError</code>. (Virtual threads keep their stacks on
+the heap when unmounted, which is why they are so cheap.)</p>
+<h3 id="heap">Heap</h3>
+<p>All objects and arrays live on the <strong>heap</strong>, shared by
+all threads. That sharing is why topic 2.2 matters. You never free heap
+memory yourself; the <strong>garbage collector</strong> reclaims objects
+that are no longer reachable.</p>
+<h3 id="metaspace-and-native-memory">Metaspace and native memory</h3>
+<p>Class metadata lives in <strong>metaspace</strong>, outside the heap.
+It grows with the number of loaded classes; leaks here usually come from
+class loaders that are never released (for example, repeated hot
+redeploys). Thread stacks, the JIT code cache, direct
+<code>ByteBuffer</code>s (used by Netty and many drivers) and GC
+bookkeeping are also native memory. This matters in containers:
+<strong>total process memory is always more than the heap</strong>.</p>
+<h2 id="3-garbage-collection">3. Garbage collection</h2>
+<h3 id="reachability">Reachability</h3>
+<p>The GC starts from <strong>GC roots</strong> (local variables on
+thread stacks, static fields, JNI references, active threads) and
+follows references. Anything reachable is live; everything else is
+garbage. Cycles are not a problem: two objects pointing at each other
+but unreachable from any root are both collected.</p>
+<h3 id="the-generational-hypothesis">The generational hypothesis</h3>
+<p>Most objects die young: the <code>BigDecimal</code> intermediate in a
+fee calculation, the DTO for one HTTP request, the strings in a log
+message. A few live long: caches, connection pools, Spring beans.
+Collectors exploit this:</p>
+<ul>
+<li>New objects are allocated in <strong>Eden</strong> (very fast: a
+pointer bump).</li>
+<li>A <strong>minor (young) collection</strong> copies the few survivors
+from Eden into a <strong>survivor</strong> space and discards the rest
+wholesale. Cheap, because it only touches live objects.</li>
+<li>Objects that survive several minor collections are
+<strong>promoted</strong> to the <strong>old generation</strong>.</li>
+<li>The old generation is collected less often, with more expensive
+<strong>major/mixed</strong> collections.</li>
+</ul>
+<h3 id="stop-the-world-pauses">Stop-the-world pauses</h3>
+<p>Some GC phases pause all application threads ("stop-the-world").
+Modern collectors do most of their work <strong>concurrently</strong>
+with the application, shrinking pauses, at the cost of some CPU and
+memory overhead. The trade-off is always between
+<strong>throughput</strong> (total work done), <strong>latency</strong>
+(pause times) and <strong>footprint</strong> (memory used).</p>
+<h3 id="the-collectors">The collectors</h3>
+<table>
+<thead>
+<tr>
+<th>Collector</th>
+<th>Flag</th>
+<th>Pauses</th>
+<th>Best for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>G1</strong> (default)</td>
+<td><code>-XX:+UseG1GC</code></td>
+<td>Targets a pause goal (default 200 ms), typically tens of ms</td>
+<td>General-purpose services: the right default</td>
+</tr>
+<tr>
+<td><strong>ZGC</strong> (generational since 21, default mode since
+23)</td>
+<td><code>-XX:+UseZGC</code></td>
+<td>Sub-millisecond, independent of heap size</td>
+<td>Latency-critical APIs, large heaps</td>
+</tr>
+<tr>
+<td><strong>Parallel</strong></td>
+<td><code>-XX:+UseParallelGC</code></td>
+<td>Longer pauses, highest throughput</td>
+<td>Batch jobs where pauses don't matter</td>
+</tr>
+<tr>
+<td><strong>Serial</strong></td>
+<td><code>-XX:+UseSerialGC</code></td>
+<td>Single-threaded</td>
+<td>Tiny containers, &lt; 2 CPUs or very small heaps</td>
+</tr>
+<tr>
+<td>Shenandoah</td>
+<td><code>-XX:+UseShenandoahGC</code></td>
+<td>Low pause</td>
+<td>Alternative to ZGC in some distributions</td>
+</tr>
+</tbody>
+</table>
+<p>G1 divides the heap into equal regions and collects the regions with
+the most garbage first ("garbage first"). ZGC uses coloured pointers and
+load barriers to move objects while the application runs. For a
+card-authorisation service with tight p99 latency, test ZGC; for an
+overnight reconciliation batch, Parallel may finish fastest. Measure
+your workload before switching: the default is usually right.</p>
+<p>Note that the JVM may pick Serial GC automatically if it thinks it is
+on a small machine (fewer than 2 CPUs or under about 1.8 GB memory),
+which surprises people running small containers.</p>
+<h2 id="4-sizing-memory-especially-in-containers">4. Sizing memory,
+especially in containers</h2>
+<pre class="bash"><code>java -Xms512m -Xmx2g -jar app.jar             # fixed initial and maximum heap
+java -XX:MaxRAMPercentage=75 -jar app.jar     # heap as a share of the container&#39;s memory limit</code></pre>
+<p>Since Java 10 the JVM is <strong>container-aware</strong>: it reads
+the cgroup memory and CPU limits. By default the maximum heap is only
+<strong>25%</strong> of the available memory, which wastes most of a
+container. For a dedicated service container,
+<code>-XX:MaxRAMPercentage=70</code> to <code>75</code> is common,
+leaving the rest for metaspace, thread stacks, code cache and direct
+buffers.</p>
+<p>If total process memory exceeds the container limit, the kernel's OOM
+killer terminates the process (Kubernetes shows <code>OOMKilled</code>,
+exit code 137), <strong>with no Java error at all</strong>. If the heap
+fills, you get a Java <code>OutOfMemoryError: Java heap space</code>.
+Different symptoms, different fixes.</p>
+<p>Rules of thumb for a typical Spring Boot service:</p>
+<ul>
+<li>Start with a container of 1–2 GB and
+<code>MaxRAMPercentage=75</code>, then measure.</li>
+<li>Keep <code>-Xms</code> equal to <code>-Xmx</code> (or set
+<code>InitialRAMPercentage</code> to match) in production to avoid
+resize pauses.</li>
+<li>Watch the <strong>heap after GC</strong> over time, not the peak: a
+healthy service shows a saw-tooth that returns to a stable floor.</li>
+</ul>
+<h2 id="5-when-memory-goes-wrong">5. When memory goes wrong</h2>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely cause</th>
+<th>First steps</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OutOfMemoryError: Java heap space</code></td>
+<td>Leak, or genuinely too much live data</td>
+<td>Heap dump, look at the biggest retainers</td>
+</tr>
+<tr>
+<td><code>OutOfMemoryError: Metaspace</code></td>
+<td>Class-loader leak, too many generated classes</td>
+<td>Check redeploys, proxies, scripting engines</td>
+</tr>
+<tr>
+<td><code>OutOfMemoryError: unable to create native thread</code></td>
+<td>Too many platform threads</td>
+<td>Thread dump; bound your pools, consider virtual threads</td>
+</tr>
+<tr>
+<td>Container <code>OOMKilled</code> (137)</td>
+<td>Total process memory &gt; limit</td>
+<td>Lower <code>MaxRAMPercentage</code>, check native memory</td>
+</tr>
+<tr>
+<td><code>StackOverflowError</code></td>
+<td>Runaway recursion</td>
+<td>Read the repeating frames in the stack trace</td>
+</tr>
+<tr>
+<td>Rising latency, high CPU, frequent full GCs</td>
+<td>Heap too small, or a leak approaching the limit</td>
+<td>GC logs: is heap after GC climbing?</td>
+</tr>
+</tbody>
+</table>
+<h3 id="memory-leaks-in-java">Memory leaks in Java</h3>
+<p>The GC can only free unreachable objects. A Java "leak" is objects
+that stay reachable by accident:</p>
+<ul>
+<li>static collections that only grow
+(<code>static Map&lt;String, Session&gt; CACHE</code> with no
+eviction);</li>
+<li>caches without size limits or expiry (use Caffeine or Redis with
+TTLs, topic 3.6);</li>
+<li>listeners registered and never removed;</li>
+<li><code>ThreadLocal</code> values in pooled threads never
+cleared;</li>
+<li>unclosed resources holding buffers.</li>
+</ul>
+<h2 id="6-tools-you-should-be-able-to-use">6. Tools you should be able
+to use</h2>
+<pre class="bash"><code>jcmd                                   # list running JVMs and their process IDs
+jcmd &lt;pid&gt; VM.flags                    # the effective JVM flags (which GC? which heap size?)
+jcmd &lt;pid&gt; GC.heap_info                # current heap usage
+jcmd &lt;pid&gt; Thread.print                # thread dump (deadlocks, stuck threads)
+jcmd &lt;pid&gt; GC.heap_dump /tmp/heap.hprof    # heap dump for leak analysis
+jstat -gcutil &lt;pid&gt; 1000               # GC statistics every second
+java -Xlog:gc*:file=gc.log:time,uptime,level,tags -jar app.jar   # unified GC logging
+java -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/dumps -jar app.jar   # automatic dump on OOM
+jcmd &lt;pid&gt; JFR.start duration=60s filename=rec.jfr   # Java Flight Recorder: low-overhead profiling</code></pre>
+<p>Open heap dumps in <strong>Eclipse Memory Analyzer (MAT)</strong> or
+IntelliJ's profiler and look at the "dominator tree": which objects
+retain the most memory. Open JFR recordings in <strong>JDK Mission
+Control</strong>. Module 13 goes deeper; in Phase 1 you need to know
+these exist and run them once.</p>
+<p>A GC log line from G1 looks like:</p>
+<pre class="text"><code>[12.345s][info][gc] GC(42) Pause Young (Normal) (G1 Evacuation Pause) 812M-&gt;204M(1024M) 18.3ms</code></pre>
+<p>Read it as: the 42nd collection, a young pause, heap went from 812 MB
+used to 204 MB used out of 1024 MB committed, and the application was
+paused for 18.3 ms. If the number after the arrow keeps rising across
+collections, live data is growing.</p>
+<h2 id="worked-example-an-unbounded-cache">Worked example: an unbounded
+cache</h2>
+<pre class="java"><code>@Service
+public class FxRateService {
+    private static final Map&lt;String, BigDecimal&gt; CACHE = new HashMap&lt;&gt;();   // grows forever
+
+    public BigDecimal rate(String base, String quote, LocalDate date) {
+        return CACHE.computeIfAbsent(base + quote + date, k -&gt; provider.fetch(base, quote, date));
+    }
+}</code></pre>
+<p>Every distinct date adds an entry and nothing ever leaves. After
+months in production, <code>heap after GC</code> creeps upward, full GCs
+become frequent, latency degrades, and eventually
+<code>OutOfMemoryError</code>. A heap dump shows
+<code>HashMap$Node[]</code> dominating, held by
+<code>FxRateService.CACHE</code>. Fixes: a bounded cache with expiry
+(Caffeine's <code>maximumSize</code> and <code>expireAfterWrite</code>),
+or Redis with a TTL. And <code>HashMap</code> here is also not
+thread-safe (topic 2.2).</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Setting <code>-Xmx</code> equal to the container limit, leaving no
+room for native memory.</li>
+<li>Assuming the default heap uses most of the container (it uses
+25%).</li>
+<li>Switching collectors without measuring.</li>
+<li>Calling <code>System.gc()</code> in application code.</li>
+<li>Unbounded static caches and collections.</li>
+<li>Benchmarking without warm-up.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Run any Spring Boot or plain Java app, find it with
+<code>jcmd</code>, and print its flags. Which GC is it using, and what
+is the max heap? Run it again in Docker with <code>--memory=512m</code>
+and compare.</li>
+<li>Write a program that adds 1 KB byte arrays to a static list forever,
+run it with <code>-Xmx128m -XX:+HeapDumpOnOutOfMemoryError</code>, and
+open the dump in Eclipse MAT. Find the leak in the dominator tree.</li>
+<li>Run the same allocation-heavy program with G1, Parallel and ZGC and
+<code>-Xlog:gc</code>. Compare total runtime and the longest pause.</li>
+<li>Write a recursive function without a base case, read the
+<code>StackOverflowError</code> trace, then fix it with a loop.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Class loader, bytecode verification, interpreter, JIT, C1/C2,
+warm-up, stack, frame, heap, metaspace, code cache, native memory, GC
+roots, reachability, generational hypothesis, Eden, survivor, old
+generation, minor/major collection, stop-the-world, G1, ZGC, Parallel,
+Serial, <code>MaxRAMPercentage</code>, container awareness,
+<code>OOMKilled</code>, memory leak, heap dump, JFR,
+<code>jcmd</code>.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://docs.oracle.com/en/java/javase/21/gctuning/introduction-garbage-collection-tuning.html">Oracle:
+Java Garbage Collection Tuning Guide (Java 21)</a></li>
+<li><a
+href="https://docs.oracle.com/en/java/javase/21/troubleshoot/troubleshooting-memory-leaks.html">Oracle:
+Troubleshooting Guide, memory leaks (Java 21)</a></li>
+<li><a
+href="https://docs.oracle.com/en/java/javase/21/docs/specs/man/jcmd.html"><code>jcmd</code>
+reference (Java 21)</a></li>
+<li><a href="https://openjdk.org/jeps/439">JEP 439: Generational
+ZGC</a></li>
+<li><a href="https://eclipse.dev/mat/">Eclipse Memory Analyzer
+(MAT)</a></li>
+<li><a
+href="https://docs.oracle.com/en/java/javase/21/docs/specs/man/java.html">Oracle:
+The java command (heap and GC options)</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Stack vs Heap Memory - Simple Explanation</h3><p>Alex Hyett · 6 min. Stack vs heap memory in five minutes.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/5OJRqkYbK-4" title="Stack vs Heap Memory - Simple Explanation" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Java&#x27;s Garbage Collection Explained - How It Saves your Lazy Programmer Butt</h3><p>Coding with John · 9 min. How Java&#x27;s garbage collector finds and frees unreachable objects.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/Mlbyft_MFYM" title="Java&#x27;s Garbage Collection Explained - How It Saves your Lazy Programmer Butt" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Garbage Collection in Java | What is GC and How does it Work in the JVM? | Types of GCs | Geekific</h3><p>Geekific · 11 min. Generational collection and the main collectors: Serial, Parallel, G1, ZGC.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/XXOaCV5xm9s" title="Garbage Collection in Java | What is GC and How does it Work in the JVM? | Types of GCs | Geekific" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/02-concurrency-jvm/2.4-jvm-memory-gc/README.md">2.4 The JVM memory model, heap vs stack and garbage collection</a></p>

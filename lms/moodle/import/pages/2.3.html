@@ -1,0 +1,323 @@
+<p><em>Week 6 · Module 2: Concurrency &amp; the JVM</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Explain how virtual threads differ from platform threads, and why
+they make blocking I/O cheap.</li>
+<li>Create virtual threads and use a virtual-thread-per-task
+executor.</li>
+<li>Recognise when virtual threads help (I/O-bound concurrency) and when
+they don't (CPU-bound work, pooled resources).</li>
+<li>Explain pinning, and why <code>ThreadLocal</code> and pooling habits
+need rethinking.</li>
+<li>Describe structured concurrency and scoped values, and read code
+that uses <code>StructuredTaskScope</code>.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>A typical payments service spends 90% of each request waiting: on the
+database, the card switch, a fraud API, a notification provider. With
+classic thread-per-request servers, each waiting request holds an
+expensive operating-system thread, so a server tops out at a few hundred
+concurrent requests and teams reach for complex reactive frameworks to
+go further. Java 21's virtual threads let the same simple, blocking code
+handle tens of thousands of concurrent requests. Lagos fintech job ads
+now mention them by name, and Spring Boot turns them on with one
+property.</p>
+<h2 id="1-the-problem-virtual-threads-solve">1. The problem virtual
+threads solve</h2>
+<p>A <strong>platform thread</strong> is a thin wrapper around an
+operating-system thread. OS threads are expensive: each reserves a large
+stack (often around 1 MB), is scheduled by the OS kernel, and costs
+microseconds to switch. A server can comfortably run a few thousand at
+most.</p>
+<p>In a thread-per-request server, a request that waits 200 ms for the
+database still occupies its thread for those 200 ms. With a pool of 200
+threads, the 201st concurrent request waits in a queue even though the
+CPU is idle. Teams worked around this in two ways: bigger pools (more
+memory, more context switching) or <strong>reactive programming</strong>
+(WebFlux, <code>CompletableFuture</code> chains), which avoids blocking
+but makes code harder to write, read, debug and profile.</p>
+<h2 id="2-what-a-virtual-thread-is">2. What a virtual thread is</h2>
+<p>A <strong>virtual thread</strong> (JEP 444, final in Java 21) is a
+<code>java.lang.Thread</code> managed by the JVM rather than the OS.
+Many virtual threads are scheduled onto a small pool of platform threads
+called <strong>carrier threads</strong> (a <code>ForkJoinPool</code>
+with about one carrier per core).</p>
+<p>When a virtual thread performs a blocking operation (socket read,
+<code>Thread.sleep</code>, a <code>BlockingQueue.take</code>, a JDBC
+call over the network), the JVM <strong>unmounts</strong> it: its stack
+is saved to the heap and the carrier is freed to run another virtual
+thread. When the I/O completes, the virtual thread is
+<strong>mounted</strong> again, possibly on a different carrier, and
+continues as if nothing happened.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Platform thread</th>
+<th>Virtual thread</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Managed by</td>
+<td>Operating system</td>
+<td>JVM</td>
+</tr>
+<tr>
+<td>Memory</td>
+<td>~1 MB reserved stack</td>
+<td>Small; stack grows on the heap as needed</td>
+</tr>
+<tr>
+<td>Creation cost</td>
+<td>High</td>
+<td>Very low (like creating an object)</td>
+</tr>
+<tr>
+<td>Practical count per JVM</td>
+<td>Thousands</td>
+<td>Millions</td>
+</tr>
+<tr>
+<td>Blocking I/O</td>
+<td>Holds the OS thread</td>
+<td>Releases the carrier</td>
+</tr>
+<tr>
+<td>Best for</td>
+<td>CPU-bound work, long-running background loops</td>
+<td>Many concurrent, mostly-waiting tasks</td>
+</tr>
+<tr>
+<td>Pool them?</td>
+<td>Yes</td>
+<td><strong>No</strong>: create one per task</td>
+</tr>
+</tbody>
+</table>
+<p>Your code does not change: it still blocks, still uses try/catch,
+still reads top to bottom, and stack traces and debuggers work normally.
+That is the point.</p>
+<h2 id="3-creating-virtual-threads">3. Creating virtual threads</h2>
+<pre class="java"><code>Thread vt = Thread.ofVirtual().name(&quot;payment-&quot;, 0).start(() -&gt; processPayment(p));
+Thread.startVirtualThread(() -&gt; sendSms(msg));
+
+try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
+    for (Payment p : payments) {
+        executor.submit(() -&gt; processPayment(p));     // one new virtual thread per task
+    }
+}   // close() waits for all submitted tasks to finish</code></pre>
+<p>A classic demonstration:</p>
+<pre class="java"><code>try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+    IntStream.range(0, 100_000).forEach(i -&gt;
+            executor.submit(() -&gt; {
+                Thread.sleep(Duration.ofSeconds(1));   // simulate a 1 s downstream call
+                return i;
+            }));
+}
+// Finishes in about 1 second. With a 200-thread platform pool it would take about 500 seconds.</code></pre>
+<h3 id="in-spring-boot">In Spring Boot</h3>
+<p>One property switches Tomcat's request handling, <code>@Async</code>
+tasks and several other executors to virtual threads:</p>
+<pre class="properties"><code>spring.threads.virtual.enabled=true</code></pre>
+<p>You will turn it on in Module 4 and measure the difference.</p>
+<h2 id="4-when-virtual-threads-help-and-when-they-dont">4. When virtual
+threads help, and when they don't</h2>
+<p>Virtual threads increase <strong>throughput</strong> for workloads
+with <strong>many concurrent tasks that spend most of their time
+blocked</strong>. They do not make any single task faster, and they do
+nothing for CPU-bound work: if 10,000 virtual threads all calculate
+interest, they still share the same 8 cores.</p>
+<p><strong>Downstream limits still apply.</strong> Ten thousand virtual
+threads calling a database with a connection pool of 20 will still have
+only 20 queries running; the rest wait for a connection. That is fine
+(waiting is now cheap), but it means:</p>
+<ul>
+<li>Do not use the thread count to limit concurrency to a downstream
+system. Use a <code>Semaphore</code> (topic 2.2) or the connection
+pool.</li>
+<li>Size connection pools for what the database can handle, not for the
+number of threads.</li>
+</ul>
+<h2 id="5-things-that-change-in-how-you-write-code">5. Things that
+change in how you write code</h2>
+<h3 id="dont-pool-virtual-threads">Don't pool virtual threads</h3>
+<p>Pools exist because platform threads are expensive. Virtual threads
+are cheap, so create one per task and let it die. A "pool of virtual
+threads" adds nothing but complexity.</p>
+<h3 id="pinning">Pinning</h3>
+<p>In some situations a virtual thread cannot unmount while blocked and
+keeps its carrier busy; this is called <strong>pinning</strong>. In Java
+21, the main cause was blocking inside a <code>synchronized</code> block
+or method. With only a handful of carriers, a few pinned threads could
+stall the whole application. Since <strong>Java 24 (JEP 491)</strong>,
+<code>synchronized</code> no longer pins, so on Java 25 this is largely
+solved. Blocking inside native code (JNI) still pins.</p>
+<p>What this means in practice:</p>
+<ul>
+<li>On <strong>Java 21</strong>, prefer <code>ReentrantLock</code> over
+<code>synchronized</code> around blocking I/O in hot paths, and upgrade
+drivers and libraries to versions that already do this. You can detect
+pinning with JDK Flight Recorder (<code>jdk.VirtualThreadPinned</code>
+events).</li>
+<li>On <strong>Java 24+</strong>, <code>synchronized</code> is fine
+again.</li>
+</ul>
+<h3 id="threadlocal-with-care"><code>ThreadLocal</code> with care</h3>
+<p><code>ThreadLocal</code> gives each thread its own copy of a value.
+With platform-thread pools it was often used as a per-thread cache (for
+example, a <code>SimpleDateFormat</code> per thread). With millions of
+short-lived virtual threads, such caches are recreated constantly and
+waste memory. Use immutable shared objects instead (such as
+<code>DateTimeFormatter</code>), and keep <code>ThreadLocal</code> for
+genuine per-request context. For that use case, <strong>scoped
+values</strong> are the modern replacement.</p>
+<h3 id="scoped-values">Scoped values</h3>
+<p>A <code>ScopedValue</code> (final in Java 25, preview in 21–24)
+carries an immutable value through a call chain, visible to everything
+called within a scope and automatically gone afterwards:</p>
+<pre class="java"><code>static final ScopedValue&lt;String&gt; CORRELATION_ID = ScopedValue.newInstance();
+
+ScopedValue.where(CORRELATION_ID, request.header(&quot;X-Correlation-Id&quot;))
+        .run(() -&gt; transferService.transfer(request));   // any code inside can read CORRELATION_ID.get()</code></pre>
+<p>Unlike <code>ThreadLocal</code>, it cannot be modified by the code
+that reads it, cannot leak past the scope, and is cheap to inherit by
+child tasks.</p>
+<h2 id="6-structured-concurrency">6. Structured concurrency</h2>
+<p>With <code>ExecutorService</code> and <code>CompletableFuture</code>,
+subtasks are not tied to the code that started them. If one of three
+parallel calls fails, the other two keep running (wasting resources),
+and if the parent is cancelled, its children may never find out. Errors
+and cancellation are easy to get wrong.</p>
+<p><strong>Structured concurrency</strong> applies the idea of
+structured programming to concurrency: subtasks started in a block must
+finish before the block exits, just as a method call finishes before the
+next line runs. Failures and cancellation propagate automatically.</p>
+<p>Java's API is <code>StructuredTaskScope</code>. It has been a
+<strong>preview API</strong> since Java 21 and was redesigned in Java 25
+(JEP 505); at the time of writing it is still in preview, so you must
+compile and run with <code>--enable-preview</code>, and the API may
+change before it becomes final. Read it to understand the idea; check
+the JEP for your JDK version before using it in production.</p>
+<p><strong>Java 25 style:</strong></p>
+<pre class="java"><code>// compile/run with: --release 25 --enable-preview
+Dashboard load(String customerId) throws InterruptedException {
+    try (var scope = StructuredTaskScope.open()) {            // default: all must succeed
+        Subtask&lt;Account&gt; account = scope.fork(() -&gt; core.account(customerId));
+        Subtask&lt;Integer&gt; score   = scope.fork(() -&gt; fraud.score(customerId));
+        Subtask&lt;Integer&gt; points  = scope.fork(() -&gt; loyalty.points(customerId));
+
+        scope.join();     // waits for all; if any fails, cancels the others and throws
+        return new Dashboard(account.get(), score.get(), points.get());
+    }
+}</code></pre>
+<p><strong>Java 21 style</strong> (the first preview, which you will
+still meet in articles and code):</p>
+<pre class="java"><code>try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
+    Subtask&lt;Account&gt; account = scope.fork(() -&gt; core.account(customerId));
+    Subtask&lt;Integer&gt; score = scope.fork(() -&gt; fraud.score(customerId));
+    scope.join().throwIfFailed();
+    return new Dashboard(account.get(), score.get());
+}</code></pre>
+<p>Each <code>fork</code> runs in its own virtual thread. Compared with
+the <code>CompletableFuture</code> version in topic 2.1, the code is
+sequential-looking, failures cancel sibling tasks, nothing outlives the
+block, and thread dumps show the parent–child relationship. Other
+policies ("return the first successful result", for example to query two
+FX-rate providers and use whichever answers first) are available as
+<em>joiners</em> in Java 25.</p>
+<p>Until it is final, the production-ready options on Java 21 are
+<code>CompletableFuture</code> with a virtual-thread executor, or a
+virtual-thread-per-task executor with <code>invokeAll</code>.</p>
+<h2 id="worked-example-a-webhook-dispatcher">Worked example: a webhook
+dispatcher</h2>
+<p>A payment processor must notify 5,000 merchants of settlement
+results. Each webhook call takes 100 ms to 3 s, and some merchants are
+down.</p>
+<pre class="java"><code>public DispatchReport dispatch(List&lt;Webhook&gt; hooks) {
+    var limiter = new Semaphore(500);                  // protect our outbound network and partners
+    var ok = new LongAdder();
+    var failed = new ConcurrentLinkedQueue&lt;String&gt;();
+
+    try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+        for (Webhook hook : hooks) {
+            executor.submit(() -&gt; {
+                limiter.acquire();
+                try {
+                    http.post(hook.url(), hook.payload(), Duration.ofSeconds(5));   // plain blocking call
+                    ok.increment();
+                } catch (Exception e) {
+                    failed.add(hook.merchantId());
+                } finally {
+                    limiter.release();
+                }
+                return null;
+            });
+        }
+    }
+    return new DispatchReport(ok.sum(), List.copyOf(failed));
+}</code></pre>
+<p>Simple blocking code, 5,000 concurrent tasks, at most 500 in flight,
+no thread pool tuning, and failures collected for a retry run. With a
+50-thread platform pool, the same job would take minutes longer.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Expecting virtual threads to speed up CPU-bound work.</li>
+<li>Pooling virtual threads, or limiting concurrency by pool size
+instead of a semaphore.</li>
+<li>Long blocking calls inside <code>synchronized</code> on Java 21
+(pinning).</li>
+<li>Per-thread caches in <code>ThreadLocal</code>.</li>
+<li>Using preview APIs (structured concurrency) in production without
+<code>--enable-preview</code> awareness and a plan for API changes.</li>
+<li>Raising the database connection pool to thousands because "threads
+are cheap now".</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Run the 100,000-sleeps demo with
+<code>newVirtualThreadPerTaskExecutor()</code> and with
+<code>newFixedThreadPool(200)</code>. Record both times and explain
+them.</li>
+<li>Rewrite the dashboard from topic 2.1 with a virtual-thread executor
+and <code>CompletableFuture</code>, then (on a Java 25 JDK with
+<code>--enable-preview</code>) with <code>StructuredTaskScope</code>.
+Make one service fail and compare what happens to the others.</li>
+<li>On Java 21, write a method that sleeps inside
+<code>synchronized</code> and run 1,000 of them on virtual threads with
+<code>-Djdk.tracePinnedThreads=full</code> (Java 21–23) or JFR's
+<code>jdk.VirtualThreadPinned</code> event. Then replace
+<code>synchronized</code> with <code>ReentrantLock</code> and
+compare.</li>
+<li>Build the webhook dispatcher against a local fake server (for
+example a tiny HTTP server that sleeps randomly) and show that no more
+than 500 requests are in flight.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Platform thread, virtual thread, carrier thread, mount/unmount,
+throughput vs latency, pinning,
+<code>newVirtualThreadPerTaskExecutor</code>,
+<code>spring.threads.virtual.enabled</code>, <code>ThreadLocal</code>,
+scoped value, structured concurrency, <code>StructuredTaskScope</code>,
+subtask, joiner, preview feature.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a href="https://openjdk.org/jeps/444">JEP 444: Virtual
+Threads</a></li>
+<li><a
+href="https://docs.oracle.com/en/java/javase/21/core/virtual-threads.html">Oracle:
+Virtual Threads guide (Java 21)</a></li>
+<li><a href="https://openjdk.org/jeps/491">JEP 491: Synchronize Virtual
+Threads without Pinning</a></li>
+<li><a href="https://openjdk.org/jeps/505">JEP 505: Structured
+Concurrency (Fifth Preview)</a></li>
+<li><a href="https://openjdk.org/jeps/506">JEP 506: Scoped
+Values</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Java Threads vs Virtual Threads | Why This Changes Everything</h3><p>ByteMonk · 8 min. Platform threads vs virtual threads, with a clear mental model of carrier threads.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/0NtIcbSsjBc" title="Java Threads vs Virtual Threads | Why This Changes Everything" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Java Virtual Threads</h3><p>Jakob Jenkov · 9 min. Creating and running virtual threads in code.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/kirhhcFAGB4" title="Java Virtual Threads" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Structured Concurrency Revamp in Java 25 - Inside Java Newscast #91</h3><p>Java · 9 min. The Java team on the redesigned structured-concurrency API in Java 25.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/vLJDPmXufQw" title="Structured Concurrency Revamp in Java 25 - Inside Java Newscast #91" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/02-concurrency-jvm/2.3-virtual-threads-structured-concurrency/README.md">2.3 Virtual threads (Project Loom) and structured concurrency</a></p>

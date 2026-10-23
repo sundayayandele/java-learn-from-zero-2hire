@@ -1,0 +1,486 @@
+<p><em>Week 1 · Module 1: Modern Java &amp; OOP Foundations</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Install a Java 21 JDK and explain the difference between the JDK,
+the JRE and the JVM.</li>
+<li>Compile and run Java from the terminal, and from IntelliJ IDEA.</li>
+<li>Read and edit a Maven <code>pom.xml</code> and a Gradle
+<code>build.gradle.kts</code>, and run the standard build lifecycle with
+the wrapper scripts.</li>
+<li>Move around a Linux machine confidently from the command line:
+files, permissions, processes, environment variables, pipes and remote
+login.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Every backend engineer's day starts in three places: the IDE, the
+build tool and a terminal. In a bank you will build code on a CI server
+you never see, deploy it to Linux machines you reach only over SSH, and
+debug it from log files with <code>grep</code> and <code>tail</code>.
+Interviewers rarely ask "what is Maven?", but they notice within minutes
+if you cannot run a build, read a dependency tree or find a log line.
+This topic gives you those reflexes before you write any real code.</p>
+<h2 id="1-the-jdk-the-jre-and-the-jvm">1. The JDK, the JRE and the
+JVM</h2>
+<p>Java source code (<code>.java</code> files) is compiled by
+<code>javac</code> into <strong>bytecode</strong> (<code>.class</code>
+files). Bytecode is not machine code; it runs on the <strong>Java
+Virtual Machine (JVM)</strong>, which translates it to machine code for
+whatever operating system and CPU it is running on. That is the "write
+once, run anywhere" promise: the same <code>.jar</code> runs on your
+Mac, a Windows laptop and a Linux server in a data centre.</p>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>What it is</th>
+<th>You need it to...</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>JVM</strong></td>
+<td>The engine that loads, verifies, interprets and JIT-compiles
+bytecode, and manages memory</td>
+<td>Run any Java program</td>
+</tr>
+<tr>
+<td><strong>JRE</strong></td>
+<td>The JVM plus the standard class library</td>
+<td>Run programs (historical term; modern JDKs no longer ship a separate
+JRE)</td>
+</tr>
+<tr>
+<td><strong>JDK</strong></td>
+<td>The JRE plus developer tools: <code>javac</code>, <code>jar</code>,
+<code>jshell</code>, <code>jdeps</code>, <code>jcmd</code>,
+<code>jfr</code></td>
+<td>Build programs. <strong>This is what you install.</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Java ships a new version every six months. Every two years one of
+them is a <strong>Long-Term Support (LTS)</strong> release that vendors
+patch for many years: 8, 11, 17, 21 and 25. Banks standardise on LTS
+releases. This programme uses <strong>Java 21</strong> as the baseline,
+because most new enterprise services run on it, and points out where
+Java 25 adds something useful.</p>
+<p>The JDK itself is open source (OpenJDK). Several vendors build and
+support it. <strong>Eclipse Temurin</strong> (from the Adoptium project)
+is free, TCK-certified and the default choice for most teams; Amazon
+Corretto, Microsoft Build of OpenJDK, Azul Zulu and Oracle JDK are
+equivalent for learning purposes.</p>
+<h3 id="installing-java-21">Installing Java 21</h3>
+<p>The cleanest way on macOS, Linux and WSL is <strong>SDKMAN!</strong>,
+which lets you install several JDKs side by side and switch between
+them, which you will need when maintaining older services:</p>
+<pre class="bash"><code>curl -s &quot;https://get.sdkman.io&quot; | bash
+source &quot;$HOME/.sdkman/bin/sdkman-init.sh&quot;
+sdk list java            # find the exact Temurin 21 identifier
+sdk install java 21.0.8-tem   # use the latest 21.x the list shows
+sdk default java 21.0.8-tem
+java -version</code></pre>
+<p>On Windows, use
+<code>winget install EclipseAdoptium.Temurin.21.JDK</code>, or the MSI
+installer from adoptium.net, then open a new terminal. Either way, check
+that <code>java -version</code> and <code>javac -version</code> both
+print 21, and that <code>JAVA_HOME</code> points at the JDK folder:
+build tools and IDEs read it.</p>
+<h3 id="your-first-program-without-an-ide">Your first program, without
+an IDE</h3>
+<pre class="java"><code>// Interest.java
+public class Interest {
+    public static void main(String[] args) {
+        double principal = 250_000.00;   // naira
+        double annualRate = 0.18;        // 18% per year
+        int months = 12;
+        double interest = principal * annualRate * months / 12;
+        System.out.println(&quot;Simple interest for one year: &quot; + interest);
+    }
+}</code></pre>
+<pre class="bash"><code>javac Interest.java     # produces Interest.class
+java Interest           # runs it on the JVM
+java Interest.java      # since Java 11: compile in memory and run a single file
+jshell                  # an interactive Java shell; try 250_000 * 0.18</code></pre>
+<p>Using <code>double</code> for money is a deliberate mistake here. You
+will see why and fix it with <code>BigDecimal</code> in topic 1.2.</p>
+<h2 id="2-intellij-idea">2. IntelliJ IDEA</h2>
+<p>IntelliJ IDEA is the IDE most Java teams use. The free edition covers
+everything in Phases 1 and 2; the paid Ultimate tier adds deeper Spring
+and database tooling that you can live without. Install it with the
+JetBrains Toolbox app so updates are painless.</p>
+<p>The habits that matter from day one:</p>
+<ul>
+<li><strong>Open the project folder, not a single file.</strong>
+IntelliJ detects <code>pom.xml</code> or <code>build.gradle.kts</code>
+and imports the project. If it does not, right-click the build file and
+choose <em>Add as Maven/Gradle project</em>.</li>
+<li><strong>Set the Project SDK</strong> (<em>File → Project Structure →
+Project</em>) to your Java 21 JDK.</li>
+<li><strong>Learn five shortcuts</strong>: search everywhere (double
+Shift), find action (Cmd/Ctrl+Shift+A), go to definition (Cmd/Ctrl+B),
+rename (Shift+F6) and reformat (Cmd/Ctrl+Alt+L). Refactoring with the
+IDE is safer than editing by hand because it updates every
+reference.</li>
+<li><strong>Use the debugger, not <code>println</code>.</strong> Click
+in the gutter to set a breakpoint, run with <em>Debug</em>, then step
+over (F8), step into (F7) and inspect variables. Five minutes with the
+debugger often saves an hour of guessing.</li>
+<li><strong>Run builds the way CI does.</strong> The IDE's green "build"
+button is not your source of truth; <code>./mvnw verify</code> in the
+terminal is, because that is what the pipeline runs.</li>
+</ul>
+<h2 id="3-maven">3. Maven</h2>
+<p>Maven is the most common build tool in enterprise Java. It does four
+jobs: downloads dependencies, compiles code, runs tests and packages the
+result, all driven by one declarative file, <code>pom.xml</code>
+(Project Object Model).</p>
+<h3 id="coordinates-and-the-standard-layout">Coordinates and the
+standard layout</h3>
+<p>Every artifact has coordinates, usually written
+<code>groupId:artifactId:version</code> (GAV), for example
+<code>org.postgresql:postgresql:42.7.14</code>. Your own project has
+coordinates too:</p>
+<pre class="xml"><code>&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot;&gt;
+  &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+  &lt;groupId&gt;ng.itlearning.bank&lt;/groupId&gt;
+  &lt;artifactId&gt;interest-calculator&lt;/artifactId&gt;
+  &lt;version&gt;0.1.0-SNAPSHOT&lt;/version&gt;
+
+  &lt;properties&gt;
+    &lt;maven.compiler.release&gt;21&lt;/maven.compiler.release&gt;
+    &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+  &lt;/properties&gt;
+
+  &lt;dependencies&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;org.junit.jupiter&lt;/groupId&gt;
+      &lt;artifactId&gt;junit-jupiter&lt;/artifactId&gt;
+      &lt;version&gt;6.1.3&lt;/version&gt;
+      &lt;scope&gt;test&lt;/scope&gt;
+    &lt;/dependency&gt;
+  &lt;/dependencies&gt;
+&lt;/project&gt;</code></pre>
+<p>Maven expects a fixed folder layout, and following it means zero
+configuration:</p>
+<pre class="text"><code>interest-calculator/
+├── pom.xml
+├── mvnw, mvnw.cmd, .mvn/        &lt;- the Maven Wrapper (commit these)
+└── src/
+    ├── main/java/ng/itlearning/bank/...    production code
+    ├── main/resources/                      config files
+    └── test/java/ng/itlearning/bank/...    tests</code></pre>
+<p><code>SNAPSHOT</code> versions are "work in progress" and may change;
+release versions (<code>1.0.0</code>) must never change once
+published.</p>
+<h3 id="the-lifecycle">The lifecycle</h3>
+<p>Maven runs <strong>phases</strong> in order. Asking for a later phase
+runs every earlier one:</p>
+<p><code>validate → compile → test → package → verify → install → deploy</code></p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>What happens</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>./mvnw compile</code></td>
+<td>Compiles <code>src/main/java</code></td>
+</tr>
+<tr>
+<td><code>./mvnw test</code></td>
+<td>Compiles, then runs unit tests</td>
+</tr>
+<tr>
+<td><code>./mvnw package</code></td>
+<td>...then builds
+<code>target/interest-calculator-0.1.0-SNAPSHOT.jar</code></td>
+</tr>
+<tr>
+<td><code>./mvnw verify</code></td>
+<td>...then runs integration tests and checks. <strong>This is what CI
+runs.</strong></td>
+</tr>
+<tr>
+<td><code>./mvnw install</code></td>
+<td>...then copies the jar to your local repository
+<code>~/.m2/repository</code></td>
+</tr>
+<tr>
+<td><code>./mvnw clean verify</code></td>
+<td>Deletes <code>target/</code> first, for a clean build</td>
+</tr>
+</tbody>
+</table>
+<h3 id="dependency-scopes-and-the-dependency-tree">Dependency scopes and
+the dependency tree</h3>
+<table>
+<thead>
+<tr>
+<th>Scope</th>
+<th>On the compile classpath</th>
+<th>In tests</th>
+<th>Packaged at runtime</th>
+<th>Typical example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>compile</code> (default)</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+<td>Spring, Jackson</td>
+</tr>
+<tr>
+<td><code>provided</code></td>
+<td>yes</td>
+<td>yes</td>
+<td>no</td>
+<td>Servlet API inside an app server</td>
+</tr>
+<tr>
+<td><code>runtime</code></td>
+<td>no</td>
+<td>yes</td>
+<td>yes</td>
+<td>JDBC driver</td>
+</tr>
+<tr>
+<td><code>test</code></td>
+<td>no</td>
+<td>yes</td>
+<td>no</td>
+<td>JUnit, Mockito, Testcontainers</td>
+</tr>
+</tbody>
+</table>
+<p>Dependencies bring their own dependencies (transitive dependencies).
+When two libraries want different versions of the same jar, Maven picks
+the one <strong>nearest</strong> to your project in the tree.
+<code>./mvnw dependency:tree</code> shows you the tree; it is the first
+command to run when you see <code>NoSuchMethodError</code> or
+<code>ClassNotFoundException</code> after adding a library. Spring
+Boot's parent POM (Module 4) manages hundreds of versions for you so
+these conflicts are rare.</p>
+<h3 id="the-maven-wrapper">The Maven Wrapper</h3>
+<p><code>mvnw</code> is a small script committed to the repository that
+downloads and runs the exact Maven version the project expects.
+Everybody, including the CI runner, builds with the same Maven.
+<strong>Always run <code>./mvnw</code>, never a globally installed
+<code>mvn</code>.</strong> Generate it once with
+<code>mvn wrapper:wrapper</code> (or it comes with every project from
+start.spring.io).</p>
+<h2 id="4-gradle">4. Gradle</h2>
+<p>Gradle is the other major build tool; Android and many newer services
+use it. Instead of XML it uses a script, preferably in Kotlin
+(<code>build.gradle.kts</code>):</p>
+<pre class="kotlin"><code>plugins {
+    java
+    application
+}
+
+group = &quot;ng.itlearning.bank&quot;
+version = &quot;0.1.0-SNAPSHOT&quot;
+
+java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
+
+repositories { mavenCentral() }
+
+dependencies {
+    testImplementation(platform(&quot;org.junit:junit-bom:6.1.3&quot;))
+    testImplementation(&quot;org.junit.jupiter:junit-jupiter&quot;)
+    testRuntimeOnly(&quot;org.junit.platform:junit-platform-launcher&quot;)
+}
+
+application { mainClass = &quot;ng.itlearning.bank.Interest&quot; }
+
+tasks.test { useJUnitPlatform() }</code></pre>
+<table>
+<thead>
+<tr>
+<th>Maven</th>
+<th>Gradle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pom.xml</code></td>
+<td><code>build.gradle.kts</code> +
+<code>settings.gradle.kts</code></td>
+</tr>
+<tr>
+<td><code>./mvnw verify</code></td>
+<td><code>./gradlew build</code></td>
+</tr>
+<tr>
+<td><code>./mvnw test</code></td>
+<td><code>./gradlew test</code></td>
+</tr>
+<tr>
+<td><code>compile</code> / <code>runtime</code> / <code>test</code>
+scopes</td>
+<td><code>implementation</code> / <code>runtimeOnly</code> /
+<code>testImplementation</code></td>
+</tr>
+<tr>
+<td><code>./mvnw dependency:tree</code></td>
+<td><code>./gradlew dependencies</code></td>
+</tr>
+<tr>
+<td>Phases (fixed lifecycle)</td>
+<td>Tasks (a graph you can extend)</td>
+</tr>
+<tr>
+<td><code>target/</code></td>
+<td><code>build/</code></td>
+</tr>
+</tbody>
+</table>
+<p>Gradle is faster on large builds because of incremental compilation
+and its build cache; Maven is more predictable and dominant in banks.
+You will use Maven for every project in this programme, and you should
+be able to read and run a Gradle build when you meet one.</p>
+<h2 id="5-the-linux-command-line">5. The Linux command line</h2>
+<p>Production Java runs on Linux. These are the commands you will
+actually use in your first job. On macOS the Terminal is close enough;
+on Windows use WSL 2 with Ubuntu.</p>
+<p><strong>Moving around and looking at files</strong></p>
+<pre class="bash"><code>pwd                         # where am I?
+ls -la                      # list everything, including hidden files, with permissions
+cd /var/log/payments        # absolute path
+cd ..                       # up one level; cd - goes back
+cat application.log         # print a file
+less application.log        # page through it (q to quit, / to search)
+head -n 20 file; tail -n 50 file
+tail -f application.log     # follow a log as it grows: the on-call engineer&#39;s best friend</code></pre>
+<p><strong>Creating, copying and deleting</strong></p>
+<pre class="bash"><code>mkdir -p reports/2026/10    # create nested folders
+cp statement.csv backup/    # copy;  mv to move or rename
+rm old.csv                  # delete. There is no recycle bin.
+rm -r tmp/                  # delete a folder. Read the command twice before pressing Enter.</code></pre>
+<p><strong>Searching and pipes</strong></p>
+<p>The pipe <code>|</code> sends one command's output into the next.
+Combining small tools is the Unix superpower:</p>
+<pre class="bash"><code>grep &quot;ERROR&quot; application.log                       # lines containing ERROR
+grep -c &quot;TransferFailed&quot; application.log           # count them
+grep -rn &quot;jdbc:postgresql&quot; src/                   # search a whole folder, with line numbers
+grep &quot;ERROR&quot; app.log | grep -v &quot;Timeout&quot; | wc -l   # errors that are not timeouts, counted
+cut -d, -f3 transactions.csv | sort | uniq -c | sort -rn | head   # most common values in column 3
+find . -name &quot;*.sql&quot; -mtime -1                     # SQL files changed in the last day</code></pre>
+<p><strong>Permissions</strong></p>
+<p><code>ls -l</code> shows something like <code>-rwxr-x---</code>: the
+owner can read, write and execute, the group can read and execute,
+everyone else has no access. Change them with <code>chmod</code>
+(<code>chmod +x mvnw</code> makes the wrapper executable, a fix you will
+need when a Windows checkout loses the bit) and ownership with
+<code>chown</code>. <code>sudo</code> runs one command as the
+administrator; use it sparingly.</p>
+<p><strong>Processes, ports and the environment</strong></p>
+<pre class="bash"><code>ps aux | grep java          # which Java processes are running?
+top                         # live CPU and memory (or htop if installed)
+kill 12345                  # ask process 12345 to stop; kill -9 forces it (last resort)
+ss -tlnp                    # which ports are listening? Is something already on 8080?
+df -h; free -h              # disk and memory
+echo $JAVA_HOME             # read an environment variable
+export SPRING_PROFILES_ACTIVE=dev   # set one for this shell session</code></pre>
+<p><strong>Remote machines and the network</strong></p>
+<pre class="bash"><code>ssh deploy@203.0.113.10     # log in to a server (key-based auth; never share private keys)
+scp app.jar deploy@203.0.113.10:/opt/app/   # copy a file to it
+curl -s http://localhost:8080/actuator/health  # call an HTTP endpoint</code></pre>
+<p><strong>Redirection</strong>: <code>&gt;</code> writes output to a
+file (overwriting), <code>&gt;&gt;</code> appends,
+<code>2&gt;&amp;1</code> sends errors to the same place.
+<code>./mvnw verify &gt; build.log 2&gt;&amp;1</code> captures a whole
+build for later reading.</p>
+<h2 id="worked-example-a-reproducible-interest-calculator">Worked
+example: a reproducible interest calculator</h2>
+<ol type="1">
+<li><code>mkdir interest-calculator &amp;&amp; cd interest-calculator</code>.</li>
+<li>Create the <code>pom.xml</code> above and
+<code>src/main/java/ng/itlearning/bank/Interest.java</code> with the
+package line <code>package ng.itlearning.bank;</code> at the top.</li>
+<li>Run <code>mvn -N wrapper:wrapper</code> once (needs a global Maven)
+or copy the wrapper from any Spring Boot project, then
+<code>chmod +x mvnw</code>.</li>
+<li><code>./mvnw package</code> and run it:
+<code>java -cp target/interest-calculator-0.1.0-SNAPSHOT.jar ng.itlearning.bank.Interest</code>.</li>
+<li>Open the folder in IntelliJ, set a breakpoint on the
+<code>interest</code> line, and run it in the debugger. Change
+<code>months</code> in the Variables pane and watch the result
+change.</li>
+<li><code>git init</code>, add a <code>.gitignore</code> containing
+<code>target/</code> and <code>.idea/</code>, and commit. The wrapper
+files are committed; the build output is not.</li>
+</ol>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li><strong>Two JDKs fighting.</strong> <code>java -version</code> says
+21 but Maven compiles with 17. Check <code>./mvnw -v</code>, which
+prints the Java it is using, and fix <code>JAVA_HOME</code>.</li>
+<li><strong>Running <code>mvn</code> instead of
+<code>./mvnw</code>.</strong> Works on your laptop, fails on CI with a
+different Maven version.</li>
+<li><strong>Committing <code>target/</code> or
+<code>.idea/</code>.</strong> Generated files cause merge conflicts and
+bloat the repository.</li>
+<li><strong>Editing dependency versions blindly.</strong> Run
+<code>dependency:tree</code> before and after, and read what
+changed.</li>
+<li><strong><code>rm -rf</code> with a variable</strong>:
+<code>rm -rf $DIR/</code> deletes <code>/</code> if <code>DIR</code> is
+empty. Quote variables and double-check.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Install Java 21 and a second JDK (17) with SDKMAN. Switch between
+them with <code>sdk use java ...</code> and prove it with
+<code>java -version</code>.</li>
+<li>Build the interest calculator with Maven, then create the same
+project with Gradle (<code>gradle init</code>, or by hand) and get
+<code>./gradlew run</code> working.</li>
+<li>Download any public CSV (for example the ECB exchange-rate CSV you
+will use in Capstone 2) and use only <code>head</code>,
+<code>cut</code>, <code>sort</code>, <code>uniq</code> and
+<code>grep</code> to answer: how many rows are there, and which date has
+the most entries?</li>
+<li>Add the <code>org.postgresql:postgresql</code> dependency with
+<code>runtime</code> scope to your POM. Run
+<code>./mvnw dependency:tree</code> and explain the output in two
+sentences.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>JDK, JRE, JVM, bytecode, LTS, <code>JAVA_HOME</code>, GAV
+coordinates, lifecycle phase, dependency scope, transitive dependency,
+wrapper, pipe, redirection, file permissions, SSH.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a href="https://adoptium.net/installation/">Adoptium: installing
+Temurin</a></li>
+<li><a
+href="https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html">Maven:
+Introduction to the Build Lifecycle</a></li>
+<li><a
+href="https://docs.gradle.org/current/userguide/building_java_projects.html">Gradle:
+Building Java projects</a></li>
+<li><a
+href="https://www.jetbrains.com/help/idea/getting-started.html">IntelliJ
+IDEA: Getting started</a></li>
+<li><a
+href="https://ubuntu.com/tutorials/command-line-for-beginners">The Linux
+command line for beginners (Ubuntu tutorial)</a></li>
+<li><a
+href="https://dev.java/learn/first-steps/first-java-code/">dev.java
+(Oracle): Getting Started with Java</a></li>
+<li><a href="https://docs.oracle.com/en/java/javase/21/">Oracle: Java SE
+21 documentation home</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Creating your first Java application with IntelliJ IDEA</h3><p>IntelliJ IDEA, a JetBrains IDE · 11 min. JetBrains&#x27; own walkthrough: create, run and debug your first Java project in IntelliJ IDEA.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/V_vXRRydnYI" title="Creating your first Java application with IntelliJ IDEA" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Maven Tutorial - Crash Course</h3><p>Marco Codes · 26 min. Maven from first principles: the pom, coordinates, scopes, lifecycle phases and plugins.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/Xatr8AZLOsE" title="Maven Tutorial - Crash Course" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Gradle Tutorial - Crash Course</h3><p>Marco Codes · 22 min. The same ideas in Gradle, so you can read either build when you join a team.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/gKPMKRnnbXU" title="Gradle Tutorial - Crash Course" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>60 Linux Commands you NEED to know (in 10 minutes)</h3><p>NetworkChuck · 11 min. Sixty everyday Linux commands at speed. Rewatch it with a terminal open and type along.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/gd7BXuUQ91w" title="60 Linux Commands you NEED to know (in 10 minutes)" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/01-modern-java-oop/1.1-tooling-build-linux/README.md">1.1 Your toolkit: JDK, IntelliJ IDEA, Maven, Gradle and the Linux command line</a></p>

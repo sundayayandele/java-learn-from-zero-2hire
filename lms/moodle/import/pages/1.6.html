@@ -1,0 +1,328 @@
+<p><em>Week 3 · Module 1: Modern Java &amp; OOP Foundations</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Model immutable data with <strong>records</strong>, including
+validation in compact constructors.</li>
+<li>Close a type hierarchy with <strong>sealed</strong> classes and
+interfaces.</li>
+<li>Use <strong>pattern matching</strong> for <code>instanceof</code>,
+record patterns and <code>switch</code>, with guards and exhaustiveness
+checks.</li>
+<li>Write multi-line strings with <strong>text blocks</strong>.</li>
+<li>Combine these features into "data-oriented" domain models that the
+compiler checks for you.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Financial domains are full of closed sets of cases: a payment is a
+card payment, a bank transfer or a wallet top-up; a transaction outcome
+is approved, declined or pending review. When a new case is added, every
+place that handles the set must change, and missing one is a production
+bug. Java 21's records, sealed types and pattern matching let the
+compiler find every one of those places for you. Job postings that ask
+for "Java 21+" are asking whether you write code this way.</p>
+<h2 id="1-records">1. Records</h2>
+<p>A record is a class whose purpose is to carry data. You declare the
+components; the compiler generates the constructor, private final
+fields, accessors, <code>equals</code>, <code>hashCode</code> and
+<code>toString</code>.</p>
+<pre class="java"><code>public record Money(BigDecimal amount, Currency currency) { }
+
+Money m = new Money(new BigDecimal(&quot;1500.00&quot;), Currency.getInstance(&quot;NGN&quot;));
+m.amount();       // accessor is amount(), not getAmount()
+m.equals(new Money(new BigDecimal(&quot;1500.00&quot;), Currency.getInstance(&quot;NGN&quot;)));   // true: value equality
+m.toString();     // Money[amount=1500.00, currency=NGN]</code></pre>
+<p>That one line replaces about 50 lines of hand-written class, and it
+cannot get <code>equals</code>/<code>hashCode</code> wrong.</p>
+<h3 id="validation-in-a-compact-constructor">Validation in a compact
+constructor</h3>
+<pre class="java"><code>public record Money(BigDecimal amount, Currency currency) {
+    public Money {                                       // compact constructor: no parameter list
+        Objects.requireNonNull(amount, &quot;amount&quot;);
+        Objects.requireNonNull(currency, &quot;currency&quot;);
+        if (amount.scale() &gt; currency.getDefaultFractionDigits()) {
+            throw new IllegalArgumentException(&quot;Too many decimal places for &quot; + currency);
+        }
+    }
+
+    public static Money naira(String value) {            // static factory
+        return new Money(new BigDecimal(value), Currency.getInstance(&quot;NGN&quot;));
+    }
+
+    public Money plus(Money other) {                     // records can have methods
+        requireSameCurrency(other);
+        return new Money(amount.add(other.amount), currency);   // return a new value
+    }
+
+    private void requireSameCurrency(Money other) {
+        if (!currency.equals(other.currency)) {
+            throw new IllegalArgumentException(currency + &quot; vs &quot; + other.currency);
+        }
+    }
+}</code></pre>
+<p>What records can and cannot do:</p>
+<ul>
+<li>Fields are final; there are no setters. "Changing" a record means
+creating a new one (a "wither" such as <code>withAmount(...)</code> if
+you need it).</li>
+<li>They can have static fields and methods, instance methods, nested
+types, and implement interfaces.</li>
+<li>They cannot extend another class (they implicitly extend
+<code>java.lang.Record</code>) and cannot declare extra instance
+fields.</li>
+<li>Immutability is <strong>shallow</strong>: a record holding a
+<code>List</code> should copy it defensively
+(<code>this.items = List.copyOf(items)</code> in the compact
+constructor).</li>
+</ul>
+<p>Use records for value objects (<code>Money</code>,
+<code>AccountNumber</code>, <code>DateRange</code>), DTOs
+(request/response bodies), events (<code>TransferCompleted</code>) and
+map keys. Do not use them for JPA entities, which need mutable state and
+a no-argument constructor (Module 4).</p>
+<h2 id="2-sealed-classes-and-interfaces">2. Sealed classes and
+interfaces</h2>
+<p>A sealed type lists exactly which classes may extend or implement
+it.</p>
+<pre class="java"><code>public sealed interface PaymentMethod permits Card, BankTransfer, Wallet { }
+
+public record Card(String token, String last4, YearMonth expiry) implements PaymentMethod { }
+public record BankTransfer(String bankCode, String accountNumber) implements PaymentMethod { }
+public record Wallet(String walletId, String provider) implements PaymentMethod { }</code></pre>
+<p>Each permitted subclass must be <code>final</code> (records are),
+<code>sealed</code> (with its own <code>permits</code>), or
+<code>non-sealed</code> (open again for extension). Permitted subclasses
+must live in the same module, or in the same package if you are not
+using modules.</p>
+<p>Sealing does two things. It documents intent: "these are all the
+payment methods, by design". And it lets the compiler <strong>know the
+full list</strong>, which makes exhaustive <code>switch</code>
+possible.</p>
+<p>Inheritance in topic 1.3 was "open": anyone can add a subclass.
+Sealed hierarchies are "closed", and the right choice when the business
+defines a fixed set of variants.</p>
+<h2 id="3-pattern-matching">3. Pattern matching</h2>
+<h3 id="instanceof-patterns-java-16"><code>instanceof</code> patterns
+(Java 16)</h3>
+<pre class="java"><code>// Old style: test, then cast
+if (method instanceof Card) {
+    Card c = (Card) method;
+    charge(c.token());
+}
+
+// Pattern matching: test and bind in one step
+if (method instanceof Card c &amp;&amp; c.expiry().isAfter(YearMonth.now())) {
+    charge(c.token());
+}</code></pre>
+<h3 id="record-patterns-java-21">Record patterns (Java 21)</h3>
+<p>A record pattern takes a record apart into its components, and
+patterns can nest:</p>
+<pre class="java"><code>if (method instanceof BankTransfer(String bankCode, String acct)) {
+    validateNuban(bankCode, acct);
+}
+
+record Transfer(Money amount, PaymentMethod from, PaymentMethod to) { }
+
+if (t instanceof Transfer(Money(var amt, var ccy), Wallet w, BankTransfer b)) {
+    // amt, ccy, w and b are all in scope
+}</code></pre>
+<h3 id="pattern-matching-for-switch-java-21">Pattern matching for
+<code>switch</code> (Java 21)</h3>
+<p><code>switch</code> can now match on types and record shapes, with
+<strong>guards</strong> (<code>when</code>) and full exhaustiveness
+checking:</p>
+<pre class="java"><code>BigDecimal processingFee(PaymentMethod method, Money amount) {
+    return switch (method) {
+        case Card c when c.expiry().isBefore(YearMonth.now()) -&gt;
+                throw new CardExpiredException(c.last4());
+        case Card c -&gt; amount.amount().multiply(new BigDecimal(&quot;0.015&quot;))
+                .min(new BigDecimal(&quot;2000.00&quot;));
+        case BankTransfer(var bank, var acct) when bank.equals(OUR_BANK_CODE) -&gt; BigDecimal.ZERO;
+        case BankTransfer b -&gt; new BigDecimal(&quot;10.75&quot;);
+        case Wallet w -&gt; new BigDecimal(&quot;5.00&quot;);
+    };   // no default: the compiler knows PaymentMethod has exactly these three subtypes
+}</code></pre>
+<p>Now add
+<code>record Ussd(String phone) implements PaymentMethod</code> to the
+<code>permits</code> list. <strong>Every</strong> switch over
+<code>PaymentMethod</code> without a default stops compiling until
+someone decides what the USSD fee is. That is the payoff: a business
+change becomes a compiler-guided checklist instead of a production
+incident.</p>
+<p>Details worth knowing:</p>
+<ul>
+<li>Cases are checked top to bottom. A more specific case
+(<code>Card c when ...</code>) must come before a general one
+(<code>Card c</code>), or the compiler reports it as dominated.</li>
+<li><code>case null -&gt;</code> handles null explicitly; without it, a
+null selector throws <code>NullPointerException</code> as before.</li>
+<li>Adding <code>default</code> switches off exhaustiveness checking for
+future subtypes. Avoid it with sealed hierarchies.</li>
+<li>Java 22 made the unnamed pattern <code>_</code> final
+(<code>case BankTransfer(var bank, _) -&gt; ...</code>); in Java 21 it
+is a preview feature, so name every variable there.</li>
+</ul>
+<h3 id="modelling-outcomes-not-just-inputs">Modelling outcomes, not just
+inputs</h3>
+<p>Sealed records are just as useful for results, replacing booleans and
+error codes:</p>
+<pre class="java"><code>public sealed interface AuthorisationResult
+        permits Approved, Declined, ReferToIssuer { }
+public record Approved(String authCode) implements AuthorisationResult { }
+public record Declined(String reason) implements AuthorisationResult { }
+public record ReferToIssuer(String phone) implements AuthorisationResult { }
+
+String message = switch (authorise(request)) {
+    case Approved a -&gt; &quot;Approved, code &quot; + a.authCode();
+    case Declined d -&gt; &quot;Declined: &quot; + d.reason();
+    case ReferToIssuer r -&gt; &quot;Call your bank on &quot; + r.phone();
+};</code></pre>
+<p>This style, plain data in records plus behaviour in exhaustive
+switches, is often called <strong>data-oriented programming</strong>. It
+complements, rather than replaces, the object-oriented design from topic
+1.3: use polymorphic methods when each subtype owns its behaviour, and
+pattern matching when an operation sits outside the types (reports,
+fees, serialisation).</p>
+<h2 id="4-text-blocks">4. Text blocks</h2>
+<p>Text blocks (Java 15) are multi-line string literals delimited by
+<code>"""</code>. They make embedded SQL, JSON and messages
+readable:</p>
+<pre class="java"><code>String sql = &quot;&quot;&quot;
+        SELECT a.number, a.balance, c.full_name
+        FROM account a
+        JOIN customer c ON c.id = a.customer_id
+        WHERE a.status = &#39;ACTIVE&#39;
+          AND a.balance &lt; ?
+        &quot;&quot;&quot;;
+
+String webhook = &quot;&quot;&quot;
+        {
+          &quot;event&quot;: &quot;transfer.completed&quot;,
+          &quot;reference&quot;: &quot;%s&quot;,
+          &quot;amount&quot;: %s
+        }
+        &quot;&quot;&quot;.formatted(reference, amount);</code></pre>
+<p>Rules:</p>
+<ul>
+<li>The opening <code>"""</code> must be followed by a line break.</li>
+<li>Indentation is stripped up to the leftmost line, <em>including</em>
+the line with the closing <code>"""</code>. Move the closing delimiter
+left to keep indentation in the string.</li>
+<li>A <code>\</code> at the end of a line joins it with the next (no
+newline); <code>\s</code> keeps a trailing space that would otherwise be
+stripped.</li>
+<li>Use <code>.formatted(...)</code> for placeholders.
+<strong>Never</strong> build SQL with string formatting from user input:
+use <code>?</code> parameters (topic 3.5).</li>
+</ul>
+<h2 id="5-other-modern-features-you-will-meet">5. Other modern features
+you will meet</h2>
+<ul>
+<li><strong>Switch expressions</strong> (Java 14): covered in topic
+1.2.</li>
+<li><strong><code>var</code></strong> (Java 10): covered in topic
+1.2.</li>
+<li><strong>Helpful NullPointerExceptions</strong> (Java 14): messages
+now name the null expression, e.g.
+<code>Cannot invoke "Account.balance()" because "acc" is null</code>.</li>
+<li><strong>Sequenced collections</strong> (Java 21): covered in topic
+1.4.</li>
+<li><strong>Virtual threads</strong> (Java 21): Module 2.</li>
+<li>In <strong>Java 25</strong>: unnamed variables and patterns are long
+final, module import declarations
+(<code>import module java.base;</code>), flexible constructor bodies
+(statements before <code>super(...)</code>), compact source files with
+instance <code>main</code> methods for small programs, and primitive
+types in patterns still in preview. None are required for this
+programme, but you should recognise them in newer codebases.</li>
+</ul>
+<h2 id="worked-example-a-fee-engine-with-no-if-chains">Worked example: a
+fee engine with no <code>if</code> chains</h2>
+<pre class="java"><code>public sealed interface Txn permits CardTxn, TransferTxn, AirtimeTxn { Money amount(); }
+public record CardTxn(Money amount, String mcc, boolean international) implements Txn { }
+public record TransferTxn(Money amount, String destinationBank) implements Txn { }
+public record AirtimeTxn(Money amount, String network) implements Txn { }
+
+public final class FeeEngine {
+    private static final BigDecimal CAP = new BigDecimal(&quot;2000.00&quot;);
+
+    public Money fee(Txn txn) {
+        BigDecimal fee = switch (txn) {
+            case CardTxn c when c.international() -&gt; pct(c.amount(), &quot;0.030&quot;);
+            case CardTxn c -&gt; pct(c.amount(), &quot;0.015&quot;).min(CAP);
+            case TransferTxn t when t.amount().amount().compareTo(new BigDecimal(&quot;5000&quot;)) &lt;= 0 -&gt; new BigDecimal(&quot;10.75&quot;);
+            case TransferTxn t when t.amount().amount().compareTo(new BigDecimal(&quot;50000&quot;)) &lt;= 0 -&gt; new BigDecimal(&quot;26.88&quot;);
+            case TransferTxn t -&gt; new BigDecimal(&quot;53.75&quot;);
+            case AirtimeTxn a -&gt; BigDecimal.ZERO;
+        };
+        return new Money(fee.setScale(2, RoundingMode.HALF_EVEN), txn.amount().currency());
+    }
+
+    private static BigDecimal pct(Money m, String rate) {
+        return m.amount().multiply(new BigDecimal(rate));
+    }
+}</code></pre>
+<p>The transfer bands mirror the familiar Nigerian NIP-style fee tiers;
+treat the numbers as illustrative, since each bank publishes its
+own.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Calling <code>money.getAmount()</code>: record accessors have no
+<code>get</code> prefix.</li>
+<li>Assuming records are deeply immutable when they hold mutable lists
+or arrays.</li>
+<li>Putting a <code>default</code> branch in a switch over a sealed
+type, which silently swallows new variants.</li>
+<li>Ordering a general case before a guarded specific one.</li>
+<li>Using records as JPA entities.</li>
+<li>Building SQL from text blocks with
+<code>formatted(userInput)</code>.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Write <code>record AccountNumber(String value)</code> that rejects
+anything but 10 digits, and
+<code>record DateRange(LocalDate from, LocalDate to)</code> that rejects
+<code>from</code> after <code>to</code>. Add
+<code>boolean contains(LocalDate)</code>.</li>
+<li>Model
+<code>sealed interface LoanDecision permits Approved, Rejected, ManualReview</code>
+with sensible components, and write an exhaustive switch that produces
+the customer SMS text.</li>
+<li>Add a fourth <code>Txn</code> type, <code>BillPaymentTxn</code>, to
+the worked example. Note every compile error, fix them, and explain why
+this is better than a runtime failure.</li>
+<li>Rewrite a 15-line JSON string built with <code>+</code> and
+<code>\n</code> as a text block with <code>formatted</code>.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Record, component, compact constructor, canonical constructor, value
+equality, sealed, <code>permits</code>, <code>non-sealed</code>, pattern
+matching, type pattern, record pattern, guard (<code>when</code>),
+exhaustiveness, dominance, data-oriented programming, text block.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a href="https://openjdk.org/jeps/395">JEP 395: Records</a></li>
+<li><a href="https://openjdk.org/jeps/409">JEP 409: Sealed
+Classes</a></li>
+<li><a href="https://openjdk.org/jeps/440">JEP 440: Record
+Patterns</a></li>
+<li><a href="https://openjdk.org/jeps/441">JEP 441: Pattern Matching for
+switch</a></li>
+<li><a href="https://openjdk.org/jeps/378">JEP 378: Text Blocks</a></li>
+<li><a
+href="https://www.infoq.com/articles/data-oriented-programming-java/">Brian
+Goetz: Data-Oriented Programming in Java (InfoQ)</a></li>
+<li><a href="https://dev.java/learn/language/oop/records/">dev.java
+(Oracle): Records</a></li>
+<li><a
+href="https://docs.oracle.com/en/java/javase/21/language/java-language-changes.html">Oracle:
+Java SE 21 language changes</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Records In Java - Full Tutorial - The Best New Java Feature You&#x27;re Not Using</h3><p>Coding with John · 14 min. Records: what they generate for you and when to use them.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/gJ9DYC-jswo" title="Records In Java - Full Tutorial - The Best New Java Feature You&#x27;re Not Using" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Sealed Classes in Java | Java 17 features</h3><p>Telusko · 10 min. Sealed classes and interfaces: closing a type hierarchy on purpose.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/glvYULuaf-k" title="Sealed Classes in Java | Java 17 features" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Java 21 Pattern Matching Tutorial #RoadTo21</h3><p>Java · 23 min. The Java team&#x27;s own tour of pattern matching in Java 21: record patterns and switch.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/QrwFrm1R8OY" title="Java 21 Pattern Matching Tutorial #RoadTo21" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Text Blocks - JEP Café #5</h3><p>Java · 11 min. Text blocks from the Java team: indentation rules, escapes and formatting.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/NDaA9MrTLBM" title="Text Blocks - JEP Café #5" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/01-modern-java-oop/1.6-modern-java-features/README.md">1.6 Modern Java: records, sealed classes, pattern matching for switch and text blocks</a></p>

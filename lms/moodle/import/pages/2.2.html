@@ -1,0 +1,423 @@
+<p><em>Week 5 · Module 2: Concurrency &amp; the JVM</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Recognise race conditions (check-then-act, read-modify-write) and
+reproduce one deliberately.</li>
+<li>Explain visibility, atomicity and ordering, and the "happens-before"
+rule in plain words.</li>
+<li>Protect shared state with <code>synchronized</code>,
+<code>ReentrantLock</code>, <code>ReadWriteLock</code>,
+<code>volatile</code> and atomic classes, and choose between them.</li>
+<li>Use concurrent collections (<code>ConcurrentHashMap</code>,
+<code>CopyOnWriteArrayList</code>, blocking queues) correctly.</li>
+<li>Diagnose and prevent deadlocks, and know when to use semaphores and
+latches.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>The most expensive concurrency bug in finance is the <strong>double
+spend</strong>: two requests withdraw from the same account at the same
+time, both see enough balance, and both succeed. Variants of it include
+lost updates to a daily-limit counter, duplicated webhook processing and
+a reconciliation total that differs every run. These bugs pass every
+unit test and appear only under load, in production, usually on salary
+day. This topic teaches you to see them in code review before they
+ship.</p>
+<h2 id="1-what-a-race-condition-looks-like">1. What a race condition
+looks like</h2>
+<pre class="java"><code>public class Wallet {
+    private BigDecimal balance = new BigDecimal(&quot;1000.00&quot;);
+
+    public boolean withdraw(BigDecimal amount) {
+        if (balance.compareTo(amount) &gt;= 0) {            // 1. check
+            balance = balance.subtract(amount);          // 2. act
+            return true;
+        }
+        return false;
+    }
+}</code></pre>
+<p>Two threads call <code>withdraw(800)</code> at the same moment:</p>
+<table>
+<thead>
+<tr>
+<th>Time</th>
+<th>Thread A</th>
+<th>Thread B</th>
+<th>balance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>t1</td>
+<td>reads 1000, check passes</td>
+<td></td>
+<td>1000</td>
+</tr>
+<tr>
+<td>t2</td>
+<td></td>
+<td>reads 1000, check passes</td>
+<td>1000</td>
+</tr>
+<tr>
+<td>t3</td>
+<td>writes 200</td>
+<td></td>
+<td>200</td>
+</tr>
+<tr>
+<td>t4</td>
+<td></td>
+<td>writes 200</td>
+<td>200</td>
+</tr>
+</tbody>
+</table>
+<p>₦1,600 left the wallet; the balance says ₦800 was withdrawn. This is
+a <strong>check-then-act</strong> race. Its sibling is
+<strong>read-modify-write</strong>: <code>count++</code> is really three
+steps (read, add one, write), so two threads can both read 41 and both
+write 42.</p>
+<p>You can reproduce it reliably:</p>
+<pre class="java"><code>var counter = new int[1];
+try (var pool = Executors.newFixedThreadPool(8)) {
+    for (int i = 0; i &lt; 100_000; i++) pool.submit(() -&gt; counter[0]++);
+}
+System.out.println(counter[0]);   // rarely 100000</code></pre>
+<p>A <strong>critical section</strong> is code that touches shared
+mutable state and must not be interleaved. The fixes below make critical
+sections atomic, or remove the shared mutable state entirely.</p>
+<h2 id="2-the-three-problems-atomicity-visibility-ordering">2. The three
+problems: atomicity, visibility, ordering</h2>
+<ul>
+<li><strong>Atomicity</strong>: an operation happens entirely or not at
+all, from other threads' point of view.</li>
+<li><strong>Visibility</strong>: a write by one thread is seen by
+another. Without synchronisation, a thread may keep reading a stale
+value from a CPU cache or register <em>forever</em>.</li>
+<li><strong>Ordering</strong>: compilers and CPUs reorder instructions
+for speed. Within one thread the result looks the same, but another
+thread can observe the steps in a surprising order.</li>
+</ul>
+<p>The <strong>Java Memory Model (JMM)</strong> defines when one thread
+is guaranteed to see another's writes, through
+<strong>happens-before</strong> relationships. You do not need to
+memorise the formal rules; you need to know which tools create
+happens-before:</p>
+<ul>
+<li>releasing a lock happens-before the next acquisition of the same
+lock;</li>
+<li>a write to a <code>volatile</code> field happens-before every later
+read of it;</li>
+<li><code>Thread.start()</code> happens-before anything in the started
+thread; everything in a thread happens-before another thread's
+<code>join()</code> returns;</li>
+<li>putting an item into a concurrent collection happens-before taking
+it out;</li>
+<li>completing a <code>Future</code> happens-before <code>get()</code>
+returns.</li>
+</ul>
+<p>If shared mutable data is accessed without one of these, you have a
+data race and the behaviour is undefined.</p>
+<h2 id="3-synchronized">3. <code>synchronized</code></h2>
+<p>Every Java object has an intrinsic lock (monitor).
+<code>synchronized</code> acquires it, giving both mutual exclusion and
+visibility:</p>
+<pre class="java"><code>public class Wallet {
+    private BigDecimal balance = new BigDecimal(&quot;1000.00&quot;);
+
+    public synchronized boolean withdraw(BigDecimal amount) {   // locks on `this`
+        if (balance.compareTo(amount) &lt; 0) return false;
+        balance = balance.subtract(amount);
+        return true;
+    }
+
+    public synchronized BigDecimal balance() { return balance; }   // reads must synchronise too
+}</code></pre>
+<p>Or lock on a private object, so outside code cannot interfere with
+your lock:</p>
+<pre class="java"><code>private final Object lock = new Object();
+
+public boolean withdraw(BigDecimal amount) {
+    synchronized (lock) { ... }
+}</code></pre>
+<p>Rules: keep critical sections short; never call slow I/O or unknown
+code while holding a lock; and make <strong>both reads and
+writes</strong> of shared state go through the same lock. A synchronised
+writer with an unsynchronised reader is still broken.</p>
+<p><strong>This only protects one JVM.</strong> A real wallet balance
+lives in a database, and your service runs as several instances. There,
+the database provides the locking (<code>SELECT ... FOR UPDATE</code>,
+optimistic version columns, or a conditional <code>UPDATE</code>), which
+you will learn in topic 3.2. In-memory locks are for in-memory state:
+caches, counters, rate limiters.</p>
+<h2 id="4-explicit-locks-reentrantlock-and-readwritelock">4. Explicit
+locks: <code>ReentrantLock</code> and <code>ReadWriteLock</code></h2>
+<p><code>java.util.concurrent.locks</code> gives you locks with more
+control:</p>
+<pre class="java"><code>private final ReentrantLock lock = new ReentrantLock();
+
+public boolean withdraw(BigDecimal amount) throws InterruptedException {
+    if (!lock.tryLock(200, TimeUnit.MILLISECONDS)) {     // give up instead of waiting forever
+        throw new WalletBusyException(id);
+    }
+    try {
+        if (balance.compareTo(amount) &lt; 0) return false;
+        balance = balance.subtract(amount);
+        return true;
+    } finally {
+        lock.unlock();                                    // ALWAYS in finally
+    }
+}</code></pre>
+<p>Use <code>ReentrantLock</code> when you need <code>tryLock</code>
+with a timeout, interruptible waiting (<code>lockInterruptibly</code>),
+fairness, or several <code>Condition</code>s. Otherwise
+<code>synchronized</code> is simpler and equally fast. (Before Java 24,
+<code>synchronized</code> blocks pinned virtual threads to their
+carrier; topic 2.3 explains why that mattered.)</p>
+<p><code>ReentrantReadWriteLock</code> allows many concurrent readers or
+one writer, which suits data that is read constantly and updated rarely,
+such as an in-memory FX-rate table refreshed every few minutes.
+<code>StampedLock</code> adds optimistic reads for very hot paths.</p>
+<h2 id="5-volatile-and-atomic-classes">5. <code>volatile</code> and
+atomic classes</h2>
+<p><code>volatile</code> guarantees <strong>visibility and
+ordering</strong>, not atomicity. It is right for a flag written by one
+thread and read by others:</p>
+<pre class="java"><code>private volatile boolean shuttingDown = false;
+
+public void stop() { shuttingDown = true; }          // visible to the worker immediately
+public void run() { while (!shuttingDown) { processNext(); } }</code></pre>
+<p><code>volatile int count; count++;</code> is still a race: the
+increment is a read-modify-write.</p>
+<p>The <strong>atomic classes</strong> perform read-modify-write
+operations atomically, without locks, using the CPU's compare-and-swap
+(CAS) instruction:</p>
+<pre class="java"><code>private final AtomicLong processed = new AtomicLong();
+processed.incrementAndGet();
+
+private final AtomicReference&lt;BigDecimal&gt; balance = new AtomicReference&lt;&gt;(new BigDecimal(&quot;1000.00&quot;));
+
+public boolean withdraw(BigDecimal amount) {
+    while (true) {                                       // CAS loop: retry if someone else changed it
+        BigDecimal current = balance.get();
+        if (current.compareTo(amount) &lt; 0) return false;
+        if (balance.compareAndSet(current, current.subtract(amount))) return true;
+    }
+}</code></pre>
+<p>(<code>compareAndSet</code> on an <code>AtomicReference</code>
+compares by reference, which works here because <code>BigDecimal</code>
+values are replaced, never mutated.) <code>updateAndGet</code> and
+<code>accumulateAndGet</code> wrap the loop for you.</p>
+<p>For counters updated by many threads at once (requests per second,
+transactions processed), <code>LongAdder</code> spreads updates across
+cells and is much faster than <code>AtomicLong</code> under
+contention.</p>
+<h2 id="6-concurrent-collections">6. Concurrent collections</h2>
+<p>The ordinary collections from topic 1.4 are not thread-safe.
+<code>Collections.synchronizedMap(map)</code> wraps every method in one
+lock, which is correct but slow, and compound actions are still racy.
+Prefer <code>java.util.concurrent</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Need</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Shared map with frequent reads and writes</td>
+<td><code>ConcurrentHashMap</code></td>
+</tr>
+<tr>
+<td>List read very often, changed rarely (listeners, config)</td>
+<td><code>CopyOnWriteArrayList</code></td>
+</tr>
+<tr>
+<td>Producer/consumer hand-off</td>
+<td><code>ArrayBlockingQueue</code>,
+<code>LinkedBlockingQueue</code></td>
+</tr>
+<tr>
+<td>Sorted concurrent map</td>
+<td><code>ConcurrentSkipListMap</code></td>
+</tr>
+</tbody>
+</table>
+<p>The key with <code>ConcurrentHashMap</code> is to use its
+<strong>atomic compound operations</strong>, not separate calls:</p>
+<pre class="java"><code>ConcurrentHashMap&lt;String, LongAdder&gt; perMerchant = new ConcurrentHashMap&lt;&gt;();
+
+// Racy: two threads can both see &quot;absent&quot; and both put
+if (!map.containsKey(k)) map.put(k, v);
+
+// Atomic alternatives
+map.putIfAbsent(k, v);
+map.computeIfAbsent(merchantId, id -&gt; new LongAdder()).increment();
+map.merge(account, amount, BigDecimal::add);                      // atomic add-or-insert
+map.compute(account, (k, old) -&gt; old == null ? amount : old.add(amount));</code></pre>
+<p>Keep the functions passed to <code>compute</code>/<code>merge</code>
+short and free of I/O: they run while part of the map is locked.</p>
+<p>A <strong>blocking queue</strong> is the cleanest way to coordinate
+threads, because the queue does the synchronisation:</p>
+<pre class="java"><code>BlockingQueue&lt;Transaction&gt; queue = new ArrayBlockingQueue&lt;&gt;(10_000);
+// producer (file reader)
+queue.put(tx);                  // blocks when full: natural back-pressure
+// consumers (posting workers)
+Transaction tx = queue.take();  // blocks when empty</code></pre>
+<h2 id="7-deadlock-and-how-to-avoid-it">7. Deadlock and how to avoid
+it</h2>
+<p>A deadlock happens when threads each hold a lock the other needs:</p>
+<pre class="java"><code>void transfer(Account from, Account to, BigDecimal amt) {
+    synchronized (from) {
+        synchronized (to) { ... }
+    }
+}
+// Thread 1: transfer(A, B)  holds A, waits for B
+// Thread 2: transfer(B, A)  holds B, waits for A   → both wait forever</code></pre>
+<p>All four conditions must hold for a deadlock: mutual exclusion,
+hold-and-wait, no pre-emption and a circular wait. Break any one:</p>
+<ul>
+<li><p><strong>Lock ordering</strong> (breaks the cycle): always lock
+accounts in a global order, for example by account number.</p>
+<pre class="java"><code>Account first = from.number().compareTo(to.number()) &lt; 0 ? from : to;
+Account second = first == from ? to : from;
+synchronized (first) { synchronized (second) { ... } }</code></pre></li>
+<li><p><strong>Timeouts</strong> with <code>tryLock(timeout)</code>:
+back off and retry instead of waiting forever.</p></li>
+<li><p><strong>Fewer locks</strong>: one lock, or no shared mutable
+state at all.</p></li>
+</ul>
+<p>To diagnose a live deadlock, take a thread dump
+(<code>jcmd &lt;pid&gt; Thread.print</code> or
+<code>jstack &lt;pid&gt;</code>). The JVM reports "Found one Java-level
+deadlock" and lists the threads and locks involved.</p>
+<p>Related liveness problems: <strong>livelock</strong> (threads keep
+reacting to each other and make no progress, like two people stepping
+aside in a corridor) and <strong>starvation</strong> (a thread never
+gets the lock because others always win).</p>
+<h2 id="8-coordination-helpers">8. Coordination helpers</h2>
+<ul>
+<li><code>Semaphore(n)</code>: allow at most <em>n</em> concurrent
+holders. Perfect for "no more than 10 concurrent calls to the NIBSS
+sandbox".</li>
+<li><code>CountDownLatch(n)</code>: wait until <em>n</em> events have
+happened, for example until all file-loading threads finish.</li>
+<li><code>CyclicBarrier</code>, <code>Phaser</code>: groups of threads
+that proceed in phases.</li>
+</ul>
+<pre class="java"><code>private final Semaphore permits = new Semaphore(10);
+
+public Response callPartner(Request r) throws InterruptedException {
+    permits.acquire();
+    try { return client.send(r); }
+    finally { permits.release(); }
+}</code></pre>
+<h2 id="9-the-best-lock-is-no-lock">9. The best lock is no lock</h2>
+<p>The most reliable concurrent code avoids shared mutable state:</p>
+<ul>
+<li><strong>Immutability</strong> (topic 1.7): immutable objects need no
+locks.</li>
+<li><strong>Confinement</strong>: give each thread its own data, then
+merge results at the end (as the statement generator in topic 2.1
+did).</li>
+<li><strong>Message passing</strong>: hand data between threads through
+a queue instead of sharing it.</li>
+<li><strong>Let the database do it</strong>: for money, the database
+transaction and its locks are the source of truth (topic 3.2).</li>
+</ul>
+<h2 id="worked-example-a-thread-safe-daily-limit-tracker">Worked
+example: a thread-safe daily limit tracker</h2>
+<pre class="java"><code>public final class DailyLimitTracker {
+    private final BigDecimal limit;
+    private final ConcurrentHashMap&lt;String, BigDecimal&gt; usedToday = new ConcurrentHashMap&lt;&gt;();
+
+    public DailyLimitTracker(BigDecimal limit) { this.limit = limit; }
+
+    /** Atomically reserves the amount if it fits under the limit. */
+    public boolean tryReserve(String account, BigDecimal amount) {
+        var accepted = new boolean[1];
+        usedToday.compute(account, (k, used) -&gt; {
+            BigDecimal current = used == null ? BigDecimal.ZERO : used;
+            BigDecimal next = current.add(amount);
+            if (next.compareTo(limit) &gt; 0) { accepted[0] = false; return current; }
+            accepted[0] = true;
+            return next;
+        });
+        return accepted[0];
+    }
+
+    public void release(String account, BigDecimal amount) {
+        usedToday.computeIfPresent(account, (k, used) -&gt; used.subtract(amount));
+    }
+
+    public void resetForNewDay() { usedToday.clear(); }
+}</code></pre>
+<p>Check and update happen inside one atomic <code>compute</code>, so
+two concurrent ₦400,000 transfers against a ₦500,000 limit can never
+both succeed. In production, this state would also be persisted (or kept
+in Redis, topic 3.6) so it survives restarts and is shared across
+instances.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Synchronising writes but not reads.</li>
+<li><code>volatile</code> used for counters.</li>
+<li><code>containsKey</code> followed by <code>put</code> on a
+<code>ConcurrentHashMap</code>.</li>
+<li>Calling I/O or external services while holding a lock.</li>
+<li><code>lock()</code> without <code>unlock()</code> in a
+<code>finally</code>.</li>
+<li>Nested locks in inconsistent order.</li>
+<li>Assuming an in-memory lock protects a balance shared by several
+service instances.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Reproduce the double-withdraw race with 100 threads and a
+<code>CountDownLatch</code> that releases them at once. Fix it three
+ways: <code>synchronized</code>, <code>ReentrantLock</code> and
+<code>AtomicReference</code> with CAS. Benchmark them roughly.</li>
+<li>Write the deadlocking <code>transfer</code> above, trigger it, take
+a thread dump with <code>jcmd</code>, and find the deadlock report. Fix
+it with lock ordering.</li>
+<li>Count transactions per merchant from 8 threads using a plain
+<code>HashMap</code>, then <code>ConcurrentHashMap</code> with
+<code>merge</code>. Compare totals against the expected count.</li>
+<li>Wrap a fake partner API in a <code>Semaphore(5)</code> and prove
+with logs that no more than five calls are ever in flight.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Race condition, check-then-act, read-modify-write, critical section,
+atomicity, visibility, ordering, Java Memory Model, happens-before,
+monitor, <code>synchronized</code>, <code>ReentrantLock</code>,
+<code>tryLock</code>, <code>ReadWriteLock</code>, <code>volatile</code>,
+CAS, atomic classes, <code>LongAdder</code>,
+<code>ConcurrentHashMap</code>, blocking queue, deadlock, livelock,
+starvation, lock ordering, semaphore, latch.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://docs.oracle.com/javase/tutorial/essential/concurrency/sync.html">The
+Java Tutorials: Synchronization</a></li>
+<li><a
+href="https://docs.oracle.com/javase/tutorial/essential/concurrency/highlevel.html">The
+Java Tutorials: High Level Concurrency Objects</a></li>
+<li><a
+href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/concurrent/package-summary.html"><code>java.util.concurrent</code>
+package summary (Java 21)</a></li>
+<li><a
+href="https://www.cs.umd.edu/~pugh/java/memoryModel/jsr-133-faq.html">JSR-133
+(Java Memory Model) FAQ</a></li>
+<li><a
+href="https://docs.oracle.com/javase/specs/jls/se21/html/jls-17.html">The
+Java Language Specification, Java SE 21, Chapter 17: Threads and
+Locks</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>#89 Race Condition in Java</h3><p>Telusko · 12 min. A race condition reproduced live, then fixed with synchronized.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/7eV4nib3Cm8" title="#89 Race Condition in Java" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Using volatile vs AtomicInteger in Java concurrency</h3><p>Defog Tech · 7 min. volatile vs AtomicInteger: visibility is not the same as atomicity.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/WH5UvQJizH0" title="Using volatile vs AtomicInteger in Java concurrency" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>How detect and resolve DeadLocks in Java</h3><p>Defog Tech · 11 min. How deadlocks happen, how to spot them in a thread dump, and how to avoid them.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/B4IVu-2hCos" title="How detect and resolve DeadLocks in Java" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>ConcurrentHashmap in Java and its differences with Synchronized HashMap</h3><p>Daily Code Buffer · 12 min. ConcurrentHashMap vs a synchronized HashMap.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/_A0Wty5Aeis" title="ConcurrentHashmap in Java and its differences with Synchronized HashMap" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/02-concurrency-jvm/2.2-race-conditions-locks-atomics/README.md">2.2 Race conditions, locks, atomics and concurrent collections</a></p>

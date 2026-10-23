@@ -146,6 +146,16 @@ def combine_topic_banks() -> None:
                       encoding="utf-8")
 
 
+def publish_pages() -> None:
+    """Copy lesson and capstone pages to lms/moodle/import/ (committed, public: the same content is in the
+    Markdown), so the LMS can load them from raw.githubusercontent.com."""
+    for kind in ("pages", "capstones"):
+        target = ROOT / "lms" / "moodle" / "import" / kind
+        if target.exists():
+            shutil.rmtree(target)
+        shutil.copytree(OUT / kind, target)
+
+
 def main() -> int:
     if not shutil.which("pandoc"):
         print("pandoc is required: https://pandoc.org/installing.html", file=sys.stderr)
@@ -235,6 +245,7 @@ def main() -> int:
 
     (OUT / "course-structure.json").write_text(json.dumps(structure, indent=2) + "\n", encoding="utf-8")
     combine_topic_banks()
+    publish_pages()
     n_q = len(list((OUT / "questions").glob("*.xml")))
     n_p = len(list((OUT / "pages").glob("*.html")))
     print(f"moodle: {n_p} pages, {n_q} question banks, course-structure.json in {OUT.relative_to(ROOT)}")

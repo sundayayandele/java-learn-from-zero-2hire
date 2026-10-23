@@ -1,0 +1,386 @@
+<p><em>Week 8 · Module 3: Databases: SQL &amp; NoSQL</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Explain what a B-tree index is and why it turns a scan of millions
+of rows into a few page reads.</li>
+<li>Design single-column, composite, covering, partial and expression
+indexes, and order composite columns correctly.</li>
+<li>Read <code>EXPLAIN</code> and <code>EXPLAIN ANALYZE</code> output in
+PostgreSQL and <code>EXPLAIN</code> in MySQL, and spot the expensive
+step.</li>
+<li>Recognise queries that cannot use an index ("non-sargable"
+predicates) and rewrite them.</li>
+<li>Weigh the costs of indexes: slower writes, storage and
+maintenance.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>A transaction table grows by millions of rows a day. The query behind
+"show my last 20 transactions" runs on every app open, thousands of
+times a second. Without the right index it reads the whole table each
+time, and the database CPU hits 100% at 9 a.m. on salary day. With the
+right index it reads a handful of pages in under a millisecond. Query
+tuning is one of the most valuable skills a backend engineer brings to a
+bank, and "how would you speed up this slow query?" is a near-certain
+interview question.</p>
+<h2 id="1-what-an-index-is">1. What an index is</h2>
+<p>Without an index, the database must read every row to find matches: a
+<strong>sequential scan</strong>. On 50 million transactions that means
+gigabytes of reads per query.</p>
+<p>A <strong>B-tree index</strong> keeps a sorted copy of the indexed
+column(s) with pointers back to the table rows, organised as a balanced
+tree. Finding a value takes O(log n) page reads: a B-tree over 50
+million rows is typically 3–4 levels deep. It also supports range
+queries (<code>BETWEEN</code>, <code>&lt;</code>, <code>&gt;</code>),
+<code>ORDER BY</code> and prefix <code>LIKE 'abc%'</code>, because
+entries are sorted.</p>
+<pre class="sql"><code>CREATE INDEX idx_txn_account ON txn (account_id);</code></pre>
+<p>Primary keys and <code>UNIQUE</code> constraints create indexes
+automatically. <strong>Foreign keys do not</strong>, in PostgreSQL:
+index them yourself, or every join and every delete on the parent table
+scans the child.</p>
+<p>Other index types in PostgreSQL: <strong>Hash</strong> (equality
+only), <strong>GIN</strong> (arrays, <code>JSONB</code>, full-text
+search), <strong>GiST</strong> (geometric data, ranges),
+<strong>BRIN</strong> (very large, naturally ordered tables, such as an
+append-only log by date: tiny and cheap). B-tree is the default and
+right 90% of the time.</p>
+<h2 id="2-reading-query-plans-in-postgresql">2. Reading query plans in
+PostgreSQL</h2>
+<pre class="sql"><code>EXPLAIN ANALYZE
+SELECT * FROM txn WHERE account_id = 42 ORDER BY posted_at DESC LIMIT 20;</code></pre>
+<p>Before indexing:</p>
+<pre class="text"><code>Limit  (cost=812345.10..812345.15 rows=20 width=96) (actual time=2103.551..2103.557 rows=20 loops=1)
+  -&gt;  Sort  (cost=812345.10..812380.00 rows=13960 width=96) (actual time=2103.549..2103.552 rows=20 loops=1)
+        Sort Key: posted_at DESC
+        Sort Method: top-N heapsort  Memory: 30kB
+        -&gt;  Seq Scan on txn  (cost=0.00..811973.00 rows=13960 width=96) (actual time=0.031..2098.112 rows=14120 loops=1)
+              Filter: (account_id = 42)
+              Rows Removed by Filter: 49985880
+Planning Time: 0.110 ms
+Execution Time: 2103.600 ms</code></pre>
+<p>How to read it:</p>
+<ul>
+<li>It is a <strong>tree</strong>; read from the most indented node up.
+Each node feeds its parent.</li>
+<li><code>cost=start..total</code> is the planner's <em>estimate</em> in
+arbitrary units. <code>actual time</code> (ms), <code>rows</code> and
+<code>loops</code> come from <strong>actually running</strong> the query
+(<code>ANALYZE</code>).</li>
+<li>Compare <strong>estimated rows vs actual rows</strong>. Big
+differences mean stale statistics: run <code>ANALYZE txn;</code>.</li>
+<li>Look for the node with the most time. Here: <code>Seq Scan</code>
+with <code>Rows Removed by Filter: 49,985,880</code>. It read 50 million
+rows to keep 14,120.</li>
+</ul>
+<p><code>EXPLAIN (ANALYZE, BUFFERS)</code> adds how many 8 KB pages were
+read from cache (<code>shared hit</code>) and from disk
+(<code>read</code>), often the clearest measure of work. Careful:
+<code>EXPLAIN ANALYZE</code> really executes the statement, so wrap
+<code>UPDATE</code>/<code>DELETE</code> in
+<code>BEGIN; ... ROLLBACK;</code>.</p>
+<p>Now add the right index:</p>
+<pre class="sql"><code>CREATE INDEX idx_txn_account_posted ON txn (account_id, posted_at DESC);</code></pre>
+<pre class="text"><code>Limit  (cost=0.56..21.78 rows=20 width=96) (actual time=0.041..0.067 rows=20 loops=1)
+  -&gt;  Index Scan using idx_txn_account_posted on txn  (cost=0.56..14812.40 rows=13960 width=96) (actual time=0.040..0.063 rows=20 loops=1)
+        Index Cond: (account_id = 42)
+Execution Time: 0.090 ms</code></pre>
+<p>From 2.1 seconds to 0.09 ms, more than 20,000 times faster. The index
+matches the filter <strong>and</strong> the sort order, so PostgreSQL
+reads the first 20 entries for account 42 and stops. No sort step at
+all.</p>
+<h3 id="scan-types-you-will-see">Scan types you will see</h3>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Seq Scan</code></td>
+<td>Reads the whole table. Fine for small tables or when most rows
+match</td>
+</tr>
+<tr>
+<td><code>Index Scan</code></td>
+<td>Walks the index, fetches each matching row from the table</td>
+</tr>
+<tr>
+<td><code>Index Only Scan</code></td>
+<td>All needed columns are in the index: no table access (needs a
+recently vacuumed table)</td>
+</tr>
+<tr>
+<td><code>Bitmap Index Scan</code> + <code>Bitmap Heap Scan</code></td>
+<td>Collects matching row locations, then reads table pages in order;
+good for medium selectivity or combining indexes</td>
+</tr>
+<tr>
+<td><code>Nested Loop</code></td>
+<td>For each outer row, look up inner rows: great when the outer side is
+small and the inner side is indexed</td>
+</tr>
+<tr>
+<td><code>Hash Join</code></td>
+<td>Builds a hash table of one side: good for large unsorted joins</td>
+</tr>
+<tr>
+<td><code>Merge Join</code></td>
+<td>Merges two sorted inputs</td>
+</tr>
+<tr>
+<td><code>Sort</code>, <code>HashAggregate</code>,
+<code>GroupAggregate</code></td>
+<td>Sorting and grouping; watch for <code>external merge Disk</code>
+(spilled to disk: raise <code>work_mem</code> or avoid the sort)</td>
+</tr>
+</tbody>
+</table>
+<p>A sequential scan is not always bad. If a query returns 40% of a
+table, reading it sequentially is cheaper than millions of random index
+lookups, and the planner knows it. <strong>Selectivity</strong> (what
+fraction of rows match) decides.</p>
+<h2 id="3-composite-indexes-and-column-order">3. Composite indexes and
+column order</h2>
+<p>A composite index on <code>(a, b, c)</code> is sorted by
+<code>a</code>, then <code>b</code> within each <code>a</code>, then
+<code>c</code>. It can serve:</p>
+<ul>
+<li><code>WHERE a = ?</code></li>
+<li><code>WHERE a = ? AND b = ?</code></li>
+<li><code>WHERE a = ? AND b &gt; ?</code> (range on the last used
+column)</li>
+<li><code>WHERE a = ? ORDER BY b</code></li>
+</ul>
+<p>but <strong>not</strong> efficiently <code>WHERE b = ?</code> alone
+(the <strong>leftmost-prefix rule</strong>, like looking up a phone book
+by first name).</p>
+<p>Rules of thumb for column order:</p>
+<ol type="1">
+<li>Columns compared with <strong>equality</strong> first.</li>
+<li>Then the column used for a <strong>range</strong> or
+<strong>sort</strong>.</li>
+<li>Anything after a range column helps only as extra data (for
+index-only scans), not for seeking.</li>
+</ol>
+<pre class="sql"><code>-- Query: an account&#39;s debits in a date range
+SELECT ... FROM txn WHERE account_id = ? AND direction = &#39;D&#39; AND value_date BETWEEN ? AND ?;
+-- Good:  (account_id, direction, value_date)
+-- Worse: (value_date, account_id)  -- range first: scans every account&#39;s rows in the date range</code></pre>
+<h3 id="covering-partial-and-expression-indexes">Covering, partial and
+expression indexes</h3>
+<pre class="sql"><code>-- Covering: INCLUDE extra columns so the query never touches the table (index-only scan)
+CREATE INDEX idx_txn_stmt ON txn (account_id, posted_at DESC) INCLUDE (amount, direction, narration);
+
+-- Partial: index only the rows you query. Small and fast.
+CREATE INDEX idx_payment_pending ON payment (created_at) WHERE status = &#39;PENDING&#39;;
+
+-- Expression: index the expression you filter on
+CREATE INDEX idx_customer_email_lower ON customer (lower(email));
+SELECT * FROM customer WHERE lower(email) = lower(:email);</code></pre>
+<p>A partial index on pending payments stays tiny even when the table
+holds years of completed ones. That is perfect for the job queue in
+topic 3.2.</p>
+<h2 id="4-queries-that-cant-use-indexes">4. Queries that can't use
+indexes</h2>
+<p>An index on <code>x</code> helps only if the predicate compares
+<code>x</code> itself to something. These defeat it:</p>
+<table>
+<thead>
+<tr>
+<th>Non-sargable</th>
+<th>Rewrite</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>WHERE date(posted_at) = '2026-10-21'</code></td>
+<td><code>WHERE posted_at &gt;= '2026-10-21' AND posted_at &lt; '2026-10-22'</code></td>
+</tr>
+<tr>
+<td><code>WHERE lower(email) = ?</code> (with an index on
+<code>email</code>)</td>
+<td>Expression index on <code>lower(email)</code>, or store
+normalised</td>
+</tr>
+<tr>
+<td><code>WHERE amount * 100 &gt; 500000</code></td>
+<td><code>WHERE amount &gt; 5000</code></td>
+</tr>
+<tr>
+<td><code>WHERE narration LIKE '%POS%'</code></td>
+<td>Leading wildcard: use a trigram (<code>pg_trgm</code>) GIN index or
+full-text search</td>
+</tr>
+<tr>
+<td><code>WHERE account_number = 123456789</code> on a
+<code>VARCHAR</code> column</td>
+<td>Compare with a string: implicit casts can stop index use (especially
+in MySQL)</td>
+</tr>
+<tr>
+<td><code>WHERE status &lt;&gt; 'CLOSED'</code> matching 95% of
+rows</td>
+<td>Not an index problem: low selectivity. Reconsider the query</td>
+</tr>
+<tr>
+<td><code>WHERE a = ? OR b = ?</code></td>
+<td>Separate indexes on <code>a</code> and <code>b</code> (bitmap OR),
+or <code>UNION</code></td>
+</tr>
+</tbody>
+</table>
+<p>Also: the planner relies on <strong>statistics</strong>. After a big
+data load, run <code>ANALYZE</code>. Autovacuum normally keeps
+statistics fresh.</p>
+<h2 id="5-the-cost-of-indexes">5. The cost of indexes</h2>
+<p>Indexes are not free:</p>
+<ul>
+<li><strong>Every
+<code>INSERT</code>/<code>UPDATE</code>/<code>DELETE</code> must update
+every index</strong> on the table. A transaction table with 12 indexes
+ingests far more slowly than one with 4.</li>
+<li>They take disk and memory, competing with table data for the
+cache.</li>
+<li>Unused and duplicate indexes are pure cost. Find them:</li>
+</ul>
+<pre class="sql"><code>SELECT relname AS table, indexrelname AS index, idx_scan, pg_size_pretty(pg_relation_size(indexrelid)) AS size
+FROM pg_stat_user_indexes ORDER BY idx_scan ASC, pg_relation_size(indexrelid) DESC;</code></pre>
+<ul>
+<li>On a busy production table, build indexes with
+<code>CREATE INDEX CONCURRENTLY</code> so writes are not blocked (it
+takes longer and cannot run inside a transaction block; topic 3.4 covers
+this in migrations).</li>
+</ul>
+<p>Index for the queries you actually run. The
+<code>pg_stat_statements</code> extension shows the most expensive
+queries across the whole database, which is the right place to start
+tuning.</p>
+<h2 id="6-mysqls-explain">6. MySQL's EXPLAIN</h2>
+<p>MySQL shows a table rather than a tree:</p>
+<pre class="sql"><code>EXPLAIN SELECT * FROM txn WHERE account_id = 42 ORDER BY posted_at DESC LIMIT 20;</code></pre>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>What to look for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>type</code></td>
+<td>Access method, best to worst: <code>const</code>,
+<code>eq_ref</code>, <code>ref</code>, <code>range</code>,
+<code>index</code> (full index scan), <strong><code>ALL</code> (full
+table scan)</strong></td>
+</tr>
+<tr>
+<td><code>possible_keys</code> / <code>key</code></td>
+<td>Indexes considered / chosen</td>
+</tr>
+<tr>
+<td><code>rows</code></td>
+<td>Estimated rows examined</td>
+</tr>
+<tr>
+<td><code>Extra</code></td>
+<td><code>Using index</code> (covering: good), <code>Using where</code>,
+<strong><code>Using filesort</code></strong> (extra sort step),
+<strong><code>Using temporary</code></strong></td>
+</tr>
+</tbody>
+</table>
+<p>MySQL 8 also offers <code>EXPLAIN ANALYZE</code> (actual timings,
+tree format) and <code>EXPLAIN FORMAT=TREE</code>. In InnoDB the table
+itself is stored in primary-key order (a <strong>clustered
+index</strong>), and secondary indexes store the primary key as their
+row pointer, so keep primary keys short.</p>
+<h2 id="worked-example-tuning-the-dormant-accounts-report">Worked
+example: tuning the dormant-accounts report</h2>
+<pre class="sql"><code>-- Accounts with no customer-initiated transaction in 180 days: 9 minutes in production
+SELECT a.number
+FROM account a
+WHERE a.status = &#39;ACTIVE&#39;
+  AND NOT EXISTS (
+      SELECT 1 FROM txn t
+      WHERE t.account_id = a.id
+        AND t.channel &lt;&gt; &#39;SYSTEM&#39;
+        AND date(t.posted_at) &gt; current_date - 180);</code></pre>
+<p><code>EXPLAIN ANALYZE</code> shows a <code>Seq Scan</code> on
+<code>txn</code> inside the anti-join, run once per active account.
+Fixes:</p>
+<ol type="1">
+<li>Make the date predicate sargable:
+<code>t.posted_at &gt; now() - interval '180 days'</code>.</li>
+<li>Add an index matching the correlated lookup:
+<code>CREATE INDEX CONCURRENTLY idx_txn_acct_posted ON txn (account_id, posted_at) WHERE channel &lt;&gt; 'SYSTEM';</code></li>
+<li>Re-run <code>EXPLAIN ANALYZE</code>: the plan now shows an
+<code>Index Only Scan</code> inside a
+<code>Nested Loop Anti Join</code>, and the report runs in seconds.</li>
+</ol>
+<p>Write the before and after plans into your pull request description.
+Reviewers trust numbers.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>No index on foreign key columns.</li>
+<li>Composite index columns in the wrong order (range column
+first).</li>
+<li>Functions or casts on indexed columns in <code>WHERE</code>.</li>
+<li>Adding an index for every column "just in case".</li>
+<li>Trusting <code>EXPLAIN</code> estimates without running
+<code>EXPLAIN ANALYZE</code>.</li>
+<li>Running <code>EXPLAIN ANALYZE</code> on a <code>DELETE</code>
+outside a rolled-back transaction.</li>
+<li><code>CREATE INDEX</code> (not <code>CONCURRENTLY</code>) on a hot
+production table.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Load 5–10 million rows into <code>txn</code> with
+<code>generate_series</code>. Time "last 20 transactions for an account"
+with no index, an index on <code>account_id</code>, and an index on
+<code>(account_id, posted_at DESC)</code>. Save the three plans.</li>
+<li>Write a query that filters on <code>date(posted_at)</code>, show it
+can't use the index, then rewrite it.</li>
+<li>Create a partial index for <code>status = 'PENDING'</code> on a
+payment table where 0.1% of rows are pending. Compare its size with a
+full index on <code>status</code>.</li>
+<li>In MySQL 8 (Docker image <code>mysql:8.4</code>), run the same
+statement query, read <code>EXPLAIN</code>, and identify
+<code>type</code>, <code>key</code> and <code>Extra</code> before and
+after indexing.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Sequential scan, B-tree, index scan, index-only scan, bitmap scan,
+selectivity, cost, <code>EXPLAIN ANALYZE</code>, <code>BUFFERS</code>,
+statistics, <code>ANALYZE</code>, composite index, leftmost prefix,
+covering index, <code>INCLUDE</code>, partial index, expression index,
+sargable, nested loop, hash join, merge join, filesort, clustered index,
+<code>CREATE INDEX CONCURRENTLY</code>,
+<code>pg_stat_statements</code>.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://www.postgresql.org/docs/17/using-explain.html">PostgreSQL:
+Using EXPLAIN</a></li>
+<li><a
+href="https://www.postgresql.org/docs/17/indexes.html">PostgreSQL:
+Indexes</a></li>
+<li><a
+href="https://dev.mysql.com/doc/refman/8.4/en/explain-output.html">MySQL
+8.4: EXPLAIN Output Format</a></li>
+<li><a href="https://use-the-index-luke.com/">Use The Index, Luke! (free
+SQL indexing book)</a></li>
+<li><a
+href="https://www.postgresql.org/docs/17/pgstatstatements.html">PostgreSQL:
+pg_stat_statements</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>what is a database index?</h3><p>Hussein Nasser · 5 min. What a database index physically is, from Hussein Nasser.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/Jemuod4wKWo" title="what is a database index?" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Postgres Explain Explained - How Databases Prepare Optimal Query Plans to Execute SQL</h3><p>Hussein Nasser · 10 min. How PostgreSQL chooses a plan, and how to read EXPLAIN output.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/P7EUFtjeAmI" title="Postgres Explain Explained - How Databases Prepare Optimal Query Plans to Execute SQL" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>SQL indexing best practices | How to make your database FASTER!</h3><p>CockroachDB · 4 min. Index best practices in four minutes.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/BIlFTFrEFOI" title="SQL indexing best practices | How to make your database FASTER!" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Use MySQL EXPLAIN for Query Optimization</h3><p>Code with Lucian · 17 min. The same skill in MySQL: reading EXPLAIN and fixing slow queries.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/TukZd6LjeBc" title="Use MySQL EXPLAIN for Query Optimization" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/03-databases-sql-nosql/3.3-indexing-query-plans/README.md">3.3 Indexing and reading query plans in PostgreSQL and MySQL</a></p>

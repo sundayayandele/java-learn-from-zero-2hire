@@ -1,0 +1,443 @@
+<p><em>Week 11 · Module 4: Spring Boot 4 Fundamentals</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Map entities, IDs, columns, enums, embedded values and relationships
+with Jakarta Persistence (JPA) annotations.</li>
+<li>Explain the persistence context, entity states and dirty checking,
+and how they produce SQL.</li>
+<li>Use Spring Data JPA repositories: derived queries,
+<code>@Query</code>, projections, pagination and sorting.</li>
+<li>Detect and fix the N+1 select problem with fetch joins, entity
+graphs and DTO projections.</li>
+<li>Use <code>@Transactional</code> correctly, and add optimistic
+locking with <code>@Version</code>.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>JPA with Hibernate is the default persistence stack in enterprise
+Java, and also the most common source of performance incidents in it. A
+statement page that silently runs 501 queries, a "harmless"
+<code>toString()</code> that loads a customer's entire transaction
+history, or a <code>@Transactional</code> annotation that never applied,
+all pass tests on a laptop and fall over in production. This topic
+teaches you to use JPA productively <em>and</em> to see the SQL it
+generates, which is exactly what interviewers probe with "what's the N+1
+problem?".</p>
+<h2 id="1-jpa-hibernate-and-spring-data">1. JPA, Hibernate and Spring
+Data</h2>
+<ul>
+<li><strong>Jakarta Persistence (JPA)</strong> is a specification:
+annotations and the <code>EntityManager</code> API
+(<code>jakarta.persistence</code>). Spring Boot 4 uses Jakarta
+Persistence 3.2.</li>
+<li><strong>Hibernate</strong> (version 7 in Boot 4) is the
+implementation that turns entity operations into SQL.</li>
+<li><strong>Spring Data JPA</strong> adds repository interfaces on top,
+generating common queries for you.</li>
+</ul>
+<p>All three sit on JDBC and the HikariCP pool from topic 3.5.</p>
+<pre class="properties"><code>spring.datasource.url=jdbc:postgresql://localhost:5432/bank
+spring.datasource.username=bank_app
+spring.datasource.password=${DB_PASSWORD}
+spring.jpa.hibernate.ddl-auto=validate        # Flyway owns the schema; Hibernate only checks it
+spring.jpa.open-in-view=false                  # see section 7
+spring.jpa.show-sql=false                      # use logging instead (below)
+logging.level.org.hibernate.SQL=debug          # print every SQL statement during development
+logging.level.org.hibernate.orm.jdbc.bind=trace   # and the bound parameter values</code></pre>
+<p><strong>Never use <code>ddl-auto=update</code> or <code>create</code>
+against a shared database.</strong> Schemas are managed by Flyway
+migrations (topic 3.4); <code>validate</code> makes startup fail if
+entities and schema disagree.</p>
+<h2 id="2-mapping-entities">2. Mapping entities</h2>
+<pre class="java"><code>@Entity
+@Table(name = &quot;account&quot;)
+public class Account {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)     // matches GENERATED ALWAYS AS IDENTITY
+    private Long id;
+
+    @Column(nullable = false, unique = true, length = 10)
+    private String number;
+
+    @Enumerated(EnumType.STRING)                            // store &#39;SAVINGS&#39;, never the ordinal 0/1/2
+    @Column(nullable = false)
+    private Product product;
+
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal balance = BigDecimal.ZERO;
+
+    @Column(nullable = false, length = 3)
+    private String currency;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = &quot;customer_id&quot;)
+    private Customer customer;
+
+    @Version
+    private long version;                                    // optimistic locking (section 6)
+
+    protected Account() { }                                  // JPA needs a no-arg constructor
+
+    public Account(String number, Product product, String currency, Customer customer) {
+        this.number = number; this.product = product; this.currency = currency; this.customer = customer;
+    }
+
+    public void debit(BigDecimal amount) {                   // behaviour, not just setters (topic 1.3)
+        if (balance.compareTo(amount) &lt; 0) throw new InsufficientFundsException(number, amount, balance);
+        balance = balance.subtract(amount);
+    }
+
+    public void credit(BigDecimal amount) { balance = balance.add(amount); }
+
+    public Long getId() { return id; }
+    public String getNumber() { return number; }
+    public BigDecimal getBalance() { return balance; }
+    // ...
+}</code></pre>
+<p>Rules for entities:</p>
+<ul>
+<li>They need a no-arg constructor (it can be <code>protected</code>)
+and must not be <code>final</code>, because Hibernate creates proxies
+(subclasses) for lazy loading. <strong>That is why records are not
+entities</strong> (topic 1.6).</li>
+<li>Map enums with <code>EnumType.STRING</code>. The default
+<code>ORDINAL</code> stores 0, 1, 2 and corrupts data the day someone
+reorders the enum.</li>
+<li>Keep <code>equals</code>/<code>hashCode</code> simple: base them on
+a business key (<code>number</code>) or on <code>id</code> with care for
+unsaved entities. Never include lazy associations.</li>
+<li><strong>Don't put associations in <code>toString()</code></strong>:
+printing an account would load its customer, and printing a customer
+could load every account.</li>
+</ul>
+<h3 id="value-objects-with-embeddable">Value objects with
+<code>@Embeddable</code></h3>
+<pre class="java"><code>@Embeddable
+public record Money(@Column(name = &quot;amount&quot;, precision = 19, scale = 2) BigDecimal amount,
+                    @Column(name = &quot;currency&quot;, length = 3) String currency) { }
+
+@Entity
+public class LedgerPosting {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
+    @Embedded private Money money;          // stored as two columns in the posting table
+}</code></pre>
+<p>Records <em>can</em> be <code>@Embeddable</code> (Hibernate 6.2+),
+which is a neat way to keep <code>Money</code> immutable inside a
+mutable entity.</p>
+<h3 id="relationships">Relationships</h3>
+<table>
+<thead>
+<tr>
+<th>Annotation</th>
+<th>Example</th>
+<th>Default fetch</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>@ManyToOne</code></td>
+<td>many transactions → one account</td>
+<td><strong>EAGER</strong> (change it to LAZY)</td>
+</tr>
+<tr>
+<td><code>@OneToMany(mappedBy = ...)</code></td>
+<td>one account → many transactions</td>
+<td>LAZY</td>
+</tr>
+<tr>
+<td><code>@OneToOne</code></td>
+<td>customer → KYC profile</td>
+<td>EAGER (change it to LAZY)</td>
+</tr>
+<tr>
+<td><code>@ManyToMany</code></td>
+<td>customers ↔︎ joint accounts</td>
+<td>LAZY (often better as an explicit join entity)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Make every association <code>LAZY</code>.</strong> EAGER is a
+performance trap: it loads related data on every query, whether you need
+it or not, and cannot be switched off per query.</p>
+<p>Bidirectional relationships have an <strong>owning side</strong> (the
+side with the foreign key,
+<code>@ManyToOne</code>/<code>@JoinColumn</code>) and an <strong>inverse
+side</strong> (<code>mappedBy</code>). Only the owning side's changes
+are written to the database. Think twice before mapping
+<code>@OneToMany</code> collections that can be huge: an account's
+transactions should be <strong>queried</strong> (paged), not loaded as a
+collection.</p>
+<h2 id="3-the-persistence-context">3. The persistence context</h2>
+<p>The <code>EntityManager</code> (and the Hibernate
+<code>Session</code> underneath) keeps a <strong>persistence
+context</strong>: a first-level cache of the entities loaded in the
+current transaction.</p>
+<p>Entity states:</p>
+<ul>
+<li><strong>Transient</strong>: <code>new Account(...)</code>, not known
+to JPA.</li>
+<li><strong>Managed</strong>: loaded or saved in the current persistence
+context. Changes are tracked.</li>
+<li><strong>Detached</strong>: was managed, but the context closed (e.g.
+after the transaction).</li>
+<li><strong>Removed</strong>: scheduled for deletion.</li>
+</ul>
+<p><strong>Dirty checking</strong>: at flush time (usually commit),
+Hibernate compares each managed entity with its snapshot and issues
+<code>UPDATE</code>s for whatever changed. You don't call
+<code>save()</code> after modifying a managed entity:</p>
+<pre class="java"><code>@Transactional
+public void applyMonthlyFee(String number) {
+    Account acc = accounts.findByNumber(number).orElseThrow();
+    acc.debit(new BigDecimal(&quot;50.00&quot;));      // no save() needed: UPDATE is issued at commit
+}</code></pre>
+<p>The persistence context also guarantees one Java object per row per
+transaction: loading the same account twice returns the same instance
+and runs one query.</p>
+<h2 id="4-spring-data-jpa-repositories">4. Spring Data JPA
+repositories</h2>
+<pre class="java"><code>public interface AccountRepository extends JpaRepository&lt;Account, Long&gt; {
+
+    Optional&lt;Account&gt; findByNumber(String number);                     // derived query
+
+    List&lt;Account&gt; findByCustomerIdAndStatus(Long customerId, Status status);
+
+    boolean existsByNumber(String number);
+
+    @Query(&quot;&quot;&quot;
+           select a from Account a
+           where a.status = :status and a.balance &lt; :threshold
+           &quot;&quot;&quot;)
+    Page&lt;Account&gt; findLowBalance(@Param(&quot;status&quot;) Status status,
+                                 @Param(&quot;threshold&quot;) BigDecimal threshold,
+                                 Pageable pageable);                   // pagination + sorting
+
+    @Query(value = &quot;select * from account where lower(number) = lower(:n)&quot;, nativeQuery = true)
+    Optional&lt;Account&gt; findByNumberNative(@Param(&quot;n&quot;) String n);       // plain SQL when you need it
+}</code></pre>
+<ul>
+<li><code>JpaRepository</code> gives you <code>save</code>,
+<code>findById</code>, <code>findAll</code>, <code>deleteById</code>,
+<code>count</code>, paging and more.</li>
+<li><strong>Derived queries</strong> parse the method name:
+<code>findBy...And...OrderBy...Desc</code>. Great for simple lookups;
+switch to <code>@Query</code> when names get long.</li>
+<li><code>@Query</code> uses <strong>JPQL</strong>, which queries
+entities and fields (<code>Account</code>, <code>a.balance</code>), not
+tables and columns. <code>nativeQuery = true</code> runs plain SQL.</li>
+<li><strong>Pagination</strong>:
+<code>PageRequest.of(page, size, Sort.by("postedAt").descending())</code>.
+<code>Page</code> also runs a <code>count</code> query;
+<code>Slice</code> skips it when you only need "is there a next
+page?".</li>
+</ul>
+<h3 id="projections-read-only-what-you-need">Projections: read only what
+you need</h3>
+<p>For read-only screens, don't load full entities. Project straight
+into a DTO:</p>
+<pre class="java"><code>public record StatementLine(LocalDate valueDate, String reference, String direction,
+                            BigDecimal amount, String narration) { }
+
+@Query(&quot;&quot;&quot;
+       select new ng.itlearning.bank.statement.StatementLine(t.valueDate, t.reference, t.direction, t.amount, t.narration)
+       from Txn t
+       where t.account.number = :number and t.valueDate between :from and :to
+       order by t.postedAt
+       &quot;&quot;&quot;)
+List&lt;StatementLine&gt; statement(String number, LocalDate from, LocalDate to);</code></pre>
+<p>Projections select only the needed columns, never trigger lazy
+loading, and produce no managed entities (no dirty-checking overhead).
+Interface-based and record-based projections in derived queries work
+too.</p>
+<h2 id="5-the-n1-select-problem">5. The N+1 select problem</h2>
+<pre class="java"><code>List&lt;Account&gt; accounts = accountRepository.findByStatus(Status.ACTIVE);   // 1 query: 500 accounts
+for (Account a : accounts) {
+    System.out.println(a.getCustomer().getFullName());                     // +1 query per account
+}</code></pre>
+<p>With <code>customer</code> mapped <code>LAZY</code>, each
+<code>getCustomer().getFullName()</code> triggers a separate
+<code>SELECT</code> from <code>customer</code>: <strong>1 + 500
+queries</strong>. With <code>EAGER</code> it's no better: Hibernate
+often loads each customer with its own query anyway. Each query is fast;
+501 round trips are not. In logs it looks like the same
+<code>select ... from customer where id=?</code> repeated hundreds of
+times.</p>
+<p><strong>Fixes:</strong></p>
+<ol type="1">
+<li><p><strong>Fetch join</strong> in JPQL: load accounts and their
+customers in one query.</p>
+<pre class="java"><code>@Query(&quot;select a from Account a join fetch a.customer where a.status = :status&quot;)
+List&lt;Account&gt; findActiveWithCustomer(Status status);</code></pre></li>
+<li><p><strong>Entity graph</strong> on a repository method:</p>
+<pre class="java"><code>@EntityGraph(attributePaths = &quot;customer&quot;)
+List&lt;Account&gt; findByStatus(Status status);</code></pre></li>
+<li><p><strong>DTO projection</strong> (section 4): select exactly the
+columns needed, joined in SQL.</p></li>
+<li><p><strong>Batch fetching</strong> as a safety net:
+<code>spring.jpa.properties.hibernate.default_batch_fetch_size=50</code>
+makes Hibernate load lazy associations in batches
+(<code>where id in (?, ?, ...)</code>), turning N+1 into 1 +
+N/50.</p></li>
+</ol>
+<p>Caveat: fetch-joining a <strong>collection</strong>
+(<code>join fetch c.accounts</code>) together with pagination makes
+Hibernate paginate in memory (it warns:
+<code>HHH90003004: firstResult/maxResults specified with collection fetch</code>).
+Page the parent IDs first, then fetch their children in a second
+query.</p>
+<p><strong>How to catch N+1 before production:</strong> enable SQL
+logging in development, look at the statement count per request
+(Hibernate statistics:
+<code>spring.jpa.properties.hibernate.generate_statistics=true</code>),
+and write tests that assert the number of queries for key endpoints.</p>
+<h2 id="6-transactions-with-transactional">6. Transactions with
+<code>@Transactional</code></h2>
+<pre class="java"><code>@Service
+public class TransferService {
+    private final AccountRepository accounts;
+    private final LedgerRepository ledger;
+
+    @Transactional
+    public TransferReceipt transfer(TransferRequest r) {
+        Account from = accounts.findByNumberForUpdate(r.fromAccount()).orElseThrow(...);
+        Account to = accounts.findByNumberForUpdate(r.toAccount()).orElseThrow(...);
+        from.debit(r.amount());
+        to.credit(r.amount());
+        ledger.save(LedgerEntry.debit(r.clientReference(), from, r.amount()));
+        ledger.save(LedgerEntry.credit(r.clientReference(), to, r.amount()));
+        return new TransferReceipt(r.clientReference(), Instant.now());
+    }   // commit: dirty checking flushes the two balance UPDATEs and the INSERTs
+}</code></pre>
+<p>Spring wraps the bean in a <strong>proxy</strong> that begins a
+transaction before the method, commits after it, and <strong>rolls back
+on unchecked exceptions</strong> (<code>RuntimeException</code>,
+<code>Error</code>). The JDBC code from topic 3.5 is what it does
+underneath.</p>
+<p>What trips people up:</p>
+<ul>
+<li><strong>Self-invocation</strong>: calling a
+<code>@Transactional</code> method from another method <em>in the same
+class</em> bypasses the proxy, so no transaction starts. Put it in a
+separate bean, or make the outer method transactional.</li>
+<li><strong>Checked exceptions don't roll back</strong> by default. Use
+unchecked domain exceptions, or
+<code>@Transactional(rollbackFor = Exception.class)</code>.</li>
+<li><strong>Only public methods</strong> called through the proxy are
+transactional.</li>
+<li><code>@Transactional(readOnly = true)</code> on read methods lets
+Hibernate skip dirty checking and may route to a read replica.</li>
+<li><strong>Keep transactions short</strong>: no HTTP calls to partners
+inside them (topic 3.2).</li>
+<li>Use <code>jakarta.transaction.Transactional</code> or
+<code>org.springframework.transaction.annotation.Transactional</code>;
+prefer Spring's, which has more options.</li>
+</ul>
+<h3 id="locking-with-jpa">Locking with JPA</h3>
+<p><strong>Optimistic</strong>: the <code>@Version</code> field above.
+Every update runs
+<code>UPDATE ... SET ..., version = version + 1 WHERE id = ? AND version = ?</code>;
+if another transaction changed the row first, Hibernate throws
+<code>ObjectOptimisticLockingFailureException</code>, which you map to
+HTTP 409 or retry.</p>
+<p><strong>Pessimistic</strong>: lock the row for the rest of the
+transaction (<code>SELECT ... FOR UPDATE</code>), matching topic
+3.2:</p>
+<pre class="java"><code>@Lock(LockModeType.PESSIMISTIC_WRITE)
+@Query(&quot;select a from Account a where a.number = :number&quot;)
+Optional&lt;Account&gt; findByNumberForUpdate(String number);</code></pre>
+<p>For transfers, lock both accounts in a consistent order (by number or
+id) to avoid deadlocks.</p>
+<h2 id="7-open-session-in-view-switch-it-off">7. Open Session in View:
+switch it off</h2>
+<p>By default Spring Boot keeps the persistence context open for the
+whole web request (<code>spring.jpa.open-in-view=true</code>, with a
+startup warning), so lazy loading works even in controllers and JSON
+serialisation. That hides N+1 problems and holds database connections
+for the entire request, including JSON writing. Set it to
+<code>false</code>, load what each use case needs in the service (fetch
+joins, projections), and return DTOs. A
+<code>LazyInitializationException</code> after that change tells you
+exactly where data was being loaded by accident.</p>
+<h2
+id="worked-example-a-statement-endpoint-that-runs-two-queries-not-500">Worked
+example: a statement endpoint that runs two queries, not 500</h2>
+<pre class="java"><code>@Transactional(readOnly = true)
+public StatementResponse statement(String number, LocalDate from, LocalDate to, int page) {
+    AccountHeader header = accounts.findHeader(number)                         // 1: projection with customer name
+            .orElseThrow(() -&gt; new AccountNotFoundException(number));
+    Slice&lt;StatementLine&gt; lines = txns.statementPage(number, from, to,
+            PageRequest.of(page, 50, Sort.by(&quot;postedAt&quot;, &quot;id&quot;)));             // 2: projection, paged
+    return new StatementResponse(header, lines.getContent(), lines.hasNext());
+}</code></pre>
+<p>Two SQL statements regardless of statement length, no entities
+loaded, no lazy-loading surprises, and the transaction is read-only.
+Compare that with returning <code>account.getTransactions()</code> from
+the entity: one query for the account, one for the customer, and a
+collection load of <em>every</em> transaction the account ever had.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li><code>ddl-auto=update</code> in shared environments.</li>
+<li><code>EnumType.ORDINAL</code>.</li>
+<li>EAGER associations, or entities in
+<code>toString()</code>/JSON.</li>
+<li>Mapping unbounded <code>@OneToMany</code> collections and loading
+them.</li>
+<li>N+1 queries hidden by Open Session in View.</li>
+<li>Calling a <code>@Transactional</code> method from the same
+class.</li>
+<li>Expecting checked exceptions to roll back.</li>
+<li><code>save()</code> calls everywhere "just in case", or
+<code>saveAll</code> in loops without batching
+(<code>hibernate.jdbc.batch_size</code>).</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Map <code>Customer</code>, <code>Account</code> and <code>Txn</code>
+to your Flyway schema from topic 3.4 with
+<code>ddl-auto=validate</code>. Make startup fail by renaming a column
+in a migration, read the error, and fix it.</li>
+<li>Write an endpoint listing 200 active accounts with customer names.
+Turn on SQL logging, count the queries, then fix the N+1 three ways
+(fetch join, entity graph, projection) and compare the SQL.</li>
+<li>Implement <code>transfer</code> with <code>@Transactional</code> and
+pessimistic locking. Write a test that runs 20 concurrent transfers and
+asserts the total balance is unchanged.</li>
+<li>Add <code>@Version</code> to <code>Customer</code>, update the same
+customer from two threads, and map the resulting exception to a 409
+Problem Detail.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>JPA, Hibernate, Spring Data JPA, entity, <code>@Id</code>,
+<code>@GeneratedValue</code>, <code>@Enumerated(STRING)</code>,
+<code>@Embeddable</code>, association, owning side,
+<code>mappedBy</code>, LAZY/EAGER, proxy, persistence context, entity
+states, dirty checking, flush, derived query, JPQL, native query,
+<code>Page</code>/<code>Slice</code>, projection, N+1, fetch join,
+entity graph, batch fetching, <code>@Transactional</code>,
+self-invocation, <code>@Version</code>, optimistic/pessimistic locking,
+Open Session in View, <code>ddl-auto</code>.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a href="https://docs.spring.io/spring-data/jpa/reference/">Spring
+Data JPA reference</a></li>
+<li><a
+href="https://docs.spring.io/spring-boot/reference/data/sql.html">Spring
+Boot reference: SQL databases and JPA</a></li>
+<li><a
+href="https://docs.hibernate.org/orm/7.0/userguide/html_single/">Hibernate
+ORM User Guide</a></li>
+<li><a
+href="https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative.html">Spring
+Framework reference: Declarative transaction management</a></li>
+<li><a href="https://vladmihalcea.com/n-plus-1-query-problem/">Vlad
+Mihalcea: N+1 query problem with JPA and Hibernate</a></li>
+<li><a href="https://jakarta.ee/specifications/persistence/3.2/">Jakarta
+Persistence 3.2 specification</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Hibernate &amp; JPA Tutorial - Crash Course</h3><p>Marco Codes · 24 min. JPA and Hibernate from the ground up: entities, mappings and the persistence context.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/xHminZ9Dxm4" title="Hibernate &amp; JPA Tutorial - Crash Course" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>JOIN FETCH with Hibernate - The end of n+1 select issues</h3><p>Thorben Janssen · 6 min. Fixing N+1 selects with JOIN FETCH, from Thorben Janssen.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/QAaTLLYdHJ0" title="JOIN FETCH with Hibernate - The end of n+1 select issues" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Fix N+1 Select Issues with Hibernate’s EntityGraphs</h3><p>Thorben Janssen · 7 min. Fixing N+1 selects with entity graphs.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/7gm30iX3Nfw" title="Fix N+1 Select Issues with Hibernate’s EntityGraphs" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/04-spring-boot-fundamentals/4.3-spring-data-jpa-hibernate/README.md">4.3 Spring Data JPA and Hibernate: mappings, fetching and avoiding N+1</a></p>

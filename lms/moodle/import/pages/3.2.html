@@ -1,0 +1,349 @@
+<p><em>Week 7 · Module 3: Databases: SQL &amp; NoSQL</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Explain ACID and use
+<code>BEGIN</code>/<code>COMMIT</code>/<code>ROLLBACK</code> and
+savepoints.</li>
+<li>Describe the concurrency anomalies (dirty read, non-repeatable read,
+phantom, lost update, write skew) and which isolation levels prevent
+them in PostgreSQL and MySQL.</li>
+<li>Explain how PostgreSQL's MVCC works and why readers don't block
+writers.</li>
+<li>Prevent double-spending with pessimistic locking
+(<code>SELECT ... FOR UPDATE</code>), optimistic locking (version
+columns) and atomic conditional updates.</li>
+<li>Avoid and handle deadlocks and serialization failures with ordered
+locking and retries.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Topic 2.2 ended with a warning: in-memory locks cannot protect a
+balance shared by several service instances. The database can.
+Transactions are how a transfer debits one account and credits another
+so that either both happen or neither does, even if the server crashes
+in between. Isolation and locking are how two simultaneous withdrawals
+from the same account are serialised so the customer cannot spend the
+same naira twice. This is the most important database topic for a
+payments engineer.</p>
+<h2 id="1-transactions-and-acid">1. Transactions and ACID</h2>
+<p>A <strong>transaction</strong> groups statements into one unit of
+work.</p>
+<pre class="sql"><code>BEGIN;
+UPDATE account SET balance = balance - 5000.00 WHERE number = &#39;0123456789&#39;;
+UPDATE account SET balance = balance + 5000.00 WHERE number = &#39;9876543210&#39;;
+INSERT INTO ledger_entry (...) VALUES (...), (...);
+COMMIT;      -- or ROLLBACK; to undo everything since BEGIN</code></pre>
+<p><strong>ACID</strong> describes the guarantees:</p>
+<ul>
+<li><strong>Atomicity</strong>: all statements succeed or none take
+effect. A crash after the debit and before the credit leaves no trace of
+the debit.</li>
+<li><strong>Consistency</strong>: the transaction moves the database
+from one valid state to another; every constraint (foreign keys,
+<code>CHECK</code>, <code>UNIQUE</code>) holds at commit.</li>
+<li><strong>Isolation</strong>: concurrent transactions don't see each
+other's partial work, to a degree set by the <strong>isolation
+level</strong>.</li>
+<li><strong>Durability</strong>: once <code>COMMIT</code> returns, the
+change survives crashes (PostgreSQL writes it to the write-ahead log,
+WAL, first).</li>
+</ul>
+<p><strong>Savepoints</strong> let you roll back part of a
+transaction:</p>
+<pre class="sql"><code>BEGIN;
+INSERT INTO txn (...) VALUES (...);
+SAVEPOINT before_fee;
+INSERT INTO txn (...) VALUES (...);   -- fee posting fails a check
+ROLLBACK TO SAVEPOINT before_fee;     -- keep the main posting
+COMMIT;</code></pre>
+<p>Keep transactions <strong>short</strong>. A transaction that stays
+open while your code calls an external API holds locks and prevents
+vacuum from cleaning up, hurting everyone else.</p>
+<h2 id="2-concurrency-anomalies">2. Concurrency anomalies</h2>
+<table>
+<thead>
+<tr>
+<th>Anomaly</th>
+<th>What happens</th>
+<th>Banking example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Dirty read</strong></td>
+<td>Read another transaction's uncommitted data</td>
+<td>A balance check sees a deposit that is later rolled back</td>
+</tr>
+<tr>
+<td><strong>Non-repeatable read</strong></td>
+<td>Same row read twice returns different values</td>
+<td>A report reads a balance at the start and the end and gets different
+numbers</td>
+</tr>
+<tr>
+<td><strong>Phantom read</strong></td>
+<td>Same query returns different <em>sets of rows</em></td>
+<td><code>count(*)</code> of today's transactions changes between two
+reads in a report</td>
+</tr>
+<tr>
+<td><strong>Lost update</strong></td>
+<td>Two read-modify-write cycles overwrite each other</td>
+<td>Two withdrawals both read ₦1,000 and both write their own
+result</td>
+</tr>
+<tr>
+<td><strong>Write skew</strong></td>
+<td>Two transactions read overlapping data, each writes a different row,
+together breaking a rule</td>
+<td>Two joint-account holders each withdraw because "the combined
+balance is enough"</td>
+</tr>
+</tbody>
+</table>
+<h2 id="3-isolation-levels">3. Isolation levels</h2>
+<p>The SQL standard defines four levels. PostgreSQL implements three
+distinct behaviours:</p>
+<table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Dirty read</th>
+<th>Non-repeatable read</th>
+<th>Phantom</th>
+<th>PostgreSQL notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Read Uncommitted</td>
+<td>prevented in PG</td>
+<td>possible</td>
+<td>possible</td>
+<td>Behaves as Read Committed</td>
+</tr>
+<tr>
+<td><strong>Read Committed</strong> (PG default)</td>
+<td>prevented</td>
+<td>possible</td>
+<td>possible</td>
+<td>Each <em>statement</em> sees data committed before it began</td>
+</tr>
+<tr>
+<td><strong>Repeatable Read</strong></td>
+<td>prevented</td>
+<td>prevented</td>
+<td>prevented in PG</td>
+<td>Whole transaction sees one snapshot; conflicting writes fail</td>
+</tr>
+<tr>
+<td><strong>Serializable</strong></td>
+<td>prevented</td>
+<td>prevented</td>
+<td>prevented</td>
+<td>As if transactions ran one at a time; may abort with a serialization
+failure</td>
+</tr>
+</tbody>
+</table>
+<pre class="sql"><code>BEGIN ISOLATION LEVEL REPEATABLE READ;
+...
+COMMIT;</code></pre>
+<p><strong>MySQL (InnoDB)</strong> defaults to Repeatable Read and uses
+a mix of snapshots and next-key (gap) locks to prevent phantoms in
+locking reads. Differences between databases matter: always check the
+documentation for the one you use.</p>
+<p>The key insight: <strong>Read Committed alone does not prevent lost
+updates</strong> in a read-then-write pattern done in application code.
+You need one of the techniques in section 5.</p>
+<h2 id="4-how-postgresql-does-it-mvcc">4. How PostgreSQL does it:
+MVCC</h2>
+<p>PostgreSQL uses <strong>multi-version concurrency control</strong>.
+An <code>UPDATE</code> does not overwrite a row; it writes a new version
+of it and marks the old one as expired. Each transaction sees the
+versions that were committed as of its <strong>snapshot</strong>.</p>
+<p>Consequences:</p>
+<ul>
+<li><strong>Readers never block writers, and writers never block
+readers.</strong> A long report doesn't stop payments from posting.</li>
+<li><strong>Writers block writers on the same row.</strong> A second
+<code>UPDATE</code> of a row waits until the first transaction commits
+or rolls back.</li>
+<li>Old row versions accumulate and are cleaned up by
+<strong>VACUUM</strong> (autovacuum). Very long transactions prevent
+cleanup and cause table "bloat".</li>
+</ul>
+<h2 id="5-preventing-double-spending">5. Preventing double spending</h2>
+<p>Starting point, broken under concurrency:</p>
+<pre class="java"><code>BigDecimal balance = jdbc.queryBalance(acct);            // SELECT balance ...
+if (balance.compareTo(amount) &lt; 0) throw new InsufficientFundsException(...);
+jdbc.update(&quot;UPDATE account SET balance = ? WHERE id = ?&quot;, balance.subtract(amount), acct);</code></pre>
+<p>Two transactions can both read ₦1,000 and both write ₦200 (a lost
+update). Three correct alternatives:</p>
+<h3 id="option-a-atomic-conditional-update-simplest-often-best">Option
+A: atomic conditional update (simplest, often best)</h3>
+<pre class="sql"><code>UPDATE account
+SET balance = balance - :amount
+WHERE id = :id AND balance &gt;= :amount;</code></pre>
+<p>The check and the change happen in one statement on one row;
+PostgreSQL's row lock serialises concurrent updates, and the second one
+re-evaluates the <code>WHERE</code> against the new balance. The
+application checks the <strong>affected row count</strong>: 1 means
+success, 0 means insufficient funds (or no such account).</p>
+<h3 id="option-b-pessimistic-locking-with-select--for-update">Option B:
+pessimistic locking with <code>SELECT ... FOR UPDATE</code></h3>
+<pre class="sql"><code>BEGIN;
+SELECT balance, status FROM account WHERE id = :id FOR UPDATE;   -- locks the row until commit
+-- application checks status, limits, balance...
+UPDATE account SET balance = balance - :amount WHERE id = :id;
+INSERT INTO ledger_entry ...;
+COMMIT;</code></pre>
+<p>Any other transaction that tries to lock or update that row waits.
+Use this when the decision needs several reads and checks in application
+code. Variants: <code>FOR UPDATE NOWAIT</code> (fail immediately if
+locked) and <code>FOR UPDATE SKIP LOCKED</code> (skip locked rows, which
+is perfect for a queue of payment jobs processed by several
+workers):</p>
+<pre class="sql"><code>SELECT id FROM payment_job WHERE status = &#39;PENDING&#39;
+ORDER BY created_at LIMIT 10
+FOR UPDATE SKIP LOCKED;</code></pre>
+<h3 id="option-c-optimistic-locking-with-a-version-column">Option C:
+optimistic locking with a version column</h3>
+<pre class="sql"><code>ALTER TABLE account ADD COLUMN version BIGINT NOT NULL DEFAULT 0;
+
+-- read
+SELECT balance, version FROM account WHERE id = :id;          -- e.g. version = 7
+-- write only if nobody changed it in between
+UPDATE account SET balance = :newBalance, version = version + 1
+WHERE id = :id AND version = 7;                                 -- 0 rows → someone else won; retry</code></pre>
+<p>No locks are held between read and write; conflicts are detected at
+write time. It suits low-contention data and long user think-time
+(editing a customer profile). JPA's <code>@Version</code> does exactly
+this (topic 4.3). Under high contention (a hot merchant settlement
+account), many retries make pessimistic locking or Option A better.</p>
+<h3 id="option-d-let-the-database-prove-it-with-serializable">Option D:
+let the database prove it with Serializable</h3>
+<p>Run the transaction at <code>SERIALIZABLE</code> and <strong>retry on
+serialization failure</strong> (SQLSTATE <code>40001</code>).
+PostgreSQL's Serializable Snapshot Isolation detects dangerous patterns,
+including write skew, and aborts one transaction. It is the most general
+protection, at the cost of more aborts under contention, and it
+<strong>requires retry logic</strong> in the application.</p>
+<h2 id="6-deadlocks-in-the-database">6. Deadlocks in the database</h2>
+<p>Exactly as in topic 2.2, two transactions that lock rows in opposite
+orders deadlock:</p>
+<pre class="text"><code>T1: UPDATE account ... WHERE id = 1;   T2: UPDATE account ... WHERE id = 2;
+T1: UPDATE account ... WHERE id = 2;   (waits for T2)
+T2: UPDATE account ... WHERE id = 1;   (waits for T1)  → deadlock</code></pre>
+<p>PostgreSQL detects it after <code>deadlock_timeout</code> (1 s by
+default) and aborts one transaction with SQLSTATE <code>40P01</code>.
+Prevention: <strong>lock rows in a consistent order</strong> (for
+transfers, lock the lower account id first, or
+<code>SELECT ... WHERE id IN (:a, :b) ORDER BY id FOR UPDATE</code>).
+Handling: retry the aborted transaction.</p>
+<h3 id="retrying-correctly">Retrying correctly</h3>
+<p>Serialization failures (<code>40001</code>) and deadlocks
+(<code>40P01</code>) are expected, transient errors. The whole
+transaction must be retried from the start, a small number of times,
+with a short random backoff, and only if the operation is
+<strong>idempotent</strong> (the same transfer reference cannot be
+applied twice: the <code>UNIQUE</code> constraint from topic 3.1
+helps).</p>
+<h2 id="7-other-locks-you-will-meet">7. Other locks you will meet</h2>
+<ul>
+<li><code>LOCK TABLE</code> and DDL locks: <code>ALTER TABLE</code>
+takes strong locks; in production, schema changes must be planned (topic
+3.4).</li>
+<li><strong>Advisory locks</strong>
+(<code>pg_advisory_xact_lock(key)</code>): application-defined locks,
+for example to ensure only one instance runs the end-of-day job.</li>
+<li><strong>Lock timeouts</strong>: <code>SET lock_timeout = '2s'</code>
+so a request fails fast instead of waiting forever behind a stuck
+transaction.</li>
+</ul>
+<h2 id="worked-example-a-correct-transfer">Worked example: a correct
+transfer</h2>
+<pre class="sql"><code>BEGIN;
+-- Lock both accounts in id order to avoid deadlocks
+SELECT id, balance, status FROM account
+WHERE id IN (:fromId, :toId)
+ORDER BY id
+FOR UPDATE;
+
+-- (application checks: both ACTIVE, limits OK)
+
+UPDATE account SET balance = balance - :amount
+WHERE id = :fromId AND balance &gt;= :amount;          -- must affect exactly 1 row, else ROLLBACK
+
+UPDATE account SET balance = balance + :amount
+WHERE id = :toId;
+
+INSERT INTO ledger_entry (transfer_ref, account_id, direction, amount)
+VALUES (:ref, :fromId, &#39;D&#39;, :amount), (:ref, :toId, &#39;C&#39;, :amount);   -- UNIQUE(transfer_ref, direction)
+COMMIT;</code></pre>
+<p>Atomic (all or nothing), consistent (constraints hold), isolated (row
+locks serialise competing transfers), durable (committed to the WAL),
+deadlock-free (ordered locks) and idempotent (the unique transfer
+reference rejects a replay). In Module 4, Spring's
+<code>@Transactional</code> will manage
+<code>BEGIN</code>/<code>COMMIT</code>/<code>ROLLBACK</code> for you,
+but the SQL underneath is exactly this.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Read-then-write balance updates in application code with no
+locking.</li>
+<li>Assuming the default isolation level prevents lost updates.</li>
+<li>Long transactions spanning HTTP calls to other services.</li>
+<li>Locking rows in inconsistent order.</li>
+<li>Using Serializable without retry logic.</li>
+<li>Retrying non-idempotent operations.</li>
+<li>Forgetting to check affected row counts.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Open two <code>psql</code> sessions. Reproduce a lost update with
+read-then-write, then fix it with each of: conditional
+<code>UPDATE</code>, <code>SELECT ... FOR UPDATE</code>, and a version
+column. Write down what each session sees and when it blocks.</li>
+<li>Reproduce a deadlock with two sessions updating two accounts in
+opposite orders. Read the error message, then fix it with ordered
+locking.</li>
+<li>In two sessions at <code>REPEATABLE READ</code>, reproduce write
+skew on a "joint account" rule (sum of two balances must stay ≥ 0). Then
+run the same at <code>SERIALIZABLE</code> and observe the
+<code>40001</code> failure.</li>
+<li>Build a job queue table and process it from three sessions with
+<code>FOR UPDATE SKIP LOCKED</code>, showing no job is picked
+twice.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Transaction, ACID, commit, rollback, savepoint, WAL, isolation level,
+dirty read, non-repeatable read, phantom, lost update, write skew, MVCC,
+snapshot, VACUUM, row lock, <code>SELECT FOR UPDATE</code>,
+<code>NOWAIT</code>, <code>SKIP LOCKED</code>, optimistic locking,
+version column, serialization failure, deadlock, SQLSTATE, idempotency,
+advisory lock, lock timeout.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://www.postgresql.org/docs/17/transaction-iso.html">PostgreSQL:
+Transaction Isolation</a></li>
+<li><a
+href="https://www.postgresql.org/docs/17/explicit-locking.html">PostgreSQL:
+Explicit Locking</a></li>
+<li><a
+href="https://www.postgresql.org/docs/17/mvcc-intro.html">PostgreSQL:
+Concurrency Control (MVCC introduction)</a></li>
+<li><a
+href="https://dev.mysql.com/doc/refman/8.4/en/innodb-transaction-isolation-levels.html">MySQL
+8.4: InnoDB Transaction Isolation Levels</a></li>
+<li><a
+href="https://docs.oracle.com/en/java/javase/21/docs/api/java.sql/java/sql/Connection.html">Oracle:
+java.sql.Connection API (transaction isolation, Java 21)</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>ACID Properties in Databases With Examples</h3><p>ByteByteGo · 5 min. ACID properties with examples, from ByteByteGo.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/GAe5oB742dw" title="ACID Properties in Databases With Examples" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Transaction Isolation Levels With PostgreSQL as an example</h3><p>mkdev · 8 min. Isolation levels and their anomalies, demonstrated in PostgreSQL.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/G8wDjV0N9tk" title="Transaction Isolation Levels With PostgreSQL as an example" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Transaction Isolation Levels</h3><p>Bharath thippireddy · 5 min. A short recap of the four isolation levels and what each prevents.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/CTCAo89fcQw" title="Transaction Isolation Levels" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/03-databases-sql-nosql/3.2-transactions-isolation-locking/README.md">3.2 Transactions, isolation levels and locking</a></p>

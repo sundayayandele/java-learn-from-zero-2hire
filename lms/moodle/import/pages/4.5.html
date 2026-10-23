@@ -1,0 +1,413 @@
+<p><em>Week 12 · Module 4: Spring Boot 4 Fundamentals</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Add Spring Boot Actuator and expose the right endpoints,
+securely.</li>
+<li>Use health checks, health groups, and liveness/readiness probes, and
+write a custom <code>HealthIndicator</code>.</li>
+<li>Record business and technical metrics with Micrometer (counters,
+timers, gauges, distribution summaries) and expose them to
+Prometheus.</li>
+<li>Use the <code>info</code>, <code>loggers</code>, <code>env</code>,
+<code>configprops</code>, <code>conditions</code>,
+<code>threaddump</code> and <code>heapdump</code> endpoints for
+diagnosis, and know which ones must never be public.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>When a payment service misbehaves, operations teams need answers in
+seconds: is it up, is it ready for traffic, is the database reachable,
+how many transfers failed in the last five minutes, how slow is the card
+switch? Actuator gives every Spring Boot service the same standard
+answers. Load balancers and Kubernetes use its health endpoints to route
+traffic, Prometheus scrapes its metrics, and Grafana turns them into the
+dashboards that on-call engineers watch. Module 13 builds full
+observability; this topic gives you the foundation every service needs
+from day one.</p>
+<h2 id="1-adding-actuator">1. Adding Actuator</h2>
+<pre class="xml"><code>&lt;dependency&gt;
+  &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+  &lt;artifactId&gt;spring-boot-starter-actuator&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+<p>Endpoints live under <code>/actuator</code>. By default, over HTTP
+only <code>health</code> is exposed. You choose what else to expose:</p>
+<pre class="yaml"><code>management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: when-authorized      # never &quot;always&quot; on a public endpoint
+      show-components: when-authorized
+  server:
+    port: 8081                           # optional: a separate management port, not exposed publicly</code></pre>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Purpose</th>
+<th>Expose publicly?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>health</code></td>
+<td>Up/down status, plus probes</td>
+<td>Yes (summary only)</td>
+</tr>
+<tr>
+<td><code>info</code></td>
+<td>Build version, Git commit, Java and process details</td>
+<td>Usually internal</td>
+</tr>
+<tr>
+<td><code>metrics</code></td>
+<td>Browse metric names and values</td>
+<td>Internal</td>
+</tr>
+<tr>
+<td><code>prometheus</code></td>
+<td>Metrics in Prometheus format</td>
+<td>Internal (scraped by Prometheus)</td>
+</tr>
+<tr>
+<td><code>loggers</code></td>
+<td>View and <strong>change log levels at runtime</strong></td>
+<td>Internal, secured</td>
+</tr>
+<tr>
+<td><code>env</code>, <code>configprops</code></td>
+<td>Effective configuration (values sanitised)</td>
+<td>Internal, secured</td>
+</tr>
+<tr>
+<td><code>conditions</code>, <code>beans</code>,
+<code>mappings</code></td>
+<td>Auto-configuration report, beans, URL mappings</td>
+<td>Internal, secured</td>
+</tr>
+<tr>
+<td><code>threaddump</code></td>
+<td>Thread dump (topic 2.2)</td>
+<td>Internal, secured</td>
+</tr>
+<tr>
+<td><code>heapdump</code></td>
+<td>Downloads a heap dump <strong>containing all data in
+memory</strong></td>
+<td><strong>Never public.</strong> Prefer disabling in production</td>
+</tr>
+<tr>
+<td><code>shutdown</code></td>
+<td>Stops the app (disabled by default)</td>
+<td>Never</td>
+</tr>
+</tbody>
+</table>
+<p>Exposed sensitive endpoints are a well-known attack path: a public
+<code>heapdump</code> can leak session tokens, passwords and customer
+data. Expose the minimum, put management on a separate port that only
+the internal network can reach, and secure it with Spring Security
+(Module 6).</p>
+<h2 id="2-health">2. Health</h2>
+<pre class="bash"><code>curl -s localhost:8080/actuator/health
+{&quot;status&quot;:&quot;UP&quot;,&quot;groups&quot;:[&quot;liveness&quot;,&quot;readiness&quot;]}</code></pre>
+<p>With details shown to an authorised caller:</p>
+<pre class="json"><code>{
+  &quot;status&quot;: &quot;UP&quot;,
+  &quot;components&quot;: {
+    &quot;db&quot;:        { &quot;status&quot;: &quot;UP&quot;, &quot;details&quot;: { &quot;database&quot;: &quot;PostgreSQL&quot;, &quot;validationQuery&quot;: &quot;isValid()&quot; } },
+    &quot;diskSpace&quot;: { &quot;status&quot;: &quot;UP&quot;, &quot;details&quot;: { &quot;free&quot;: 51234567890, &quot;threshold&quot;: 10485760 } },
+    &quot;ping&quot;:      { &quot;status&quot;: &quot;UP&quot; },
+    &quot;redis&quot;:     { &quot;status&quot;: &quot;UP&quot;, &quot;details&quot;: { &quot;version&quot;: &quot;8.0.2&quot; } }
+  }
+}</code></pre>
+<p>Spring Boot auto-registers <strong>health indicators</strong> for
+what it finds: databases, Redis, MongoDB, disk space, mail servers, and
+more. The overall status is the worst component status
+(<code>DOWN</code> beats <code>OUT_OF_SERVICE</code> beats
+<code>UP</code>), and <code>DOWN</code> returns HTTP 503.</p>
+<h3 id="liveness-and-readiness">Liveness and readiness</h3>
+<p>Platforms ask two different questions:</p>
+<ul>
+<li><strong>Liveness</strong>: "Is this process healthy, or should it be
+restarted?" <code>/actuator/health/liveness</code></li>
+<li><strong>Readiness</strong>: "Should it receive traffic right now?"
+<code>/actuator/health/readiness</code></li>
+</ul>
+<p>Spring Boot 4 enables these probe groups by default. The distinction
+matters:</p>
+<ul>
+<li>If the database is down, the service should report <strong>not
+ready</strong> (stop sending it requests) but stay
+<strong>live</strong>: restarting it won't fix the database, and
+restarting every instance at once makes the outage worse.</li>
+<li>During startup (Flyway migrations, cache warm-up) and graceful
+shutdown, readiness is <code>OUT_OF_SERVICE</code>.</li>
+</ul>
+<p>So: <strong>don't put external dependencies in the liveness
+group.</strong> Add the critical ones to readiness instead:</p>
+<pre class="yaml"><code>management:
+  endpoint:
+    health:
+      group:
+        readiness:
+          include: readinessState,db,redis</code></pre>
+<p>Load balancers on a VPS (Nginx, HAProxy), AWS ALB target groups,
+Azure App Service health checks, GCP Cloud Run and Kubernetes probes all
+point at these endpoints. The deployment guide in this phase shows
+each.</p>
+<h3 id="custom-health-indicators">Custom health indicators</h3>
+<pre class="java"><code>@Component(&quot;nibss&quot;)
+public class NibssHealthIndicator implements HealthIndicator {
+    private final NibssClient client;
+
+    public NibssHealthIndicator(NibssClient client) { this.client = client; }
+
+    @Override
+    public Health health() {
+        try {
+            Duration latency = client.ping();                  // a cheap, side-effect-free call
+            return Health.up().withDetail(&quot;latencyMs&quot;, latency.toMillis()).build();
+        } catch (Exception e) {
+            return Health.down().withDetail(&quot;error&quot;, e.getClass().getSimpleName()).build();   // no secrets or URLs
+        }
+    }
+}</code></pre>
+<p>Should a partner outage make your service <code>DOWN</code>? Usually
+<strong>not</strong>: you can still serve balance enquiries and queue
+transfers. Report it as a component and alert on it, but think carefully
+before adding it to readiness. Health checks are called often; keep them
+fast and cached if the check is expensive.</p>
+<h2 id="3-metrics-with-micrometer">3. Metrics with Micrometer</h2>
+<p>Micrometer is a vendor-neutral metrics API ("SLF4J for metrics").
+Spring Boot auto-configures a <code>MeterRegistry</code> and many
+built-in metrics:</p>
+<ul>
+<li><strong>HTTP</strong>: <code>http.server.requests</code> (count,
+latency, by URI, method, status, outcome)</li>
+<li><strong>JVM</strong>: memory per area, GC pauses, threads, classes
+loaded (topic 2.4)</li>
+<li><strong>Database pool</strong>:
+<code>hikaricp.connections.active</code>, <code>.pending</code>,
+<code>.timeout</code> (topic 3.5)</li>
+<li><strong>System</strong>: CPU usage, uptime, file descriptors</li>
+<li><strong>Tomcat</strong>, caches, executors, Spring Data repository
+calls, and more</li>
+</ul>
+<p>Add the Prometheus registry to expose them in Prometheus's text
+format at <code>/actuator/prometheus</code>:</p>
+<pre class="xml"><code>&lt;dependency&gt;
+  &lt;groupId&gt;io.micrometer&lt;/groupId&gt;
+  &lt;artifactId&gt;micrometer-registry-prometheus&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+<pre class="text"><code>http_server_requests_seconds_count{method=&quot;POST&quot;,outcome=&quot;SUCCESS&quot;,status=&quot;201&quot;,uri=&quot;/api/v1/transfers&quot;} 18234
+http_server_requests_seconds_sum{method=&quot;POST&quot;,outcome=&quot;SUCCESS&quot;,status=&quot;201&quot;,uri=&quot;/api/v1/transfers&quot;} 2511.8
+hikaricp_connections_pending{pool=&quot;HikariPool-1&quot;} 0
+jvm_memory_used_bytes{area=&quot;heap&quot;,id=&quot;G1 Old Gen&quot;} 2.18103808E8</code></pre>
+<h3 id="business-metrics">Business metrics</h3>
+<p>Technical metrics tell you the service is alive; business metrics
+tell you it is doing its job. Record them yourself:</p>
+<pre class="java"><code>@Service
+public class TransferService {
+    private final Counter completed;
+    private final Counter rejected;
+    private final Timer switchLatency;
+    private final DistributionSummary amounts;
+
+    public TransferService(MeterRegistry registry /* , other dependencies */) {
+        this.completed = Counter.builder(&quot;bank.transfers&quot;).tag(&quot;outcome&quot;, &quot;completed&quot;)
+                .description(&quot;Transfers completed&quot;).register(registry);
+        this.rejected = Counter.builder(&quot;bank.transfers&quot;).tag(&quot;outcome&quot;, &quot;rejected&quot;).register(registry);
+        this.switchLatency = Timer.builder(&quot;bank.switch.latency&quot;)
+                .publishPercentileHistogram()          // lets Prometheus compute p95/p99 across instances
+                .register(registry);
+        this.amounts = DistributionSummary.builder(&quot;bank.transfer.amount&quot;).baseUnit(&quot;naira&quot;).register(registry);
+    }
+
+    public TransferReceipt transfer(TransferRequest r) {
+        try {
+            TransferReceipt receipt = switchLatency.recordCallable(() -&gt; nip.send(r));
+            completed.increment();
+            amounts.record(r.amount().doubleValue());   // metrics are approximate by nature; the ledger is the record
+            return receipt;
+        } catch (TransferRejectedException e) {
+            rejected.increment();
+            throw e;
+        } catch (Exception e) {
+            throw new TransferFailedException(r.clientReference(), e);
+        }
+    }
+}</code></pre>
+<table>
+<thead>
+<tr>
+<th>Meter</th>
+<th>Measures</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Counter</code></td>
+<td>Things that only go up</td>
+<td>Transfers completed, OTPs sent, fraud flags raised</td>
+</tr>
+<tr>
+<td><code>Timer</code></td>
+<td>How long something takes, and how often</td>
+<td>Card switch latency, statement generation time</td>
+</tr>
+<tr>
+<td><code>Gauge</code></td>
+<td>A current value that goes up and down</td>
+<td>Payment jobs pending in the queue, cache size</td>
+</tr>
+<tr>
+<td><code>DistributionSummary</code></td>
+<td>Distribution of non-time values</td>
+<td>Transfer amounts, file sizes</td>
+</tr>
+</tbody>
+</table>
+<p><code>@Timed</code> and <code>@Counted</code> annotations (with the
+AOP starter) are a shortcut for methods. Spring's <strong>Observation
+API</strong> (<code>@Observed</code>) records metrics and traces
+together; Module 13 uses it with OpenTelemetry.</p>
+<h3 id="tags-and-cardinality">Tags and cardinality</h3>
+<p>Tags (labels) let you slice a metric: by outcome, channel, partner
+bank. Every <strong>unique combination</strong> of tag values creates a
+separate time series. Never tag with unbounded values such as account
+numbers, customer IDs, transaction references or raw URLs: millions of
+series will overwhelm Prometheus. Tag with small, fixed sets
+(<code>channel</code> = MOBILE/USSD/POS/WEB). Spring already uses URI
+<em>templates</em> (<code>/api/v1/accounts/{number}</code>) rather than
+raw paths for this reason.</p>
+<h2 id="4-other-useful-endpoints">4. Other useful endpoints</h2>
+<h3 id="info"><code>info</code></h3>
+<pre class="yaml"><code>management:
+  info:
+    env.enabled: true
+    java.enabled: true
+    os.enabled: true
+    process.enabled: true
+info:
+  app:
+    name: transfer-service
+    team: payments</code></pre>
+<p>Add the <code>build-info</code> goal of the Spring Boot Maven plugin
+and the <code>git-commit-id-maven-plugin</code> to include the build
+version and Git commit, so "which version is running in UAT?" has an
+instant answer. Spring Boot 4.1 adds more process details (uptime, start
+time, time zone).</p>
+<h3
+id="loggers-change-log-levels-without-a-restart"><code>loggers</code>:
+change log levels without a restart</h3>
+<pre class="bash"><code>curl -s localhost:8081/actuator/loggers/org.hibernate.SQL
+curl -X POST localhost:8081/actuator/loggers/ng.itlearning.bank.transfer \
+     -H &#39;Content-Type: application/json&#39; -d &#39;{&quot;configuredLevel&quot;:&quot;DEBUG&quot;}&#39;</code></pre>
+<p>Turning on <code>DEBUG</code> for one package during an incident,
+then off again, is far better than redeploying. It is also a reason to
+secure the endpoint.</p>
+<h3 id="diagnosis-endpoints">Diagnosis endpoints</h3>
+<p><code>threaddump</code> and <code>heapdump</code> give you topic
+2.2's and 2.4's diagnostics over HTTP, <code>conditions</code> gives you
+topic 4.1's report, <code>mappings</code> lists every URL, and
+<code>env</code>/<code>configprops</code> show effective configuration
+with sensitive values masked as <code>******</code>. Keep
+<code>management.endpoint.env.show-values</code> and
+<code>configprops.show-values</code> at their safe defaults
+(<code>never</code> or <code>when-authorized</code>).</p>
+<h2 id="worked-example-a-production-ready-baseline">Worked example: a
+production-ready baseline</h2>
+<pre class="yaml"><code>management:
+  server.port: 8081
+  endpoints.web.exposure.include: health,info,prometheus,loggers
+  endpoint:
+    health:
+      show-details: when-authorized
+      group.readiness.include: readinessState,db
+    heapdump.access: none            # disable the heap dump endpoint entirely
+  metrics:
+    tags:
+      application: ${spring.application.name}
+      environment: ${ENVIRONMENT:local}
+  observations:
+    key-values:
+      region: ${REGION:lagos}</code></pre>
+<p>With this, every instance:</p>
+<ul>
+<li>answers liveness and readiness probes on the internal management
+port;</li>
+<li>exposes Prometheus metrics with <code>application</code> and
+<code>environment</code> tags so one Grafana dashboard works for all
+services;</li>
+<li>reports its version via <code>info</code>;</li>
+<li>allows log levels to be changed during incidents by authorised
+operators;</li>
+<li>cannot leak memory contents through <code>heapdump</code>.</li>
+</ul>
+<p>Build a small Grafana dashboard (Module 13 does this properly):
+transfers per minute by outcome, p95 switch latency, HTTP 5xx rate and
+Hikari pending connections. Those four panels catch most payment
+incidents.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li><code>exposure.include: "*"</code> on a public port.</li>
+<li><code>show-details: always</code> publicly (reveals database type,
+versions and disk sizes).</li>
+<li>External dependencies in the liveness group, causing restart
+storms.</li>
+<li>Expensive health checks run on every probe.</li>
+<li>High-cardinality tags (account numbers, references).</li>
+<li>Only technical metrics, no business metrics.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Add Actuator to your service, expose <code>health</code>,
+<code>info</code>, <code>metrics</code> and <code>prometheus</code> on
+port 8081, and call each with <code>curl</code>.</li>
+<li>Stop the PostgreSQL container and watch
+<code>/actuator/health/readiness</code> go <code>DOWN</code> while
+<code>/actuator/health/liveness</code> stays <code>UP</code>. Start it
+again.</li>
+<li>Add <code>bank.transfers</code> counters by outcome and a
+<code>bank.switch.latency</code> timer, generate traffic with a small
+loop, and find the values in <code>/actuator/prometheus</code>.</li>
+<li>Run Prometheus and Grafana with Docker Compose, scrape your service,
+and build a panel showing transfers per minute by outcome.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Actuator, endpoint, exposure, management port, health indicator,
+health group, liveness, readiness, <code>OUT_OF_SERVICE</code>,
+Micrometer, <code>MeterRegistry</code>, counter, timer, gauge,
+distribution summary, percentile histogram, tag, cardinality,
+Prometheus, <code>info</code> endpoint, <code>loggers</code> endpoint,
+sanitisation, heap dump exposure.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://docs.spring.io/spring-boot/reference/actuator/index.html">Spring
+Boot reference: Production-ready features (Actuator)</a></li>
+<li><a
+href="https://docs.spring.io/spring-boot/reference/actuator/endpoints.html">Spring
+Boot reference: Actuator endpoints</a></li>
+<li><a
+href="https://docs.spring.io/spring-boot/reference/actuator/metrics.html">Spring
+Boot reference: Metrics</a></li>
+<li><a
+href="https://docs.micrometer.io/micrometer/reference/concepts.html">Micrometer
+documentation: Concepts</a></li>
+<li><a
+href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/">Kubernetes:
+Configure liveness, readiness and startup probes</a></li>
+<li><a
+href="https://prometheus.io/docs/concepts/metric_types/">Prometheus:
+Metric types</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>The #1 Spring Boot Starter you should include in every single application</h3><p>Dan Vega · 19 min. Dan Vega on why Actuator belongs in every application.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/4OVe0MWgZ4k" title="The #1 Spring Boot Starter you should include in every single application" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Spring Boot Quick Start 33 - Spring Boot Actuator</h3><p>Java Brains · 5 min. A five-minute first look at the Actuator endpoints.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/ojc_Jy_0EgI" title="Spring Boot Quick Start 33 - Spring Boot Actuator" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/04-spring-boot-fundamentals/4.5-actuator-health-metrics/README.md">4.5 Spring Boot Actuator: health checks and metrics</a></p>

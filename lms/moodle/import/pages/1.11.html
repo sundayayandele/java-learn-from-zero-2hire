@@ -1,0 +1,233 @@
+<p><em>Week 4 · Module 1: Modern Java &amp; OOP Foundations</em></p>
+<blockquote>
+<p><strong>Why this topic is here.</strong> "Developing Applications
+with Localization Support" is an objective group in the Oracle OCP Java
+SE 21 and 25 exams, and every customer-facing banking product formats
+money, dates and messages for different locales. See the <a
+href="https://github.com/sundayayandele/java-zero-hire/blob/main/docs/certifications.md">certification mapping</a>.</p>
+</blockquote>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Use <code>Locale</code> to represent language and region, and know
+where the default locale comes from.</li>
+<li>Format and parse numbers, currency and percentages with
+<code>NumberFormat</code>, including compact forms.</li>
+<li>Format and parse dates and times with
+<code>DateTimeFormatter</code>, including localised styles and time
+zones.</li>
+<li>Build messages with <code>MessageFormat</code> and externalise text
+in <code>ResourceBundle</code> properties files, and explain the bundle
+lookup order.</li>
+<li>Keep money formatting correct: format for display only, never parse
+display strings back into amounts.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>A Nigerian customer expects <code>₦1,250,000.50</code>; a French
+customer of the same remittance service expects
+<code>1 250 000,50 €</code>. Statements, SMS alerts and receipts are
+generated in several languages (English, French for Francophone West
+Africa, and others), and dates are written differently from country to
+country: <code>03/04/2026</code> is 3 April in Lagos and London but 4
+March in New York. Formatting mistakes are customer complaints at best,
+and disputes at worst.</p>
+<h2 id="1-locale">1. <code>Locale</code></h2>
+<pre class="java"><code>Locale ng = Locale.of(&quot;en&quot;, &quot;NG&quot;);            // Java 19+: Locale.of (constructors are deprecated)
+Locale fr = Locale.FRANCE;                     // fr_FR
+Locale ha = Locale.forLanguageTag(&quot;ha-NG&quot;);    // Hausa (Nigeria), from a BCP 47 tag
+Locale.getDefault();                           // from the OS / JVM flags -Duser.language=... -Duser.country=...
+ng.getDisplayCountry(Locale.ENGLISH);          // &quot;Nigeria&quot;</code></pre>
+<p>A locale is language plus optional region (plus script and variants).
+In a server, <strong>don't rely on the default locale</strong>: the
+JVM's default comes from the host, which differs between your laptop,
+the CI runner and production. Decide the locale per request (from the
+customer profile or the <code>Accept-Language</code> header) and pass it
+explicitly. <code>Locale.Category.FORMAT</code> and <code>DISPLAY</code>
+defaults can even differ.</p>
+<h2 id="2-numbers-currency-and-percentages">2. Numbers, currency and
+percentages</h2>
+<pre class="java"><code>BigDecimal amount = new BigDecimal(&quot;1250000.50&quot;);
+
+NumberFormat.getCurrencyInstance(Locale.of(&quot;en&quot;, &quot;NG&quot;)).format(amount);   // &quot;₦1,250,000.50&quot;
+NumberFormat.getCurrencyInstance(Locale.FRANCE).format(amount);           // &quot;1 250 000,50 €&quot;   (narrow no-break spaces)
+NumberFormat.getCurrencyInstance(Locale.US).format(amount);               // &quot;$1,250,000.50&quot;
+
+NumberFormat.getNumberInstance(Locale.GERMANY).format(1234.5);            // &quot;1.234,5&quot;
+NumberFormat.getPercentInstance(Locale.UK).format(0.185);                 // &quot;18%&quot;  (default 0 fraction digits)
+NumberFormat.getIntegerInstance(Locale.US).format(2.5);                   // &quot;2&quot;  (HALF_EVEN rounding)
+
+NumberFormat compact = NumberFormat.getCompactNumberInstance(Locale.US, NumberFormat.Style.SHORT);
+compact.format(1_250_000);                                                // &quot;1M&quot;</code></pre>
+<p>Important details:</p>
+<ul>
+<li>The currency symbol comes from the <strong>locale's</strong>
+country. To show naira to a French-speaking customer, set the currency
+explicitly:
+<code>nf.setCurrency(Currency.getInstance("NGN"))</code>.</li>
+<li><code>NumberFormat</code> instances are <strong>not
+thread-safe</strong>. Create one per use, or keep one per thread; don't
+share a static instance across requests. (<code>DateTimeFormatter</code>
+is immutable and safe.)</li>
+<li>Fraction digits follow the currency (<code>JPY</code> → 0). Set them
+deliberately with <code>setMinimumFractionDigits</code> /
+<code>setMaximumFractionDigits</code> and the <code>RoundingMode</code>
+you use for money (topic 1.2).</li>
+<li><strong>Parsing</strong> is locale-sensitive:
+<code>NumberFormat.getNumberInstance(Locale.GERMANY).parse("1.234,5")</code>
+returns 1234.5. Parse returns <code>Number</code> (often
+<code>Long</code> or <code>Double</code>); for money use
+<code>DecimalFormat</code> with <code>setParseBigDecimal(true)</code>,
+or better, accept amounts as JSON numbers or strings in a fixed machine
+format and only <em>format</em> for display.</li>
+</ul>
+<p><code>String.format</code> and <code>formatted</code> are
+locale-aware too: <code>"%,.2f".formatted(amount)</code> uses the
+default locale; pass one explicitly with
+<code>String.format(Locale.US, "%,.2f", amount)</code> in machine output
+such as CSV files, so a server with a French default locale doesn't
+write <code>1 250 000,50</code> into a file a partner parses.</p>
+<h2 id="3-dates-and-times">3. Dates and times</h2>
+<pre class="java"><code>LocalDate d = LocalDate.of(2026, 4, 3);
+DateTimeFormatter.ISO_LOCAL_DATE.format(d);                                        // &quot;2026-04-03&quot;  (APIs and files)
+DateTimeFormatter.ofPattern(&quot;dd/MM/yyyy&quot;).format(d);                               // &quot;03/04/2026&quot;
+DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(Locale.UK).format(d);     // &quot;3 April 2026&quot;
+DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(Locale.FRANCE).format(d); // &quot;3 avril 2026&quot;
+DateTimeFormatter.ofPattern(&quot;EEEE d MMMM yyyy&quot;, Locale.of(&quot;fr&quot;)).format(d);        // &quot;vendredi 3 avril 2026&quot;
+
+ZonedDateTime lagos = Instant.parse(&quot;2026-10-21T09:15:00Z&quot;).atZone(ZoneId.of(&quot;Africa/Lagos&quot;));
+DateTimeFormatter.ofPattern(&quot;dd MMM yyyy HH:mm z&quot;, Locale.UK).format(lagos);       // &quot;21 Oct 2026 10:15 WAT&quot;
+
+LocalDate parsed = LocalDate.parse(&quot;03/04/2026&quot;, DateTimeFormatter.ofPattern(&quot;dd/MM/yyyy&quot;));</code></pre>
+<p>Pattern letters to know: <code>y</code> year, <code>M</code> month
+(<code>MM</code> 04, <code>MMM</code> Apr, <code>MMMM</code> April),
+<code>d</code> day, <code>E</code> day-of-week, <code>H</code> hour
+0–23, <code>h</code> 1–12 with <code>a</code> (AM/PM), <code>m</code>
+minute, <code>s</code> second, <code>S</code> fraction,
+<code>z</code>/<code>VV</code> zone name/id,
+<code>X</code>/<code>x</code> offset. A classic bug: <code>YYYY</code>
+(week-based year) instead of <code>yyyy</code>, which shows the wrong
+year in the last days of December.</p>
+<p>Daylight saving time: Nigeria has none, but your partners in London
+or New York do. Store <code>Instant</code>s, convert with
+<code>ZoneId</code> at the edge, and use <code>ZonedDateTime</code>
+arithmetic (<code>plusDays</code> keeps local time across DST changes;
+<code>plus(Duration.ofHours(24))</code> doesn't).</p>
+<h2 id="4-messages-and-resource-bundles">4. Messages and resource
+bundles</h2>
+<p>Externalise customer-facing text so translators can work without
+touching code:</p>
+<pre class="text"><code>src/main/resources/
+├── messages.properties          # default (English)
+├── messages_fr.properties       # French
+└── messages_ha.properties       # Hausa</code></pre>
+<pre class="properties"><code># messages.properties
+transfer.success=Your transfer of {0} to {1} was successful on {2,date,long}.
+# messages_fr.properties
+transfer.success=Votre virement de {0} à {1} a été effectué le {2,date,long}.</code></pre>
+<pre class="java"><code>ResourceBundle bundle = ResourceBundle.getBundle(&quot;messages&quot;, Locale.FRANCE);
+String text = MessageFormat.format(bundle.getString(&quot;transfer.success&quot;),
+        NumberFormat.getCurrencyInstance(Locale.FRANCE).format(amount),
+        beneficiaryName,
+        Date.from(instant));   // MessageFormat&#39;s date formatting works with java.util.Date</code></pre>
+<p><strong>Lookup order</strong> for
+<code>getBundle("messages", fr_CA)</code> when the default locale is
+<code>en_US</code>: <code>messages_fr_CA</code>,
+<code>messages_fr</code>, then the default locale's candidates
+<code>messages_en_US</code>, <code>messages_en</code>, then
+<code>messages</code> (the base bundle). Individual keys missing in a
+specific bundle are found in its <strong>parents</strong>
+(<code>messages_fr</code> → <code>messages</code>). A missing key throws
+<code>MissingResourceException</code>. Properties files are read as
+UTF-8 since Java 9.</p>
+<p><code>MessageFormat</code> placeholders: <code>{0}</code>,
+<code>{1,number,#.##}</code>, <code>{2,date,short}</code>,
+<code>{3,choice,0#no transfers|1#one transfer|1&lt;{3} transfers}</code>.
+A single quote is an escape character in <code>MessageFormat</code>
+patterns, so write <code>''</code> for an apostrophe ("today''s rate");
+this catches people out in French and English text alike.</p>
+<p>Spring Boot wraps this as a <code>MessageSource</code>
+(<code>spring.messages.basename=messages</code>), and resolves the
+request locale from <code>Accept-Language</code> with a
+<code>LocaleResolver</code>. You'll use that for localised validation
+messages and Problem Details titles.</p>
+<h2 id="worked-example-a-localised-transfer-receipt">Worked example: a
+localised transfer receipt</h2>
+<pre class="java"><code>public String receipt(Transfer t, Locale locale) {
+    NumberFormat money = NumberFormat.getCurrencyInstance(locale);
+    money.setCurrency(Currency.getInstance(t.currency()));          // show the transfer&#39;s currency, not the locale&#39;s
+    DateTimeFormatter when = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
+            .withLocale(locale).withZone(ZoneId.of(&quot;Africa/Lagos&quot;));
+    ResourceBundle messages = ResourceBundle.getBundle(&quot;messages&quot;, locale);
+    return MessageFormat.format(messages.getString(&quot;receipt.line&quot;),
+            money.format(t.amount()), t.beneficiaryName(), when.format(t.postedAt()), t.reference());
+}</code></pre>
+<p>The amount stays a <code>BigDecimal</code> in the ledger; formatting
+happens only at the edge, per customer locale, with the transfer's own
+currency.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Relying on the JVM default locale in servers, or writing
+locale-formatted numbers into machine-readable files.</li>
+<li>Sharing a static <code>NumberFormat</code> or
+<code>SimpleDateFormat</code> between threads.</li>
+<li>Parsing formatted display strings back into money.</li>
+<li><code>YYYY</code> instead of <code>yyyy</code>; <code>mm</code>
+(minutes) instead of <code>MM</code> (months).</li>
+<li>Forgetting that <code>'</code> is special in
+<code>MessageFormat</code> patterns.</li>
+<li>Hard-coding customer-facing text in Java code.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Print ₦1,250,000.50 for <code>en-NG</code>, <code>fr-FR</code>,
+<code>en-US</code> and <code>de-DE</code>, then print the same amount in
+NGN for a French customer.</li>
+<li>Write a <code>StatementHeader</code> that prints the statement
+period in long form for English and French customers, in the
+<code>Africa/Lagos</code> zone.</li>
+<li>Create <code>messages.properties</code> and
+<code>messages_fr.properties</code> with three keys, delete one key from
+the French file, and observe the parent-bundle fallback. Then request a
+key that exists nowhere and handle
+<code>MissingResourceException</code>.</li>
+<li>Write a CSV export that uses
+<code>Locale.ROOT</code>/<code>Locale.US</code> for numbers regardless
+of the server's default locale, and a test that sets the default locale
+to <code>Locale.FRANCE</code> to prove it.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Locale, BCP 47 language tag, default locale,
+<code>NumberFormat</code>, currency instance, percent instance, compact
+number format, <code>DecimalFormat</code>,
+<code>DateTimeFormatter</code>, <code>FormatStyle</code>, pattern
+letters, <code>ZoneId</code>, daylight saving time,
+<code>ResourceBundle</code>, bundle lookup and parent chain,
+<code>MessageFormat</code>, <code>MessageSource</code>,
+internationalisation (i18n), localisation (l10n).</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://docs.oracle.com/javase/tutorial/i18n/index.html">The Java
+Tutorials: Internationalization</a></li>
+<li><a
+href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/text/NumberFormat.html"><code>NumberFormat</code>
+API (Java 21)</a></li>
+<li><a
+href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/time/format/DateTimeFormatter.html"><code>DateTimeFormatter</code>
+API (Java 21)</a></li>
+<li><a
+href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/ResourceBundle.html"><code>ResourceBundle.getBundle</code>
+lookup rules (Java 21)</a></li>
+<li><a
+href="https://docs.oracle.com/en/java/javase/21/intl/internationalization-overview.html">Oracle:
+Java SE 21 Internationalization Guide</a></li>
+<li><a
+href="https://dev.java/learn/api/date-time-regex/date-time/">dev.java
+(Oracle): Date and Time</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Localization and Internationalization in Java Tutorial Part 1</h3><p>Telusko · 4 min. Localization and internationalization basics: Locale and resource bundles.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/h0educ2nosg" title="Localization and Internationalization in Java Tutorial Part 1" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Formatting Money &amp; Percents in Java using the NumberFormat Class</h3><p>Logic Lambda · 4 min. Formatting money and percentages with NumberFormat.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/zaTXwXJW328" title="Formatting Money &amp; Percents in Java using the NumberFormat Class" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Java Currency Formatter Practice Program #97 (optional, longer)</h3><p>Alex Lee · 20 min. A worked currency-formatting exercise across several locales.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/L8loHaj-Bgo" title="Java Currency Formatter Practice Program #97" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/01-modern-java-oop/1.11-localization-formatting/README.md">1.11 Localization: locales, number, currency and date formatting, resource bundles</a></p>

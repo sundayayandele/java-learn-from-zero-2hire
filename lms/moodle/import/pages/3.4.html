@@ -1,0 +1,338 @@
+<p><em>Week 8 · Module 3: Databases: SQL &amp; NoSQL</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Explain why database schemas must be versioned like code, and how
+migration tools track what has run.</li>
+<li>Write and run Flyway migrations (versioned and repeatable) from
+Maven, the command line and Spring Boot.</li>
+<li>Write the equivalent Liquibase changelog and explain where Liquibase
+differs.</li>
+<li>Make backward-compatible ("expand and contract") changes that deploy
+with zero downtime.</li>
+<li>Handle failures, checksum mismatches and baselining of existing
+databases.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>A bank's core database has dozens of environments: every developer's
+laptop, CI, test, UAT, pre-production, production and DR. If schema
+changes are applied by hand, these drift apart, and one day a release
+fails in production because a column exists in UAT but not in prod.
+Auditors also ask "who changed this table, when, and was it reviewed?".
+Migration tools answer all of that: every change is a reviewed file in
+Git, applied automatically, in order, exactly once, everywhere.</p>
+<h2 id="1-the-idea">1. The idea</h2>
+<p>A <strong>migration</strong> is a small, ordered script that moves
+the schema from one version to the next. The tool keeps a
+<strong>history table</strong> in the database recording which
+migrations have run, when, and with what checksum. On startup or deploy
+it compares the files on disk with the history and applies anything new,
+in order.</p>
+<p>Rules that make this work:</p>
+<ul>
+<li><strong>Migrations are immutable once applied</strong> to any shared
+environment. To change something, write a new migration.</li>
+<li><strong>Forward only</strong> in practice. Rollbacks are another
+forward migration (or a restore). Many teams don't write "down" scripts
+at all.</li>
+<li><strong>Same files, every environment.</strong> Data differences
+(test seed data) are handled separately.</li>
+</ul>
+<h2 id="2-flyway">2. Flyway</h2>
+<p>Flyway uses plain SQL files with a naming convention:</p>
+<pre class="text"><code>src/main/resources/db/migration/
+├── V1__create_customer_and_account.sql
+├── V2__create_txn.sql
+├── V3__add_account_daily_limit.sql
+├── V4__index_txn_account_posted.sql
+└── R__view_account_summary.sql</code></pre>
+<ul>
+<li><code>V&lt;version&gt;__&lt;description&gt;.sql</code>:
+<strong>versioned</strong> migrations, run once, in version order. Two
+underscores separate version and description.</li>
+<li><code>R__&lt;description&gt;.sql</code>: <strong>repeatable</strong>
+migrations, re-run whenever their checksum changes, after all versioned
+ones. Good for views, functions and reference data.</li>
+<li><code>U&lt;version&gt;__...sql</code>: undo migrations (a paid
+Flyway feature; most teams don't use them).</li>
+</ul>
+<p>Example migrations:</p>
+<pre class="sql"><code>-- V1__create_customer_and_account.sql
+CREATE TABLE customer (
+    id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    bvn        CHAR(11)     NOT NULL UNIQUE,
+    full_name  VARCHAR(200) NOT NULL,
+    created_at TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+
+CREATE TABLE account (
+    id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    number      CHAR(10)      NOT NULL UNIQUE,
+    customer_id BIGINT        NOT NULL REFERENCES customer(id),
+    currency    CHAR(3)       NOT NULL DEFAULT &#39;NGN&#39;,
+    balance     NUMERIC(19,2) NOT NULL DEFAULT 0 CHECK (balance &gt;= 0),
+    version     BIGINT        NOT NULL DEFAULT 0
+);
+CREATE INDEX idx_account_customer ON account (customer_id);</code></pre>
+<pre class="sql"><code>-- V3__add_account_daily_limit.sql
+ALTER TABLE account ADD COLUMN daily_limit NUMERIC(19,2) NOT NULL DEFAULT 500000.00;</code></pre>
+<p>Flyway records each run in <code>flyway_schema_history</code>:</p>
+<pre class="text"><code> installed_rank | version | description                    | checksum    | success
+----------------+---------+--------------------------------+-------------+---------
+              1 | 1       | create customer and account    | 1384624371  | t
+              2 | 2       | create txn                     | -982374623  | t
+              3 | 3       | add account daily limit        | 47729384    | t</code></pre>
+<h3 id="running-flyway">Running Flyway</h3>
+<p><strong>With Spring Boot</strong> (Module 4), add the starter and the
+database module. In Spring Boot 4, Flyway has its own starter:</p>
+<pre class="xml"><code>&lt;dependency&gt;
+  &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+  &lt;artifactId&gt;spring-boot-starter-flyway&lt;/artifactId&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+  &lt;groupId&gt;org.flywaydb&lt;/groupId&gt;
+  &lt;artifactId&gt;flyway-database-postgresql&lt;/artifactId&gt;   &lt;!-- PostgreSQL support is a separate module since Flyway 10 --&gt;
+&lt;/dependency&gt;</code></pre>
+<p>Spring Boot runs pending migrations at startup before the application
+serves traffic. Useful properties: <code>spring.flyway.locations</code>,
+<code>spring.flyway.baseline-on-migrate</code>,
+<code>spring.flyway.clean-disabled=true</code> (the default; keep it
+so).</p>
+<p><strong>From the command line or CI</strong>, use the Flyway CLI or
+Docker image, which is common for running migrations as a separate
+deployment step before the new application version starts:</p>
+<pre class="bash"><code>docker run --rm --network host -v &quot;$PWD/src/main/resources/db/migration:/flyway/sql&quot; \
+  flyway/flyway -url=jdbc:postgresql://localhost:5432/bank -user=postgres -password=devpass \
+  info migrate</code></pre>
+<p>Commands: <code>info</code> (status of every migration),
+<code>migrate</code>, <code>validate</code> (checksums match?),
+<code>repair</code> (fix the history table after a failed migration or a
+deliberate checksum change), <code>baseline</code> (adopt an existing
+database), <code>clean</code> (drop everything: <strong>never</strong>
+in shared environments).</p>
+<h3 id="when-things-go-wrong">When things go wrong</h3>
+<ul>
+<li><strong>Checksum mismatch</strong>: someone edited an
+already-applied migration. Flyway refuses to continue. Fix: revert the
+edit and create a new migration. Use <code>repair</code> only when the
+change was intentional and harmless (for example, whitespace), and
+document why.</li>
+<li><strong>Failed migration</strong>: PostgreSQL supports transactional
+DDL, so a failing migration rolls back cleanly, and you fix the file and
+re-run. (MySQL commits DDL implicitly, so a half-applied migration must
+be repaired by hand: keep MySQL migrations small.)</li>
+<li><strong>Existing database with no history</strong>:
+<code>baseline</code> marks it as already at a given version, so only
+newer migrations run.</li>
+<li><strong>Out-of-order versions</strong> from parallel branches
+(<code>V7</code> merged after <code>V8</code> was applied): by default
+Flyway rejects them. Agree on a version scheme (timestamps such as
+<code>V20261021_1430__...</code> avoid collisions), or set
+<code>outOfOrder</code> deliberately.</li>
+</ul>
+<h2 id="3-liquibase">3. Liquibase</h2>
+<p>Liquibase tracks <strong>changesets</strong> in a
+<strong>changelog</strong> (XML, YAML, JSON or formatted SQL),
+identified by <code>id</code> + <code>author</code> + file, in a
+<code>DATABASECHANGELOG</code> table. Its abstractions can generate SQL
+for different databases, and it has built-in rollback definitions and
+preconditions.</p>
+<pre class="yaml"><code># src/main/resources/db/changelog/db.changelog-master.yaml
+databaseChangeLog:
+  - changeSet:
+      id: 3-add-account-daily-limit
+      author: ada
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists: { tableName: account, columnName: daily_limit }
+      changes:
+        - addColumn:
+            tableName: account
+            columns:
+              - column:
+                  name: daily_limit
+                  type: NUMERIC(19,2)
+                  defaultValueNumeric: 500000.00
+                  constraints: { nullable: false }
+      rollback:
+        - dropColumn: { tableName: account, columnName: daily_limit }</code></pre>
+<p>Or as formatted SQL, which many teams prefer for readability:</p>
+<pre class="sql"><code>--liquibase formatted sql
+--changeset ada:3-add-account-daily-limit
+ALTER TABLE account ADD COLUMN daily_limit NUMERIC(19,2) NOT NULL DEFAULT 500000.00;
+--rollback ALTER TABLE account DROP COLUMN daily_limit;</code></pre>
+<p>In Spring Boot 4, use <code>spring-boot-starter-liquibase</code>.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Flyway</th>
+<th>Liquibase</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Format</td>
+<td>SQL (or Java) files with naming convention</td>
+<td>XML/YAML/JSON/SQL changelogs</td>
+</tr>
+<tr>
+<td>Ordering</td>
+<td>Version number in file name</td>
+<td>Order in the changelog</td>
+</tr>
+<tr>
+<td>Identity</td>
+<td>Version</td>
+<td>id + author + file path</td>
+</tr>
+<tr>
+<td>Rollback</td>
+<td>Write a new migration (undo is a paid feature)</td>
+<td>Rollback blocks in the changelog</td>
+</tr>
+<tr>
+<td>Database-agnostic changes</td>
+<td>You write the SQL</td>
+<td>Abstract change types generate SQL</td>
+</tr>
+<tr>
+<td>Learning curve</td>
+<td>Very low</td>
+<td>Moderate</td>
+</tr>
+</tbody>
+</table>
+<p>Both are fine. Flyway's plain SQL is easier for most teams and is
+what this programme uses; you should be able to read and extend a
+Liquibase changelog when you meet one, because many banks standardised
+on it.</p>
+<h2 id="4-zero-downtime-changes-expand-and-contract">4. Zero-downtime
+changes: expand and contract</h2>
+<p>In production, old and new versions of your service run <strong>at
+the same time</strong> during a rolling deploy. A migration must
+therefore work with both. Some changes are naturally safe; others must
+be split across releases.</p>
+<p><strong>Safe in one step:</strong> adding a table; adding a nullable
+column; adding a column with a constant default (PostgreSQL 11+ does
+this instantly); adding an index <code>CONCURRENTLY</code>.</p>
+<p><strong>Dangerous in one step:</strong> renaming or dropping a column
+the old version still reads; changing a column's type; adding
+<code>NOT NULL</code> without a default to a big table; creating an
+index without <code>CONCURRENTLY</code> on a hot table.</p>
+<p><strong>Expand and contract</strong> (also called parallel change)
+for renaming <code>account.number</code> to
+<code>account.nuban</code>:</p>
+<ol type="1">
+<li><strong>Expand</strong> (release 1): add <code>nuban</code>
+(nullable). The application writes both columns and reads
+<code>number</code>.</li>
+<li><strong>Migrate data</strong>: backfill <code>nuban</code> from
+<code>number</code> in batches
+(<code>UPDATE ... WHERE id BETWEEN ? AND ?</code>), not in one giant
+transaction.</li>
+<li><strong>Switch reads</strong> (release 2): read <code>nuban</code>,
+still write both. Add <code>NOT NULL</code> and <code>UNIQUE</code> once
+the backfill is complete.</li>
+<li><strong>Contract</strong> (release 3): stop writing
+<code>number</code>; finally, drop the column.</li>
+</ol>
+<p>It takes three releases instead of one, but at no point is the bank
+down or any version broken.</p>
+<h3 id="other-production-habits">Other production habits</h3>
+<ul>
+<li>Set <code>lock_timeout</code> at the top of risky migrations
+(<code>SET lock_timeout = '5s';</code>) so a migration waiting behind a
+long transaction fails fast instead of queueing all traffic behind its
+lock.</li>
+<li><code>CREATE INDEX CONCURRENTLY</code> cannot run inside a
+transaction. In Flyway, put it in its own migration and disable the
+transaction for that script (a <code>.conf</code> file next to it with
+<code>executeInTransaction=false</code>), or run it as a separate
+script.</li>
+<li>Large data backfills belong in batched jobs, not in a single
+migration.</li>
+<li>Test migrations against a copy of production-sized data before
+release.</li>
+</ul>
+<h2 id="worked-example-adding-a-ledger-with-flyway">Worked example:
+adding a ledger with Flyway</h2>
+<pre class="sql"><code>-- V5__create_ledger_entry.sql
+CREATE TABLE ledger_entry (
+    id            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    transfer_ref  VARCHAR(40)   NOT NULL,
+    account_id    BIGINT        NOT NULL REFERENCES account(id),
+    direction     CHAR(1)       NOT NULL CHECK (direction IN (&#39;D&#39;,&#39;C&#39;)),
+    amount        NUMERIC(19,2) NOT NULL CHECK (amount &gt; 0),
+    posted_at     TIMESTAMPTZ   NOT NULL DEFAULT now(),
+    CONSTRAINT uq_ledger_ref_dir UNIQUE (transfer_ref, direction)
+);
+CREATE INDEX idx_ledger_account_posted ON ledger_entry (account_id, posted_at);</code></pre>
+<pre class="sql"><code>-- R__view_account_balance_check.sql  (re-runs when edited)
+CREATE OR REPLACE VIEW v_account_balance_check AS
+SELECT a.id, a.number, a.balance,
+       coalesce(sum(CASE WHEN l.direction = &#39;C&#39; THEN l.amount ELSE -l.amount END), 0) AS ledger_balance
+FROM account a LEFT JOIN ledger_entry l ON l.account_id = a.id
+GROUP BY a.id, a.number, a.balance;</code></pre>
+<p>Run <code>flyway info</code> before and after <code>migrate</code>,
+commit both files with the code that uses them, and the next person (or
+CI) gets the identical schema with one command.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Editing a migration that has already run in a shared
+environment.</li>
+<li>Running <code>flyway clean</code> anywhere near production (keep
+<code>cleanDisabled</code> true).</li>
+<li>One-step renames or type changes during rolling deploys.</li>
+<li>Huge data updates inside a schema migration.</li>
+<li><code>CREATE INDEX</code> without <code>CONCURRENTLY</code> on a hot
+table.</li>
+<li>Version-number collisions between feature branches.</li>
+<li>Using Hibernate's <code>ddl-auto=update</code> instead of migrations
+(topic 4.3 explains why).</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Turn your topic 3.1 schema into Flyway migrations
+<code>V1</code>–<code>V4</code> and run them with the Flyway Docker
+image. Run <code>info</code>, then edit <code>V2</code> and observe the
+checksum error. Revert and fix properly.</li>
+<li>Add a repeatable migration with a reporting view, change it, and
+show it re-runs.</li>
+<li>Rewrite <code>V3</code> as a Liquibase formatted-SQL changeset with
+a rollback, run it with the Liquibase Docker image, then roll it
+back.</li>
+<li>Plan, on paper, an expand-and-contract migration that changes
+<code>txn.amount</code> from <code>NUMERIC(19,2)</code> to
+<code>BIGINT</code> kobo. List each release and what the application
+does in each.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Migration, schema version, history table, versioned migration,
+repeatable migration, checksum, <code>migrate</code>, <code>info</code>,
+<code>validate</code>, <code>repair</code>, <code>baseline</code>,
+<code>clean</code>, transactional DDL, changelog, changeset,
+precondition, rollback, expand and contract, rolling deploy, backfill,
+<code>lock_timeout</code>.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://documentation.red-gate.com/fd/migrations-271585107.html">Flyway
+documentation: Migrations</a></li>
+<li><a
+href="https://docs.spring.io/spring-boot/how-to/data-initialization.html">Spring
+Boot: Execute Flyway database migrations on startup</a></li>
+<li><a href="https://docs.liquibase.com/start/home.html">Liquibase
+documentation: Get started</a></li>
+<li><a href="https://martinfowler.com/articles/evodb.html">Martin
+Fowler: Evolutionary Database Design</a></li>
+<li><a href="https://martinfowler.com/bliki/ParallelChange.html">Martin
+Fowler: Parallel Change (expand and contract)</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Database Migrations for Beginners | Flyway Tutorial</h3><p>Redhwan Nacef · 18 min. Why migrations exist and how Flyway versions a schema.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/dJDBP7pPA-o" title="Database Migrations for Beginners | Flyway Tutorial" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Working with Flyway Migrations in a Spring Boot Application</h3><p>IntelliJ IDEA, a JetBrains IDE · 8 min. Flyway inside a Spring Boot project, from JetBrains.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/AMopB9C2bH8" title="Working with Flyway Migrations in a Spring Boot Application" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>How Liquibase Works</h3><p>Liquibase · 3 min. Liquibase&#x27;s model of changelogs and changesets, from Liquibase.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/U9nVo9MS12o" title="How Liquibase Works" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/03-databases-sql-nosql/3.4-schema-migrations-flyway-liquibase/README.md">3.4 Schema migrations with Flyway and Liquibase</a></p>

@@ -1,0 +1,409 @@
+<p><em>Week 2 · Module 1: Modern Java &amp; OOP Foundations</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Model a business domain with classes, objects, fields, constructors
+and methods.</li>
+<li>Apply encapsulation, abstraction, inheritance and polymorphism, and
+say when each helps.</li>
+<li>Choose between an interface, an abstract class and composition.</li>
+<li>Implement <code>equals</code>, <code>hashCode</code> and
+<code>toString</code> correctly.</li>
+<li>Recognise violations of the five SOLID principles in code review,
+and refactor them.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Banking code lives for decades. The account, loan and payment classes
+you write will be changed by dozens of engineers after you, often under
+regulatory deadlines. Object-oriented design is how you keep that change
+safe: rules live next to the data they protect, new products plug in
+without rewriting old ones, and tests can replace a real payment gateway
+with a fake. SOLID questions are standard in Java interviews precisely
+because they predict whether your code will survive that.</p>
+<h2 id="1-classes-and-objects">1. Classes and objects</h2>
+<p>A <strong>class</strong> is a blueprint; an <strong>object</strong>
+is one instance of it with its own state.</p>
+<pre class="java"><code>public class Account {
+    private final String number;
+    private final String ownerName;
+    private BigDecimal balance;
+
+    public Account(String number, String ownerName, BigDecimal openingBalance) {
+        if (number == null || !number.matches(&quot;\\d{10}&quot;)) {
+            throw new IllegalArgumentException(&quot;Account number must be 10 digits&quot;);
+        }
+        this.number = number;
+        this.ownerName = ownerName;
+        this.balance = openingBalance;
+    }
+
+    public void deposit(BigDecimal amount) {
+        requirePositive(amount);
+        balance = balance.add(amount);
+    }
+
+    public void withdraw(BigDecimal amount) {
+        requirePositive(amount);
+        if (balance.compareTo(amount) &lt; 0) {
+            throw new InsufficientFundsException(number, amount, balance);
+        }
+        balance = balance.subtract(amount);
+    }
+
+    public BigDecimal balance() { return balance; }
+    public String number() { return number; }
+
+    private static void requirePositive(BigDecimal amount) {
+        if (amount.signum() &lt;= 0) throw new IllegalArgumentException(&quot;Amount must be positive&quot;);
+    }
+}</code></pre>
+<p><code>this</code> refers to the current object. The constructor
+guarantees that no <code>Account</code> can exist with an invalid
+number: an object should be valid from the moment it is created.</p>
+<h2 id="2-the-four-pillars">2. The four pillars</h2>
+<h3 id="encapsulation">Encapsulation</h3>
+<p>Fields are <code>private</code>; the outside world changes state only
+through methods that enforce the rules. Nobody can write
+<code>account.balance = account.balance.subtract(x)</code> and bypass
+the overdraft check. Compare that with a class full of public getters
+<em>and setters</em> for every field (an "anaemic" model), where every
+caller must remember the rules and one of them eventually forgets.</p>
+<p>Access modifiers, from most to least open: <code>public</code>
+(everyone), <code>protected</code> (subclasses and same package),
+<em>package-private</em> (no keyword: same package only),
+<code>private</code> (this class only). Start with <code>private</code>
+and open up only when you must.</p>
+<h3 id="abstraction">Abstraction</h3>
+<p>Expose <em>what</em> an object does, hide <em>how</em>. A caller of
+<code>PaymentGateway.charge(card, amount)</code> should not know whether
+it calls Paystack, Flutterwave or a test stub. Interfaces are Java's
+main abstraction tool:</p>
+<pre class="java"><code>public interface PaymentGateway {
+    PaymentResult charge(String cardToken, Money amount);
+}</code></pre>
+<h3 id="inheritance">Inheritance</h3>
+<p>A subclass <code>extends</code> a superclass, inheriting its fields
+and methods and adding or overriding behaviour:</p>
+<pre class="java"><code>public class SavingsAccount extends Account {
+    private final BigDecimal annualRate;
+
+    public SavingsAccount(String number, String owner, BigDecimal opening, BigDecimal annualRate) {
+        super(number, owner, opening);          // call the parent constructor first
+        this.annualRate = annualRate;
+    }
+
+    public BigDecimal monthlyInterest() {
+        return balance().multiply(annualRate)
+                .divide(BigDecimal.valueOf(12), 2, RoundingMode.HALF_EVEN);
+    }
+}</code></pre>
+<p>Inheritance models an <strong>is-a</strong> relationship: a savings
+account <em>is an</em> account. Java allows only one superclass (single
+inheritance) but many interfaces. Every class ultimately extends
+<code>java.lang.Object</code>.</p>
+<p>Use inheritance sparingly. Deep hierarchies
+(<code>Account → InterestBearingAccount → SavingsAccount → PremiumSavingsAccount</code>)
+become brittle: a change in a parent ripples unpredictably into every
+child (the "fragile base class" problem). Mark classes
+<code>final</code> unless you designed them to be extended.</p>
+<h3 id="polymorphism">Polymorphism</h3>
+<p>"Many forms": a variable of a supertype can hold any subtype, and the
+method that runs is chosen at runtime from the actual object.</p>
+<pre class="java"><code>List&lt;PaymentGateway&gt; gateways = List.of(new PaystackGateway(), new FlutterwaveGateway());
+for (PaymentGateway g : gateways) {
+    g.charge(token, amount);    // each object runs its own implementation
+}</code></pre>
+<p>That is <strong>runtime polymorphism</strong> via method overriding
+(mark overrides with <code>@Override</code> so the compiler catches
+typos). Overloading (topic 1.2) is sometimes called compile-time
+polymorphism.</p>
+<h2 id="3-interfaces-abstract-classes-and-composition">3. Interfaces,
+abstract classes and composition</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Interface</th>
+<th>Abstract class</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Purpose</td>
+<td>A capability or contract</td>
+<td>A partial implementation shared by close relatives</td>
+</tr>
+<tr>
+<td>State (fields)</td>
+<td>Constants only</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Constructors</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Methods</td>
+<td>Abstract, plus <code>default</code> and <code>static</code>
+methods</td>
+<td>Abstract and concrete</td>
+</tr>
+<tr>
+<td>A class can have</td>
+<td>Many</td>
+<td>One</td>
+</tr>
+</tbody>
+</table>
+<pre class="java"><code>public abstract class Loan {
+    protected final Money principal;
+    protected Loan(Money principal) { this.principal = principal; }
+
+    public abstract BigDecimal annualRate();        // each product decides
+
+    public Money totalInterest(int months) {        // shared algorithm (template method)
+        return principal.times(annualRate()).times(months).dividedBy(12);
+    }
+}</code></pre>
+<p><strong>Composition</strong> means "has-a": an object holds other
+objects and delegates to them.</p>
+<pre class="java"><code>public class TransferService {
+    private final AccountRepository accounts;
+    private final FraudCheck fraudCheck;
+    private final Notifier notifier;
+
+    public TransferService(AccountRepository accounts, FraudCheck fraudCheck, Notifier notifier) {
+        this.accounts = accounts;
+        this.fraudCheck = fraudCheck;
+        this.notifier = notifier;
+    }
+}</code></pre>
+<p><strong>Favour composition over inheritance.</strong> You can swap a
+<code>FraudCheck</code> at runtime or in a test; you cannot swap a
+superclass. Spring (Module 4) is built entirely on this idea: it
+constructs objects like <code>TransferService</code> and passes in their
+collaborators.</p>
+<h2 id="4a-enums-interface-methods-nested-classes-and-initialisers">4a.
+Enums, interface methods, nested classes and initialisers</h2>
+<p><strong>Enums</strong> are full classes with a fixed set of
+instances, and can have fields, constructors and methods:</p>
+<pre class="java"><code>public enum Channel {
+    MOBILE(&quot;10.00&quot;), USSD(&quot;6.98&quot;), POS(&quot;25.00&quot;);
+
+    private final BigDecimal fee;
+    Channel(String fee) { this.fee = new BigDecimal(fee); }     // constructors are implicitly private
+    public BigDecimal fee() { return fee; }
+}
+Channel.valueOf(&quot;POS&quot;).fee();   Channel.values();   Channel.MOBILE.ordinal();   // never persist ordinals (topic 4.3)</code></pre>
+<p><strong>Interfaces</strong> can contain <code>default</code> methods
+(inherited behaviour), <code>static</code> methods (utilities called as
+<code>FeeRule.none()</code>), and <code>private</code> methods (helpers
+shared by default methods). A class that inherits the same default
+method from two interfaces must override it, and can call one explicitly
+with <code>Interface.super.method()</code>.</p>
+<p><strong>Nested classes:</strong> a <code>static</code> nested class
+is just a class scoped inside another (common for builders and DTOs); an
+inner (non-static) class holds a reference to its outer instance; local
+and anonymous classes are declared inside methods (lambdas replaced most
+anonymous classes). <strong>Initialisers</strong> run in order: static
+initialisers once when the class loads, then instance initialisers and
+field initialisers, then the constructor body. Since <strong>Java
+25</strong>, <em>flexible constructor bodies</em> allow statements (such
+as argument validation) before <code>super(...)</code> or
+<code>this(...)</code>, as long as they don't use the object being
+constructed.</p>
+<h2 id="4-equals-hashcode-and-tostring">4. <code>equals</code>,
+<code>hashCode</code> and <code>toString</code></h2>
+<p><code>Object</code> provides defaults: <code>equals</code> compares
+references and <code>toString</code> prints something like
+<code>Account@1b6d3586</code>. For value-like objects, override them,
+and <strong>always override <code>hashCode</code> together with
+<code>equals</code></strong>, or <code>HashMap</code> and
+<code>HashSet</code> break (topic 1.4).</p>
+<pre class="java"><code>@Override
+public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof Account other)) return false;   // pattern matching instanceof (Java 16+)
+    return number.equals(other.number);
+}
+
+@Override
+public int hashCode() { return number.hashCode(); }
+
+@Override
+public String toString() { return &quot;Account[&quot; + number + &quot;]&quot;; }   // never print PINs or full card numbers</code></pre>
+<p>The contract: equal objects must have equal hash codes;
+<code>equals</code> must be reflexive, symmetric and transitive. Records
+(topic 1.6) generate all three for you.</p>
+<h2 id="5-solid">5. SOLID</h2>
+<p>Five principles, popularised by Robert C. Martin, for code that is
+easy to change.</p>
+<h3 id="s-single-responsibility-principle">S: Single Responsibility
+Principle</h3>
+<p><em>A class should have one reason to change.</em></p>
+<pre class="java"><code>// Before: three reasons to change (business rules, SQL, email format)
+class StatementService {
+    List&lt;Transaction&gt; load(String acc) { /* JDBC */ }
+    BigDecimal closingBalance(List&lt;Transaction&gt; txs) { /* rules */ }
+    void emailPdf(String acc) { /* SMTP + PDF */ }
+}</code></pre>
+<p>After: <code>TransactionRepository</code> (data access),
+<code>StatementCalculator</code> (rules) and
+<code>StatementMailer</code> (delivery). Each can be tested and changed
+alone. "Reason to change" usually maps to a stakeholder: the finance
+team, the DBA, the communications team.</p>
+<h3 id="o-openclosed-principle">O: Open/Closed Principle</h3>
+<p><em>Open for extension, closed for modification.</em> Add behaviour
+by adding code, not by editing working code.</p>
+<pre class="java"><code>// Before: every new channel edits this method (and risks breaking the others)
+BigDecimal fee(String channel, BigDecimal amount) {
+    if (channel.equals(&quot;POS&quot;)) ... else if (channel.equals(&quot;USSD&quot;)) ... else if ...
+}
+
+// After: a new channel is a new class
+interface FeeRule { boolean appliesTo(Transaction tx); Money fee(Transaction tx); }
+class PosFeeRule implements FeeRule { ... }
+class UssdFeeRule implements FeeRule { ... }
+
+class FeeEngine {
+    private final List&lt;FeeRule&gt; rules;
+    Money feeFor(Transaction tx) {
+        return rules.stream().filter(r -&gt; r.appliesTo(tx)).findFirst()
+                .map(r -&gt; r.fee(tx)).orElse(Money.zero(tx.currency()));
+    }
+}</code></pre>
+<h3 id="l-liskov-substitution-principle">L: Liskov Substitution
+Principle</h3>
+<p><em>A subtype must be usable anywhere its supertype is expected,
+without surprises.</em> If <code>Account.withdraw</code> promises
+"succeeds when the balance covers the amount", a
+<code>FixedDepositAccount</code> that throws
+<code>UnsupportedOperationException</code> from <code>withdraw</code>
+breaks every caller that trusted the contract. The fix is a better
+model: fixed deposits are not withdrawable accounts, so they should not
+extend that type. Typical LSP smells: overrides that throw "not
+supported", that strengthen preconditions (accept fewer inputs) or
+weaken postconditions (promise less).</p>
+<h3 id="i-interface-segregation-principle">I: Interface Segregation
+Principle</h3>
+<p><em>Clients should not depend on methods they do not use.</em> A
+30-method <code>BankingService</code> interface forces every implementer
+and every mock to deal with all 30. Split it by client:
+<code>BalanceQuery</code>, <code>TransferCommand</code>,
+<code>StatementExport</code>. A mobile-app adapter that only reads
+balances depends only on <code>BalanceQuery</code>.</p>
+<h3 id="d-dependency-inversion-principle">D: Dependency Inversion
+Principle</h3>
+<p><em>Depend on abstractions, not concretions.</em> High-level policy
+(<code>TransferService</code>) should not <code>new</code> up low-level
+details (<code>PostgresAccountRepository</code>,
+<code>SmtpNotifier</code>). It should depend on interfaces, and receive
+implementations from outside, usually through the constructor
+(<strong>dependency injection</strong>):</p>
+<pre class="java"><code>// Before: impossible to test without a real database and mail server
+class TransferService {
+    private final PostgresAccountRepository repo = new PostgresAccountRepository();
+}
+
+// After: tests pass in fakes; production passes real ones (Spring does it for you in Module 4)
+class TransferService {
+    private final AccountRepository repo;
+    TransferService(AccountRepository repo) { this.repo = repo; }
+}</code></pre>
+<p>SOLID is a set of heuristics, not laws. Applied dogmatically to a
+50-line script it produces 20 tiny classes. Apply it where change is
+likely: business rules, integrations and anything regulators touch.</p>
+<h2 id="worked-example-a-transfer-domain">Worked example: a transfer
+domain</h2>
+<pre class="java"><code>public interface AccountRepository {
+    Account find(String number);
+    void save(Account account);
+}
+
+public final class TransferService {
+    private final AccountRepository accounts;
+    private final List&lt;TransferRule&gt; rules;     // OCP: limits, sanctions, fraud, each its own class
+
+    public TransferService(AccountRepository accounts, List&lt;TransferRule&gt; rules) {
+        this.accounts = accounts;
+        this.rules = rules;
+    }
+
+    public void transfer(String from, String to, BigDecimal amount) {
+        Account source = accounts.find(from);
+        Account target = accounts.find(to);
+        rules.forEach(r -&gt; r.check(source, target, amount));   // each rule throws if violated
+        source.withdraw(amount);                                 // encapsulated invariants
+        target.deposit(amount);
+        accounts.save(source);
+        accounts.save(target);
+    }
+}</code></pre>
+<p>In a test you pass an in-memory <code>AccountRepository</code> backed
+by a <code>HashMap</code> and an empty rule list, with no database
+needed. In Module 3 you will make the two saves atomic with a database
+transaction.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Public fields, or a setter for every field, so the rules live
+everywhere except in the object.</li>
+<li>Inheritance for code reuse between unrelated things
+(<code>Customer extends DatabaseConnection</code>).</li>
+<li>Overriding <code>equals</code> without <code>hashCode</code>.</li>
+<li><code>toString</code> that leaks PII or secrets into logs.</li>
+<li>"God classes" (<code>BankManager</code>, <code>Utils</code>) that
+everything depends on.</li>
+<li>Over-engineering: an interface with exactly one implementation and
+no test double "just in case".</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Model <code>Customer</code>, <code>Account</code>,
+<code>SavingsAccount</code> and <code>CurrentAccount</code> (with an
+overdraft limit). Put the overdraft rule inside
+<code>CurrentAccount.withdraw</code>, not in the caller.</li>
+<li>Take the <code>if/else</code> fee method above and refactor it to
+the <code>FeeRule</code> design. Add a new
+<code>AgentBankingFeeRule</code> without editing
+<code>FeeEngine</code>.</li>
+<li>Find the LSP violation:
+<code>class ReadOnlyAccount extends Account { @Override void deposit(...) { throw new UnsupportedOperationException(); } }</code>.
+Propose a better hierarchy.</li>
+<li>Write <code>TransferService</code> with an in-memory repository and
+three tests: a successful transfer, insufficient funds, and a blocked
+account rule.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Class, object, constructor, encapsulation, abstraction, inheritance,
+polymorphism, <code>@Override</code>, interface, abstract class,
+composition, <code>equals</code>/<code>hashCode</code> contract, SOLID,
+dependency injection.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://docs.oracle.com/javase/tutorial/java/concepts/index.html">The
+Java Tutorials: Object-Oriented Programming Concepts</a></li>
+<li><a
+href="https://docs.oracle.com/javase/tutorial/java/IandI/index.html">The
+Java Tutorials: Interfaces and Inheritance</a></li>
+<li><a
+href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Object.html"><code>Object.equals</code>
+and <code>hashCode</code> contract (Java 21 API)</a></li>
+<li>Joshua Bloch, <em>Effective Java</em> (3rd edition), items 10–11 and
+18 (book)</li>
+<li><a
+href="https://dev.java/learn/language/oop/classes-objects/">dev.java
+(Oracle): Classes and Objects</a></li>
+<li><a href="https://dev.java/learn/language/oop/inheritance/">dev.java
+(Oracle): Inheritance</a></li>
+<li><a href="https://dev.java/learn/language/oop/interfaces/">dev.java
+(Oracle): Interfaces</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Object-Oriented Programming, Simplified</h3><p>Programming with Mosh · 8 min. The four pillars of OOP in plain language: encapsulation, abstraction, inheritance, polymorphism.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/pTB0EiLXUC8" title="Object-Oriented Programming, Simplified" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Java Polymorphism Fully Explained In 7 Minutes</h3><p>Coding with John · 7 min. Polymorphism in Java, shown with code you can type yourself.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/jhDUxynEQRI" title="Java Polymorphism Fully Explained In 7 Minutes" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>SOLID Design Principles with Java Examples | Clean Code and Best Practices | Geekific</h3><p>Geekific · 11 min. Each SOLID principle with a short Java before-and-after.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/HoA6aZPR5K0" title="SOLID Design Principles with Java Examples | Clean Code and Best Practices | Geekific" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Learn SOLID Principles with CLEAN CODE Examples (optional, longer)</h3><p>Amigoscode · 29 min. A longer, code-along refactor applying SOLID to a realistic class.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/_jDNAf3CzeY" title="Learn SOLID Principles with CLEAN CODE Examples" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/01-modern-java-oop/1.3-oop-and-solid/README.md">1.3 Object-oriented programming and the SOLID principles</a></p>
