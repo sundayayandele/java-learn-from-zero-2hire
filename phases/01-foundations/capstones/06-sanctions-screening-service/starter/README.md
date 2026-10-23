@@ -15,7 +15,8 @@ Generated from the [Spring Boot service starter](../../../../../templates/spring
 - `web/ApiExceptionHandler`: RFC 9457 Problem Details for validation errors and unexpected errors. Add a handler per domain exception.
 - `db/migration/V1__baseline.sql`: replace it with your first real migration.
 - Integration tests with a real PostgreSQL (Testcontainers) proving migrations ran and readiness is UP.
-- Dockerfile, Compose file, GitHub Actions (primary) and GitLab CI (secondary).
+- Dockerfile and Compose file.
+- CI/CD for six platforms: GitHub Actions (primary, `.github/workflows/ci.yml`), GitLab CI (`.gitlab-ci.yml`), Azure DevOps (`azure-pipelines.yml`), AWS CodeBuild/CodePipeline (`buildspec.yml`), Jenkins (`Jenkinsfile`), and Kubernetes manifests with an Argo CD GitOps Application (`deploy/`). See the [CI/CD guide](../../../cicd/README.md).
 
 ## Your first tasks
 

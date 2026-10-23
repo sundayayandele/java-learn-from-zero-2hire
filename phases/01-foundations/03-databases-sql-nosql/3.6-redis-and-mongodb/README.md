@@ -271,7 +271,7 @@ NoSQL, key-value store, document store, Redis, TTL, `NX`, atomic command, cache-
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-22. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-23. Moodle learners see them embedded.
 
 - [Redis in 100 Seconds](https://www.youtube.com/watch?v=G1rOthIU-uo) · Fireship · 2 min. Redis in 100 seconds.
 - [What is Redis Cache?](https://www.youtube.com/watch?v=Tqaqdfxi-J4) · Redis · 6 min. What a cache is and the cache-aside pattern, from Redis.

@@ -1,6 +1,6 @@
 {
   "about": "Curated English YouTube videos for every topic. Source of truth for the Watch section of each topic README and for the Moodle topic pages. Rules: English audio and captions, embeddable, official or well-established channels first, 'optional' for anything over 30 minutes. Checked by lms/check_videos.py; minutes and published are filled from YouTube by `python lms/check_videos.py --fill`.",
-  "checked": "2026-10-22",
+  "checked": "2026-10-23",
   "topics": {
     "1.1": [
       {
@@ -823,6 +823,75 @@
         "published": "2025-04-09",
         "optional": true,
         "why": "Auto-deploying a Spring Boot backend to a VPS with GitHub Actions and HTTPS."
+      }
+    ],
+    "cicd": [
+      {
+        "id": "Nc_jITa2qYE",
+        "title": "Create Your First Azure Pipeline using YAML | Azure DevOps Tutorial | An IT Professional",
+        "channel": "An IT Professional",
+        "minutes": 12.2,
+        "published": "2023-08-14",
+        "why": "Your first Azure DevOps YAML pipeline, step by step."
+      },
+      {
+        "id": "e0bF1LlclEs",
+        "title": "(Simple?) Real World Azure Pipelines YAML Walkthrough",
+        "channel": "Julie Ng",
+        "minutes": 22.1,
+        "published": "2021-04-18",
+        "why": "A real-world Azure Pipelines YAML file walked through stage by stage."
+      },
+      {
+        "id": "E-YanBx38Cs",
+        "title": "Build a CI/CD Pipeline with AWS CodePipeline | Training and Demo",
+        "channel": "Digital Cloud Training",
+        "minutes": 14.7,
+        "published": "2025-03-04",
+        "why": "AWS CodePipeline with CodeBuild: how the pieces connect."
+      },
+      {
+        "id": "TiTrcFEsj7A",
+        "title": "How to Write a Pipeline Script in Jenkins",
+        "channel": "CloudBeesTV",
+        "minutes": 8.9,
+        "published": "2021-04-29",
+        "why": "Writing a Jenkins pipeline script, from CloudBees (the company behind Jenkins' enterprise edition)."
+      },
+      {
+        "id": "Yb3_4PZX0B0",
+        "title": "Let's do GitOps in Kubernetes! ArgoCD Tutorial",
+        "channel": "Christian Lempa",
+        "minutes": 18.0,
+        "published": "2022-08-30",
+        "why": "GitOps on Kubernetes with Argo CD, hands-on."
+      },
+      {
+        "id": "4BibQ69MD8c",
+        "title": "Azure DevOps Tutorial for Beginners | CI/CD with Azure Pipelines",
+        "channel": "TechWorld with Nana",
+        "minutes": 36.5,
+        "published": "2022-07-19",
+        "optional": true,
+        "why": "Azure DevOps and Azure Pipelines end to end."
+      },
+      {
+        "id": "7KCS70sCoK0",
+        "title": "Complete Jenkins Pipeline Tutorial | Jenkinsfile explained",
+        "channel": "TechWorld with Nana",
+        "minutes": 35.1,
+        "published": "2020-03-07",
+        "optional": true,
+        "why": "The complete Jenkinsfile explained."
+      },
+      {
+        "id": "MeU5_k9ssrs",
+        "title": "ArgoCD Tutorial for Beginners | GitOps CD for Kubernetes",
+        "channel": "TechWorld with Nana",
+        "minutes": 47.9,
+        "published": "2021-10-21",
+        "optional": true,
+        "why": "Argo CD in depth: applications, sync and GitOps workflows."
       }
     ]
   }

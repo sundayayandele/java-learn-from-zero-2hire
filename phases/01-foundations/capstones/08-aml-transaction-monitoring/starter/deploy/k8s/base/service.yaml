@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: aml-transaction-monitoring
+spec:
+  selector: {}
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

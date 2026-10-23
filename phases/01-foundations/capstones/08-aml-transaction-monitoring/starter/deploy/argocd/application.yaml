@@ -1,0 +1,22 @@
+# Argo CD Application (GitOps): Argo CD keeps the cluster in sync with deploy/k8s/overlays/local in Git.
+# Replace OWNER/REPO, then: kubectl apply -n argocd -f deploy/argocd/application.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: aml-transaction-monitoring
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/OWNER/REPO.git
+    targetRevision: main
+    path: deploy/k8s/overlays/local
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: aml-transaction-monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

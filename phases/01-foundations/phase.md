@@ -47,9 +47,9 @@ Ten financial-institution capstones built on public datasets that are free for c
 
 ## Deployment and CI/CD
 
-Every capstone ships with GitHub Actions CI (primary) and an equivalent GitLab CI file (secondary, on a free gitlab.com account), plus infrastructure sizing and step-by-step deployment to a VPS (for example SSDNodes), AWS, Azure and GCP.
+Every capstone ships with the same pipeline on six platforms: GitHub Actions (primary), GitLab CI (secondary, free gitlab.com), Azure DevOps, AWS CodeBuild/CodePipeline, Jenkins, and Kubernetes manifests with Argo CD for GitOps, plus infrastructure sizing and step-by-step deployment to a VPS (for example SSDNodes), AWS, Azure and GCP.
 
-→ [Deployment and CI/CD guide](deploy/README.md)
+→ [Deployment guide](deploy/README.md) · [CI/CD guide: GitHub Actions, GitLab, Azure DevOps, AWS, Jenkins, Argo CD](cicd/README.md)
 
 ## End-of-phase exam
 

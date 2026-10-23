@@ -1,0 +1,19 @@
+# Production-like: two replicas, managed PostgreSQL outside the cluster, secret provided by the platform
+# (External Secrets Operator, Sealed Secrets or the cloud's secret store CSI driver). Nothing secret is committed.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: sanctions-screening-service
+resources:
+  - ../../base
+images:
+  - name: sanctions-screening-service
+    newName: ghcr.io/OWNER/sanctions-screening-service
+    newTag: "0000000"          # pinned commit SHA, updated by CI in a pull request (GitOps)
+patches:
+  - target:
+      kind: Deployment
+      name: sanctions-screening-service
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 2

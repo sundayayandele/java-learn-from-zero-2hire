@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kyb-lei-lookup-service
+spec:
+  selector: {}
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

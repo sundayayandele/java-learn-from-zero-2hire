@@ -327,7 +327,7 @@ JDBC, driver, `DataSource`, `DriverManager`, `Connection`, `PreparedStatement`, 
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-22. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-23. Moodle learners see them embedded.
 
 - [JDBC Tutorial - Crash Course](https://www.youtube.com/watch?v=KgXq2UBNEhA) · Marco Codes · 24 min. JDBC end to end: connections, statements, result sets and transactions.
 - [Java Database Connectivity | JDBC](https://www.youtube.com/watch?v=7v2OnUti2eM) · Telusko · 21 min. A second walkthrough of the JDBC steps, slower and beginner-friendly.

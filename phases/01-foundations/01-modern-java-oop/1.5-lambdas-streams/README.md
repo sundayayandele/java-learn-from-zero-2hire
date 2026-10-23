@@ -260,7 +260,7 @@ Functional interface, lambda, effectively final, method reference, `Predicate`, 
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-22. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-23. Moodle learners see them embedded.
 
 - [Lambda Expressions in Java - Full Simple Tutorial](https://www.youtube.com/watch?v=tj5sLSFjVj4) · Coding with John · 13 min. Lambdas and functional interfaces from scratch.
 - [Java Streams Crash Course: Everything You Need to Know](https://www.youtube.com/watch?v=yv9Q2E39kJM) · camelCase · 9 min. A fast tour of filter, map, reduce and collect.

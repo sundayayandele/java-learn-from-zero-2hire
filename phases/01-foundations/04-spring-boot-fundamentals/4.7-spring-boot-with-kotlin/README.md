@@ -307,7 +307,7 @@ Same Flyway migrations, same PostgreSQL, same Actuator endpoints, same Docker im
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-22. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-23. Moodle learners see them embedded.
 
 - [Project Creation & First Hello World App - Spring Boot 4 Basics With Kotlin](https://www.youtube.com/watch?v=eRej0b_Bm7A) · Philipp Lackner · 19 min. Creating a Spring Boot 4 project in Kotlin and running it.
 

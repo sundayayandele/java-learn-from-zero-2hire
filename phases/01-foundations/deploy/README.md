@@ -501,7 +501,7 @@ Before you call a capstone "deployed":
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-22. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-23. Moodle learners see them embedded.
 
 - [How To Dockerize Spring Boot Application & PostgreSQL Database](https://www.youtube.com/watch?v=3fALfjlkfuU) · CodeVice · 15 min. Dockerising a Spring Boot app with PostgreSQL.
 - [CI/CD Tutorial using GitHub Actions - Automated Testing & Automated Deployments](https://www.youtube.com/watch?v=YLtlz88zrLg) · Tom Shaw · 6 min. CI/CD with GitHub Actions in six minutes.

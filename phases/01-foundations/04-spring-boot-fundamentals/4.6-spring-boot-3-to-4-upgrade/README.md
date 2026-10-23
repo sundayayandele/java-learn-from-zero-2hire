@@ -237,7 +237,7 @@ Spring Framework 7, Jakarta EE 11, modular starters, test starters, classic star
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-22. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-23. Moodle learners see them embedded.
 
 - [Spring Boot 4 Modularization Explained: What you need to know](https://www.youtube.com/watch?v=kTLuhE7_jGU) · Dan Vega · 11 min. Spring Boot 4's modular starters explained by Dan Vega.
 - [Migrating To Spring Boot 4](https://www.youtube.com/watch?v=ENpq2J5yQ8Y) · SivaLabs · 21 min. A step-by-step migration to Spring Boot 4, from SivaLabs.

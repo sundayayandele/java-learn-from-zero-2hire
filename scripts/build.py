@@ -184,6 +184,7 @@ VIDEOS = load(ROOT / "lms" / "videos.json")
 # Authored guide.md pages that get a generated README with a Watch section.
 GUIDE_PAGES = [
     ("phases/01-foundations/deploy", "deploy"),
+    ("phases/01-foundations/cicd", "cicd"),
     ("phases/01-foundations/getting-hired", "getting-hired"),
 ]
 

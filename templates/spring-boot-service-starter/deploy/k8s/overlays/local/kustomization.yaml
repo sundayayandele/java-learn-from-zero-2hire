@@ -1,0 +1,19 @@
+# Local cluster (kind or minikube) with an in-cluster PostgreSQL. For learning only.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: spring-boot-service-starter
+resources:
+  - namespace.yaml
+  - ../../base
+  - postgres.yaml
+images:
+  - name: spring-boot-service-starter
+    newName: ghcr.io/OWNER/spring-boot-service-starter   # your image; CI or Argo CD Image Updater changes the tag
+    newTag: latest
+secretGenerator:
+  # Local-cluster-only credentials, like .env.example. Real environments use External Secrets or Sealed Secrets.
+  - name: spring-boot-service-starter-db
+    literals:
+      - DB_URL=jdbc:postgresql://postgres:5432/app
+      - DB_USER=app
+      - DB_PASSWORD=local-cluster-only

@@ -1,0 +1,19 @@
+# Production-like: two replicas, managed PostgreSQL outside the cluster, secret provided by the platform
+# (External Secrets Operator, Sealed Secrets or the cloud's secret store CSI driver). Nothing secret is committed.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: core-banking-ledger
+resources:
+  - ../../base
+images:
+  - name: core-banking-ledger
+    newName: ghcr.io/OWNER/core-banking-ledger
+    newTag: "0000000"          # pinned commit SHA, updated by CI in a pull request (GitOps)
+patches:
+  - target:
+      kind: Deployment
+      name: core-banking-ledger
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 2

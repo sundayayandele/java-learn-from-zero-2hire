@@ -321,7 +321,7 @@ Race condition, check-then-act, read-modify-write, critical section, atomicity, 
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-22. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-23. Moodle learners see them embedded.
 
 - [#89 Race Condition in Java](https://www.youtube.com/watch?v=7eV4nib3Cm8) · Telusko · 12 min. A race condition reproduced live, then fixed with synchronized.
 - [Using volatile vs AtomicInteger in Java concurrency](https://www.youtube.com/watch?v=WH5UvQJizH0) · Defog Tech · 7 min. volatile vs AtomicInteger: visibility is not the same as atomicity.
