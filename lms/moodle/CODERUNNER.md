@@ -137,15 +137,43 @@ The response should list `java` and its version. For a load test, `testsubmit.py
 
 **Rollback:** uninstall CodeRunner under *Plugins → Plugins overview*, then stop the Jobe container. Nothing in courses 4 and 5 depends on CodeRunner until the steps below are done.
 
-## Then, in the repository and on Moodle (Claude can do this)
+## Coding practice questions and quizzes (done 24 October 2026)
 
-Once you confirm that the smoke test passed and tell me the Jobe host:
+**Questions.** [`scripts/moodle/coderunner/build_coderunner.py`](../../scripts/moodle/coderunner/build_coderunner.py) turns 15 `practice/dsa` problems per phase into CodeRunner questions, listed in [`problems.py`](../../scripts/moodle/coderunner/problems.py):
 
-1. **Convert practice problems to CodeRunner questions.** A generator script will turn a subset of `practice/dsa` problems into CodeRunner Moodle XML: the starter stub becomes the answer preload, and the JUnit cases become CodeRunner test cases. The subset is about 15 for Phase 1 and 15 more for Phase 2, chosen to cover every topic folder. The script will check that each reference solution passes and each stub fails, as the practice track does now.
-2. **SQL drills.** CodeRunner's SQL support needs a database engine inside Jobe; JobeInABox doesn't include PostgreSQL. SQL drills therefore stay graded by Testcontainers unless you also want SQLite drills (simpler, but a different SQL dialect from the course's PostgreSQL).
-3. **Add a "Coding practice quiz" per phase**, built from those questions with unlimited attempts and Interactive or Adaptive feedback. Then turn the **coding practice checkpoint** into this quiz with a 70% pass mark, so it's graded automatically instead of by a mentor.
-4. Optionally, add a **timed coding quiz** before the live-coding assessment (for example 3 problems in 60 minutes) as a practice run. The live-coding assessment itself stays human-assessed, because communication is part of its rubric.
-5. Update the course completion criteria, the certificate restrictions, `BLUEPRINT.md` and the practice track README.
+- Phase 1: arrays 4, windows 4, strings 3, stacks 2, search 2.
+- Phase 2: lists 3, search 1, trees 3, graphs 3, dynamic programming 3, design 2.
+
+Each question is built like this:
+
+- **Starting code** in the editor: the generated stub. **Sample answer:** the reference solution.
+- **Tests:** taken from the JUnit tests, 3–7 per problem. Their **expected outputs are computed** by running the reference solution through the same tester Jobe uses (in Docker, `eclipse-temurin:21-jdk`). The build fails if a stub passes any test, or if CodeRunner's file-naming logic (ported to Python) would misread a program.
+- **Marking:** all or nothing, unlimited checks, no penalty. Output to `lms/moodle/import/coderunner/phase-<n>-coding-practice.xml`, category *Java Zero-to-Hired/Phase N/Coding practice*.
+
+Three design points matter on our Jobe server:
+
+- **One compile per check.** It uses a combinator template, so all tests run in one compile and one run. CodeRunner's own `java_class` template compiles once per test (about 3 s each here).
+- **No public class.** The tester class is a non-public `NO_PUBLIC_CLASS_FOUND`, and the template removes `public` from top-level types in the answer. CodeRunner's detection of the main class counts braces but not character literals (`'{'` in BalancedBrackets), so with any public class some answers wouldn't compile. With none, CodeRunner always falls back to `NO_PUBLIC_CLASS_FOUND.java`.
+- **A time budget for large inputs.** Large-input tests run with a 3-second wall-clock budget (`within(...)`), so a too-slow answer gets "Too slow: no answer within 3 s" in about 8 seconds. Without it, CodeRunner reruns every test separately after a timeout, which took about a minute. This relies on the Jobe flag `UseCountedLoopSafepoints` (see the setup script).
+
+**Verified on Jobe** through Moodle's question engine:
+
+- All 30 sample answers score 1 and all 30 stubs score 0, with no test passing. One check takes about 3–8 s.
+- In a quiz preview in the browser, a correct HashMap answer scored 1/1. An O(n²) answer passed the five small tests and showed "Too slow" on the large one (0/1).
+
+**Quizzes.** One *Coding practice quiz: 15 auto-graded Java problems* per course, in the Start here section:
+
+- Phase 1: cmid 379. Phase 2: cmid 380.
+- Adaptive behaviour (a Check button per question), one question per page, in practice-plan order.
+- Unlimited attempts, highest grade, pass 7/10, and completion on a pass. Learners see the reference solutions after finishing an attempt.
+- It is optional: it isn't in course completion or the certificate restrictions. The mentor-checked coding practice checkpoint assignment (which also covers SQL) is unchanged.
+
+**Updating questions.** Edit `problems.py`, rebuild, then re-import. Because the questions are in a quiz, first remove the quiz's question slots, then import with `--replace`, then add the questions back (in order, one per page). `build_coderunner.py --check` reports stale XML.
+
+**Not covered by CodeRunner:**
+
+- **SQL drills.** CodeRunner's SQL support needs a database inside Jobe, and JobeInABox has no PostgreSQL, so they stay graded by Testcontainers.
+- **The live-coding assessment.** It stays human-assessed, because communication is part of its rubric.
 
 ## Security and running costs
 

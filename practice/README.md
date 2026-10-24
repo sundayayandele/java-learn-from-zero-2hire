@@ -67,6 +67,8 @@ The Java stubs are generated from the solutions by `scripts/practice_stubs.py`, 
 
 ## Checkpoints on ITLearning
 
+Each course also has a **Coding practice quiz** on Moodle: 15 of these Java problems per phase, graded in the browser on our sandbox server, with unlimited checks. It's a quick way to practise without a local setup; the full track and its tests live here.
+
 Each phase has a **Coding practice checkpoint** assignment on Moodle: submit your repository link and the test summary. Phase 1 (week 13) expects at least 70% of that phase's Java and SQL problems passing; Phase 2 (week 24) expects at least 70% of all of them. Phases 1 and 2 each also include a **timed live-coding assessment** built on the same patterns.
 
 ## Further practice

@@ -45,7 +45,7 @@ PROBLEMS = [
          '        LocalDate.parse("2026-03-10"), LocalDate.parse("2026-02-27"), LocalDate.parse("2026-03-01"))));', True),
         ("System.out.println(LongestActiveStreak.longest(List.of()));", False),
         ('System.out.println(LongestActiveStreak.longest(List.of(LocalDate.parse("2026-01-01"))));', False),
-        ("// 100,001 dates, 3-second budget: sorting works, but aim for O(n).\n"
+        ("// 100,001 dates, 3-second budget: sorting works, but aim for linear time.\n"
          "List<LocalDate> days = new ArrayList<>();\n"
          'LocalDate start = LocalDate.parse("2000-01-01");\n'
          "for (int i = 0; i < 100_000; i++) days.add(start.plusDays(i * 2L));\n"

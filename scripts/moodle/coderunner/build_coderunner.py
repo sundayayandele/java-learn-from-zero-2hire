@@ -193,6 +193,8 @@ def javadoc(stub: str) -> tuple[str, str]:
     rest = html.escape(rest.replace("<p>", "\n\n"), quote=False)
     rest = re.sub(r"\{@code ([^}]*)\}", r"<code>\1</code>", rest)
     rest = re.sub(r"\{@link ([^}]*)\}", r"<code>\1</code>", rest)
+    # Complexity in maths style, O(<i>n</i>). This also stops Moodle's emoticon filter turning "(n)" into 👎.
+    rest = re.sub(r"\bO\(([^)0-9][^)]*)\)", r"O(<i>\1</i>)", rest)
     paras = [" ".join(p.split()) for p in rest.split("\n\n") if p.strip()]
     return "".join(f"<p>{p}</p>" for p in paras), first.strip()
 

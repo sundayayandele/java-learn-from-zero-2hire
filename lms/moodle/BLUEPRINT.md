@@ -120,7 +120,7 @@ Done (24 October 2026):
 
 **Course completion**: all of 43 activities: the 32 topic quizzes, the exam, the four module projects, Capstone 1, the defence, the live-coding assessment, the practice checkpoint, the Getting Hired checklist and the certificate (whose restriction enforces the "two other capstones" rule). Pages load from `lms/moodle/import/{pages,capstones,guides}/` (regenerate with `build_moodle.py`, then replace a page's content to update it).
 
-CodeRunner 5.10.6 (with its behaviour plugin 1.4.8) was installed on 24 October 2026. It runs code on our own Jobe server at `https://jobe.itlearning.tech` (Java 21, reachable only from the Moodle server) and passed the smoke and load tests; see [CODERUNNER.md](CODERUNNER.md). No learner-facing CodeRunner questions exist yet. Until they do, coding practice is graded by JUnit and Testcontainers on the learner's machine and checked through the checkpoint assignment.
+CodeRunner 5.10.6 (with its behaviour plugin 1.4.8) was installed on 24 October 2026. It runs code on our own Jobe server at `https://jobe.itlearning.tech` (Java 21, reachable only from the Moodle server) and passed the smoke and load tests; see [CODERUNNER.md](CODERUNNER.md). Each course's Start here section has an optional **Coding practice quiz** of 15 auto-graded Java problems from the practice track (Phase 1 cmid 379, Phase 2 cmid 380; pass 7/10, unlimited attempts). The coding practice checkpoint assignment still covers the whole track, including the SQL drills, which stay graded by JUnit and Testcontainers on the learner's machine.
 
 ### Phase 2 on itlearning.tech (course id 5, `JAVA-Z2H-P2`)
 
