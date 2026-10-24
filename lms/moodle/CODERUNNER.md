@@ -9,6 +9,43 @@ Two parts are needed:
 - **CodeRunner** (`qtype_coderunner`): a Moodle question type. It depends on the `qbehaviour_adaptive_adapted_for_coderunner` question behaviour.
 - **Jobe**: a separate server that compiles and runs the submitted code in a sandbox and returns the results to Moodle.
 
+## Status (24 October 2026)
+
+**Moodle 5.2 support confirmed.** The Moodle Marketplace lists CodeRunner as supporting Moodle 2.9–5.2. The project's CI ran its full PHPUnit and Behat suites on `MOODLE_502_STABLE` with MariaDB, and they passed for commit `01a0f9f`.
+
+**Backed up**, before any change: `/root/backups/itlearning-pre-coderunner-20261024-1142/` on the server, with a copy on the site owner's Mac. The backup has:
+
+- the database dump;
+- the `moodledata` volume;
+- `/opt/itlearning-tech` (Dockerfile, plugins, compose file, `.env`, `config.php`);
+- SHA-256 checksums.
+
+The previous image is kept under the tag `itlearning-tech-moodle:pre-coderunner-20261024-1142`.
+
+**Installed:**
+
+- CodeRunner **5.10.6** (build 2026092700, commit `01a0f9f`, the CI-tested commit, which adds Twig security patches after the `v5.10.6` tag);
+- *Adaptive adapted for CodeRunner* **1.4.8**.
+
+Both live in `/opt/itlearning-tech/moodle/plugins/question/` and are baked into the image like the other add-ons; `question/PINNED.txt` records the commits. The image was rebuilt and the Moodle containers recreated, then the upgrade ran. Maintenance mode lasted 41 seconds. The 19 built-in prototypes were loaded by running CodeRunner's ad hoc task. On Moodle 5 that task is queued to cron rather than run during the install.
+
+**Smoke-tested** against the default public Jobe server (`jobe2.cosc.canterbury.ac.nz`):
+
+- Raw Java runs through Moodle's sandbox layer: a correct program printed 55, a wrong one printed 54, and a compile error returned javac's message.
+- A temporary `java_method` question, graded through the question engine:
+
+  | Answer | Fraction | Tests passed | Note |
+  | --- | --- | --- | --- |
+  | Correct | 1 | 2/2 | |
+  | Wrong | 0 | 1/2 | all-or-nothing marking |
+  | Compile error | 0 | | the error message was shown |
+
+  The question and its category were deleted afterwards.
+
+Each Java run took about 1.1–1.2 s.
+
+**Not done yet:** our own Jobe server. The public Canterbury server is for testing only: it is shared, rate-limited and outside our control, and learners' code would be sent to a third party. Don't put CodeRunner questions in front of learners until `jobe_host` points to our own Jobe (step 2 below), then repeat the smoke test.
+
 ## What we know about itlearning.tech today
 
 | Item | Value (checked 24 October 2026) |
