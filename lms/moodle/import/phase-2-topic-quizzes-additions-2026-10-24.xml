@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="category">
+    <category><text>$course$/top/Java Zero-to-Hired/Phase 2/5.6 System design basics for junior interviews</text></category>
+  </question>
+  <question type="multichoice">
+    <name><text>5.6-Q01</text></name>
+    <questiontext format="html"><text><![CDATA[<p>An interviewer says: 'Design a transfer API for a digital bank.' and waits.</p><p><strong>What is the best first move?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Requirements and assumptions frame every later choice; interviewers assess this structure.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[Draw Kafka, Kubernetes and ten microservices]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Start writing Java code]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Ask which cloud provider the bank uses and stop there]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[Clarify functional and non-functional requirements (scale, consistency, availability, compliance) and state assumptions]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>5.6-Q02</text></name>
+    <questiontext format="html"><text><![CDATA[<p>A bank expects 4 million transfers per day.</p><p><strong>Roughly what average request rate is that, and what should you plan for?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>4,000,000 / 86,400 ≈ 46/s; peaks are commonly 5–10× the average.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[About 46,000 per second]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[About 4 per second; peaks don't matter]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[About 4,000 per second on average]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[About 46 per second on average; plan for peaks several times higher]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>5.6-Q03</text></name>
+    <questiontext format="html"><text><![CDATA[<p>A team proposes caching account balances in Redis for 60 seconds to speed up transfer authorisation.</p><p><strong>What is the main problem?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Cache read-mostly data that tolerates staleness, not data used to authorise money movement.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[Redis can't store decimals]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[60 seconds is too short for any cache]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[Stale balances could authorise debits that overdraw accounts; balances used for decisions must come from the source of truth under a lock]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Caches always slow systems down]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>5.6-Q04</text></name>
+    <questiontext format="html"><text><![CDATA[<p>Statement queries overload the primary database. The team adds an asynchronous read replica for statements.</p><p><strong>What trade-off must they handle?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Async replicas can be behind; design for read-your-own-writes where it matters.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="100" format="html"><text><![CDATA[Replication lag: a customer may not immediately see a transfer they just made, so recent activity may need to come from the primary]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Replicas can't run SELECT queries]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Replicas remove the need for backups]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Replicas double write throughput]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>5.6-Q05</text></name>
+    <questiontext format="html"><text><![CDATA[<p>After a transfer, the API calls SMS, email and fraud services synchronously, and an SMS outage makes transfers time out.</p><p><strong>What design change helps most?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Queues decouple slow or failing follow-up work from the critical path.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[Retry the whole transfer when SMS fails]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Add a longer timeout to the SMS call]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Remove fraud scoring]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[Commit the transfer, publish an event (via an outbox) to a queue, and let consumers process notifications independently with retries]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>5.6-Q06</text></name>
+    <questiontext format="html"><text><![CDATA[<p>Which statements about horizontal scaling of a Spring Boot API are true? (Choose two.)</p><p><strong>Select two.</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Stateless instances behind a load balancer scale out; shared state and locks must move to shared infrastructure.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>false</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="50" format="html"><text><![CDATA[In-memory locks and rate limits stop working correctly across instances]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="-50" format="html"><text><![CDATA[It automatically scales the database]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="-50" format="html"><text><![CDATA[It removes the need for health checks]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="50" format="html"><text><![CDATA[Instances should be stateless so any instance can serve any request]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>5.6-Q07</text></name>
+    <questiontext format="html"><text><![CDATA[<p>An interviewer asks how your payment hub behaves when a provider times out after possibly charging the customer.</p><p><strong>What is the strongest answer?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Unknown outcomes need resolution, not guesses; idempotency and status checks prevent double charges.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[Retry the charge until it succeeds]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[Record the payment as pending, resolve the outcome with status queries or webhooks, and never retry the charge blindly]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Ask the customer to try again]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Treat every timeout as a failure and refund]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="category">
+    <category><text>$course$/top/Java Zero-to-Hired/Phase 2/8.6 Working in an agile team</text></category>
+  </question>
+  <question type="multichoice">
+    <name><text>8.6-Q01</text></name>
+    <questiontext format="html"><text><![CDATA[<p>You pick up a ticket titled 'Improve reversals' with no description, and the sprint started today.</p><p><strong>What should you do first?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>A ticket isn't ready without shared understanding and acceptance criteria.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[Start coding what you think it means]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Move it to Done to keep velocity up]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[Ask the product owner and team to clarify the goal and agree acceptance criteria before starting]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Split it by layer into database and API tickets]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>8.6-Q02</text></name>
+    <questiontext format="html"><text><![CDATA[<p>You have been stuck for most of a day on a failing Testcontainers setup, after trying the usual fixes.</p><p><strong>What is the most professional action?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Raising blockers early, with evidence of what you tried, protects the sprint.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[Keep quiet and work late until it's solved]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[Raise it as a blocker at stand-up or in the team chat, saying what you've tried, and ask for a pairing session]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Re-estimate the ticket to 13 points silently]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Delete the integration tests]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>8.6-Q03</text></name>
+    <questiontext format="html"><text><![CDATA[<p>A large story 'Customers can manage beneficiaries' is estimated at 21 points.</p><p><strong>Which split is best?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Vertical slices deliver testable behaviour in each piece.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="100" format="html"><text><![CDATA[Vertical slices such as 'add a beneficiary with name enquiry', 'list beneficiaries', 'delete a beneficiary', each testable end to end]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Database tables, then services, then controllers, then UI]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[One ticket per developer regardless of behaviour]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Keep it as one story but work faster]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>8.6-Q04</text></name>
+    <questiontext format="html"><text><![CDATA[<p>Your feature works on your laptop, but the PR isn't reviewed and the integration tests haven't run in CI.</p><p><strong>According to a typical definition of done, is the ticket done?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Done means meeting the team's written definition of done, not just working locally.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="100" format="html"><text><![CDATA[No: it needs review, merge, green CI and quality gates, updated docs, and deployment to the test environment]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Yes, if the product owner liked the screenshot]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Yes, if you add a TODO comment]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Yes, it works locally]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>8.6-Q05</text></name>
+    <questiontext format="html"><text><![CDATA[<p>Which details make a bug report actionable? (Choose two.)</p><p><strong>Select two.</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Reproducible steps and evidence get bugs fixed; personal data must never be included.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>false</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="-50" format="html"><text><![CDATA[A sentence saying 'it is broken again']]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="50" format="html"><text><![CDATA[Exact steps to reproduce with environment and build version]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="-50" format="html"><text><![CDATA[The customer's full card number and BVN]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="50" format="html"><text><![CDATA[Expected versus actual result with evidence such as a correlation id]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>8.6-Q06</text></name>
+    <questiontext format="html"><text><![CDATA[<p>During planning poker, you estimate 8 points and a senior engineer estimates 2.</p><p><strong>What should happen next?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Divergent estimates are a prompt to discuss assumptions.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[Remove the ticket from the sprint]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Take the average, 5, and move on]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[Both explain their reasoning; the difference often reveals a misunderstanding or a missing task]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Defer to the senior engineer without discussion]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>8.6-Q07</text></name>
+    <questiontext format="html"><text><![CDATA[<p>A bank requires a change approval (CAB) before production releases.</p><p><strong>What helps your change get approved quickly?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Auditors and approvers rely on linked, reviewed and tested evidence.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[Combining many unrelated changes into one release]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[Traceability: ticket with acceptance criteria, linked PR with review, green pipeline and test evidence, and a rollback plan]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Releasing late at night to avoid questions]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Skipping the ticket and merging directly]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="category">
+    <category><text>$course$/top/Java Zero-to-Hired/Phase 2/7.1 Unit testing with JUnit and Mockito; test-driven development</text></category>
+  </question>
+  <question type="multichoice">
+    <name><text>7.1-Q08</text></name>
+    <questiontext format="html"><text><![CDATA[<p>An integration test calls an <code>@Async</code> notification and then <code>Thread.sleep(3000)</code> before asserting. It is slow and still fails occasionally on the CI runner.</p><p><strong>What is the better approach?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Awaitility waits only as long as needed; synchronous executors remove the timing problem in unit tests.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[Run the test three times and accept any pass]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Increase the sleep to 10 seconds]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[Use Awaitility to poll for the expected result with a timeout, or make the work synchronous in the test with a direct executor]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Mark the test @Disabled on CI]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="category">
+    <category><text>$course$/top/Java Zero-to-Hired/Phase 2/7.2 Integration tests with Testcontainers (real Postgres, Kafka,</text></category>
+  </question>
+  <question type="multichoice">
+    <name><text>7.2-Q08</text></name>
+    <questiontext format="html"><text><![CDATA[<p>A suite of 40 test classes starts 25 Spring application contexts. Each class declares a slightly different set of <code>@MockitoBean</code> fields and properties.</p><p><strong>Why is the suite slow, and what helps?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Spring reuses a context only for identical configurations; @DirtiesContext makes it worse by discarding contexts.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="100" format="html"><text><![CDATA[Each distinct configuration creates a new cached context; unify mocks and properties in a shared base or composed annotation]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[@MockitoBean must be replaced with @DirtiesContext]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[The JVM needs more heap]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Testcontainers is always slow; remove it]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="category">
+    <category><text>$course$/top/Java Zero-to-Hired/Phase 2/7.4 Coverage with JaCoCo and static analysis with SonarQube</text></category>
+  </question>
+  <question type="multichoice">
+    <name><text>7.4-Q08</text></name>
+    <questiontext format="html"><text><![CDATA[<p>An ADR says controllers must never call repositories directly, but new code keeps doing it and reviewers miss it.</p><p><strong>How can the build enforce the rule?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>ArchUnit turns architecture decisions into fast, automated tests.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[Raise the JaCoCo threshold]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[Add an ArchUnit test that fails when classes in the web package depend on the repository package]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Run SonarQube once a month]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Add a comment to every controller]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+</quiz>
