@@ -131,7 +131,7 @@ Done (24 October 2026), built with the same settings as Phase 1 (each activity's
 | 8 Exam | Exam information page; exam quiz: 60 questions shuffled, 5 per page, 120 minutes, 2 attempts 48 hours apart, pass 70%, available only after all 25 topic quizzes are passed. The bank was uploaded directly from the private assessments repository |
 | 9 Getting hired | Getting hired page with videos; URL: certification map; Getting Hired checklist assignment; **Phase 2 certificate** (`mod_customcert`, same A4 landscape design as Phase 1; available when all 25 topic quizzes, the exam, the five module projects, Capstone 1 and any two other capstones are passed, as 36 OR-ed capstone pairs) |
 
-**Course completion**: all of 34 activities: the 25 topic quizzes, the exam, the five module projects, Capstone 1, the Getting Hired checklist and the certificate. Pages load from `lms/moodle/import/pages/` and `lms/moodle/import/{capstones,guides}/phase-2/`. The course is hidden, like Phase 1, until you make it visible.
+**Course completion**: all of 34 activities: the 25 topic quizzes, the exam, the five module projects, Capstone 1, the Getting Hired checklist and the certificate. Pages load from `lms/moodle/import/pages/` and `lms/moodle/import/{capstones,guides}/phase-2/`. Both Phase 1 (id 4) and Phase 2 (id 5) were made visible on 24 October 2026. The site requires login; learners are enrolled manually (self enrolment and guest access exist on both courses but are disabled).
 
 ## 6. Updating content
 
