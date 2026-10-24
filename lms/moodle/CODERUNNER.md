@@ -63,6 +63,13 @@ Each Java run took about 1.1–1.2 s.
 
   The 3 burst failures came in the first burst after a restart, and weren't time limits. They didn't recur in the next 96 direct runs or the 32 through Moodle. A single Java answer takes about 2.5–4.5 s; with 16 at once, 10–19 s.
 
+**Abuse protection** (added 24 October 2026; all in the setup script). The threat is a learner, or anyone who signs up and enrols, submitting a "Java answer" that attacks other systems from our VPS. On the day it was added, the VPS had logged 16,841 failed SSH logins in 24 hours. The protections:
+
+- **SSH: keys only.** `/etc/ssh/sshd_config.d/00-itl-hardening.conf` sets `PasswordAuthentication no` and `PermitRootLogin prohibit-password`. fail2ban bans an address after 5 failures in 10 minutes, for an hour at first and up to a week for repeat offenders. It banned 5 addresses within minutes.
+- **No outbound network from learner code.** `jobe-egress-block.service` drops every new connection that starts in a container: to the internet (`DOCKER-USER` chain) and to the host's own services (`INPUT`). It runs at boot and again whenever Docker restarts. The script ends by checking it with Jobe jobs that try to reach 1.1.1.1:443, the Docker host and the server's public address; all three are blocked. Image builds need the network, so a rebuild stops Jobe and lifts the block until the new container is running.
+- **Container limits:** 10 of 12 CPUs, 60% of the RAM (about 28 GB) and 8,192 processes. A flood of submissions can't starve SSH or Caddy. Jobe still limits each job's CPU time and runs at most 16 jobs at once.
+- **Re-tested after the change:** all 30 questions scored correctly, and 16 at once through Moodle gave 32/32 correct.
+
 **Capacity.** This server suits practice quizzes and moderate class sizes. For a timed coding exam with many learners submitting at once, use a VPS with faster cores (or add a second Jobe server: CodeRunner accepts several hosts separated by `;`) and load-test first.
 
 ## What we know about itlearning.tech today
