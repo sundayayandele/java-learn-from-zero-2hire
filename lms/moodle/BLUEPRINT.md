@@ -119,6 +119,20 @@ Done (24 October 2026):
 
 **Course completion**: all of 37 activities: the 29 topic quizzes, the exam, the four module projects, Capstone 1, the Getting Hired checklist and the certificate (whose restriction enforces the "two other capstones" rule). Pages load from `lms/moodle/import/{pages,capstones,guides}/` (regenerate with `build_moodle.py`, then replace a page's content to update it).
 
+### Phase 2 on itlearning.tech (course id 5, `JAVA-Z2H-P2`)
+
+Done (24 October 2026), built with the same settings as Phase 1 (each activity's settings form was cloned from its Phase 1 counterpart):
+
+| Section | Live activities |
+| --- | --- |
+| 1 Start here | Page: how the course works and the Phase 2 plan; Forum: Questions and help |
+| 2–6 Modules 5–9 | 25 lesson pages (text, embedded videos, references; completion on view) each before its topic quiz (175 questions; pass 7/10, unlimited attempts, immediate feedback; completion on pass); per module a **project submission** assignment with a five-criterion rubric from the module's assessment table (15 points, pass 10) |
+| 7 Capstones | Overview and rubric page; per capstone a page (brief, five architecture diagrams, step-by-step guide) and a **submission assignment** (online text, **24 points, pass 17**, unlimited resubmission until pass, six-criterion rubric scored 1–4); deployment (with identity provider) and CI/CD quality-gates pages |
+| 8 Exam | Exam information page; exam quiz: 60 questions shuffled, 5 per page, 120 minutes, 2 attempts 48 hours apart, pass 70%, available only after all 25 topic quizzes are passed. The bank was uploaded directly from the private assessments repository |
+| 9 Getting hired | Getting hired page with videos; URL: certification map; Getting Hired checklist assignment; **Phase 2 certificate** (`mod_customcert`, same A4 landscape design as Phase 1; available when all 25 topic quizzes, the exam, the five module projects, Capstone 1 and any two other capstones are passed, as 36 OR-ed capstone pairs) |
+
+**Course completion**: all of 34 activities: the 25 topic quizzes, the exam, the five module projects, Capstone 1, the Getting Hired checklist and the certificate. Pages load from `lms/moodle/import/pages/` and `lms/moodle/import/{capstones,guides}/phase-2/`. The course is hidden, like Phase 1, until you make it visible.
+
 ## 6. Updating content
 
 Edit the source in the repository (`lesson.md`, `cbt.json`, `lms/videos.json`, `assessments/private/...`), run `python scripts/build.py`, `python scripts/check_repo.py` and `python scripts/moodle/build_moodle.py`, then replace the Page content and re-import changed question banks (import into the same category, then swap questions in the quiz). Run `python lms/check_videos.py --quick` monthly to catch removed videos.
