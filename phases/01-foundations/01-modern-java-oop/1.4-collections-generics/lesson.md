@@ -40,9 +40,9 @@ statement.getLast();           // instead of statement.get(statement.size() - 1)
 
 | Operation | `ArrayList` | `LinkedList` |
 | --- | --- | --- |
-| `get(i)` | O(1) | O(n) |
+| `get(i)` | O(1) | O(*n*) |
 | add at end | O(1) amortised | O(1) |
-| insert/remove in the middle | O(n) (shifts elements) | O(n) to find, O(1) to relink |
+| insert/remove in the middle | O(*n*) (shifts elements) | O(*n*) to find, O(1) to relink |
 | memory per element | small | large (node with two pointers) |
 | CPU cache friendliness | excellent | poor |
 
@@ -57,7 +57,7 @@ txs.contains(tx);     // O(n): uses equals on every element
 txs.remove(tx);
 ```
 
-**Big-O notation** describes how cost grows with size *n*: O(1) constant, O(log n) grows slowly (sorted structures), O(n) linear, O(n²) painful (a loop inside a loop over the same data).
+**Big-O notation** describes how cost grows with size *n*: O(1) constant, O(log *n*) grows slowly (sorted structures), O(*n*) linear, O(*n*²) painful (a loop inside a loop over the same data).
 
 ## 3. Sets
 
@@ -117,7 +117,7 @@ feeBands.floorEntry(new BigDecimal("73000")).getValue();   // 50.00
 
 ### How `HashMap` works
 
-A `HashMap` is an array of buckets. To store a key it computes `key.hashCode()`, maps that to a bucket index, and stores the entry there. To look up a key it goes straight to the bucket and uses `equals` to find the exact entry among any collisions. When the map gets too full (load factor 0.75) it doubles the array and rehashes. Since Java 8, a bucket with many collisions turns into a balanced tree, so worst-case lookups are O(log n) instead of O(n).
+A `HashMap` is an array of buckets. To store a key it computes `key.hashCode()`, maps that to a bucket index, and stores the entry there. To look up a key it goes straight to the bucket and uses `equals` to find the exact entry among any collisions. When the map gets too full (load factor 0.75) it doubles the array and rehashes. Since Java 8, a bucket with many collisions turns into a balanced tree, so worst-case lookups are O(log *n*) instead of O(*n*).
 
 Consequences you must remember:
 
@@ -263,7 +263,7 @@ totalsByCurrency.forEach((ccy, total) -> System.out.println(ccy + " " + total));
 System.out.println(duplicates.size() + " duplicate references");
 ```
 
-One pass, O(n), sorted output by currency, and duplicates detected with a set. The naive version (`for` over transactions with `list.contains` on the processed list) is O(n²) and takes hours on a million rows.
+One pass, O(*n*), sorted output by currency, and duplicates detected with a set. The naive version (`for` over transactions with `list.contains` on the processed list) is O(*n*²) and takes hours on a million rows.
 
 ## Common mistakes
 

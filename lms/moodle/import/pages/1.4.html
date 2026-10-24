@@ -55,7 +55,7 @@ statement.getLast();           // instead of statement.get(statement.size() - 1)
 <tr>
 <td><code>get(i)</code></td>
 <td>O(1)</td>
-<td>O(n)</td>
+<td>O(<em>n</em>)</td>
 </tr>
 <tr>
 <td>add at end</td>
@@ -64,8 +64,8 @@ statement.getLast();           // instead of statement.get(statement.size() - 1)
 </tr>
 <tr>
 <td>insert/remove in the middle</td>
-<td>O(n) (shifts elements)</td>
-<td>O(n) to find, O(1) to relink</td>
+<td>O(<em>n</em>) (shifts elements)</td>
+<td>O(<em>n</em>) to find, O(1) to relink</td>
 </tr>
 <tr>
 <td>memory per element</td>
@@ -89,9 +89,9 @@ txs.size();
 txs.contains(tx);     // O(n): uses equals on every element
 txs.remove(tx);</code></pre>
 <p><strong>Big-O notation</strong> describes how cost grows with size
-<em>n</em>: O(1) constant, O(log n) grows slowly (sorted structures),
-O(n) linear, O(n²) painful (a loop inside a loop over the same
-data).</p>
+<em>n</em>: O(1) constant, O(log <em>n</em>) grows slowly (sorted
+structures), O(<em>n</em>) linear, O(<em>n</em>²) painful (a loop inside
+a loop over the same data).</p>
 <h2 id="3-sets">3. Sets</h2>
 <p>A <code>Set</code> holds no duplicates, as defined by
 <code>equals</code> (and <code>hashCode</code> for hash sets,
@@ -186,8 +186,8 @@ stores the entry there. To look up a key it goes straight to the bucket
 and uses <code>equals</code> to find the exact entry among any
 collisions. When the map gets too full (load factor 0.75) it doubles the
 array and rehashes. Since Java 8, a bucket with many collisions turns
-into a balanced tree, so worst-case lookups are O(log n) instead of
-O(n).</p>
+into a balanced tree, so worst-case lookups are O(log <em>n</em>)
+instead of O(<em>n</em>).</p>
 <p>Consequences you must remember:</p>
 <ul>
 <li>Keys need a correct <code>equals</code> <strong>and</strong>
@@ -309,10 +309,10 @@ for (Transaction tx : dayTransactions) {
 }
 totalsByCurrency.forEach((ccy, total) -&gt; System.out.println(ccy + &quot; &quot; + total));
 System.out.println(duplicates.size() + &quot; duplicate references&quot;);</code></pre>
-<p>One pass, O(n), sorted output by currency, and duplicates detected
-with a set. The naive version (<code>for</code> over transactions with
-<code>list.contains</code> on the processed list) is O(n²) and takes
-hours on a million rows.</p>
+<p>One pass, O(<em>n</em>), sorted output by currency, and duplicates
+detected with a set. The naive version (<code>for</code> over
+transactions with <code>list.contains</code> on the processed list) is
+O(<em>n</em>²) and takes hours on a million rows.</p>
 <h2 id="common-mistakes">Common mistakes</h2>
 <ul>
 <li><code>list.contains</code> or <code>list.remove(Object)</code>

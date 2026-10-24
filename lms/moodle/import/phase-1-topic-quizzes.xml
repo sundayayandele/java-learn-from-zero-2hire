@@ -360,7 +360,7 @@
   <question type="multichoice">
     <name><text>1.4-Q01</text></name>
     <questiontext format="html"><text><![CDATA[<p>A nightly job checks each of 2 million transactions against a list of 300,000 blocked account numbers using <code>blockedList.contains(acc)</code>. It takes six hours.</p><p><strong>What single change helps most?</strong></p>]]></text></questiontext>
-    <generalfeedback format="html"><text><![CDATA[<p>ArrayList.contains is O(n), so the job does about 600 billion comparisons. HashSet.contains is O(1) on average, turning it into roughly 2 million lookups.</p>]]></text></generalfeedback>
+    <generalfeedback format="html"><text><![CDATA[<p>ArrayList.contains is O(<em>n</em>), so the job does about 600 billion comparisons. HashSet.contains is O(1) on average, turning it into roughly 2 million lookups.</p>]]></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0.3333333</penalty>
     <hidden>0</hidden>

@@ -299,11 +299,11 @@ aside in a corridor) and <strong>starvation</strong> (a thread never
 gets the lock because others always win).</p>
 <h2 id="8-coordination-helpers">8. Coordination helpers</h2>
 <ul>
-<li><code>Semaphore(n)</code>: allow at most <em>n</em> concurrent
-holders. Perfect for "no more than 10 concurrent calls to the NIBSS
-sandbox".</li>
-<li><code>CountDownLatch(n)</code>: wait until <em>n</em> events have
-happened, for example until all file-loading threads finish.</li>
+<li><code>Semaphore(permits)</code>: allow at most <em>permits</em>
+concurrent holders. Perfect for "no more than 10 concurrent calls to the
+NIBSS sandbox".</li>
+<li><code>CountDownLatch(count)</code>: wait until <em>count</em> events
+have happened, for example until all file-loading threads finish.</li>
 <li><code>CyclicBarrier</code>, <code>Phaser</code>: groups of threads
 that proceed in phases.</li>
 </ul>

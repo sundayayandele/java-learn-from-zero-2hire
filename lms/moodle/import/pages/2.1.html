@@ -122,8 +122,8 @@ traps</h3>
 </thead>
 <tbody>
 <tr>
-<td><code>newFixedThreadPool(n)</code></td>
-<td>n threads, <strong>unbounded</strong> queue</td>
+<td><code>newFixedThreadPool(nThreads)</code></td>
+<td><code>nThreads</code> threads, <strong>unbounded</strong> queue</td>
 <td>Queue grows forever under overload → OutOfMemoryError</td>
 </tr>
 <tr>
@@ -137,7 +137,7 @@ traps</h3>
 <td>Unbounded queue</td>
 </tr>
 <tr>
-<td><code>newScheduledThreadPool(n)</code></td>
+<td><code>newScheduledThreadPool(corePoolSize)</code></td>
 <td>delayed and periodic tasks</td>
 <td>Exceptions silently cancel a periodic task</td>
 </tr>

@@ -83,10 +83,10 @@ if (!pool.awaitTermination(30, TimeUnit.SECONDS)) {
 
 | Factory | Behaviour | Trap |
 | --- | --- | --- |
-| `newFixedThreadPool(n)` | n threads, **unbounded** queue | Queue grows forever under overload → OutOfMemoryError |
+| `newFixedThreadPool(nThreads)` | `nThreads` threads, **unbounded** queue | Queue grows forever under overload → OutOfMemoryError |
 | `newCachedThreadPool()` | creates threads on demand, reuses idle ones | **Unbounded threads** under load |
 | `newSingleThreadExecutor()` | one thread, tasks run in order | Unbounded queue |
-| `newScheduledThreadPool(n)` | delayed and periodic tasks | Exceptions silently cancel a periodic task |
+| `newScheduledThreadPool(corePoolSize)` | delayed and periodic tasks | Exceptions silently cancel a periodic task |
 | `newVirtualThreadPerTaskExecutor()` | one virtual thread per task (Java 21) | See topic 2.3 |
 
 For production pools, construct a `ThreadPoolExecutor` directly with a **bounded queue** and an explicit **rejection policy**, and give threads meaningful names so thread dumps make sense:

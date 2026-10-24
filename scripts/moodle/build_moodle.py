@@ -36,10 +36,12 @@ def load(path: Path):
 
 
 def inline_md(text: str) -> str:
-    """Escape HTML, then render `code` and **bold** (the only inline markdown used in questions)."""
+    """Escape HTML, then render `code`, **bold** and *italic* (the only inline markdown used in questions).
+    Italic is for maths such as O(*n*): Moodle's emoticon filter turns a plain "(n)" into a thumbs-down."""
     out = html.escape(text, quote=False)
     out = re.sub(r"`([^`]+)`", r"<code>\1</code>", out)
-    return re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", out)
+    out = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", out)
+    return re.sub(r"(?<![*\w])\*(?![*\s])([^*\n]+?)(?<!\s)\*(?![*\w])", r"<em>\1</em>", out)
 
 
 def cdata(s: str) -> str:

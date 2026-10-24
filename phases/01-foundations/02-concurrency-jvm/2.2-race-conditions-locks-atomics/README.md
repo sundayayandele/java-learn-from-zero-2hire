@@ -236,8 +236,8 @@ Related liveness problems: **livelock** (threads keep reacting to each other and
 
 ## 8. Coordination helpers
 
-- `Semaphore(n)`: allow at most *n* concurrent holders. Perfect for "no more than 10 concurrent calls to the NIBSS sandbox".
-- `CountDownLatch(n)`: wait until *n* events have happened, for example until all file-loading threads finish.
+- `Semaphore(permits)`: allow at most *permits* concurrent holders. Perfect for "no more than 10 concurrent calls to the NIBSS sandbox".
+- `CountDownLatch(count)`: wait until *count* events have happened, for example until all file-loading threads finish.
 - `CyclicBarrier`, `Phaser`: groups of threads that proceed in phases.
 
 ```java

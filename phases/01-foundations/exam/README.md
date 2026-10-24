@@ -39,7 +39,7 @@ Every question describes a realistic situation, usually from a bank or fintech, 
 
 <details><summary>Answer</summary>
 
-**B.** `List.contains` is O(n), so the job is O(n²). A `HashSet` makes each check O(1) on average.
+**B.** `List.contains` is O(*n*), so the job is O(*n*²). A `HashSet` makes each check O(1) on average.
 
 </details>
 

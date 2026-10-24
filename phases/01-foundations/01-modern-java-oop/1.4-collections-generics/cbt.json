@@ -12,7 +12,7 @@
         "Load the blocked numbers into a HashSet and call contains on it"
       ],
       "answer": 3,
-      "explanation": "ArrayList.contains is O(n), so the job does about 600 billion comparisons. HashSet.contains is O(1) on average, turning it into roughly 2 million lookups."
+      "explanation": "ArrayList.contains is O(*n*), so the job does about 600 billion comparisons. HashSet.contains is O(1) on average, turning it into roughly 2 million lookups."
     },
     {
       "type": "single",
