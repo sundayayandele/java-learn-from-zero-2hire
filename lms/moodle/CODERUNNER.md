@@ -58,10 +58,10 @@ Each Java run took about 1.1–1.2 s.
   | --- | --- |
   | Sandbox runs through Moodle | 9/9 |
   | Graded `java_method` questions | 9/9 (correct 1.0; wrong 0 with 1/2 tests; compile error reported) |
-  | Direct bursts on Jobe | 8 at once 24/24; 16 at once 125/128 |
+  | Direct bursts on Jobe | 8 at once 24/24; 16 at once 109/112 |
   | 16 at once through Moodle | 32/32 |
 
-  The 3 burst failures happened once, right after a restart, and weren't time limits; they didn't recur in the following 112 runs. A single Java answer takes about 2.5–4.5 s; with 16 at once, 10–19 s.
+  The 3 burst failures came in the first burst after a restart, and weren't time limits. They didn't recur in the next 96 direct runs or the 32 through Moodle. A single Java answer takes about 2.5–4.5 s; with 16 at once, 10–19 s.
 
 **Capacity.** This server suits practice quizzes and moderate class sizes. For a timed coding exam with many learners submitting at once, use a VPS with faster cores (or add a second Jobe server: CodeRunner accepts several hosts separated by `;`) and load-test first.
 
