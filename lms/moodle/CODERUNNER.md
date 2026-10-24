@@ -44,7 +44,26 @@ Both live in `/opt/itlearning-tech/moodle/plugins/question/` and are baked into 
 
 Each Java run took about 1.1–1.2 s.
 
-**Not done yet:** our own Jobe server. The public Canterbury server is for testing only: it is shared, rate-limited and outside our control, and learners' code would be sent to a third party. Don't put CodeRunner questions in front of learners until `jobe_host` points to our own Jobe (step 2 below), then repeat the smoke test.
+**Our own Jobe server is live** at `https://jobe.itlearning.tech`, on a dedicated VPS (`ssdnodes-48`, 89.233.107.182; Ubuntu 26.04, 12 vCPU, 46 GB RAM). CodeRunner's `jobe_host` points to it, and the API key setting is empty. [`scripts/moodle/jobe/setup-jobe.sh`](../../scripts/moodle/jobe/setup-jobe.sh) builds and configures everything and can be re-run:
+
+- **Versions:** JobeInABox `aad6f5c` with Jobe `bfca53c` (both pinned), Java **21.0.12** (`openjdk-21-jdk-headless` instead of the image's default JDK), time zone Africa/Lagos.
+- **Network:** Jobe listens on `127.0.0.1:4000` only. Caddy serves it over HTTPS with a Let's Encrypt certificate (renewed automatically) and answers only the Moodle server (187.127.78.116).
+- **Firewall:** ufw allows SSH, port 80 (certificate challenges only) and port 443 from the Moodle server only. Checked from outside: 443 times out and 4000 is closed.
+- **Java tuning, needed on this VPS.** Its Xeon Silver 4216 cores are about 3.6× slower per core than the Moodle server's EPYC (a pure Python loop took 8.65 s against 2.38 s). Compiling even hello-world used 4–5 s of CPU time, over the ~3 s limit CodeRunner sends, so most valid answers failed with "timelimit exceeded". Two changes fix it:
+  - `javac` runs with `-J-XX:ActiveProcessorCount=1 -J-XX:TieredStopAtLevel=1 -J-XX:+UseSerialGC`, and programs run with `-XX:ActiveProcessorCount=1`. This halves the CPU time of a compile.
+  - The minimum CPU time for the **compile step only** is raised from 2 s to 20 s, because with 16 compiles at once each one used up to 7.3 s. Learners' programs still run under the question's own limit.
+- **Results after tuning:**
+
+  | Test | Result |
+  | --- | --- |
+  | Sandbox runs through Moodle | 9/9 |
+  | Graded `java_method` questions | 9/9 (correct 1.0; wrong 0 with 1/2 tests; compile error reported) |
+  | Direct bursts on Jobe | 8 at once 24/24; 16 at once 125/128 |
+  | 16 at once through Moodle | 32/32 |
+
+  The 3 burst failures happened once, right after a restart, and weren't time limits; they didn't recur in the following 112 runs. A single Java answer takes about 2.5–4.5 s; with 16 at once, 10–19 s.
+
+**Capacity.** This server suits practice quizzes and moderate class sizes. For a timed coding exam with many learners submitting at once, use a VPS with faster cores (or add a second Jobe server: CodeRunner accepts several hosts separated by `;`) and load-test first.
 
 ## What we know about itlearning.tech today
 
