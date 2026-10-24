@@ -1,0 +1,2632 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="category">
+    <category><text>$course$/top/Java Zero-to-Hired/Phase 1/Coding practice</text></category>
+  </question>
+  <question type="coderunner">
+    <name><text>P1-CODE-01 TwoSumTransfers</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 2. Pattern: hash map lookup.</strong></p><p>A reconciliation clerk knows two transfers (amounts in kobo) add up to <code>target</code>. Return the indices <code>[i, j]</code> with <code>i &lt; j</code> of the first such pair found scanning left to right (smallest <code>j</code>), or an empty array if there is none. Aim for O(n) time.</p><p>Complete the class <code>TwoSumTransfers</code> in the answer box, keeping these signatures:</p><ul><li><code>public static int[] find(long[] amounts, long target)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: hash map lookup. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/arrays/TwoSumTransfers.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Week 2. Pattern: hash map lookup.
+ * <p>
+ * A reconciliation clerk knows two transfers (amounts in kobo) add up to {@code target}. Return the indices
+ * {@code [i, j]} with {@code i < j} of the first such pair found scanning left to right (smallest {@code j}),
+ * or an empty array if there is none. Aim for O(n) time.
+ */
+public final class TwoSumTransfers {
+
+    private TwoSumTransfers() {
+    }
+
+    public static int[] find(long[] amounts, long target) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Week 2. Pattern: hash map lookup.
+ * <p>
+ * A reconciliation clerk knows two transfers (amounts in kobo) add up to {@code target}. Return the indices
+ * {@code [i, j]} with {@code i < j} of the first such pair found scanning left to right (smallest {@code j}),
+ * or an empty array if there is none. Aim for O(n) time.
+ */
+public final class TwoSumTransfers {
+
+    private TwoSumTransfers() {
+    }
+
+    public static int[] find(long[] amounts, long target) {
+        //>>
+        Map<Long, Integer> seen = new HashMap<>();
+        for (int j = 0; j < amounts.length; j++) {
+            Integer i = seen.get(target - amounts[j]);
+            if (i != null) {
+                return new int[] {i, j};
+            }
+            seen.putIfAbsent(amounts[j], j);
+        }
+        return new int[0];
+        //<<
+    }
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[show(TwoSumTransfers.find(new long[] {500_00, 2_000_00, 1_250_00, 750_00}, 2_000_00));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[2, 3]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[show(TwoSumTransfers.find(new long[] {1, 4, 3, 2, 3}, 6));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[1, 3]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[show(TwoSumTransfers.find(new long[] {300, 300}, 600));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[0, 1]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[show(TwoSumTransfers.find(new long[] {1, 2, 3}, 100));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[show(TwoSumTransfers.find(new long[0], 0));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[// 200,000 amounts: an O(n^2) answer runs out of time here.
+long[] amounts = new long[200_000];
+for (int i = 0; i < amounts.length; i++) amounts[i] = i * 2L;
+amounts[amounts.length - 1] = 1;
+show(TwoSumTransfers.find(amounts, 3));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[1, 199999]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+  <question type="coderunner">
+    <name><text>P1-CODE-02 FirstDuplicateReference</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 2. Pattern: hash set.</strong></p><p>A settlement file must not contain the same transaction reference twice. Return the first reference that appears for the second time (scanning in order), ignoring case and surrounding spaces, or empty if all are unique. The returned value is the trimmed, upper-cased reference.</p><p>Complete the class <code>FirstDuplicateReference</code> in the answer box, keeping these signatures:</p><ul><li><code>public static Optional&lt;String&gt; find(List&lt;String&gt; references)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: hash set. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/arrays/FirstDuplicateReference.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+/**
+ * Week 2. Pattern: hash set.
+ * <p>
+ * A settlement file must not contain the same transaction reference twice. Return the first reference that
+ * appears for the second time (scanning in order), ignoring case and surrounding spaces, or empty if all are
+ * unique. The returned value is the trimmed, upper-cased reference.
+ */
+public final class FirstDuplicateReference {
+
+    private FirstDuplicateReference() {
+    }
+
+    public static Optional<String> find(List<String> references) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+/**
+ * Week 2. Pattern: hash set.
+ * <p>
+ * A settlement file must not contain the same transaction reference twice. Return the first reference that
+ * appears for the second time (scanning in order), ignoring case and surrounding spaces, or empty if all are
+ * unique. The returned value is the trimmed, upper-cased reference.
+ */
+public final class FirstDuplicateReference {
+
+    private FirstDuplicateReference() {
+    }
+
+    public static Optional<String> find(List<String> references) {
+        //>>
+        Set<String> seen = new HashSet<>();
+        for (String raw : references) {
+            String ref = raw.trim().toUpperCase();
+            if (!seen.add(ref)) {
+                return Optional.of(ref);
+            }
+        }
+        return Optional.empty();
+        //<<
+    }
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(FirstDuplicateReference.find(List.of("TRF1", "TRF2", "TRF3", "TRF2", "TRF1")));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[Optional[TRF2]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(FirstDuplicateReference.find(List.of("abc-1", " ABC-2", "Abc-2 ")));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[Optional[ABC-2]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(FirstDuplicateReference.find(List.of("A", "B", "C")));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[Optional.empty]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(FirstDuplicateReference.find(List.of()));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[Optional.empty]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+  <question type="coderunner">
+    <name><text>P1-CODE-03 TotalsByAccount</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 3. Pattern: grouping with a map.</strong></p><p>Given postings (account number and a signed amount in kobo: credits positive, debits negative), return each account's net total, ordered by total descending and, for equal totals, by account number ascending.</p><p>Complete the class <code>TotalsByAccount</code> in the answer box, keeping these signatures:</p><ul><li><code>public record Posting(String account, long amountKobo)</code></li><li><code>public static LinkedHashMap&lt;String, Long&gt; totals(List&lt;Posting&gt; postings)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: grouping with a map. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/arrays/TotalsByAccount.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
+/**
+ * Week 3. Pattern: grouping with a map.
+ * <p>
+ * Given postings (account number and a signed amount in kobo: credits positive, debits negative), return each
+ * account's net total, ordered by total descending and, for equal totals, by account number ascending.
+ */
+public final class TotalsByAccount {
+
+    public record Posting(String account, long amountKobo) {
+    }
+
+    private TotalsByAccount() {
+    }
+
+    public static LinkedHashMap<String, Long> totals(List<Posting> postings) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
+/**
+ * Week 3. Pattern: grouping with a map.
+ * <p>
+ * Given postings (account number and a signed amount in kobo: credits positive, debits negative), return each
+ * account's net total, ordered by total descending and, for equal totals, by account number ascending.
+ */
+public final class TotalsByAccount {
+
+    public record Posting(String account, long amountKobo) {
+    }
+
+    private TotalsByAccount() {
+    }
+
+    public static LinkedHashMap<String, Long> totals(List<Posting> postings) {
+        //>>
+        Map<String, Long> sums = new TreeMap<>();
+        for (Posting p : postings) {
+            sums.merge(p.account(), p.amountKobo(), Long::sum);
+        }
+        LinkedHashMap<String, Long> ordered = new LinkedHashMap<>();
+        sums.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed().thenComparing(Map.Entry.comparingByKey()))
+                .forEach(e -> ordered.put(e.getKey(), e.getValue()));
+        return ordered;
+        //<<
+    }
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(TotalsByAccount.totals(List.of(
+        new TotalsByAccount.Posting("0003", 5_000), new TotalsByAccount.Posting("0001", 10_000),
+        new TotalsByAccount.Posting("0002", 7_000), new TotalsByAccount.Posting("0001", -3_000),
+        new TotalsByAccount.Posting("0003", 2_000), new TotalsByAccount.Posting("0004", -100))));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[{0001=7000, 0002=7000, 0003=7000, 0004=-100}]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(TotalsByAccount.totals(List.of(
+        new TotalsByAccount.Posting("9", -5), new TotalsByAccount.Posting("1", -5),
+        new TotalsByAccount.Posting("5", 0))));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[{5=0, 1=-5, 9=-5}]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(TotalsByAccount.totals(List.of()));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[{}]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+  <question type="coderunner">
+    <name><text>P1-CODE-04 LongestActiveStreak</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 4. Pattern: hash set with sequence starts.</strong></p><p>Given the (unsorted, possibly repeated) dates on which a customer transacted, return the length of the longest run of consecutive calendar days. Aim for O(n) rather than sorting.</p><p>Complete the class <code>LongestActiveStreak</code> in the answer box, keeping these signatures:</p><ul><li><code>public static int longest(List&lt;LocalDate&gt; days)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: hash set with sequence starts. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/arrays/LongestActiveStreak.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+/**
+ * Week 4. Pattern: hash set with sequence starts.
+ * <p>
+ * Given the (unsorted, possibly repeated) dates on which a customer transacted, return the length of the
+ * longest run of consecutive calendar days. Aim for O(n) rather than sorting.
+ */
+public final class LongestActiveStreak {
+
+    private LongestActiveStreak() {
+    }
+
+    public static int longest(List<LocalDate> days) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+/**
+ * Week 4. Pattern: hash set with sequence starts.
+ * <p>
+ * Given the (unsorted, possibly repeated) dates on which a customer transacted, return the length of the
+ * longest run of consecutive calendar days. Aim for O(n) rather than sorting.
+ */
+public final class LongestActiveStreak {
+
+    private LongestActiveStreak() {
+    }
+
+    public static int longest(List<LocalDate> days) {
+        //>>
+        Set<LocalDate> set = new HashSet<>(days);
+        int best = 0;
+        for (LocalDate d : set) {
+            if (set.contains(d.minusDays(1))) {
+                continue;                          // not the start of a streak
+            }
+            int length = 1;
+            while (set.contains(d.plusDays(length))) {
+                length++;
+            }
+            best = Math.max(best, length);
+        }
+        return best;
+        //<<
+    }
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(LongestActiveStreak.longest(List.of(
+        LocalDate.parse("2026-03-02"), LocalDate.parse("2026-02-28"), LocalDate.parse("2026-03-01"),
+        LocalDate.parse("2026-03-10"), LocalDate.parse("2026-02-27"), LocalDate.parse("2026-03-01"))));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[4]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(LongestActiveStreak.longest(List.of()));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[0]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(LongestActiveStreak.longest(List.of(LocalDate.parse("2026-01-01"))));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[1]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[// 100,001 dates: sorting works, but aim for O(n).
+List<LocalDate> days = new ArrayList<>();
+LocalDate start = LocalDate.parse("2000-01-01");
+for (int i = 0; i < 100_000; i++) days.add(start.plusDays(i * 2L));
+days.add(start.plusDays(1));
+System.out.println(LongestActiveStreak.longest(days));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[3]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+  <question type="coderunner">
+    <name><text>P1-CODE-05 MergeSortedStatements</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 5. Pattern: two pointers.</strong></p><p>Two statement extracts are each sorted by booking time (epoch seconds). Merge them into one sorted list in O(n + m). When times are equal, the entry from <code>a</code> comes first (a stable merge).</p><p>Complete the class <code>MergeSortedStatements</code> in the answer box, keeping these signatures:</p><ul><li><code>public record Entry(long bookedAt, String reference)</code></li><li><code>public static List&lt;Entry&gt; merge(List&lt;Entry&gt; a, List&lt;Entry&gt; b)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: two pointers. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/windows/MergeSortedStatements.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Week 5. Pattern: two pointers.
+ * <p>
+ * Two statement extracts are each sorted by booking time (epoch seconds). Merge them into one sorted list in
+ * O(n + m). When times are equal, the entry from {@code a} comes first (a stable merge).
+ */
+public final class MergeSortedStatements {
+
+    public record Entry(long bookedAt, String reference) {
+    }
+
+    private MergeSortedStatements() {
+    }
+
+    public static List<Entry> merge(List<Entry> a, List<Entry> b) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Week 5. Pattern: two pointers.
+ * <p>
+ * Two statement extracts are each sorted by booking time (epoch seconds). Merge them into one sorted list in
+ * O(n + m). When times are equal, the entry from {@code a} comes first (a stable merge).
+ */
+public final class MergeSortedStatements {
+
+    public record Entry(long bookedAt, String reference) {
+    }
+
+    private MergeSortedStatements() {
+    }
+
+    public static List<Entry> merge(List<Entry> a, List<Entry> b) {
+        //>>
+        List<Entry> out = new ArrayList<>(a.size() + b.size());
+        int i = 0;
+        int j = 0;
+        while (i < a.size() && j < b.size()) {
+            out.add(a.get(i).bookedAt() <= b.get(j).bookedAt() ? a.get(i++) : b.get(j++));
+        }
+        out.addAll(a.subList(i, a.size()));
+        out.addAll(b.subList(j, b.size()));
+        return out;
+        //<<
+    }
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[var a = List.of(new MergeSortedStatements.Entry(1, "a1"), new MergeSortedStatements.Entry(5, "a5"),
+        new MergeSortedStatements.Entry(5, "a5b"));
+var b = List.of(new MergeSortedStatements.Entry(2, "b2"), new MergeSortedStatements.Entry(5, "b5"),
+        new MergeSortedStatements.Entry(9, "b9"));
+System.out.println(MergeSortedStatements.merge(a, b).stream().map(MergeSortedStatements.Entry::reference).toList());]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[a1, b2, a5, a5b, b5, b9]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(MergeSortedStatements.merge(List.of(), List.of(new MergeSortedStatements.Entry(1, "x"))));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[Entry[bookedAt=1, reference=x]]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(MergeSortedStatements.merge(List.of(), List.of()));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+  <question type="coderunner">
+    <name><text>P1-CODE-06 ReferencePalindrome</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 5. Pattern: two pointers from both ends.</strong></p><p>Return whether a string reads the same forwards and backwards when only letters and digits are considered, ignoring case. Use O(1) extra space (don't build a cleaned copy).</p><p>Complete the class <code>ReferencePalindrome</code> in the answer box, keeping these signatures:</p><ul><li><code>public static boolean isPalindrome(String s)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: two pointers from both ends. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/windows/ReferencePalindrome.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[/**
+ * Week 5. Pattern: two pointers from both ends.
+ * <p>
+ * Return whether a string reads the same forwards and backwards when only letters and digits are considered,
+ * ignoring case. Use O(1) extra space (don't build a cleaned copy).
+ */
+public final class ReferencePalindrome {
+
+    private ReferencePalindrome() {
+    }
+
+    public static boolean isPalindrome(String s) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[/**
+ * Week 5. Pattern: two pointers from both ends.
+ * <p>
+ * Return whether a string reads the same forwards and backwards when only letters and digits are considered,
+ * ignoring case. Use O(1) extra space (don't build a cleaned copy).
+ */
+public final class ReferencePalindrome {
+
+    private ReferencePalindrome() {
+    }
+
+    public static boolean isPalindrome(String s) {
+        //>>
+        int i = 0;
+        int j = s.length() - 1;
+        while (i < j) {
+            if (!Character.isLetterOrDigit(s.charAt(i))) {
+                i++;
+            } else if (!Character.isLetterOrDigit(s.charAt(j))) {
+                j--;
+            } else if (Character.toLowerCase(s.charAt(i++)) != Character.toLowerCase(s.charAt(j--))) {
+                return false;
+            }
+        }
+        return true;
+        //<<
+    }
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(ReferencePalindrome.isPalindrome("A man, a plan, a canal: Panama"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[true]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(ReferencePalindrome.isPalindrome("TRF-2026"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[false]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(ReferencePalindrome.isPalindrome("12-3-21"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[true]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(ReferencePalindrome.isPalindrome(""));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[true]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(ReferencePalindrome.isPalindrome(",.!"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[true]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(ReferencePalindrome.isPalindrome("ab"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[false]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+  <question type="coderunner">
+    <name><text>P1-CODE-07 BestKDayWindow</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 6. Pattern: fixed-size sliding window.</strong></p><p>Given daily transaction totals (kobo), return the largest total over any <code>k</code> consecutive days. Throw <code>IllegalArgumentException</code> if <code>k</code> is not between 1 and the number of days. O(n).</p><p>Complete the class <code>BestKDayWindow</code> in the answer box, keeping these signatures:</p><ul><li><code>public static long maxTotal(long[] daily, int k)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: fixed-size sliding window. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/windows/BestKDayWindow.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[/**
+ * Week 6. Pattern: fixed-size sliding window.
+ * <p>
+ * Given daily transaction totals (kobo), return the largest total over any {@code k} consecutive days.
+ * Throw {@link IllegalArgumentException} if {@code k} is not between 1 and the number of days. O(n).
+ */
+public final class BestKDayWindow {
+
+    private BestKDayWindow() {
+    }
+
+    public static long maxTotal(long[] daily, int k) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[/**
+ * Week 6. Pattern: fixed-size sliding window.
+ * <p>
+ * Given daily transaction totals (kobo), return the largest total over any {@code k} consecutive days.
+ * Throw {@link IllegalArgumentException} if {@code k} is not between 1 and the number of days. O(n).
+ */
+public final class BestKDayWindow {
+
+    private BestKDayWindow() {
+    }
+
+    public static long maxTotal(long[] daily, int k) {
+        //>>
+        if (k < 1 || k > daily.length) {
+            throw new IllegalArgumentException("k must be between 1 and " + daily.length);
+        }
+        long window = 0;
+        for (int i = 0; i < k; i++) {
+            window += daily[i];
+        }
+        long best = window;
+        for (int i = k; i < daily.length; i++) {
+            window += daily[i] - daily[i - k];
+            best = Math.max(best, window);
+        }
+        return best;
+        //<<
+    }
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(BestKDayWindow.maxTotal(new long[] {5, -2, 9, 1, -8, 7, 7}, 3));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[12]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(BestKDayWindow.maxTotal(new long[] {-5, -2, -9}, 1));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[-2]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(BestKDayWindow.maxTotal(new long[] {4, 4}, 2));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[8]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(BestKDayWindow.maxTotal(new long[] {1}, 2));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[IllegalArgumentException]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(BestKDayWindow.maxTotal(new long[] {1}, 0));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[IllegalArgumentException]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+  <question type="coderunner">
+    <name><text>P1-CODE-08 LongestUniqueRun</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 6. Pattern: variable sliding window with a map.</strong></p><p>Return the length of the longest substring without repeating characters. O(n).</p><p>Complete the class <code>LongestUniqueRun</code> in the answer box, keeping these signatures:</p><ul><li><code>public static int length(String s)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: variable sliding window with a map. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/windows/LongestUniqueRun.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Week 6. Pattern: variable sliding window with a map.
+ * <p>
+ * Return the length of the longest substring without repeating characters. O(n).
+ */
+public final class LongestUniqueRun {
+
+    private LongestUniqueRun() {
+    }
+
+    public static int length(String s) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Week 6. Pattern: variable sliding window with a map.
+ * <p>
+ * Return the length of the longest substring without repeating characters. O(n).
+ */
+public final class LongestUniqueRun {
+
+    private LongestUniqueRun() {
+    }
+
+    public static int length(String s) {
+        //>>
+        Map<Character, Integer> last = new HashMap<>();
+        int start = 0;
+        int best = 0;
+        for (int end = 0; end < s.length(); end++) {
+            Integer seen = last.put(s.charAt(end), end);
+            if (seen != null && seen >= start) {
+                start = seen + 1;
+            }
+            best = Math.max(best, end - start + 1);
+        }
+        return best;
+        //<<
+    }
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(LongestUniqueRun.length("abcabcbb"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[3]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(LongestUniqueRun.length("bbbbb"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[1]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(LongestUniqueRun.length("pwwkew"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[3]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(LongestUniqueRun.length("abba"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[2]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(LongestUniqueRun.length(""));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[0]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+  <question type="coderunner">
+    <name><text>P1-CODE-09 Luhn</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 8. Pattern: digit processing.</strong></p><p>Return whether a card number passes the Luhn check. Spaces are allowed between digits; any other non-digit, or fewer than 13 or more than 19 digits, makes it invalid. Starting from the rightmost digit, double every second digit, subtract 9 from doubled values above 9, sum everything; valid if the sum is a multiple of 10.</p><p>Complete the class <code>Luhn</code> in the answer box, keeping these signatures:</p><ul><li><code>public static boolean isValid(String pan)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: digit processing. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/strings/Luhn.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[/**
+ * Week 8. Pattern: digit processing.
+ * <p>
+ * Return whether a card number passes the Luhn check. Spaces are allowed between digits; any other non-digit,
+ * or fewer than 13 or more than 19 digits, makes it invalid. Starting from the rightmost digit, double every
+ * second digit, subtract 9 from doubled values above 9, sum everything; valid if the sum is a multiple of 10.
+ */
+public final class Luhn {
+
+    private Luhn() {
+    }
+
+    public static boolean isValid(String pan) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[/**
+ * Week 8. Pattern: digit processing.
+ * <p>
+ * Return whether a card number passes the Luhn check. Spaces are allowed between digits; any other non-digit,
+ * or fewer than 13 or more than 19 digits, makes it invalid. Starting from the rightmost digit, double every
+ * second digit, subtract 9 from doubled values above 9, sum everything; valid if the sum is a multiple of 10.
+ */
+public final class Luhn {
+
+    private Luhn() {
+    }
+
+    public static boolean isValid(String pan) {
+        //>>
+        String digits = pan.replace(" ", "");
+        if (!digits.matches("\\d{13,19}")) {
+            return false;
+        }
+        int sum = 0;
+        boolean dbl = false;
+        for (int i = digits.length() - 1; i >= 0; i--) {
+            int d = digits.charAt(i) - '0';
+            if (dbl) {
+                d *= 2;
+                if (d > 9) {
+                    d -= 9;
+                }
+            }
+            sum += d;
+            dbl = !dbl;
+        }
+        return sum % 10 == 0;
+        //<<
+    }
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(Luhn.isValid("4242424242424242"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[true]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(Luhn.isValid("4242 4242 4242 4242"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[true]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(Luhn.isValid("5555555555554444"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[true]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(Luhn.isValid("4242424242424241"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[false]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(Luhn.isValid("4242-4242-4242-4242"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[false]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(Luhn.isValid("424242424242"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[false]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(Luhn.isValid("42424242424242424242"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[false]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+  <question type="coderunner">
+    <name><text>P1-CODE-10 NubanCheckDigit</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 8. Pattern: weighted checksum.</strong></p><p>A 10-digit NUBAN account number is a 9-digit serial plus a check digit computed with the bank's 3-digit code (CBN NUBAN standard). Multiply the 12 digits of bankCode + serial by the weights 3,7,3,3,7,3,3,7,3,3,7,3, sum them, and the check digit is <code>10 - (sum % 10)</code>, with 10 becoming 0. Inputs that are not exactly 3 and 9 (or 10) digits throw <code>IllegalArgumentException</code>.</p><p>Complete the class <code>NubanCheckDigit</code> in the answer box, keeping these signatures:</p><ul><li><code>public static int checkDigit(String bankCode, String serial)</code></li><li><code>public static boolean isValid(String bankCode, String accountNumber)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: weighted checksum. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/strings/NubanCheckDigit.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[/**
+ * Week 8. Pattern: weighted checksum.
+ * <p>
+ * A 10-digit NUBAN account number is a 9-digit serial plus a check digit computed with the bank's 3-digit code
+ * (CBN NUBAN standard). Multiply the 12 digits of bankCode + serial by the weights
+ * 3,7,3,3,7,3,3,7,3,3,7,3, sum them, and the check digit is {@code 10 - (sum % 10)}, with 10 becoming 0.
+ * Inputs that are not exactly 3 and 9 (or 10) digits throw {@link IllegalArgumentException}.
+ */
+public final class NubanCheckDigit {
+
+    private NubanCheckDigit() {
+    }
+
+    public static int checkDigit(String bankCode, String serial) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    public static boolean isValid(String bankCode, String accountNumber) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[/**
+ * Week 8. Pattern: weighted checksum.
+ * <p>
+ * A 10-digit NUBAN account number is a 9-digit serial plus a check digit computed with the bank's 3-digit code
+ * (CBN NUBAN standard). Multiply the 12 digits of bankCode + serial by the weights
+ * 3,7,3,3,7,3,3,7,3,3,7,3, sum them, and the check digit is {@code 10 - (sum % 10)}, with 10 becoming 0.
+ * Inputs that are not exactly 3 and 9 (or 10) digits throw {@link IllegalArgumentException}.
+ */
+public final class NubanCheckDigit {
+
+    //>>hide
+    private static final int[] WEIGHTS = {3, 7, 3, 3, 7, 3, 3, 7, 3, 3, 7, 3};
+
+    //<<
+    private NubanCheckDigit() {
+    }
+
+    public static int checkDigit(String bankCode, String serial) {
+        //>>
+        if (!bankCode.matches("\\d{3}") || !serial.matches("\\d{9}")) {
+            throw new IllegalArgumentException("bank code must be 3 digits and serial 9 digits");
+        }
+        String all = bankCode + serial;
+        int sum = 0;
+        for (int i = 0; i < 12; i++) {
+            sum += (all.charAt(i) - '0') * WEIGHTS[i];
+        }
+        int check = 10 - sum % 10;
+        return check == 10 ? 0 : check;
+        //<<
+    }
+
+    public static boolean isValid(String bankCode, String accountNumber) {
+        //>>
+        if (!accountNumber.matches("\\d{10}")) {
+            throw new IllegalArgumentException("account number must be 10 digits");
+        }
+        return checkDigit(bankCode, accountNumber.substring(0, 9)) == accountNumber.charAt(9) - '0';
+        //<<
+    }
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(NubanCheckDigit.checkDigit("058", "000000001"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[8]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(NubanCheckDigit.checkDigit("011", "123456789"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[5]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(NubanCheckDigit.checkDigit("000", "000000000"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[0]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(NubanCheckDigit.isValid("011", "1234567895"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[true]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(NubanCheckDigit.isValid("011", "1234567894"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[false]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(NubanCheckDigit.checkDigit("58", "000000001"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[IllegalArgumentException]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(NubanCheckDigit.isValid("058", "12345"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[IllegalArgumentException]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+  <question type="coderunner">
+    <name><text>P1-CODE-11 RunLength</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 9. Pattern: StringBuilder and counting runs.</strong></p><p>Compress a status history such as "PPPSSF" to "P3S2F1". Return the original string if the compressed form is not shorter. Use <code>StringBuilder</code>; string concatenation in a loop is O(n^2).</p><p>Complete the class <code>RunLength</code> in the answer box, keeping these signatures:</p><ul><li><code>public static String compress(String s)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: StringBuilder and counting runs. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/strings/RunLength.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[/**
+ * Week 9. Pattern: StringBuilder and counting runs.
+ * <p>
+ * Compress a status history such as "PPPSSF" to "P3S2F1". Return the original string if the compressed form is
+ * not shorter. Use {@link StringBuilder}; string concatenation in a loop is O(n^2).
+ */
+public final class RunLength {
+
+    private RunLength() {
+    }
+
+    public static String compress(String s) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[/**
+ * Week 9. Pattern: StringBuilder and counting runs.
+ * <p>
+ * Compress a status history such as "PPPSSF" to "P3S2F1". Return the original string if the compressed form is
+ * not shorter. Use {@link StringBuilder}; string concatenation in a loop is O(n^2).
+ */
+public final class RunLength {
+
+    private RunLength() {
+    }
+
+    public static String compress(String s) {
+        //>>
+        StringBuilder sb = new StringBuilder();
+        int i = 0;
+        while (i < s.length()) {
+            char c = s.charAt(i);
+            int j = i;
+            while (j < s.length() && s.charAt(j) == c) {
+                j++;
+            }
+            sb.append(c).append(j - i);
+            i = j;
+        }
+        return sb.length() < s.length() ? sb.toString() : s;
+        //<<
+    }
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(RunLength.compress("PPPPSSF"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[P4S2F1]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(RunLength.compress("AAAAAAAAAAAAB"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[A12B1]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(RunLength.compress("PSF"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[PSF]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(RunLength.compress("PPSS"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[PPSS]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println("[" + RunLength.compress("") + "]");]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+  <question type="coderunner">
+    <name><text>P1-CODE-12 BalancedBrackets</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 10. Pattern: stack.</strong></p><p>A rules engine accepts expressions such as <code>(amount &gt; [limit]) &amp;&amp; {channel</code>}. Return whether every (, [ and { is closed by the matching bracket in the right order; other characters are ignored. Use <code>Deque</code> (ArrayDeque), not the legacy Stack class.</p><p>Complete the class <code>BalancedBrackets</code> in the answer box, keeping these signatures:</p><ul><li><code>public static boolean isBalanced(String expression)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: stack. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/stacks/BalancedBrackets.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.Map;
+
+/**
+ * Week 10. Pattern: stack.
+ * <p>
+ * A rules engine accepts expressions such as {@code (amount > [limit]) && {channel}}. Return whether every
+ * (, [ and { is closed by the matching bracket in the right order; other characters are ignored.
+ * Use {@link Deque} (ArrayDeque), not the legacy Stack class.
+ */
+public final class BalancedBrackets {
+
+    private BalancedBrackets() {
+    }
+
+    public static boolean isBalanced(String expression) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.Map;
+
+/**
+ * Week 10. Pattern: stack.
+ * <p>
+ * A rules engine accepts expressions such as {@code (amount > [limit]) && {channel}}. Return whether every
+ * (, [ and { is closed by the matching bracket in the right order; other characters are ignored.
+ * Use {@link Deque} (ArrayDeque), not the legacy Stack class.
+ */
+public final class BalancedBrackets {
+
+    //>>hide
+    private static final Map<Character, Character> PAIRS = Map.of(')', '(', ']', '[', '}', '{');
+
+    //<<
+    private BalancedBrackets() {
+    }
+
+    public static boolean isBalanced(String expression) {
+        //>>
+        Deque<Character> stack = new ArrayDeque<>();
+        for (char c : expression.toCharArray()) {
+            if (c == '(' || c == '[' || c == '{') {
+                stack.push(c);
+            } else if (PAIRS.containsKey(c)) {
+                if (stack.isEmpty() || stack.pop() != PAIRS.get(c)) {
+                    return false;
+                }
+            }
+        }
+        return stack.isEmpty();
+        //<<
+    }
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(BalancedBrackets.isBalanced("(amount > [limit]) && {channel}"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[true]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(BalancedBrackets.isBalanced("(]"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[false]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(BalancedBrackets.isBalanced(""));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[true]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(BalancedBrackets.isBalanced("{[()()]}"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[true]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(BalancedBrackets.isBalanced("(("));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[false]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(BalancedBrackets.isBalanced("())"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[false]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(BalancedBrackets.isBalanced("{[}]"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[false]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+  <question type="coderunner">
+    <name><text>P1-CODE-13 DaysUntilHigherRate</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 10. Pattern: monotonic stack.</strong></p><p>Given daily exchange rates, return for each day how many days you must wait for a strictly higher rate, or 0 if it never comes. O(n).</p><p>Complete the class <code>DaysUntilHigherRate</code> in the answer box, keeping these signatures:</p><ul><li><code>public static int[] waits(double[] rates)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: monotonic stack. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/stacks/DaysUntilHigherRate.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[import java.util.ArrayDeque;
+import java.util.Deque;
+
+/**
+ * Week 10. Pattern: monotonic stack.
+ * <p>
+ * Given daily exchange rates, return for each day how many days you must wait for a strictly higher rate,
+ * or 0 if it never comes. O(n).
+ */
+public final class DaysUntilHigherRate {
+
+    private DaysUntilHigherRate() {
+    }
+
+    public static int[] waits(double[] rates) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[import java.util.ArrayDeque;
+import java.util.Deque;
+
+/**
+ * Week 10. Pattern: monotonic stack.
+ * <p>
+ * Given daily exchange rates, return for each day how many days you must wait for a strictly higher rate,
+ * or 0 if it never comes. O(n).
+ */
+public final class DaysUntilHigherRate {
+
+    private DaysUntilHigherRate() {
+    }
+
+    public static int[] waits(double[] rates) {
+        //>>
+        int[] out = new int[rates.length];
+        Deque<Integer> stack = new ArrayDeque<>();           // indices with no higher rate found yet
+        for (int i = 0; i < rates.length; i++) {
+            while (!stack.isEmpty() && rates[stack.peek()] < rates[i]) {
+                int j = stack.pop();
+                out[j] = i - j;
+            }
+            stack.push(i);
+        }
+        return out;
+        //<<
+    }
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[show(DaysUntilHigherRate.waits(new double[] {1530, 1528, 1535, 1535, 1520, 1540}));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[2, 1, 3, 2, 1, 0]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[show(DaysUntilHigherRate.waits(new double[] {3, 2, 1}));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[0, 0, 0]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[show(DaysUntilHigherRate.waits(new double[0]));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+  <question type="coderunner">
+    <name><text>P1-CODE-14 MergeWindows</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 12. Pattern: sort then sweep.</strong></p><p>Maintenance windows are given as [start, end] minutes (start ≤ end), in any order. Merge overlapping or touching windows ([1,3] and [3,5] become [1,5]) and return them sorted by start.</p><p>Complete the class <code>MergeWindows</code> in the answer box, keeping these signatures:</p><ul><li><code>public record Window(int start, int end)</code></li><li><code>public static List&lt;Window&gt; merge(List&lt;Window&gt; windows)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: sort then sweep. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/search/MergeWindows.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
+/**
+ * Week 12. Pattern: sort then sweep.
+ * <p>
+ * Maintenance windows are given as [start, end] minutes (start ≤ end), in any order. Merge overlapping or
+ * touching windows ([1,3] and [3,5] become [1,5]) and return them sorted by start.
+ */
+public final class MergeWindows {
+
+    public record Window(int start, int end) {
+    }
+
+    private MergeWindows() {
+    }
+
+    public static List<Window> merge(List<Window> windows) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
+/**
+ * Week 12. Pattern: sort then sweep.
+ * <p>
+ * Maintenance windows are given as [start, end] minutes (start ≤ end), in any order. Merge overlapping or
+ * touching windows ([1,3] and [3,5] become [1,5]) and return them sorted by start.
+ */
+public final class MergeWindows {
+
+    public record Window(int start, int end) {
+    }
+
+    private MergeWindows() {
+    }
+
+    public static List<Window> merge(List<Window> windows) {
+        //>>
+        List<Window> sorted = new ArrayList<>(windows);
+        sorted.sort(Comparator.comparingInt(Window::start));
+        List<Window> out = new ArrayList<>();
+        for (Window w : sorted) {
+            if (!out.isEmpty() && w.start() <= out.getLast().end()) {
+                Window last = out.removeLast();
+                out.add(new Window(last.start(), Math.max(last.end(), w.end())));
+            } else {
+                out.add(w);
+            }
+        }
+        return out;
+        //<<
+    }
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(MergeWindows.merge(List.of(new MergeWindows.Window(8, 10), new MergeWindows.Window(1, 3),
+        new MergeWindows.Window(2, 6), new MergeWindows.Window(15, 18), new MergeWindows.Window(6, 7))));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[Window[start=1, end=7], Window[start=8, end=10], Window[start=15, end=18]]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(MergeWindows.merge(List.of(new MergeWindows.Window(1, 10), new MergeWindows.Window(2, 3))));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[Window[start=1, end=10]]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(MergeWindows.merge(List.of()));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+  <question type="coderunner">
+    <name><text>P1-CODE-15 KthLargestTransfer</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 13. Pattern: min-heap of size k.</strong></p><p>Return the k-th largest amount (k = 1 is the largest) from a large array of transfers, in O(n log k) time and O(k) extra space. Throw <code>IllegalArgumentException</code> if k is out of range.</p><p>Complete the class <code>KthLargestTransfer</code> in the answer box, keeping these signatures:</p><ul><li><code>public static long kthLargest(long[] amounts, int k)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: min-heap of size k. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/search/KthLargestTransfer.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[import java.util.PriorityQueue;
+
+/**
+ * Week 13. Pattern: min-heap of size k.
+ * <p>
+ * Return the k-th largest amount (k = 1 is the largest) from a large array of transfers, in O(n log k) time
+ * and O(k) extra space. Throw {@link IllegalArgumentException} if k is out of range.
+ */
+public final class KthLargestTransfer {
+
+    private KthLargestTransfer() {
+    }
+
+    public static long kthLargest(long[] amounts, int k) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[import java.util.PriorityQueue;
+
+/**
+ * Week 13. Pattern: min-heap of size k.
+ * <p>
+ * Return the k-th largest amount (k = 1 is the largest) from a large array of transfers, in O(n log k) time
+ * and O(k) extra space. Throw {@link IllegalArgumentException} if k is out of range.
+ */
+public final class KthLargestTransfer {
+
+    private KthLargestTransfer() {
+    }
+
+    public static long kthLargest(long[] amounts, int k) {
+        //>>
+        if (k < 1 || k > amounts.length) {
+            throw new IllegalArgumentException("bad k");
+        }
+        PriorityQueue<Long> heap = new PriorityQueue<>(k);
+        for (long a : amounts) {
+            if (heap.size() < k) {
+                heap.offer(a);
+            } else if (a > heap.peek()) {
+                heap.poll();
+                heap.offer(a);
+            }
+        }
+        return heap.peek();
+        //<<
+    }
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(KthLargestTransfer.kthLargest(new long[] {3, 2, 1, 5, 6, 4}, 2));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[5]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(KthLargestTransfer.kthLargest(new long[] {3, 2, 3, 1, 2, 4, 5, 5, 6}, 4));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[4]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[long[] amounts = new Random(1).longs(50_000, 0, 1_000_000).toArray();
+System.out.println(KthLargestTransfer.kthLargest(amounts, 100));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[998068]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(KthLargestTransfer.kthLargest(new long[] {1}, 2));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[IllegalArgumentException]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(KthLargestTransfer.kthLargest(new long[] {1}, 0));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[IllegalArgumentException]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+</quiz>

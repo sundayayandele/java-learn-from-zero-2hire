@@ -1,0 +1,2711 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="category">
+    <category><text>$course$/top/Java Zero-to-Hired/Phase 2/Coding practice</text></category>
+  </question>
+  <question type="coderunner">
+    <name><text>P2-CODE-01 ReverseList</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 14. Pattern: pointer manipulation.</strong></p><p>Reverse a singly linked list in place and return the new head. O(n) time, O(1) extra space.</p><p>Complete the class <code>ReverseList</code> in the answer box, keeping these signatures:</p><ul><li><code>public static Node reverse(Node head)</code></li></ul><p>The <code>Node</code> class is provided; don't include it in your answer.</p><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: pointer manipulation. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/lists/ReverseList.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[/**
+ * Week 14. Pattern: pointer manipulation.
+ * <p>
+ * Reverse a singly linked list in place and return the new head. O(n) time, O(1) extra space.
+ */
+public final class ReverseList {
+
+    private ReverseList() {
+    }
+
+    public static Node reverse(Node head) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+/** A singly linked list node used by the list problems. Provided; nothing to implement here. */
+final class Node {
+    public int value;
+    public Node next;
+
+    public Node(int value) {
+        this.value = value;
+    }
+
+    public static Node of(int... values) {
+        Node dummy = new Node(0);
+        Node tail = dummy;
+        for (int v : values) {
+            tail.next = new Node(v);
+            tail = tail.next;
+        }
+        return dummy.next;
+    }
+
+    public static java.util.List<Integer> toList(Node head) {
+        java.util.List<Integer> out = new java.util.ArrayList<>();
+        for (Node n = head; n != null; n = n.next) {
+            out.add(n.value);
+        }
+        return out;
+    }
+}
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[/**
+ * Week 14. Pattern: pointer manipulation.
+ * <p>
+ * Reverse a singly linked list in place and return the new head. O(n) time, O(1) extra space.
+ */
+public final class ReverseList {
+
+    private ReverseList() {
+    }
+
+    public static Node reverse(Node head) {
+        //>>
+        Node prev = null;
+        Node current = head;
+        while (current != null) {
+            Node next = current.next;
+            current.next = prev;
+            prev = current;
+            current = next;
+        }
+        return prev;
+        //<<
+    }
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(Node.toList(ReverseList.reverse(Node.of(1, 2, 3, 4))));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[4, 3, 2, 1]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(Node.toList(ReverseList.reverse(Node.of(7))));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[7]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(ReverseList.reverse(null));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[null]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+  <question type="coderunner">
+    <name><text>P2-CODE-02 HasCycle</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 15. Pattern: fast and slow pointers (Floyd).</strong></p><p>A corrupted approval chain may loop back on itself. Return whether the list has a cycle, using O(1) extra space (no HashSet).</p><p>Complete the class <code>HasCycle</code> in the answer box, keeping these signatures:</p><ul><li><code>public static boolean hasCycle(Node head)</code></li></ul><p>The <code>Node</code> class is provided; don't include it in your answer.</p><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: fast and slow pointers (Floyd). Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/lists/HasCycle.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[/**
+ * Week 15. Pattern: fast and slow pointers (Floyd).
+ * <p>
+ * A corrupted approval chain may loop back on itself. Return whether the list has a cycle, using O(1) extra
+ * space (no HashSet).
+ */
+public final class HasCycle {
+
+    private HasCycle() {
+    }
+
+    public static boolean hasCycle(Node head) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+/** A singly linked list node used by the list problems. Provided; nothing to implement here. */
+final class Node {
+    public int value;
+    public Node next;
+
+    public Node(int value) {
+        this.value = value;
+    }
+
+    public static Node of(int... values) {
+        Node dummy = new Node(0);
+        Node tail = dummy;
+        for (int v : values) {
+            tail.next = new Node(v);
+            tail = tail.next;
+        }
+        return dummy.next;
+    }
+
+    public static java.util.List<Integer> toList(Node head) {
+        java.util.List<Integer> out = new java.util.ArrayList<>();
+        for (Node n = head; n != null; n = n.next) {
+            out.add(n.value);
+        }
+        return out;
+    }
+}
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[/**
+ * Week 15. Pattern: fast and slow pointers (Floyd).
+ * <p>
+ * A corrupted approval chain may loop back on itself. Return whether the list has a cycle, using O(1) extra
+ * space (no HashSet).
+ */
+public final class HasCycle {
+
+    private HasCycle() {
+    }
+
+    public static boolean hasCycle(Node head) {
+        //>>
+        Node slow = head;
+        Node fast = head;
+        while (fast != null && fast.next != null) {
+            slow = slow.next;
+            fast = fast.next.next;
+            if (slow == fast) {
+                return true;
+            }
+        }
+        return false;
+        //<<
+    }
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(HasCycle.hasCycle(Node.of(1, 2, 3, 4, 5)));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[false]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[Node head = Node.of(1, 2, 3, 4, 5);
+head.next.next.next.next.next = head.next;   // 5 -> 2
+System.out.println(HasCycle.hasCycle(head));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[true]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[Node single = new Node(1);
+single.next = single;
+System.out.println(HasCycle.hasCycle(single));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[true]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(HasCycle.hasCycle(null));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[false]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+  <question type="coderunner">
+    <name><text>P2-CODE-03 MergeSortedLists</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 15. Pattern: dummy head and splicing.</strong></p><p>Merge two sorted linked lists into one sorted list by relinking the existing nodes (no new nodes except an optional dummy head).</p><p>Complete the class <code>MergeSortedLists</code> in the answer box, keeping these signatures:</p><ul><li><code>public static Node merge(Node a, Node b)</code></li></ul><p>The <code>Node</code> class is provided; don't include it in your answer.</p><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: dummy head and splicing. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/lists/MergeSortedLists.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[/**
+ * Week 15. Pattern: dummy head and splicing.
+ * <p>
+ * Merge two sorted linked lists into one sorted list by relinking the existing nodes (no new nodes except an
+ * optional dummy head).
+ */
+public final class MergeSortedLists {
+
+    private MergeSortedLists() {
+    }
+
+    public static Node merge(Node a, Node b) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+/** A singly linked list node used by the list problems. Provided; nothing to implement here. */
+final class Node {
+    public int value;
+    public Node next;
+
+    public Node(int value) {
+        this.value = value;
+    }
+
+    public static Node of(int... values) {
+        Node dummy = new Node(0);
+        Node tail = dummy;
+        for (int v : values) {
+            tail.next = new Node(v);
+            tail = tail.next;
+        }
+        return dummy.next;
+    }
+
+    public static java.util.List<Integer> toList(Node head) {
+        java.util.List<Integer> out = new java.util.ArrayList<>();
+        for (Node n = head; n != null; n = n.next) {
+            out.add(n.value);
+        }
+        return out;
+    }
+}
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[/**
+ * Week 15. Pattern: dummy head and splicing.
+ * <p>
+ * Merge two sorted linked lists into one sorted list by relinking the existing nodes (no new nodes except an
+ * optional dummy head).
+ */
+public final class MergeSortedLists {
+
+    private MergeSortedLists() {
+    }
+
+    public static Node merge(Node a, Node b) {
+        //>>
+        Node dummy = new Node(0);
+        Node tail = dummy;
+        while (a != null && b != null) {
+            if (a.value <= b.value) {
+                tail.next = a;
+                a = a.next;
+            } else {
+                tail.next = b;
+                b = b.next;
+            }
+            tail = tail.next;
+        }
+        tail.next = a != null ? a : b;
+        return dummy.next;
+        //<<
+    }
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(Node.toList(MergeSortedLists.merge(Node.of(1, 2, 4), Node.of(1, 3, 4))));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[1, 1, 2, 3, 4, 4]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(Node.toList(MergeSortedLists.merge(null, Node.of(0))));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[0]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(MergeSortedLists.merge(null, null));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[null]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[// The merged list must reuse the existing nodes.
+Node a = Node.of(1);
+Node b = Node.of(2);
+Node merged = MergeSortedLists.merge(a, b);
+System.out.println((merged == a) + " " + (merged.next == b));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[true true]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+  <question type="coderunner">
+    <name><text>P2-CODE-04 StatementOrdering</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 14. Pattern: Comparator composition.</strong></p><p>Sort transactions for an investigation report: largest amount first; for equal amounts (compare with <code>compareTo</code>, so 10.0 equals 10.00), earliest time first; then reference ascending. Return a new list; don't modify the input.</p><p>Complete the class <code>StatementOrdering</code> in the answer box, keeping these signatures:</p><ul><li><code>public record Txn(String reference, BigDecimal amount, Instant at)</code></li><li><code>public static List&lt;Txn&gt; sorted(List&lt;Txn&gt; txns)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: Comparator composition. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/search/StatementOrdering.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.Comparator;
+import java.util.List;
+
+/**
+ * Week 14. Pattern: Comparator composition.
+ * <p>
+ * Sort transactions for an investigation report: largest amount first; for equal amounts (compare with
+ * {@code compareTo}, so 10.0 equals 10.00), earliest time first; then reference ascending. Return a new list;
+ * don't modify the input.
+ */
+public final class StatementOrdering {
+
+    public record Txn(String reference, BigDecimal amount, Instant at) {
+    }
+
+    private StatementOrdering() {
+    }
+
+    public static List<Txn> sorted(List<Txn> txns) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.Comparator;
+import java.util.List;
+
+/**
+ * Week 14. Pattern: Comparator composition.
+ * <p>
+ * Sort transactions for an investigation report: largest amount first; for equal amounts (compare with
+ * {@code compareTo}, so 10.0 equals 10.00), earliest time first; then reference ascending. Return a new list;
+ * don't modify the input.
+ */
+public final class StatementOrdering {
+
+    public record Txn(String reference, BigDecimal amount, Instant at) {
+    }
+
+    private StatementOrdering() {
+    }
+
+    public static List<Txn> sorted(List<Txn> txns) {
+        //>>
+        return txns.stream()
+                .sorted(Comparator.comparing(Txn::amount, Comparator.reverseOrder())
+                        .thenComparing(Txn::at)
+                        .thenComparing(Txn::reference))
+                .toList();
+        //<<
+    }
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[List<StatementOrdering.Txn> input = new ArrayList<>(List.of(
+        new StatementOrdering.Txn("C", new BigDecimal("10.00"), Instant.parse("2026-01-01T10:00:00Z")),
+        new StatementOrdering.Txn("A", new BigDecimal("500.00"), Instant.parse("2026-01-01T09:00:00Z")),
+        new StatementOrdering.Txn("B", new BigDecimal("10.0"), Instant.parse("2026-01-01T09:00:00Z")),
+        new StatementOrdering.Txn("D", new BigDecimal("10.00"), Instant.parse("2026-01-01T09:00:00Z"))));
+System.out.println(StatementOrdering.sorted(input).stream().map(StatementOrdering.Txn::reference).toList());]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[A, B, D, C]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[// The input list must not change.
+List<StatementOrdering.Txn> input = new ArrayList<>(List.of(
+        new StatementOrdering.Txn("C", new BigDecimal("10.00"), Instant.parse("2026-01-01T10:00:00Z")),
+        new StatementOrdering.Txn("A", new BigDecimal("500.00"), Instant.parse("2026-01-01T09:00:00Z"))));
+StatementOrdering.sorted(input);
+System.out.println(input.stream().map(StatementOrdering.Txn::reference).toList());]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[C, A]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(StatementOrdering.sorted(List.of()));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+  <question type="coderunner">
+    <name><text>P2-CODE-05 TreeDepth</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 16. Pattern: recursion on trees.</strong></p><p>Return the number of levels in a reporting hierarchy (an empty tree has depth 0).</p><p>Complete the class <code>TreeDepth</code> in the answer box, keeping these signatures:</p><ul><li><code>public static int depth(TreeNode root)</code></li></ul><p>The <code>TreeNode</code> class is provided; don't include it in your answer.</p><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: recursion on trees. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/trees/TreeDepth.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[/**
+ * Week 16. Pattern: recursion on trees.
+ * <p>
+ * Return the number of levels in a reporting hierarchy (an empty tree has depth 0).
+ */
+public final class TreeDepth {
+
+    private TreeDepth() {
+    }
+
+    public static int depth(TreeNode root) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+/** A binary tree node used by the tree problems. Provided; nothing to implement here. */
+final class TreeNode {
+    public final String name;
+    public final int value;
+    public TreeNode left;
+    public TreeNode right;
+
+    public TreeNode(String name, int value) {
+        this.name = name;
+        this.value = value;
+    }
+
+    public TreeNode(int value) {
+        this(String.valueOf(value), value);
+    }
+
+    public static TreeNode of(int value, TreeNode left, TreeNode right) {
+        TreeNode n = new TreeNode(value);
+        n.left = left;
+        n.right = right;
+        return n;
+    }
+}
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[/**
+ * Week 16. Pattern: recursion on trees.
+ * <p>
+ * Return the number of levels in a reporting hierarchy (an empty tree has depth 0).
+ */
+public final class TreeDepth {
+
+    private TreeDepth() {
+    }
+
+    public static int depth(TreeNode root) {
+        //>>
+        return root == null ? 0 : 1 + Math.max(depth(root.left), depth(root.right));
+        //<<
+    }
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(TreeDepth.depth(TreeNode.of(1, TreeNode.of(2, TreeNode.of(4, null, null), null),
+        TreeNode.of(3, null, null))));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[3]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(TreeDepth.depth(null));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[0]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(TreeDepth.depth(new TreeNode(1)));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[1]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+  <question type="coderunner">
+    <name><text>P2-CODE-06 ValidSearchTree</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 16. Pattern: recursion with bounds.</strong></p><p>Return whether a binary tree is a valid binary search tree: every value in a node's left subtree is strictly smaller and every value in its right subtree strictly larger. Checking only the children is not enough.</p><p>Complete the class <code>ValidSearchTree</code> in the answer box, keeping these signatures:</p><ul><li><code>public static boolean isValid(TreeNode root)</code></li></ul><p>The <code>TreeNode</code> class is provided; don't include it in your answer.</p><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: recursion with bounds. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/trees/ValidSearchTree.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[/**
+ * Week 16. Pattern: recursion with bounds.
+ * <p>
+ * Return whether a binary tree is a valid binary search tree: every value in a node's left subtree is strictly
+ * smaller and every value in its right subtree strictly larger. Checking only the children is not enough.
+ */
+public final class ValidSearchTree {
+
+    private ValidSearchTree() {
+    }
+
+    public static boolean isValid(TreeNode root) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+/** A binary tree node used by the tree problems. Provided; nothing to implement here. */
+final class TreeNode {
+    public final String name;
+    public final int value;
+    public TreeNode left;
+    public TreeNode right;
+
+    public TreeNode(String name, int value) {
+        this.name = name;
+        this.value = value;
+    }
+
+    public TreeNode(int value) {
+        this(String.valueOf(value), value);
+    }
+
+    public static TreeNode of(int value, TreeNode left, TreeNode right) {
+        TreeNode n = new TreeNode(value);
+        n.left = left;
+        n.right = right;
+        return n;
+    }
+}
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[/**
+ * Week 16. Pattern: recursion with bounds.
+ * <p>
+ * Return whether a binary tree is a valid binary search tree: every value in a node's left subtree is strictly
+ * smaller and every value in its right subtree strictly larger. Checking only the children is not enough.
+ */
+public final class ValidSearchTree {
+
+    private ValidSearchTree() {
+    }
+
+    public static boolean isValid(TreeNode root) {
+        //>>
+        return valid(root, Long.MIN_VALUE, Long.MAX_VALUE);
+        //<<
+    }
+    //>>hide
+
+    private static boolean valid(TreeNode n, long low, long high) {
+        if (n == null) {
+            return true;
+        }
+        if (n.value <= low || n.value >= high) {
+            return false;
+        }
+        return valid(n.left, low, n.value) && valid(n.right, n.value, high);
+    }
+    //<<
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(ValidSearchTree.isValid(TreeNode.of(5, TreeNode.of(3, TreeNode.of(1, null, null),
+        TreeNode.of(4, null, null)), TreeNode.of(8, null, TreeNode.of(9, null, null)))));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[true]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[// 6 is in 5's left subtree, so this is not a search tree.
+System.out.println(ValidSearchTree.isValid(TreeNode.of(5, TreeNode.of(3, null, TreeNode.of(6, null, null)),
+        TreeNode.of(8, null, null))));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[false]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(ValidSearchTree.isValid(null));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[true]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(ValidSearchTree.isValid(TreeNode.of(Integer.MAX_VALUE,
+        TreeNode.of(Integer.MIN_VALUE, null, null), null)));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[true]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(ValidSearchTree.isValid(TreeNode.of(5, TreeNode.of(5, null, null), null)));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[false]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+  <question type="coderunner">
+    <name><text>P2-CODE-07 LevelOrder</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 17. Pattern: breadth-first search with a queue.</strong></p><p>Return the names in an org chart level by level, left to right.</p><p>Complete the class <code>LevelOrder</code> in the answer box, keeping these signatures:</p><ul><li><code>public static List&lt;List&lt;String&gt;&gt; levels(TreeNode root)</code></li></ul><p>The <code>TreeNode</code> class is provided; don't include it in your answer.</p><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: breadth-first search with a queue. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/trees/LevelOrder.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.List;
+
+/**
+ * Week 17. Pattern: breadth-first search with a queue.
+ * <p>
+ * Return the names in an org chart level by level, left to right.
+ */
+public final class LevelOrder {
+
+    private LevelOrder() {
+    }
+
+    public static List<List<String>> levels(TreeNode root) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+/** A binary tree node used by the tree problems. Provided; nothing to implement here. */
+final class TreeNode {
+    public final String name;
+    public final int value;
+    public TreeNode left;
+    public TreeNode right;
+
+    public TreeNode(String name, int value) {
+        this.name = name;
+        this.value = value;
+    }
+
+    public TreeNode(int value) {
+        this(String.valueOf(value), value);
+    }
+
+    public static TreeNode of(int value, TreeNode left, TreeNode right) {
+        TreeNode n = new TreeNode(value);
+        n.left = left;
+        n.right = right;
+        return n;
+    }
+}
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.List;
+
+/**
+ * Week 17. Pattern: breadth-first search with a queue.
+ * <p>
+ * Return the names in an org chart level by level, left to right.
+ */
+public final class LevelOrder {
+
+    private LevelOrder() {
+    }
+
+    public static List<List<String>> levels(TreeNode root) {
+        //>>
+        List<List<String>> out = new ArrayList<>();
+        if (root == null) {
+            return out;
+        }
+        Deque<TreeNode> queue = new ArrayDeque<>();
+        queue.offer(root);
+        while (!queue.isEmpty()) {
+            int size = queue.size();
+            List<String> level = new ArrayList<>(size);
+            for (int i = 0; i < size; i++) {
+                TreeNode n = queue.poll();
+                level.add(n.name);
+                if (n.left != null) {
+                    queue.offer(n.left);
+                }
+                if (n.right != null) {
+                    queue.offer(n.right);
+                }
+            }
+            out.add(level);
+        }
+        return out;
+        //<<
+    }
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[TreeNode ceo = new TreeNode("Ada", 1);
+ceo.left = new TreeNode("Bayo", 2);
+ceo.right = new TreeNode("Chi", 3);
+ceo.left.right = new TreeNode("Dele", 4);
+ceo.right.left = new TreeNode("Efe", 5);
+System.out.println(LevelOrder.levels(ceo));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[[Ada], [Bayo, Chi], [Dele, Efe]]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(LevelOrder.levels(null));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(LevelOrder.levels(new TreeNode("Solo", 1)));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[[Solo]]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+  <question type="coderunner">
+    <name><text>P2-CODE-08 FewestHops</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 18. Pattern: breadth-first search for shortest paths in an unweighted graph.</strong></p><p>Transfers are directed edges. Return the fewest transfers needed for money to move from <code>source</code> to <code>target</code> (0 if they are the same account), or -1 if it can't.</p><p>Complete the class <code>FewestHops</code> in the answer box, keeping these signatures:</p><ul><li><code>public static int hops(Map&lt;String, List&lt;String&gt;&gt; sentTo, String source, String target)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: breadth-first search for shortest paths in an unweighted graph. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/graphs/FewestHops.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Week 18. Pattern: breadth-first search for shortest paths in an unweighted graph.
+ * <p>
+ * Transfers are directed edges. Return the fewest transfers needed for money to move from {@code source} to
+ * {@code target} (0 if they are the same account), or -1 if it can't.
+ */
+public final class FewestHops {
+
+    private FewestHops() {
+    }
+
+    public static int hops(Map<String, List<String>> sentTo, String source, String target) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Week 18. Pattern: breadth-first search for shortest paths in an unweighted graph.
+ * <p>
+ * Transfers are directed edges. Return the fewest transfers needed for money to move from {@code source} to
+ * {@code target} (0 if they are the same account), or -1 if it can't.
+ */
+public final class FewestHops {
+
+    private FewestHops() {
+    }
+
+    public static int hops(Map<String, List<String>> sentTo, String source, String target) {
+        //>>
+        if (source.equals(target)) {
+            return 0;
+        }
+        Map<String, Integer> distance = new HashMap<>();
+        Deque<String> queue = new ArrayDeque<>();
+        distance.put(source, 0);
+        queue.offer(source);
+        while (!queue.isEmpty()) {
+            String current = queue.poll();
+            for (String next : sentTo.getOrDefault(current, List.of())) {
+                if (!distance.containsKey(next)) {
+                    int d = distance.get(current) + 1;
+                    if (next.equals(target)) {
+                        return d;
+                    }
+                    distance.put(next, d);
+                    queue.offer(next);
+                }
+            }
+        }
+        return -1;
+        //<<
+    }
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[Map<String, List<String>> sentTo = Map.of("A", List.of("B", "C"), "B", List.of("D"),
+        "C", List.of("D", "E"), "D", List.of("F"), "E", List.of("F"), "F", List.of("A"));
+System.out.println(FewestHops.hops(sentTo, "A", "F"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[3]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[Map<String, List<String>> sentTo = Map.of("A", List.of("B", "C"), "B", List.of("D"),
+        "C", List.of("D", "E"), "D", List.of("F"), "E", List.of("F"), "F", List.of("A"));
+System.out.println(FewestHops.hops(sentTo, "E", "D"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[4]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(FewestHops.hops(Map.of("A", List.of("B")), "A", "A"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[0]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[Map<String, List<String>> sentTo = Map.of("A", List.of("B", "C"), "B", List.of("D"),
+        "C", List.of("D", "E"), "D", List.of("F"), "E", List.of("F"), "F", List.of("A"));
+System.out.println(FewestHops.hops(sentTo, "A", "Z"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[-1]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(FewestHops.hops(Map.of(), "X", "Y"));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[-1]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+  <question type="coderunner">
+    <name><text>P2-CODE-09 LinkedAccountGroups</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 18. Pattern: union-find (or BFS/DFS over an undirected graph).</strong></p><p>Fraud analysts treat accounts that have sent money to each other, directly or through other accounts, as one group. Given transfers as [from, to] pairs, return the number of groups among all accounts that appear.</p><p>Complete the class <code>LinkedAccountGroups</code> in the answer box, keeping these signatures:</p><ul><li><code>public record Transfer(String from, String to)</code></li><li><code>public static int groups(List&lt;Transfer&gt; transfers)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: union-find (or BFS/DFS over an undirected graph). Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/graphs/LinkedAccountGroups.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Week 18. Pattern: union-find (or BFS/DFS over an undirected graph).
+ * <p>
+ * Fraud analysts treat accounts that have sent money to each other, directly or through other accounts, as one
+ * group. Given transfers as [from, to] pairs, return the number of groups among all accounts that appear.
+ */
+public final class LinkedAccountGroups {
+
+    public record Transfer(String from, String to) {
+    }
+
+    private LinkedAccountGroups() {
+    }
+
+    public static int groups(List<Transfer> transfers) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Week 18. Pattern: union-find (or BFS/DFS over an undirected graph).
+ * <p>
+ * Fraud analysts treat accounts that have sent money to each other, directly or through other accounts, as one
+ * group. Given transfers as [from, to] pairs, return the number of groups among all accounts that appear.
+ */
+public final class LinkedAccountGroups {
+
+    public record Transfer(String from, String to) {
+    }
+
+    private LinkedAccountGroups() {
+    }
+
+    public static int groups(List<Transfer> transfers) {
+        //>>
+        Map<String, String> parent = new HashMap<>();
+        for (Transfer t : transfers) {
+            parent.putIfAbsent(t.from(), t.from());
+            parent.putIfAbsent(t.to(), t.to());
+            String a = find(parent, t.from());
+            String b = find(parent, t.to());
+            if (!a.equals(b)) {
+                parent.put(a, b);
+            }
+        }
+        int roots = 0;
+        for (String account : parent.keySet()) {
+            if (find(parent, account).equals(account)) {
+                roots++;
+            }
+        }
+        return roots;
+        //<<
+    }
+    //>>hide
+
+    private static String find(Map<String, String> parent, String x) {
+        String root = x;
+        while (!parent.get(root).equals(root)) {
+            root = parent.get(root);
+        }
+        while (!parent.get(x).equals(root)) {                 // path compression
+            String next = parent.get(x);
+            parent.put(x, root);
+            x = next;
+        }
+        return root;
+    }
+    //<<
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(LinkedAccountGroups.groups(List.of(new LinkedAccountGroups.Transfer("A", "B"),
+        new LinkedAccountGroups.Transfer("C", "B"), new LinkedAccountGroups.Transfer("D", "E"),
+        new LinkedAccountGroups.Transfer("F", "F"))));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[3]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(LinkedAccountGroups.groups(List.of()));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[0]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[// A chain of 50,000 transfers: deep recursion overflows the stack here.
+List<LinkedAccountGroups.Transfer> chain = new ArrayList<>();
+for (int i = 0; i < 50_000; i++) chain.add(new LinkedAccountGroups.Transfer("acc" + i, "acc" + (i + 1)));
+System.out.println(LinkedAccountGroups.groups(chain));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[1]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+  <question type="coderunner">
+    <name><text>P2-CODE-10 JobOrder</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 19. Pattern: topological sort (Kahn&#x27;s algorithm).</strong></p><p>End-of-day batch jobs depend on each other: <code>dependsOn.get("interest")</code> lists jobs that must finish before "interest". Every job appears as a key. Return an order that runs each job after its dependencies, choosing the alphabetically smallest ready job whenever several are ready, or empty if there is a cycle.</p><p>Complete the class <code>JobOrder</code> in the answer box, keeping these signatures:</p><ul><li><code>public static Optional&lt;List&lt;String&gt;&gt; order(Map&lt;String, List&lt;String&gt;&gt; dependsOn)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: topological sort (Kahn&#x27;s algorithm). Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/graphs/JobOrder.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.TreeMap;
+
+/**
+ * Week 19. Pattern: topological sort (Kahn's algorithm).
+ * <p>
+ * End-of-day batch jobs depend on each other: {@code dependsOn.get("interest")} lists jobs that must finish
+ * before "interest". Every job appears as a key. Return an order that runs each job after its dependencies,
+ * choosing the alphabetically smallest ready job whenever several are ready, or empty if there is a cycle.
+ */
+public final class JobOrder {
+
+    private JobOrder() {
+    }
+
+    public static Optional<List<String>> order(Map<String, List<String>> dependsOn) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.TreeMap;
+
+/**
+ * Week 19. Pattern: topological sort (Kahn's algorithm).
+ * <p>
+ * End-of-day batch jobs depend on each other: {@code dependsOn.get("interest")} lists jobs that must finish
+ * before "interest". Every job appears as a key. Return an order that runs each job after its dependencies,
+ * choosing the alphabetically smallest ready job whenever several are ready, or empty if there is a cycle.
+ */
+public final class JobOrder {
+
+    private JobOrder() {
+    }
+
+    public static Optional<List<String>> order(Map<String, List<String>> dependsOn) {
+        //>>
+        Map<String, Integer> remaining = new TreeMap<>();
+        Map<String, List<String>> dependants = new HashMap<>();
+        dependsOn.forEach((job, deps) -> {
+            remaining.put(job, deps.size());
+            deps.forEach(d -> dependants.computeIfAbsent(d, k -> new ArrayList<>()).add(job));
+        });
+        java.util.PriorityQueue<String> ready = new java.util.PriorityQueue<>();
+        remaining.forEach((job, n) -> {
+            if (n == 0) {
+                ready.add(job);
+            }
+        });
+        List<String> out = new ArrayList<>();
+        while (!ready.isEmpty()) {
+            String job = ready.poll();
+            out.add(job);
+            for (String next : dependants.getOrDefault(job, List.of())) {
+                if (remaining.merge(next, -1, Integer::sum) == 0) {
+                    ready.add(next);
+                }
+            }
+        }
+        return out.size() == dependsOn.size() ? Optional.of(out) : Optional.empty();
+        //<<
+    }
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(JobOrder.order(Map.of(
+        "close-day", List.of("interest", "fees"),
+        "interest", List.of("load-balances"),
+        "fees", List.of("load-balances"),
+        "load-balances", List.<String>of(),
+        "audit", List.<String>of())));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[Optional[[audit, load-balances, fees, interest, close-day]]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(JobOrder.order(Map.of("a", List.of("b"), "b", List.of("c"), "c", List.of("a"))));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[Optional.empty]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(JobOrder.order(Map.of("only", List.<String>of())));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[Optional[[only]]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+  <question type="coderunner">
+    <name><text>P2-CODE-11 FewestNotes</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 20. Pattern: dynamic programming (minimum).</strong></p><p>An ATM must dispense exactly <code>amount</code> with the fewest notes from the given denominations (unlimited of each). Return that number, or -1 if it is impossible. Greedy choice fails for some denomination sets.</p><p>Complete the class <code>FewestNotes</code> in the answer box, keeping these signatures:</p><ul><li><code>public static int fewest(int[] notes, int amount)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: dynamic programming (minimum). Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/dp/FewestNotes.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[import java.util.Arrays;
+
+/**
+ * Week 20. Pattern: dynamic programming (minimum).
+ * <p>
+ * An ATM must dispense exactly {@code amount} with the fewest notes from the given denominations (unlimited of
+ * each). Return that number, or -1 if it is impossible. Greedy choice fails for some denomination sets.
+ */
+public final class FewestNotes {
+
+    private FewestNotes() {
+    }
+
+    public static int fewest(int[] notes, int amount) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[import java.util.Arrays;
+
+/**
+ * Week 20. Pattern: dynamic programming (minimum).
+ * <p>
+ * An ATM must dispense exactly {@code amount} with the fewest notes from the given denominations (unlimited of
+ * each). Return that number, or -1 if it is impossible. Greedy choice fails for some denomination sets.
+ */
+public final class FewestNotes {
+
+    private FewestNotes() {
+    }
+
+    public static int fewest(int[] notes, int amount) {
+        //>>
+        int[] best = new int[amount + 1];
+        Arrays.fill(best, Integer.MAX_VALUE);
+        best[0] = 0;
+        for (int a = 1; a <= amount; a++) {
+            for (int note : notes) {
+                if (note <= a && best[a - note] != Integer.MAX_VALUE) {
+                    best[a] = Math.min(best[a], best[a - note] + 1);
+                }
+            }
+        }
+        return best[amount] == Integer.MAX_VALUE ? -1 : best[amount];
+        //<<
+    }
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(FewestNotes.fewest(new int[] {200, 500, 1000}, 1700));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[3]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[// Greedy (4 + 1 + 1) gives 3 notes; the answer is 3 + 3.
+System.out.println(FewestNotes.fewest(new int[] {1, 3, 4}, 6));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[2]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(FewestNotes.fewest(new int[] {500}, 300));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[-1]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(FewestNotes.fewest(new int[] {500}, 0));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[0]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+  <question type="coderunner">
+    <name><text>P2-CODE-12 BestSingleTrade</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 21. Pattern: running minimum.</strong></p><p>Given daily prices of a stock or currency, return the best profit from one buy followed by one later sell, or 0 if no profitable trade exists. O(n).</p><p>Complete the class <code>BestSingleTrade</code> in the answer box, keeping these signatures:</p><ul><li><code>public static long maxProfit(long[] prices)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: running minimum. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/dp/BestSingleTrade.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[/**
+ * Week 21. Pattern: running minimum.
+ * <p>
+ * Given daily prices of a stock or currency, return the best profit from one buy followed by one later sell,
+ * or 0 if no profitable trade exists. O(n).
+ */
+public final class BestSingleTrade {
+
+    private BestSingleTrade() {
+    }
+
+    public static long maxProfit(long[] prices) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[/**
+ * Week 21. Pattern: running minimum.
+ * <p>
+ * Given daily prices of a stock or currency, return the best profit from one buy followed by one later sell,
+ * or 0 if no profitable trade exists. O(n).
+ */
+public final class BestSingleTrade {
+
+    private BestSingleTrade() {
+    }
+
+    public static long maxProfit(long[] prices) {
+        //>>
+        long lowest = Long.MAX_VALUE;
+        long best = 0;
+        for (long p : prices) {
+            lowest = Math.min(lowest, p);
+            best = Math.max(best, p - lowest);
+        }
+        return best;
+        //<<
+    }
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(BestSingleTrade.maxProfit(new long[] {7, 1, 5, 3, 6, 4}));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[5]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(BestSingleTrade.maxProfit(new long[] {7, 6, 4, 3, 1}));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[0]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(BestSingleTrade.maxProfit(new long[0]));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[0]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+  <question type="coderunner">
+    <name><text>P2-CODE-13 NonAdjacentBonus</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 21. Pattern: dynamic programming with two states.</strong></p><p>A promotion pays bonuses on chosen days, but never on two consecutive days. Given the bonus available each day (non-negative), return the largest total you can collect. O(n) time, O(1) space.</p><p>Complete the class <code>NonAdjacentBonus</code> in the answer box, keeping these signatures:</p><ul><li><code>public static long best(long[] bonus)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: dynamic programming with two states. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/dp/NonAdjacentBonus.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[/**
+ * Week 21. Pattern: dynamic programming with two states.
+ * <p>
+ * A promotion pays bonuses on chosen days, but never on two consecutive days. Given the bonus available each
+ * day (non-negative), return the largest total you can collect. O(n) time, O(1) space.
+ */
+public final class NonAdjacentBonus {
+
+    private NonAdjacentBonus() {
+    }
+
+    public static long best(long[] bonus) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[/**
+ * Week 21. Pattern: dynamic programming with two states.
+ * <p>
+ * A promotion pays bonuses on chosen days, but never on two consecutive days. Given the bonus available each
+ * day (non-negative), return the largest total you can collect. O(n) time, O(1) space.
+ */
+public final class NonAdjacentBonus {
+
+    private NonAdjacentBonus() {
+    }
+
+    public static long best(long[] bonus) {
+        //>>
+        long take = 0;
+        long skip = 0;
+        for (long b : bonus) {
+            long newTake = skip + b;
+            skip = Math.max(skip, take);
+            take = newTake;
+        }
+        return Math.max(take, skip);
+        //<<
+    }
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(NonAdjacentBonus.best(new long[] {2, 7, 9, 3, 1}));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[12]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(NonAdjacentBonus.best(new long[] {5, 1, 1, 5}));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[10]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[System.out.println(NonAdjacentBonus.best(new long[0]));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[0]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+  <question type="coderunner">
+    <name><text>P2-CODE-14 LruCache</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 22. Pattern: hash map plus access order.</strong></p><p>A name-enquiry cache holding at most <code>capacity</code> entries. <code>get</code> and <code>put</code> are O(1); when full, <code>put</code> of a new key evicts the least recently used entry (a <code>get</code> or <code>put</code> counts as a use). You may use <code>LinkedHashMap</code> or build your own list + map; be ready to explain both in an interview.</p><p>Complete the class <code>LruCache</code> in the answer box, keeping these signatures:</p><ul><li><code>public LruCache(int capacity)</code></li><li><code>public Optional&lt;V&gt; get(K key)</code></li><li><code>public void put(K key, V value)</code></li><li><code>public int size()</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: hash map plus access order. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/design/LruCache.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
+
+/**
+ * Week 22. Pattern: hash map plus access order.
+ * <p>
+ * A name-enquiry cache holding at most {@code capacity} entries. {@code get} and {@code put} are O(1); when full,
+ * {@code put} of a new key evicts the least recently used entry (a {@code get} or {@code put} counts as a use).
+ * You may use {@link LinkedHashMap} or build your own list + map; be ready to explain both in an interview.
+ */
+public final class LruCache<K, V> {
+
+    public LruCache(int capacity) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    public Optional<V> get(K key) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    public void put(K key, V value) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    public int size() {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
+
+/**
+ * Week 22. Pattern: hash map plus access order.
+ * <p>
+ * A name-enquiry cache holding at most {@code capacity} entries. {@code get} and {@code put} are O(1); when full,
+ * {@code put} of a new key evicts the least recently used entry (a {@code get} or {@code put} counts as a use).
+ * You may use {@link LinkedHashMap} or build your own list + map; be ready to explain both in an interview.
+ */
+public final class LruCache<K, V> {
+
+    //>>hide
+    private final LinkedHashMap<K, V> map;
+
+    //<<
+    public LruCache(int capacity) {
+        //>>
+        if (capacity < 1) {
+            throw new IllegalArgumentException("capacity must be positive");
+        }
+        this.map = new LinkedHashMap<>(16, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
+                return size() > capacity;
+            }
+        };
+        //<<
+    }
+
+    public Optional<V> get(K key) {
+        //>>
+        return Optional.ofNullable(map.get(key));
+        //<<
+    }
+
+    public void put(K key, V value) {
+        //>>
+        map.put(key, value);
+        //<<
+    }
+
+    public int size() {
+        //>>
+        return map.size();
+        //<<
+    }
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[LruCache<String, String> cache = new LruCache<>(2);
+cache.put("0123456789", "ADA EZE");
+cache.put("0987654321", "BAYO OKAFOR");
+System.out.println(cache.get("0123456789"));   // now the most recently used
+cache.put("1111111111", "CHI BELLO");          // evicts 0987654321
+System.out.println(cache.get("0987654321"));
+System.out.println(cache.get("1111111111"));
+System.out.println(cache.size());]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[Optional[ADA EZE]
+Optional.empty
+Optional[CHI BELLO]
+2]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[// Updating a key counts as a use.
+LruCache<Integer, Integer> cache = new LruCache<>(2);
+cache.put(1, 1);
+cache.put(2, 2);
+cache.put(1, 10);
+cache.put(3, 3);
+System.out.println(cache.get(2) + " " + cache.get(1));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[Optional.empty Optional[10]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[new LruCache<String, String>(0);
+System.out.println("created");]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[IllegalArgumentException]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+  <question type="coderunner">
+    <name><text>P2-CODE-15 SplitAmount</text></name>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 23. Pattern: exact money allocation.</strong></p><p>Split <code>totalKobo</code> (non-negative) into <code>parts</code> amounts that differ by at most 1 kobo and add up exactly to the total; earlier parts get the extra kobo. ₦100.00 in 3 parts is [3334, 3333, 3333]. Throw <code>IllegalArgumentException</code> if parts is less than 1 or the total is negative.</p><p>Complete the class <code>SplitAmount</code> in the answer box, keeping these signatures:</p><ul><li><code>public static long[] split(long totalKobo, int parts)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pattern: exact money allocation. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/design/SplitAmount.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <idnumber></idnumber>
+    <coderunnertype>java_class</coderunnertype>
+    <prototypetype>0</prototypetype>
+    <allornothing>1</allornothing>
+    <penaltyregime>0</penaltyregime>
+    <precheck>0</precheck>
+    <hidecheck>0</hidecheck>
+    <showsource>0</showsource>
+    <answerboxlines>30</answerboxlines>
+    <answerboxcolumns>100</answerboxcolumns>
+    <answerpreload><![CDATA[/**
+ * Week 23. Pattern: exact money allocation.
+ * <p>
+ * Split {@code totalKobo} (non-negative) into {@code parts} amounts that differ by at most 1 kobo and add up
+ * exactly to the total; earlier parts get the extra kobo. ₦100.00 in 3 parts is [3334, 3333, 3333].
+ * Throw {@link IllegalArgumentException} if parts is less than 1 or the total is negative.
+ */
+public final class SplitAmount {
+
+    private SplitAmount() {
+    }
+
+    public static long[] split(long totalKobo, int parts) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+}
+]]></answerpreload>
+    <globalextra></globalextra>
+    <useace>1</useace>
+    <resultcolumns></resultcolumns>
+    <template><![CDATA[import java.math.*;
+import java.time.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+
+
+
+public class __tester__ {
+    static void show(Object o) {
+        if (o instanceof int[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof long[] a) {
+            System.out.println(Arrays.toString(a));
+        } else if (o instanceof double[] a) {
+            System.out.println(Arrays.toString(a));
+        } else {
+            System.out.println(o);
+        }
+    }
+
+    public static void main(String[] args) {
+{% for TEST in TESTCASES %}
+        try {
+{{ TEST.testcode }}
+        } catch (RuntimeException | StackOverflowError e) {
+            System.out.println(e.getClass().getSimpleName());
+        }
+{% if not loop.last %}
+        System.out.println("#<ab@17943918#@>#");
+{% endif %}
+{% endfor %}
+    }
+}
+]]></template>
+    <iscombinatortemplate>1</iscombinatortemplate>
+    <allowmultiplestdins>0</allowmultiplestdins>
+    <answer><![CDATA[/**
+ * Week 23. Pattern: exact money allocation.
+ * <p>
+ * Split {@code totalKobo} (non-negative) into {@code parts} amounts that differ by at most 1 kobo and add up
+ * exactly to the total; earlier parts get the extra kobo. ₦100.00 in 3 parts is [3334, 3333, 3333].
+ * Throw {@link IllegalArgumentException} if parts is less than 1 or the total is negative.
+ */
+public final class SplitAmount {
+
+    private SplitAmount() {
+    }
+
+    public static long[] split(long totalKobo, int parts) {
+        //>>
+        if (parts < 1 || totalKobo < 0) {
+            throw new IllegalArgumentException("parts must be positive and total non-negative");
+        }
+        long base = totalKobo / parts;
+        long remainder = totalKobo % parts;
+        long[] out = new long[parts];
+        for (int i = 0; i < parts; i++) {
+            out[i] = base + (i < remainder ? 1 : 0);
+        }
+        return out;
+        //<<
+    }
+}
+]]></answer>
+    <validateonsave>1</validateonsave>
+    <testsplitterre><![CDATA[|#<ab@17943918#@>#\n|ms]]></testsplitterre>
+    <language>java</language>
+    <acelang>java</acelang>
+    <sandbox></sandbox>
+    <grader>EqualityGrader</grader>
+    <cputimelimitsecs>10</cputimelimitsecs>
+    <memlimitmb></memlimitmb>
+    <sandboxparams></sandboxparams>
+    <templateparams></templateparams>
+    <templateparamslang>None</templateparamslang>
+    <templateparamsevalpertry>0</templateparamsevalpertry>
+    <templateparamsevald></templateparamsevald>
+    <hoisttemplateparams>1</hoisttemplateparams>
+    <extractcodefromjson>1</extractcodefromjson>
+    <twigall>0</twigall>
+    <uiplugin>ace</uiplugin>
+    <uiparameters></uiparameters>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <maxfilesize>10240</maxfilesize>
+    <filenamesregex></filenamesregex>
+    <filenamesexplain></filenamesexplain>
+    <displayfeedback>1</displayfeedback>
+    <giveupallowed>0</giveupallowed>
+    <testcases>
+      <testcase testtype="0" useasexample="1" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[show(SplitAmount.split(10_000, 3));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[3334, 3333, 3333]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[show(SplitAmount.split(2, 3));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[1, 1, 0]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[show(SplitAmount.split(0, 2));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[[0, 0]]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[long[] parts = SplitAmount.split(999_999_999_999L, 7);
+System.out.println(Arrays.stream(parts).sum() + " " + (Arrays.stream(parts).max().getAsLong() - Arrays.stream(parts).min().getAsLong()));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[999999999999 0]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[show(SplitAmount.split(100, 0));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[IllegalArgumentException]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+      <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
+        <testcode><text><![CDATA[show(SplitAmount.split(-1, 2));]]></text></testcode>
+        <stdin><text></text></stdin>
+        <expected><text><![CDATA[IllegalArgumentException]]></text></expected>
+        <extra><text></text></extra>
+        <display><text>SHOW</text></display>
+      </testcase>
+    </testcases>
+  </question>
+</quiz>
