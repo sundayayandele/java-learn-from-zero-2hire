@@ -1,7 +1,8 @@
 """Which practice/dsa problems become CodeRunner questions, and their test cases.
 
 Each test is a Java snippet run inside the question's tester class; it prints results with
-System.out.println or show(...) (which prints arrays readably). Expected outputs are not written here:
+System.out.println or show(...) (which prints arrays readably). Large-input tests use within(millis, () -> ...),
+which prints the result or "Too slow" after a wall-clock budget. Expected outputs are not written here:
 build_coderunner.py computes them by running the reference solution in practice/dsa/solutions.
 A test that should throw prints the exception's simple class name (the template catches it).
 Tests marked example=True are shown as examples in the question text.
@@ -16,11 +17,11 @@ PROBLEMS = [
         ("show(TwoSumTransfers.find(new long[] {300, 300}, 600));", False),
         ("show(TwoSumTransfers.find(new long[] {1, 2, 3}, 100));", False),
         ("show(TwoSumTransfers.find(new long[0], 0));", False),
-        ("// 200,000 amounts: an O(n^2) answer runs out of time here.\n"
+        ("// 200,000 amounts: an O(n^2) answer is too slow here (3-second budget).\n"
          "long[] amounts = new long[200_000];\n"
          "for (int i = 0; i < amounts.length; i++) amounts[i] = i * 2L;\n"
          "amounts[amounts.length - 1] = 1;\n"
-         "show(TwoSumTransfers.find(amounts, 3));", False),
+         "within(3000, () -> TwoSumTransfers.find(amounts, 3));", False),
     ]),
     (1, "arrays/FirstDuplicateReference", [
         ('System.out.println(FirstDuplicateReference.find(List.of("TRF1", "TRF2", "TRF3", "TRF2", "TRF1")));', True),
@@ -44,12 +45,12 @@ PROBLEMS = [
          '        LocalDate.parse("2026-03-10"), LocalDate.parse("2026-02-27"), LocalDate.parse("2026-03-01"))));', True),
         ("System.out.println(LongestActiveStreak.longest(List.of()));", False),
         ('System.out.println(LongestActiveStreak.longest(List.of(LocalDate.parse("2026-01-01"))));', False),
-        ("// 100,001 dates: sorting works, but aim for O(n).\n"
+        ("// 100,001 dates, 3-second budget: sorting works, but aim for O(n).\n"
          "List<LocalDate> days = new ArrayList<>();\n"
          'LocalDate start = LocalDate.parse("2000-01-01");\n'
          "for (int i = 0; i < 100_000; i++) days.add(start.plusDays(i * 2L));\n"
          "days.add(start.plusDays(1));\n"
-         "System.out.println(LongestActiveStreak.longest(days));", False),
+         "within(3000, () -> LongestActiveStreak.longest(days));", False),
     ]),
     (1, "windows/MergeSortedStatements", [
         ("var a = List.of(new MergeSortedStatements.Entry(1, \"a1\"), new MergeSortedStatements.Entry(5, \"a5\"),\n"
@@ -130,8 +131,9 @@ PROBLEMS = [
     (1, "search/KthLargestTransfer", [
         ("System.out.println(KthLargestTransfer.kthLargest(new long[] {3, 2, 1, 5, 6, 4}, 2));", True),
         ("System.out.println(KthLargestTransfer.kthLargest(new long[] {3, 2, 3, 1, 2, 4, 5, 5, 6}, 4));", False),
-        ("long[] amounts = new Random(1).longs(50_000, 0, 1_000_000).toArray();\n"
-         "System.out.println(KthLargestTransfer.kthLargest(amounts, 100));", False),
+        ("// 50,000 amounts, 3-second budget.\n"
+         "long[] amounts = new Random(1).longs(50_000, 0, 1_000_000).toArray();\n"
+         "within(3000, () -> KthLargestTransfer.kthLargest(amounts, 100));", False),
         ("System.out.println(KthLargestTransfer.kthLargest(new long[] {1}, 2));", False),
         ("System.out.println(KthLargestTransfer.kthLargest(new long[] {1}, 0));", False),
     ]),
@@ -222,10 +224,10 @@ PROBLEMS = [
          '        new LinkedAccountGroups.Transfer("C", "B"), new LinkedAccountGroups.Transfer("D", "E"),\n'
          '        new LinkedAccountGroups.Transfer("F", "F"))));', True),
         ("System.out.println(LinkedAccountGroups.groups(List.of()));", False),
-        ("// A chain of 50,000 transfers: deep recursion overflows the stack here.\n"
+        ("// A chain of 50,000 transfers, 3-second budget: deep recursion overflows the stack here.\n"
          "List<LinkedAccountGroups.Transfer> chain = new ArrayList<>();\n"
          'for (int i = 0; i < 50_000; i++) chain.add(new LinkedAccountGroups.Transfer("acc" + i, "acc" + (i + 1)));\n'
-         "System.out.println(LinkedAccountGroups.groups(chain));", False),
+         "within(3000, () -> LinkedAccountGroups.groups(chain));", False),
     ]),
     (2, "graphs/JobOrder", [
         ('System.out.println(JobOrder.order(Map.of(\n'

@@ -38,10 +38,20 @@ JDK_IMAGE = "eclipse-temurin:21-jdk"
 
 SEPARATOR = "#<ab@17943918#@>#"
 SPLITTER_RE = "|#<ab@17943918#@>#\\n|ms"
-PUBLIC_TYPES = {"public final class ": "final class ", "public class ": "class ", "public record ": "record ",
-                "public interface ": "interface ", "public enum ": "enum "}
+# CodeRunner names the Java file after the first top-level public class it finds, by counting braces in
+# the program with comments and strings removed. Character literals such as '{' are not removed, so an
+# answer that uses them (BalancedBrackets) throws the count off. So no class in the program is public: then
+# CodeRunner falls back to the file name NO_PUBLIC_CLASS_FOUND.java, and the tester class has that name.
+TESTER = "NO_PUBLIC_CLASS_FOUND"
+PUBLIC_TYPES = {"public final class ": "final class ", "public abstract class ": "abstract class ",
+                "public class ": "class ", "public record ": "record ", "public interface ": "interface ",
+                "public enum ": "enum "}
 IMPORTS = "\n".join(f"import {p}.*;" for p in
-                    ["java.math", "java.time", "java.util", "java.util.function", "java.util.stream"])
+                    ["java.math", "java.time", "java.util", "java.util.concurrent", "java.util.function",
+                     "java.util.stream"])
+# show() prints arrays readably. within() gives a large-input test a wall-clock budget: a too-slow answer
+# prints "Too slow" for that test instead of timing out the whole run, which would make CodeRunner rerun
+# every test separately (about a minute on our Jobe server).
 SHOW = """    static void show(Object o) {
         if (o instanceof int[] a) {
             System.out.println(Arrays.toString(a));
@@ -51,6 +61,28 @@ SHOW = """    static void show(Object o) {
             System.out.println(Arrays.toString(a));
         } else {
             System.out.println(o);
+        }
+    }
+
+    static void within(long millis, Supplier<Object> test) {
+        CompletableFuture<Object> result = new CompletableFuture<>();
+        Thread worker = new Thread(() -> {
+            try {
+                result.complete(test.get());
+            } catch (Throwable e) {
+                result.completeExceptionally(e);
+            }
+        });
+        worker.setDaemon(true);
+        worker.start();
+        try {
+            show(result.get(millis, TimeUnit.MILLISECONDS));
+        } catch (TimeoutException e) {
+            System.out.println("Too slow: no answer within " + millis / 1000 + " s");
+        } catch (ExecutionException e) {
+            System.out.println(e.getCause().getClass().getSimpleName());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }"""
 CATCH = """        } catch (RuntimeException | StackOverflowError e) {
@@ -86,7 +118,7 @@ def twig_template(support: str) -> str:
 
 {support}
 
-public class __tester__ {{
+final class {TESTER} {{
 {SHOW}
 
     public static void main(String[] args) {{
@@ -111,8 +143,46 @@ def tester_java(answer: str, support: str, tests: list[str]) -> str:
         if i < len(tests) - 1:
             blocks.append(f'        System.out.println("{SEPARATOR}");')
     body = "\n".join(blocks)
-    return (f"{IMPORTS}\n\n{de_public(answer)}\n\n{support}\n\npublic class __tester__ {{\n{SHOW}\n\n"
+    return (f"{IMPORTS}\n\n{de_public(answer)}\n\n{support}\n\nfinal class {TESTER} {{\n{SHOW}\n\n"
             f"    public static void main(String[] args) {{\n{body}\n    }}\n}}\n")
+
+
+def coderunner_main_class(prog: str) -> str | None:
+    """A port of qtype_coderunner jobesandbox::get_main_class (CodeRunner 5.10.6): the class name CodeRunner
+    will name the Java file after, or None (then it uses NO_PUBLIC_CLASS_FOUND.java)."""
+    prog += " "
+    kept, i, n = [], 0, len(prog) - 1
+    while i < n:
+        two = prog[i:i + 2]
+        if two == "//":
+            j = prog.find("\n", i + 2)
+            if j == -1:
+                break
+            i = j
+        elif two == "/*":
+            j = prog.find("*/", i + 2)
+            if j == -1:
+                break
+            kept.append(" ")
+            i = j + 2
+        elif prog[i] == '"':
+            m = re.compile(r'"((\\.)|[^\\"])*"').match(prog, i)
+            if not m:
+                break
+            i += len(m.group(0))
+        else:
+            kept.append(prog[i])
+            i += 1
+    depth = 0
+    for k, ch in enumerate(kept):
+        if ch == "{":
+            depth += 1
+        if ch == "}":
+            depth -= 1
+        if ch != "\n" and depth > 0 and not (depth == 1 and ch == "{"):
+            kept[k] = " "
+    m = re.search(r"public\s(\w*\s)*class\s*(\w+)[^\w]", "".join(kept))
+    return m.group(2) if m else None
 
 
 def javadoc(stub: str) -> tuple[str, str]:
@@ -147,11 +217,14 @@ def run_all(jobs: dict[str, str]) -> dict[str, str]:
     if BUILD.exists():
         shutil.rmtree(BUILD)
     for name, java in jobs.items():
+        found = coderunner_main_class(java)
+        if found is not None:
+            raise SystemExit(f"{name}: CodeRunner would name the file {found}.java; no class may be public")
         d = BUILD / name
         d.mkdir(parents=True)
-        (d / "__tester__.java").write_text(java)
-    script = ("for d in /b/*/; do cd $d && javac -nowarn -d . __tester__.java 2> compile.txt "
-              "&& timeout 60 java -cp . __tester__ > out.txt 2> err.txt; done")
+        (d / f"{TESTER}.java").write_text(java)
+    script = (f"for d in /b/*/; do cd $d && javac -nowarn -d . {TESTER}.java 2> compile.txt "
+              f"&& timeout 60 java -cp . {TESTER} > out.txt 2> err.txt; done")
     subprocess.run(["docker", "run", "--rm", "-v", f"{BUILD}:/b", JDK_IMAGE, "sh", "-c", script], check=True)
     results = {}
     for name in jobs:

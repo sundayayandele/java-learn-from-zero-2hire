@@ -52,10 +52,15 @@ docker run -d --name jobe --restart unless-stopped -p 127.0.0.1:4000:80 "$IMAGE"
 # with the quick C1 JIT and the serial collector (about half the CPU time), and give the
 # compile step (only) at least 20 s of CPU time: with 16 compiles at once each one used up
 # to 7.3 s, against 2.3 s alone. Programs still run under the question's limit.
+# With one processor the JVM picks the serial collector, and then C2 drops safepoint polls from
+# counted loops: a daemon thread stuck in an O(n^2) loop blocked JVM exit for as long as the loop
+# ran. UseCountedLoopSafepoints restores the polls (the CodeRunner questions' "Too slow" budget
+# depends on it). Jobe joins the java command with spaces, so one setting can hold several flags.
 docker exec jobe sed -i \
     -e "s/public string \$javac_extraflags = '';/public string \$javac_extraflags = '-J-XX:ActiveProcessorCount=1 -J-XX:TieredStopAtLevel=1 -J-XX:+UseSerialGC';/" \
-    -e "s/public string \$java_extraflags = '';/public string \$java_extraflags = '-XX:ActiveProcessorCount=1';/" \
+    -e "s/public string \$java_extraflags = '';/public string \$java_extraflags = '-XX:ActiveProcessorCount=1 -XX:+UseCountedLoopSafepoints -XX:LoopStripMiningIter=1000';/" \
     /var/www/html/jobe/app/Config/Jobe.php
+docker exec jobe grep -q "java_extraflags = '-XX:ActiveProcessorCount=1 -XX:+UseCountedLoopSafepoints" /var/www/html/jobe/app/Config/Jobe.php
 docker exec jobe sed -i "/min_params_compile = array(/,/);/ s/\('cputime' *=> *\)2,/\120,/" \
     /var/www/html/jobe/app/Libraries/LanguageTask.php
 docker exec jobe grep -q "javac_extraflags = '-J-XX:ActiveProcessorCount=1 -J-XX:TieredStopAtLevel=1" /var/www/html/jobe/app/Config/Jobe.php

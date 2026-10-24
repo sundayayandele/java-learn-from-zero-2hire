@@ -41,10 +41,11 @@ public final class ReverseList {
     <template><![CDATA[import java.math.*;
 import java.time.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.stream.*;
 
-{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public abstract class ': 'abstract class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
 
 /** A singly linked list node used by the list problems. Provided; nothing to implement here. */
 final class Node {
@@ -75,7 +76,7 @@ final class Node {
 }
 
 
-public class __tester__ {
+final class NO_PUBLIC_CLASS_FOUND {
     static void show(Object o) {
         if (o instanceof int[] a) {
             System.out.println(Arrays.toString(a));
@@ -85,6 +86,28 @@ public class __tester__ {
             System.out.println(Arrays.toString(a));
         } else {
             System.out.println(o);
+        }
+    }
+
+    static void within(long millis, Supplier<Object> test) {
+        CompletableFuture<Object> result = new CompletableFuture<>();
+        Thread worker = new Thread(() -> {
+            try {
+                result.complete(test.get());
+            } catch (Throwable e) {
+                result.completeExceptionally(e);
+            }
+        });
+        worker.setDaemon(true);
+        worker.start();
+        try {
+            show(result.get(millis, TimeUnit.MILLISECONDS));
+        } catch (TimeoutException e) {
+            System.out.println("Too slow: no answer within " + millis / 1000 + " s");
+        } catch (ExecutionException e) {
+            System.out.println(e.getCause().getClass().getSimpleName());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -217,10 +240,11 @@ public final class HasCycle {
     <template><![CDATA[import java.math.*;
 import java.time.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.stream.*;
 
-{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public abstract class ': 'abstract class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
 
 /** A singly linked list node used by the list problems. Provided; nothing to implement here. */
 final class Node {
@@ -251,7 +275,7 @@ final class Node {
 }
 
 
-public class __tester__ {
+final class NO_PUBLIC_CLASS_FOUND {
     static void show(Object o) {
         if (o instanceof int[] a) {
             System.out.println(Arrays.toString(a));
@@ -261,6 +285,28 @@ public class __tester__ {
             System.out.println(Arrays.toString(a));
         } else {
             System.out.println(o);
+        }
+    }
+
+    static void within(long millis, Supplier<Object> test) {
+        CompletableFuture<Object> result = new CompletableFuture<>();
+        Thread worker = new Thread(() -> {
+            try {
+                result.complete(test.get());
+            } catch (Throwable e) {
+                result.completeExceptionally(e);
+            }
+        });
+        worker.setDaemon(true);
+        worker.start();
+        try {
+            show(result.get(millis, TimeUnit.MILLISECONDS));
+        } catch (TimeoutException e) {
+            System.out.println("Too slow: no answer within " + millis / 1000 + " s");
+        } catch (ExecutionException e) {
+            System.out.println(e.getCause().getClass().getSimpleName());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -406,10 +452,11 @@ public final class MergeSortedLists {
     <template><![CDATA[import java.math.*;
 import java.time.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.stream.*;
 
-{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public abstract class ': 'abstract class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
 
 /** A singly linked list node used by the list problems. Provided; nothing to implement here. */
 final class Node {
@@ -440,7 +487,7 @@ final class Node {
 }
 
 
-public class __tester__ {
+final class NO_PUBLIC_CLASS_FOUND {
     static void show(Object o) {
         if (o instanceof int[] a) {
             System.out.println(Arrays.toString(a));
@@ -450,6 +497,28 @@ public class __tester__ {
             System.out.println(Arrays.toString(a));
         } else {
             System.out.println(o);
+        }
+    }
+
+    static void within(long millis, Supplier<Object> test) {
+        CompletableFuture<Object> result = new CompletableFuture<>();
+        Thread worker = new Thread(() -> {
+            try {
+                result.complete(test.get());
+            } catch (Throwable e) {
+                result.completeExceptionally(e);
+            }
+        });
+        worker.setDaemon(true);
+        worker.start();
+        try {
+            show(result.get(millis, TimeUnit.MILLISECONDS));
+        } catch (TimeoutException e) {
+            System.out.println("Too slow: no answer within " + millis / 1000 + " s");
+        } catch (ExecutionException e) {
+            System.out.println(e.getCause().getClass().getSimpleName());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -608,14 +677,15 @@ public final class StatementOrdering {
     <template><![CDATA[import java.math.*;
 import java.time.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.stream.*;
 
-{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public abstract class ': 'abstract class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
 
 
 
-public class __tester__ {
+final class NO_PUBLIC_CLASS_FOUND {
     static void show(Object o) {
         if (o instanceof int[] a) {
             System.out.println(Arrays.toString(a));
@@ -625,6 +695,28 @@ public class __tester__ {
             System.out.println(Arrays.toString(a));
         } else {
             System.out.println(o);
+        }
+    }
+
+    static void within(long millis, Supplier<Object> test) {
+        CompletableFuture<Object> result = new CompletableFuture<>();
+        Thread worker = new Thread(() -> {
+            try {
+                result.complete(test.get());
+            } catch (Throwable e) {
+                result.completeExceptionally(e);
+            }
+        });
+        worker.setDaemon(true);
+        worker.start();
+        try {
+            show(result.get(millis, TimeUnit.MILLISECONDS));
+        } catch (TimeoutException e) {
+            System.out.println("Too slow: no answer within " + millis / 1000 + " s");
+        } catch (ExecutionException e) {
+            System.out.println(e.getCause().getClass().getSimpleName());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -772,10 +864,11 @@ public final class TreeDepth {
     <template><![CDATA[import java.math.*;
 import java.time.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.stream.*;
 
-{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public abstract class ': 'abstract class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
 
 /** A binary tree node used by the tree problems. Provided; nothing to implement here. */
 final class TreeNode {
@@ -802,7 +895,7 @@ final class TreeNode {
 }
 
 
-public class __tester__ {
+final class NO_PUBLIC_CLASS_FOUND {
     static void show(Object o) {
         if (o instanceof int[] a) {
             System.out.println(Arrays.toString(a));
@@ -812,6 +905,28 @@ public class __tester__ {
             System.out.println(Arrays.toString(a));
         } else {
             System.out.println(o);
+        }
+    }
+
+    static void within(long millis, Supplier<Object> test) {
+        CompletableFuture<Object> result = new CompletableFuture<>();
+        Thread worker = new Thread(() -> {
+            try {
+                result.complete(test.get());
+            } catch (Throwable e) {
+                result.completeExceptionally(e);
+            }
+        });
+        worker.setDaemon(true);
+        worker.start();
+        try {
+            show(result.get(millis, TimeUnit.MILLISECONDS));
+        } catch (TimeoutException e) {
+            System.out.println("Too slow: no answer within " + millis / 1000 + " s");
+        } catch (ExecutionException e) {
+            System.out.println(e.getCause().getClass().getSimpleName());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -937,10 +1052,11 @@ public final class ValidSearchTree {
     <template><![CDATA[import java.math.*;
 import java.time.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.stream.*;
 
-{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public abstract class ': 'abstract class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
 
 /** A binary tree node used by the tree problems. Provided; nothing to implement here. */
 final class TreeNode {
@@ -967,7 +1083,7 @@ final class TreeNode {
 }
 
 
-public class __tester__ {
+final class NO_PUBLIC_CLASS_FOUND {
     static void show(Object o) {
         if (o instanceof int[] a) {
             System.out.println(Arrays.toString(a));
@@ -977,6 +1093,28 @@ public class __tester__ {
             System.out.println(Arrays.toString(a));
         } else {
             System.out.println(o);
+        }
+    }
+
+    static void within(long millis, Supplier<Object> test) {
+        CompletableFuture<Object> result = new CompletableFuture<>();
+        Thread worker = new Thread(() -> {
+            try {
+                result.complete(test.get());
+            } catch (Throwable e) {
+                result.completeExceptionally(e);
+            }
+        });
+        worker.setDaemon(true);
+        worker.start();
+        try {
+            show(result.get(millis, TimeUnit.MILLISECONDS));
+        } catch (TimeoutException e) {
+            System.out.println("Too slow: no answer within " + millis / 1000 + " s");
+        } catch (ExecutionException e) {
+            System.out.println(e.getCause().getClass().getSimpleName());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -1136,10 +1274,11 @@ public final class LevelOrder {
     <template><![CDATA[import java.math.*;
 import java.time.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.stream.*;
 
-{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public abstract class ': 'abstract class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
 
 /** A binary tree node used by the tree problems. Provided; nothing to implement here. */
 final class TreeNode {
@@ -1166,7 +1305,7 @@ final class TreeNode {
 }
 
 
-public class __tester__ {
+final class NO_PUBLIC_CLASS_FOUND {
     static void show(Object o) {
         if (o instanceof int[] a) {
             System.out.println(Arrays.toString(a));
@@ -1176,6 +1315,28 @@ public class __tester__ {
             System.out.println(Arrays.toString(a));
         } else {
             System.out.println(o);
+        }
+    }
+
+    static void within(long millis, Supplier<Object> test) {
+        CompletableFuture<Object> result = new CompletableFuture<>();
+        Thread worker = new Thread(() -> {
+            try {
+                result.complete(test.get());
+            } catch (Throwable e) {
+                result.completeExceptionally(e);
+            }
+        });
+        worker.setDaemon(true);
+        worker.start();
+        try {
+            show(result.get(millis, TimeUnit.MILLISECONDS));
+        } catch (TimeoutException e) {
+            System.out.println("Too slow: no answer within " + millis / 1000 + " s");
+        } catch (ExecutionException e) {
+            System.out.println(e.getCause().getClass().getSimpleName());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -1337,14 +1498,15 @@ public final class FewestHops {
     <template><![CDATA[import java.math.*;
 import java.time.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.stream.*;
 
-{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public abstract class ': 'abstract class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
 
 
 
-public class __tester__ {
+final class NO_PUBLIC_CLASS_FOUND {
     static void show(Object o) {
         if (o instanceof int[] a) {
             System.out.println(Arrays.toString(a));
@@ -1354,6 +1516,28 @@ public class __tester__ {
             System.out.println(Arrays.toString(a));
         } else {
             System.out.println(o);
+        }
+    }
+
+    static void within(long millis, Supplier<Object> test) {
+        CompletableFuture<Object> result = new CompletableFuture<>();
+        Thread worker = new Thread(() -> {
+            try {
+                result.complete(test.get());
+            } catch (Throwable e) {
+                result.completeExceptionally(e);
+            }
+        });
+        worker.setDaemon(true);
+        worker.start();
+        try {
+            show(result.get(millis, TimeUnit.MILLISECONDS));
+        } catch (TimeoutException e) {
+            System.out.println("Too slow: no answer within " + millis / 1000 + " s");
+        } catch (ExecutionException e) {
+            System.out.println(e.getCause().getClass().getSimpleName());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -1532,14 +1716,15 @@ public final class LinkedAccountGroups {
     <template><![CDATA[import java.math.*;
 import java.time.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.stream.*;
 
-{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public abstract class ': 'abstract class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
 
 
 
-public class __tester__ {
+final class NO_PUBLIC_CLASS_FOUND {
     static void show(Object o) {
         if (o instanceof int[] a) {
             System.out.println(Arrays.toString(a));
@@ -1549,6 +1734,28 @@ public class __tester__ {
             System.out.println(Arrays.toString(a));
         } else {
             System.out.println(o);
+        }
+    }
+
+    static void within(long millis, Supplier<Object> test) {
+        CompletableFuture<Object> result = new CompletableFuture<>();
+        Thread worker = new Thread(() -> {
+            try {
+                result.complete(test.get());
+            } catch (Throwable e) {
+                result.completeExceptionally(e);
+            }
+        });
+        worker.setDaemon(true);
+        worker.start();
+        try {
+            show(result.get(millis, TimeUnit.MILLISECONDS));
+        } catch (TimeoutException e) {
+            System.out.println("Too slow: no answer within " + millis / 1000 + " s");
+        } catch (ExecutionException e) {
+            System.out.println(e.getCause().getClass().getSimpleName());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -1667,10 +1874,10 @@ public final class LinkedAccountGroups {
         <display><text>SHOW</text></display>
       </testcase>
       <testcase testtype="0" useasexample="0" hiderestiffail="0" mark="1.0000000">
-        <testcode><text><![CDATA[// A chain of 50,000 transfers: deep recursion overflows the stack here.
+        <testcode><text><![CDATA[// A chain of 50,000 transfers, 3-second budget: deep recursion overflows the stack here.
 List<LinkedAccountGroups.Transfer> chain = new ArrayList<>();
 for (int i = 0; i < 50_000; i++) chain.add(new LinkedAccountGroups.Transfer("acc" + i, "acc" + (i + 1)));
-System.out.println(LinkedAccountGroups.groups(chain));]]></text></testcode>
+within(3000, () -> LinkedAccountGroups.groups(chain));]]></text></testcode>
         <stdin><text></text></stdin>
         <expected><text><![CDATA[1]]></text></expected>
         <extra><text></text></extra>
@@ -1727,14 +1934,15 @@ public final class JobOrder {
     <template><![CDATA[import java.math.*;
 import java.time.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.stream.*;
 
-{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public abstract class ': 'abstract class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
 
 
 
-public class __tester__ {
+final class NO_PUBLIC_CLASS_FOUND {
     static void show(Object o) {
         if (o instanceof int[] a) {
             System.out.println(Arrays.toString(a));
@@ -1744,6 +1952,28 @@ public class __tester__ {
             System.out.println(Arrays.toString(a));
         } else {
             System.out.println(o);
+        }
+    }
+
+    static void within(long millis, Supplier<Object> test) {
+        CompletableFuture<Object> result = new CompletableFuture<>();
+        Thread worker = new Thread(() -> {
+            try {
+                result.complete(test.get());
+            } catch (Throwable e) {
+                result.completeExceptionally(e);
+            }
+        });
+        worker.setDaemon(true);
+        worker.start();
+        try {
+            show(result.get(millis, TimeUnit.MILLISECONDS));
+        } catch (TimeoutException e) {
+            System.out.println("Too slow: no answer within " + millis / 1000 + " s");
+        } catch (ExecutionException e) {
+            System.out.println(e.getCause().getClass().getSimpleName());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -1908,14 +2138,15 @@ public final class FewestNotes {
     <template><![CDATA[import java.math.*;
 import java.time.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.stream.*;
 
-{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public abstract class ': 'abstract class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
 
 
 
-public class __tester__ {
+final class NO_PUBLIC_CLASS_FOUND {
     static void show(Object o) {
         if (o instanceof int[] a) {
             System.out.println(Arrays.toString(a));
@@ -1925,6 +2156,28 @@ public class __tester__ {
             System.out.println(Arrays.toString(a));
         } else {
             System.out.println(o);
+        }
+    }
+
+    static void within(long millis, Supplier<Object> test) {
+        CompletableFuture<Object> result = new CompletableFuture<>();
+        Thread worker = new Thread(() -> {
+            try {
+                result.complete(test.get());
+            } catch (Throwable e) {
+                result.completeExceptionally(e);
+            }
+        });
+        worker.setDaemon(true);
+        worker.start();
+        try {
+            show(result.get(millis, TimeUnit.MILLISECONDS));
+        } catch (TimeoutException e) {
+            System.out.println("Too slow: no answer within " + millis / 1000 + " s");
+        } catch (ExecutionException e) {
+            System.out.println(e.getCause().getClass().getSimpleName());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -2070,14 +2323,15 @@ public final class BestSingleTrade {
     <template><![CDATA[import java.math.*;
 import java.time.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.stream.*;
 
-{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public abstract class ': 'abstract class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
 
 
 
-public class __tester__ {
+final class NO_PUBLIC_CLASS_FOUND {
     static void show(Object o) {
         if (o instanceof int[] a) {
             System.out.println(Arrays.toString(a));
@@ -2087,6 +2341,28 @@ public class __tester__ {
             System.out.println(Arrays.toString(a));
         } else {
             System.out.println(o);
+        }
+    }
+
+    static void within(long millis, Supplier<Object> test) {
+        CompletableFuture<Object> result = new CompletableFuture<>();
+        Thread worker = new Thread(() -> {
+            try {
+                result.complete(test.get());
+            } catch (Throwable e) {
+                result.completeExceptionally(e);
+            }
+        });
+        worker.setDaemon(true);
+        worker.start();
+        try {
+            show(result.get(millis, TimeUnit.MILLISECONDS));
+        } catch (TimeoutException e) {
+            System.out.println("Too slow: no answer within " + millis / 1000 + " s");
+        } catch (ExecutionException e) {
+            System.out.println(e.getCause().getClass().getSimpleName());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -2218,14 +2494,15 @@ public final class NonAdjacentBonus {
     <template><![CDATA[import java.math.*;
 import java.time.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.stream.*;
 
-{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public abstract class ': 'abstract class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
 
 
 
-public class __tester__ {
+final class NO_PUBLIC_CLASS_FOUND {
     static void show(Object o) {
         if (o instanceof int[] a) {
             System.out.println(Arrays.toString(a));
@@ -2235,6 +2512,28 @@ public class __tester__ {
             System.out.println(Arrays.toString(a));
         } else {
             System.out.println(o);
+        }
+    }
+
+    static void within(long millis, Supplier<Object> test) {
+        CompletableFuture<Object> result = new CompletableFuture<>();
+        Thread worker = new Thread(() -> {
+            try {
+                result.complete(test.get());
+            } catch (Throwable e) {
+                result.completeExceptionally(e);
+            }
+        });
+        worker.setDaemon(true);
+        worker.start();
+        try {
+            show(result.get(millis, TimeUnit.MILLISECONDS));
+        } catch (TimeoutException e) {
+            System.out.println("Too slow: no answer within " + millis / 1000 + " s");
+        } catch (ExecutionException e) {
+            System.out.println(e.getCause().getClass().getSimpleName());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -2381,14 +2680,15 @@ public final class LruCache<K, V> {
     <template><![CDATA[import java.math.*;
 import java.time.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.stream.*;
 
-{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public abstract class ': 'abstract class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
 
 
 
-public class __tester__ {
+final class NO_PUBLIC_CLASS_FOUND {
     static void show(Object o) {
         if (o instanceof int[] a) {
             System.out.println(Arrays.toString(a));
@@ -2398,6 +2698,28 @@ public class __tester__ {
             System.out.println(Arrays.toString(a));
         } else {
             System.out.println(o);
+        }
+    }
+
+    static void within(long millis, Supplier<Object> test) {
+        CompletableFuture<Object> result = new CompletableFuture<>();
+        Thread worker = new Thread(() -> {
+            try {
+                result.complete(test.get());
+            } catch (Throwable e) {
+                result.completeExceptionally(e);
+            }
+        });
+        worker.setDaemon(true);
+        worker.start();
+        try {
+            show(result.get(millis, TimeUnit.MILLISECONDS));
+        } catch (TimeoutException e) {
+            System.out.println("Too slow: no answer within " + millis / 1000 + " s");
+        } catch (ExecutionException e) {
+            System.out.println(e.getCause().getClass().getSimpleName());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -2573,14 +2895,15 @@ public final class SplitAmount {
     <template><![CDATA[import java.math.*;
 import java.time.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.stream.*;
 
-{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
+{{ STUDENT_ANSWER | replace({'public final class ': 'final class ', 'public abstract class ': 'abstract class ', 'public class ': 'class ', 'public record ': 'record ', 'public interface ': 'interface ', 'public enum ': 'enum '}) }}
 
 
 
-public class __tester__ {
+final class NO_PUBLIC_CLASS_FOUND {
     static void show(Object o) {
         if (o instanceof int[] a) {
             System.out.println(Arrays.toString(a));
@@ -2590,6 +2913,28 @@ public class __tester__ {
             System.out.println(Arrays.toString(a));
         } else {
             System.out.println(o);
+        }
+    }
+
+    static void within(long millis, Supplier<Object> test) {
+        CompletableFuture<Object> result = new CompletableFuture<>();
+        Thread worker = new Thread(() -> {
+            try {
+                result.complete(test.get());
+            } catch (Throwable e) {
+                result.completeExceptionally(e);
+            }
+        });
+        worker.setDaemon(true);
+        worker.start();
+        try {
+            show(result.get(millis, TimeUnit.MILLISECONDS));
+        } catch (TimeoutException e) {
+            System.out.println("Too slow: no answer within " + millis / 1000 + " s");
+        } catch (ExecutionException e) {
+            System.out.println(e.getCause().getClass().getSimpleName());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
