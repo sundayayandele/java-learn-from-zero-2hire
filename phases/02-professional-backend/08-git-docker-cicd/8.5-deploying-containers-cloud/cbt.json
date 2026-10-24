@@ -1,0 +1,99 @@
+{
+  "topic": "8.5",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "During every rolling deployment, a few payment requests fail with connection errors as old instances are stopped.",
+      "question": "Which configuration addresses this?",
+      "options": [
+        "Disabling health checks",
+        "Deploying only at midnight",
+        "Graceful shutdown (server.shutdown=graceful with a shutdown timeout) so instances finish in-flight requests after SIGTERM, plus readiness probes",
+        "Larger container images"
+      ],
+      "answer": 2,
+      "explanation": "Graceful shutdown stops new requests while completing current ones, and readiness ensures new instances receive traffic only when ready."
+    },
+    {
+      "type": "single",
+      "scenario": "Release 2.4 renames the column narration to description and deploys with a rolling update. Old instances start failing during the rollout.",
+      "question": "What approach avoids this?",
+      "options": [
+        "Expand and contract: add the new column, write both, backfill, switch reads, and drop the old column in a later release",
+        "Run the migration manually after all instances are updated",
+        "Edit the original V1 migration to use the new name",
+        "Use a recreate deployment so versions never overlap"
+      ],
+      "answer": 0,
+      "explanation": "During rolling, blue-green and canary releases, old and new versions run together, so every schema change must stay compatible with both."
+    },
+    {
+      "type": "single",
+      "scenario": "A new version passes CI but its error rate jumps after release. The team wants the fastest safe recovery.",
+      "question": "What should be possible within minutes?",
+      "options": [
+        "Rebuilding the old version from source and retesting it",
+        "Restoring last night's database backup",
+        "Redeploying the previous image SHA or switching traffic back to the previous revision, without a database restore",
+        "Waiting for a fix to be written"
+      ],
+      "answer": 2,
+      "explanation": "Immutable images and backward-compatible schemas make application rollback a single operation; restores lose data and take hours."
+    },
+    {
+      "type": "single",
+      "scenario": "A team wants to release a new fee engine to 5% of traffic, watch error rates and latency for an hour, then increase gradually.",
+      "question": "Which strategy is this?",
+      "options": [
+        "Big-bang release",
+        "Recreate deployment",
+        "Canary release",
+        "Blue-green with an instant full switch"
+      ],
+      "answer": 2,
+      "explanation": "A canary exposes a small share of real traffic to the new version and increases it only while metrics stay healthy."
+    },
+    {
+      "type": "multi",
+      "scenario": "You are making a Spring Boot service ready to run on any container platform.",
+      "question": "Which properties should it have? (Choose two.)",
+      "options": [
+        "Session state stored in the instance's local memory",
+        "Configuration and secrets supplied by the environment rather than baked into the image",
+        "Liveness and readiness health endpoints",
+        "Uploaded files written to the container's local disk"
+      ],
+      "answer": [
+        1,
+        2
+      ],
+      "explanation": "Environment configuration and health endpoints let any platform run and manage the service. Local state breaks when instances are replaced or scaled."
+    },
+    {
+      "type": "single",
+      "scenario": "On Google Cloud Run, you want to smoke-test a new revision on its own URL before it receives any customer traffic.",
+      "question": "How can you do this?",
+      "options": [
+        "Use the latest tag",
+        "Deploy normally and test quickly",
+        "Create a second Google Cloud account",
+        "Deploy with --no-traffic and a tag, test the tagged URL, then shift traffic to it"
+      ],
+      "answer": 3,
+      "explanation": "Tagged revisions get their own URL without serving production traffic, so they can be verified before traffic migration."
+    },
+    {
+      "type": "single",
+      "scenario": "An ECS service's new tasks keep failing health checks after a deployment, and nobody is watching.",
+      "question": "Which ECS feature limits the damage automatically?",
+      "options": [
+        "Task definition revisions",
+        "The deployment circuit breaker with rollback enabled",
+        "CloudWatch log retention",
+        "Fargate Spot capacity"
+      ],
+      "answer": 1,
+      "explanation": "The circuit breaker detects that new tasks cannot become healthy and rolls back to the last working deployment."
+    }
+  ]
+}

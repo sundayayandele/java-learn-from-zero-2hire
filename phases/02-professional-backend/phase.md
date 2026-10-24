@@ -1,0 +1,75 @@
+From "I can build a Spring Boot service" to "I can be trusted with a production backend in a team": API design and third-party integration, security, a real testing strategy, Git, Docker and CI/CD pipelines, and working with AI coding assistants without losing your judgement. Every example is a payments, banking or fintech scenario, because those integrations (payment gateways, open banking, identity, KYC, card vaults) are exactly what Lagos fintechs, banks and global consultancies hire junior and mid-level Java engineers to build. The phase ends with your junior portfolio and interview preparation.
+
+> **Prerequisite:** Phase 1 (or equivalent): Java 21, SQL, and building a Spring Boot 4 service with JPA, validation, Problem Details and Actuator. Phase 2 builds directly on the Phase 1 starter and capstones.
+
+## How to study this phase
+
+Plan for **10–15 hours per week** for 11 weeks. Each topic page has the same three parts as Phase 1, in this order:
+
+1. **Read** the lesson and type out the code yourself.
+2. **Watch** the curated videos (checked: real, embeddable, English with captions).
+3. **Check your understanding** with the scenario CBT. On Moodle it is graded (pass mark 70%, unlimited attempts).
+
+Then do the topic's **practice** tasks and, each module, at least one **module project**. From week 15, start your **Phase 2 capstones**; every capstone is a team-ready service with security, a full test pyramid and a CI/CD pipeline with quality gates.
+
+## Weekly plan
+
+| Week | Module | Topics | Milestone |
+| --- | --- | --- | --- |
+| 14 | 5 API Design & Integration | 5.1 Resource design and HTTP, 5.2 OpenAPI and versioning | OpenAPI contract for your first capstone |
+| 15 | 5 | 5.3 Problem Details, pagination, idempotency, 5.4 Consuming APIs and resilience | Start Capstone 1 (payment gateway hub) |
+| 16 | 5 | 5.5 GraphQL and gRPC | Module 5 project |
+| 17 | 6 Security Essentials | 6.1 Spring Security filter chain, 6.2 JWT, OAuth2 and OIDC | Keycloak running locally |
+| 18 | 6 | 6.3 RBAC and method security, 6.4 OWASP Top 10, 6.5 Passwords, secrets, dependency scanning | Secured capstone API; Module 6 project |
+| 19 | 7 Testing & Code Quality | 7.1 JUnit, Mockito and TDD, 7.2 Testcontainers | |
+| 20 | 7 | 7.3 API tests, 7.4 JaCoCo and SonarQube, 7.5 Code review | Quality gate green on every capstone |
+| 21 | 8 Git, Docker & CI/CD | 8.1 Git workflow, 8.2 Docker images and Compose | Team PR workflow with a peer |
+| 22 | 8 | 8.3 GitHub Actions and GitLab CI, 8.4 Jenkins and Azure DevOps, 8.5 Deploying containers | Capstones deployed from CI |
+| 23 | 9 AI-Assisted Engineering | 9.1 AI coding assistants, 9.2 Reviewing AI code, 9.3 AI for tests, docs and refactors | |
+| 24 | 9 Junior Portfolio | 9.4 CV, GitHub and LinkedIn, 9.5 Junior interview prep | **End-of-phase exam**, **Getting Hired**, junior portfolio review |
+
+## Modules
+
+| Module | Weeks | What you build |
+| --- | --- | --- |
+| [5. API Design & Integration](05-api-design-integration/README.md) | 14–16 | Payment gateway integration with webhooks, FX/weather consumer, news aggregator, gRPC lookup service |
+| [6. Security Essentials](06-security-essentials/README.md) | 17–18 | JWT API with refresh tokens, Keycloak login, role-based admin vs customer endpoints |
+| [7. Testing & Code Quality](07-testing-code-quality/README.md) | 19–20 | Full test suite for the wallet, TDD fee-engine kata, e-commerce integration tests |
+| [8. Git, Docker & CI/CD](08-git-docker-cicd/README.md) | 21–22 | Team PR workflow, Dockerised stack, GitHub Actions pipeline with quality gates |
+| [9. AI-Assisted Engineering & Junior Portfolio](09-ai-assisted-engineering-portfolio/README.md) | 23–24 | Polished 4–5 project portfolio, mock interview, tailored CV and application plan |
+
+## Capstones
+
+Ten integration- and security-heavy fintech capstones, each built on public data or official sandboxes that are free for commercial and non-commercial use, with recorded licences. **Complete at least three** by the end of the phase: Capstone 1 (the payment gateway hub) plus any two others. Capstones 1 and 2 come with complete, tested reference solutions.
+
+→ [Phase 2 capstones](capstones/README.md)
+
+## Deployment and CI/CD
+
+Phase 2 capstones use the same six-platform pipeline as Phase 1 (GitHub Actions, GitLab CI, Azure DevOps, AWS CodeBuild/CodePipeline, Jenkins, Argo CD) with added **quality gates**: test coverage thresholds, static analysis, dependency and secret scanning, and image scanning. Deployment targets are the same: a VPS (for example SSDNodes), AWS, Azure and GCP.
+
+→ [Deployment guide](../01-foundations/deploy/README.md) · [CI/CD guide](../01-foundations/cicd/README.md) · [Module 8](08-git-docker-cicd/README.md) adds the quality gates
+
+## Certifications
+
+Oracle's Java SE exams are fully covered by Phase 1. Phase 2 prepares the ground for cloud and security credentials: Module 8 starts the AWS material used by **AWS Certified Developer – Associate**, and Module 6 covers the OWASP and OAuth2 knowledge assumed by vendor security courses. See the [certification mapping](../../docs/certifications.md).
+
+## End-of-phase exam
+
+A 2-hour, 60-question scenario-based CBT covering every Phase 2 topic, taken on Moodle in week 24. Pass mark 70%.
+
+→ [Exam blueprint](exam/README.md)
+
+## Getting hired
+
+Week 24 is your junior-role launch: a portfolio of four to five deployed projects, a CV and LinkedIn tuned for Java roles, and mock interviews.
+
+→ [Getting hired after Phase 2](getting-hired/README.md)
+
+## Phase 2 exit criteria
+
+- All 25 topic CBTs passed (70%+).
+- At least one project per module.
+- Capstone 1 plus two others passed against the rubric, each with a green pipeline that enforces quality gates, deployed and secured.
+- End-of-phase exam passed (70%+).
+- Getting Hired checklist complete.

@@ -1,0 +1,221 @@
+<p><em>Week 23 · Module 9: AI-Assisted Engineering &amp; Junior Portfolio</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Use AI assistants to <strong>write tests</strong> that add real
+value: boundary cases, failure paths, test data builders and WireMock
+stubs, without accepting test illusions.</li>
+<li>Generate and maintain <strong>documentation</strong>: READMEs,
+Javadoc, ADR drafts, OpenAPI descriptions and runbooks, checked for
+accuracy.</li>
+<li>Carry out <strong>refactors and upgrades</strong> with AI help
+safely: characterisation tests first, small steps, tool-assisted
+migrations (OpenRewrite) where they exist.</li>
+<li>Keep <strong>your own understanding</strong> growing while you use
+AI, so you remain interview-ready and able to debug without it.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>The most valuable uses of AI in established codebases are often not
+new features but the work teams postpone: missing tests around legacy
+code, outdated documentation, upgrades (Java 8 to 21, Spring Boot 3 to
+4) and cleanup. These are exactly the areas where a mistake can silently
+change behaviour in production. Done carefully, AI help gets this work
+done; done carelessly, it creates a false sense of safety.</p>
+<h2 id="1-tests-with-ai-help">1. Tests with AI help</h2>
+<h3 id="what-to-ask-for">What to ask for</h3>
+<p>Good requests are specific about <strong>behaviour</strong> and
+<strong>cases</strong>:</p>
+<pre class="text"><code>Write JUnit 5 + AssertJ tests for FeeCalculator.transferFee(Money, CustomerType).
+Rules (from docs/fees.md): ₦10.75 up to and including ₦5,000.00; ₦26.88 up to and
+including ₦50,000.00; ₦53.75 above; staff pay nothing; amounts must be positive.
+Use a @ParameterizedTest with @CsvSource for the boundaries (exactly on and 1 kobo
+past each), separate tests for staff and invalid amounts, and AssertJ&#39;s
+isEqualByComparingTo for money. Do not mock Money or FeeSchedule.</code></pre>
+<p>Other productive requests:</p>
+<ul>
+<li>"List the edge cases you would test for
+<code>InterestAccrual.dailyInterest</code>, without writing code yet."
+Then pick the ones that matter.</li>
+<li>"Create a test data builder for <code>Account</code> following the
+pattern in <code>TransferTestData</code>."</li>
+<li>"Write WireMock stubs for the gateway's initialise endpoint:
+success, 503 then success, 6-second delay, and a 400 with this error
+body."</li>
+<li>"Write a Testcontainers integration test for the
+20-concurrent-transfers scenario using our
+<code>TestcontainersConfiguration</code>."</li>
+</ul>
+<h3 id="how-to-judge-the-result">How to judge the result</h3>
+<ol type="1">
+<li><strong>Do the tests encode the requirement, or the current
+code?</strong> Generated tests often mirror the implementation,
+including its bugs. Write (or at least decide) the expected values from
+the <strong>specification</strong>, not from running the code.</li>
+<li><strong>Would each test fail if the code were wrong?</strong> Break
+the code deliberately (or run PIT, topic 7.4) and see.</li>
+<li><strong>Are the assertions meaningful?</strong> Watch for no
+assertions, assertions on mocks' return values, and
+<code>assertNotNull</code> as the only check.</li>
+<li><strong>Are they maintainable?</strong> Clear names, no duplication,
+consistent with existing tests.</li>
+</ol>
+<p>A powerful pattern is <strong>test-first with AI</strong>: you write
+the failing test (the specification), and the assistant writes the
+implementation until it passes. You keep control of <em>what</em> the
+system must do.</p>
+<h2 id="2-documentation-with-ai-help">2. Documentation with AI help</h2>
+<p>AI is good at turning code into prose and at keeping structure
+consistent:</p>
+<ul>
+<li><strong>README sections:</strong> "Write a 'How to run locally'
+section for this repository based on compose.yaml, .env.example and the
+Maven wrapper."</li>
+<li><strong>Javadoc</strong> for public APIs, especially explaining
+<em>why</em> (ask it to include the rounding rule and the reason).</li>
+<li><strong>OpenAPI descriptions and examples</strong> from your
+controllers and DTOs.</li>
+<li><strong>ADR drafts:</strong> give the context, options and decision;
+let it structure the Architecture Decision Record, then edit.</li>
+<li><strong>Runbooks:</strong> "From ApiExceptionHandler, the Actuator
+configuration and the resilience settings, draft a runbook section for
+'payment gateway unavailable'."</li>
+<li><strong>Diagrams as code:</strong> Mermaid sequence diagrams of a
+flow you describe (Phase 1 architecture packs used the same
+format).</li>
+</ul>
+<p>Check every factual statement: commands, property names, ports,
+versions and especially claims about behaviour ("retries three times")
+against the code and configuration. Documentation that is fluent and
+wrong is worse than none. Keep documentation next to the code and update
+it in the same pull request as the change.</p>
+<h2 id="3-refactoring-and-upgrades-with-ai-help">3. Refactoring and
+upgrades with AI help</h2>
+<h3 id="characterisation-tests-first">Characterisation tests first</h3>
+<p>Before refactoring code you do not fully understand (common with
+legacy bank code), pin down its current behaviour with
+<strong>characterisation tests</strong>: tests that record what the code
+does now, right or wrong, so you notice any change.</p>
+<pre class="text"><code>Write characterisation tests for LegacyStatementGenerator.generate(...) using the three
+sample inputs in src/test/resources/statements/. Assert the exact current output
+(approval/snapshot style). Do not change production code.</code></pre>
+<p>Then refactor in <strong>small, behaviour-preserving steps</strong>,
+running the tests after each, and commit each step. Ask the assistant
+for one step at a time ("extract the opening-balance calculation into a
+method", "replace this loop with a stream"), not "clean up this
+class".</p>
+<h3 id="use-deterministic-tools-where-they-exist">Use deterministic
+tools where they exist</h3>
+<p>For large mechanical migrations, prefer <strong>recipe-based
+tools</strong> that are tested and repeatable over free-form
+generation:</p>
+<ul>
+<li><strong>OpenRewrite</strong> recipes for Java version upgrades,
+Spring Boot 3 → 4, JUnit 4 → 5, Jakarta namespace changes (Phase 1
+topics 1.8 and 4.6):</li>
+</ul>
+<pre class="bash"><code>./mvnw -U org.openrewrite.maven:rewrite-maven-plugin:run \
+  -Drewrite.recipeArtifactCoordinates=org.openrewrite.recipe:rewrite-spring:RELEASE \
+  -Drewrite.activeRecipes=org.openrewrite.java.spring.boot4.UpgradeSpringBoot_4_0</code></pre>
+<ul>
+<li>IntelliJ IDEA's structural refactorings (rename, extract, inline,
+change signature) are deterministic and safe.</li>
+</ul>
+<p>Use the AI assistant for what recipes do not cover: explaining a
+failing test after the upgrade, adapting custom code, writing the
+upgrade notes.</p>
+<h3 id="keep-the-diff-reviewable">Keep the diff reviewable</h3>
+<p>Split upgrades into: dependency bumps; automated recipe changes;
+manual fixes; cleanup. Each is a separate pull request a reviewer can
+trust.</p>
+<h2 id="4-keeping-your-understanding">4. Keeping your understanding</h2>
+<p>AI can make you faster today and weaker in six months if it replaces
+the thinking that builds skill. Interviews (topic 9.5) and production
+incidents happen without an assistant. Habits that keep you sharp:</p>
+<ul>
+<li><strong>Predict before you ask:</strong> write down what you think
+the answer or design is, then compare.</li>
+<li><strong>Explain it back:</strong> after accepting code, explain it
+in your own words in the PR description.</li>
+<li><strong>Do some work unaided:</strong> practise live-coding problems
+and debugging sessions without AI every week.</li>
+<li><strong>Ask "why", not just "how":</strong> "Why does ordered
+locking prevent deadlocks here?" teaches more than "fix the
+deadlock".</li>
+<li><strong>Read the primary sources</strong> the assistant summarises:
+Spring reference docs, JEPs, RFCs.</li>
+<li>Keep a learning log of mistakes the assistant made; they teach you
+what to check.</li>
+</ul>
+<h2 id="5-a-worked-mini-workflow">5. A worked mini-workflow</h2>
+<p>Goal: add idempotency to a legacy refund endpoint.</p>
+<ol type="1">
+<li>Ask the assistant to explain the current refund flow and list the
+tables it touches; verify by reading the code.</li>
+<li>Write characterisation tests for the current behaviour with its
+help; review them.</li>
+<li>Write, yourself, the failing tests for the new behaviour (same key
+replays; different payload with the same key returns 422; concurrent
+duplicates create one refund).</li>
+<li>Ask the assistant to implement it following the existing idempotency
+pattern in transfers; review the diff with the topic 9.2 checklist.</li>
+<li>Ask it to draft the ADR and the README section; correct them.</li>
+<li>Open a small pull request with an AI-usage note.</li>
+</ol>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Generating tests from the code and treating them as proof the code
+is right.</li>
+<li>Accepting documentation without checking commands, properties and
+behaviour claims.</li>
+<li>"Refactor this whole class" in one step with no characterisation
+tests.</li>
+<li>Free-form AI rewrites where a deterministic OpenRewrite recipe
+exists.</li>
+<li>Mixing upgrade, refactor and feature changes in one pull
+request.</li>
+<li>Never practising without the assistant.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Pick an under-tested class in your capstone; list the cases from the
+requirements yourself, then have an assistant implement the tests; run
+PIT and compare the mutation score before and after.</li>
+<li>Generate a README "How to run" section and a runbook entry with an
+assistant; correct every inaccuracy and note how many there were.</li>
+<li>Write characterisation tests for a piece of Phase 1 legacy-style
+code, then refactor it in five small committed steps.</li>
+<li>Run the OpenRewrite Spring Boot 4 recipe on the Phase 1 upgrade lab
+and use an assistant only for the remaining manual fixes; write the
+upgrade notes.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Specification-based test, implementation-mirroring test, test-first
+with AI, test data builder, mutation testing, documentation drift, ADR,
+runbook, docs-as-code, characterisation test, approval (snapshot) test,
+behaviour-preserving refactor, OpenRewrite recipe, deterministic
+migration, reviewable diff, deliberate practice.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://docs.openrewrite.org/running-recipes/getting-started">OpenRewrite
+documentation: Running recipes</a></li>
+<li><a
+href="https://docs.openrewrite.org/recipes/java/spring/boot4">OpenRewrite:
+Spring Boot 4 migration recipes</a></li>
+<li><a
+href="https://en.wikipedia.org/wiki/Characterization_test">Wikipedia:
+Characterization test (Michael Feathers)</a></li>
+<li><a href="https://refactoring.com/catalog/">Martin Fowler:
+Refactoring (catalogue)</a></li>
+<li><a href="https://adr.github.io/">ADR GitHub organisation:
+Architecture Decision Records</a></li>
+<li><a
+href="https://docs.github.com/en/copilot/tutorials/write-tests">GitHub
+Docs: Writing tests with GitHub Copilot</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Characterization Tests, code coverage for refactoring</h3><p>Generation Engineered · 7 min. Characterisation tests: pin behaviour before refactoring.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/J3hRYO2JKHI" title="Characterization Tests, code coverage for refactoring" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Upgrading your Java &amp; Spring Boot applications with OpenRewrite in IntelliJ</h3><p>Dan Vega · 14 min. Upgrading Java and Spring Boot with OpenRewrite recipes.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/e4R6AZHpAD8" title="Upgrading your Java &amp; Spring Boot applications with OpenRewrite in IntelliJ" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Working Effectively with Legacy Code and AI Coding Assistant - Michael Feathers (optional, longer)</h3><p>Tech Lead Journal · 56 min. Michael Feathers on legacy code and AI assistants (optional).</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/mwVRHDD0tEk" title="Working Effectively with Legacy Code and AI Coding Assistant - Michael Feathers" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/02-professional-backend/09-ai-assisted-engineering-portfolio/9.3-ai-tests-docs-refactors/README.md">9.3 Using AI to write tests, docs and refactors without losing understanding</a></p>

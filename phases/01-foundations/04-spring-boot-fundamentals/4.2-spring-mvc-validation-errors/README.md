@@ -355,7 +355,7 @@ The controller does three things: validate (annotations), delegate (one service 
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-23. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
 
 - [Spring Boot Validation](https://www.youtube.com/watch?v=LItERTUC9y4) · Fast and Simple Development · 12 min. Bean Validation on request bodies with @Valid and constraint annotations.
 - [Spring Boot Tutorial | How To Handle Exceptions](https://www.youtube.com/watch?v=PzK4ZXa2Tbc) · Amigoscode · 14 min. Turning exceptions into clean HTTP responses.

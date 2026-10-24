@@ -1,0 +1,99 @@
+{
+  "topic": "7.5",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "You have finished a feature that adds idempotency, reformats every file in the package, and renames several classes. The diff is 2,300 lines.",
+      "question": "What is the best way to submit it for review?",
+      "options": [
+        "Submit it with the description 'various improvements'",
+        "Merge it directly because the tests pass",
+        "Submit one PR and ask reviewers to focus on the important parts",
+        "Split it: a formatting-only PR, a rename/refactor PR, then a focused behaviour PR with a full description and test evidence"
+      ],
+      "answer": 3,
+      "explanation": "Reviewers catch far more in small, single-purpose changes. Separating mechanical changes from behaviour changes lets each be reviewed at the right depth."
+    },
+    {
+      "type": "single",
+      "scenario": "While reviewing, you notice that a new endpoint GET /api/v1/statements/{id} checks the CUSTOMER role but not that the statement belongs to the caller.",
+      "question": "How should you comment?",
+      "options": [
+        "Rewrite the code yourself and push to their branch without discussion",
+        "Leave a nit asking for a comment in the code",
+        "Mark it blocking, explain the risk (another customer's statement can be read by changing the ID), and suggest an ownership check with a negative test",
+        "Approve and mention it in the team chat later"
+      ],
+      "answer": 2,
+      "explanation": "A broken object-level authorisation check is a security defect that must be fixed before merge. A clear explanation and a concrete suggestion make the fix fast."
+    },
+    {
+      "type": "single",
+      "scenario": "A reviewer writes: 'This is badly written.'",
+      "question": "Which rewrite is a better review comment?",
+      "options": [
+        "\"I would never do it this way.\"",
+        "\"Please fix.\"",
+        "\"You always write long methods.\"",
+        "\"suggestion: this 80-line method mixes validation, fee calculation and persistence; extracting calculateFee() would make the tier rules easier to test. What do you think?\""
+      ],
+      "answer": 3,
+      "explanation": "Good comments address the code, explain why, propose a concrete change and signal their importance. Comments about the person or with no direction do not help."
+    },
+    {
+      "type": "multi",
+      "scenario": "You are preparing a PR that changes how transfer fees are rounded.",
+      "question": "What should the PR description include? (Choose two.)",
+      "options": [
+        "The full source code pasted into the description",
+        "How it was tested, including boundary cases, and any rollout or migration risks",
+        "Why the change is needed (for example the incident or requirement) and the new rounding policy",
+        "A list of every file name changed"
+      ],
+      "answer": [
+        1,
+        2
+      ],
+      "explanation": "Reviewers need context (why), the approach, test evidence and risks. The diff already shows the code and files."
+    },
+    {
+      "type": "single",
+      "scenario": "A reviewer asks you to change a loop to a stream. You think the loop is clearer for this case.",
+      "question": "What is a professional response?",
+      "options": [
+        "Ignore the comment and merge",
+        "Change it without comment even though you disagree, then complain elsewhere",
+        "Escalate to your manager",
+        "Reply with your reasoning; if it is marked as a nit or suggestion, it is your call, and if the team disagrees, accept their decision"
+      ],
+      "answer": 3,
+      "explanation": "Optional suggestions leave the decision to the author, and disagreements are resolved with reasons. Silent merges and escalation over style damage team trust."
+    },
+    {
+      "type": "single",
+      "scenario": "A bank's change-management policy requires that every production change is approved by someone other than its author.",
+      "question": "Which repository setting enforces this?",
+      "options": [
+        "Allowing administrators to bypass reviews",
+        "A CONTRIBUTING.md file asking people to get reviews",
+        "Branch protection on main requiring at least one approving review (from CODEOWNERS where relevant) and passing status checks",
+        "Requiring signed commits only"
+      ],
+      "answer": 2,
+      "explanation": "Branch protection with required reviews makes the four-eyes principle a technical control rather than a request."
+    },
+    {
+      "type": "single",
+      "scenario": "Before requesting review, you open your own PR's diff on GitHub.",
+      "question": "Which of these should you remove or fix during self-review?",
+      "options": [
+        "The tests, to make the diff smaller",
+        "Nothing; reviewers will find everything",
+        "Debug log lines, commented-out code and unrelated changes, and make sure CI is green",
+        "The PR description"
+      ],
+      "answer": 2,
+      "explanation": "Self-review catches noise and obvious problems, so reviewers can spend their attention on design, correctness and risk."
+    }
+  ]
+}

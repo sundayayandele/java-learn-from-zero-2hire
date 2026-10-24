@@ -1,0 +1,99 @@
+{
+  "topic": "9.5",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "In a live-coding interview you are asked to 'find accounts with more than three debits within ten minutes'.",
+      "question": "What is the best first step?",
+      "options": [
+        "Ask the interviewer to write the solution",
+        "Clarify inputs, outputs and edge cases (time zone, exactly ten minutes, unsorted input), and walk through a small example",
+        "Start typing a solution immediately to save time",
+        "Say you would normally use an AI assistant"
+      ],
+      "answer": 1,
+      "explanation": "Clarifying the problem and testing understanding with an example prevents solving the wrong problem and shows the structured thinking interviewers look for."
+    },
+    {
+      "type": "single",
+      "scenario": "An interviewer asks why @Transactional on a private method in your service did not roll back on an exception.",
+      "question": "What is the correct explanation?",
+      "options": [
+        "Spring applies @Transactional through a proxy; private methods and calls from within the same class bypass the proxy, so no transaction is started",
+        "@Transactional only works with MongoDB",
+        "Rollback only happens for checked exceptions",
+        "PostgreSQL does not support rollbacks"
+      ],
+      "answer": 0,
+      "explanation": "Proxy-based AOP intercepts external calls to public methods. Self-invocation and private methods are not intercepted. (Also note: by default, rollback happens for unchecked exceptions, not checked ones.)"
+    },
+    {
+      "type": "single",
+      "scenario": "You are asked: 'Return the last three transactions for each account' in SQL.",
+      "question": "Which approach is standard?",
+      "options": [
+        "SELECT * FROM transactions LIMIT 3",
+        "Use ROW_NUMBER() OVER (PARTITION BY account_id ORDER BY created_at DESC) in a subquery or CTE and keep rows with row number ≤ 3",
+        "Load all rows into Java and sort them",
+        "GROUP BY account_id with MAX(created_at)"
+      ],
+      "answer": 1,
+      "explanation": "A window function numbers rows within each account, so filtering on the number gives the top N per group in one query."
+    },
+    {
+      "type": "single",
+      "scenario": "During a project deep-dive, the interviewer asks what happens if two transfers debit the same account at the same moment.",
+      "question": "What makes a strong answer?",
+      "options": [
+        "Say the database is fast enough",
+        "Say it never happens in practice",
+        "Explain the concrete mechanism you used (for example ordered SELECT ... FOR UPDATE locks or @Version) and the test that proves balances stay correct under concurrency",
+        "Say concurrency is handled by Spring automatically"
+      ],
+      "answer": 2,
+      "explanation": "Interviewers want the specific mechanism, its trade-offs, and evidence. Vague answers suggest the candidate does not understand their own system."
+    },
+    {
+      "type": "multi",
+      "scenario": "You are preparing STAR stories for behavioural interviews at a bank.",
+      "question": "Which elements make a STAR answer effective? (Choose two.)",
+      "options": [
+        "Giving a ten-minute history of the whole project",
+        "Focusing on the actions you personally took and the measurable result",
+        "Blaming teammates for problems to show high standards",
+        "Choosing a real situation, such as diagnosing a hard bug or raising a risk, and keeping the answer to about two minutes"
+      ],
+      "answer": [
+        1,
+        3
+      ],
+      "explanation": "STAR answers are concise, real and centred on your actions and outcomes. Blame and rambling make a poor impression."
+    },
+    {
+      "type": "single",
+      "scenario": "An interviewer asks: 'Why should money not be stored as double?'",
+      "question": "Which answer is accurate and complete?",
+      "options": [
+        "double cannot store negative numbers",
+        "double is too slow",
+        "double uses too much memory",
+        "Binary floating point cannot represent most decimal fractions exactly, so sums drift; use BigDecimal (with a defined scale and rounding mode) or integer minor units"
+      ],
+      "answer": 3,
+      "explanation": "0.1 has no exact binary representation, so repeated arithmetic accumulates errors. Decimal types or integer kobo/cents, with explicit rounding, keep money exact."
+    },
+    {
+      "type": "single",
+      "scenario": "You finish coding a live-coding solution with five minutes left.",
+      "question": "What should you do with the remaining time?",
+      "options": [
+        "Say you are done and wait",
+        "Test it aloud with your example and edge cases (empty input, duplicates, boundaries) and state its time and space complexity",
+        "Start a new, unrelated solution",
+        "Rewrite it in a different language"
+      ],
+      "answer": 1,
+      "explanation": "Testing and analysing complexity demonstrate engineering discipline and often reveal bugs you can still fix."
+    }
+  ]
+}

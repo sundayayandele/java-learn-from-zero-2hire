@@ -1,0 +1,37 @@
+%% Secure open banking accounts API: logical architecture
+flowchart LR
+    subgraph sg0["Capabilities"]
+        direction TB
+        cons["Consent management<br/>create · authorise · revoke"]
+        guard["Consent guard<br/>TPP · status · expiry · permission · account"]
+        data["Account information<br/>accounts · balances · transactions"]
+        limit["Unattended access limit<br/>per account per day"]
+        audit["Access log"]
+    end
+    subgraph sg1["Data (PostgreSQL)"]
+        direction TB
+        consent[("consent<br/>TPP · customer · permissions · expiry · status")]
+        ca[("consent_account")]
+        acct[("account · transaction<br/>synthetic")]
+        log[("access_log<br/>append-only")]
+    end
+    cons --> consent
+    cons --> ca
+    data -->|"every request"| guard
+    guard --> consent
+    guard --> ca
+    data --> limit
+    data --> acct
+    guard -->|"allowed / denied"| audit
+    audit --> log
+    classDef actor fill:#dae8fc,stroke:#6c8ebf,color:#000
+    classDef svc fill:#d5e8d4,stroke:#82b366,color:#000
+    classDef comp fill:#ffffff,stroke:#666666,color:#000
+    classDef db fill:#fff2cc,stroke:#d6b656,color:#000
+    classDef store fill:#f5f5f5,stroke:#666666,color:#000
+    classDef ext fill:#f8cecc,stroke:#b85450,color:#000,stroke-dasharray: 5 3
+    classDef infra fill:#e1d5e7,stroke:#9673a6,color:#000
+    classDef job fill:#ffe6cc,stroke:#d79b00,color:#000
+    class guard,limit comp
+    class consent,ca,acct,log db
+    class cons,data,audit svc

@@ -1,0 +1,99 @@
+{
+  "topic": "6.2",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "Your wallet API accepts any token signed by the bank's Keycloak realm. A tester takes a valid token issued for the bank's internal HR API and calls your transfer endpoint with it, and it works.",
+      "question": "Which validation is missing?",
+      "options": [
+        "Signature validation",
+        "TLS on the endpoint",
+        "Expiry validation",
+        "Audience (aud) validation, so only tokens intended for the wallet API are accepted"
+      ],
+      "answer": 3,
+      "explanation": "The token is genuine and unexpired, but it was issued for a different API. Checking that aud includes your API prevents tokens meant for one service being replayed against another."
+    },
+    {
+      "type": "single",
+      "scenario": "A developer says JWT payloads are safe for storing the customer's BVN because 'the token is signed'.",
+      "question": "Why is this wrong?",
+      "options": [
+        "Signatures expire after 15 minutes",
+        "A signature proves who created the token and that it was not changed; it does not hide the contents, which anyone holding the token can decode",
+        "BVNs are not personal data",
+        "JWTs are encrypted by default, so it is fine"
+      ],
+      "answer": 1,
+      "explanation": "A signed JWT (JWS) is only Base64URL-encoded. Sensitive data must not be placed in claims unless you use encrypted JWTs (JWE), and even then it is usually better to keep it server-side."
+    },
+    {
+      "type": "single",
+      "scenario": "A mobile banking app needs to call your API on behalf of a signed-in customer.",
+      "question": "Which OAuth 2.0 flow should it use?",
+      "options": [
+        "Resource owner password credentials",
+        "Authorization code with PKCE",
+        "Implicit",
+        "Client credentials"
+      ],
+      "answer": 1,
+      "explanation": "Authorization code with PKCE is the recommended flow for user-facing public clients. Client credentials has no user; the password and implicit grants are deprecated."
+    },
+    {
+      "type": "single",
+      "scenario": "A nightly reconciliation job (no user involved) must call the ledger API.",
+      "question": "Which grant fits?",
+      "options": [
+        "No authentication, because it runs inside the network",
+        "Authorization code with PKCE using an operations staff member's login",
+        "Client credentials, with the job authenticating as its own client and receiving only the scopes it needs",
+        "Sharing an admin user's password with the job"
+      ],
+      "answer": 2,
+      "explanation": "Machine-to-machine calls use client credentials. Borrowing a person's identity breaks audit trails, and network location is not authentication."
+    },
+    {
+      "type": "single",
+      "scenario": "Your service rotates refresh tokens. An attacker steals a refresh token and uses it first; later the real user's app presents the same (already used) token.",
+      "question": "What should the service do?",
+      "options": [
+        "Treat it as theft: revoke the whole token family and require a new login",
+        "Issue a new token pair to whoever presents it",
+        "Extend the token's expiry",
+        "Ignore the second request"
+      ],
+      "answer": 0,
+      "explanation": "Reuse of a rotated refresh token means two parties hold it. Revoking the family cuts off the attacker, at the cost of asking the user to sign in again."
+    },
+    {
+      "type": "multi",
+      "scenario": "You are listing the checks a resource server must perform on every JWT.",
+      "question": "Which of these are required? (Choose two.)",
+      "options": [
+        "The token's sub claim is an email address",
+        "The token is longer than 500 characters",
+        "The token has not expired (exp) and comes from the expected issuer (iss)",
+        "The signature verifies with the issuer's key, using an expected algorithm"
+      ],
+      "answer": [
+        2,
+        3
+      ],
+      "explanation": "Signature with an allowed algorithm, issuer and time-based claims (plus audience) are the core checks. Token length and the format of sub are not security properties."
+    },
+    {
+      "type": "single",
+      "scenario": "A back-office web application signs staff in with oauth2Login and keeps their tokens in the server-side HTTP session.",
+      "question": "Should CSRF protection be disabled for this application?",
+      "options": [
+        "Yes: all Spring applications should disable CSRF",
+        "Yes: OAuth2 makes CSRF impossible",
+        "No: it authenticates with a session cookie that browsers attach automatically, so CSRF protection must stay on",
+        "It does not matter for internal staff"
+      ],
+      "answer": 2,
+      "explanation": "oauth2Login results in a cookie-based session, which is exactly what CSRF attacks exploit. Only bearer-token APIs without cookies can safely disable it."
+    }
+  ]
+}

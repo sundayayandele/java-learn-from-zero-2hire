@@ -1,0 +1,40 @@
+<mxfile host="java-zero-hire" type="device">
+  <diagram id="10-fraud-case-management-infra" name="Fraud case management service: infrastructure architecture (VPS)">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="grp0" value="Internet" style="swimlane;whiteSpace=wrap;html=1;rounded=1;startSize=34;fillColor=#f9f9f9;strokeColor=#999999;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="40" y="40" width="220" height="230" as="geometry"/></mxCell>
+        <mxCell id="users" value="Users and client apps" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="grp0"><mxGeometry x="20" y="54" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="dev" value="Developer" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="grp0"><mxGeometry x="20" y="146" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="grp1" value="GitHub (CI/CD)" style="swimlane;whiteSpace=wrap;html=1;rounded=1;startSize=34;fillColor=#f9f9f9;strokeColor=#999999;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="350" y="40" width="220" height="230" as="geometry"/></mxCell>
+        <mxCell id="gha" value="GitHub Actions&lt;br&gt;build · test · image" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="grp1"><mxGeometry x="20" y="54" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="ghcr" value="GHCR&lt;br&gt;container registry" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="grp1"><mxGeometry x="20" y="146" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="grp2" value="VPS: Ubuntu 24.04 LTS · 2 vCPU / 4 GB / 40 GB SSD" style="swimlane;whiteSpace=wrap;html=1;rounded=1;startSize=34;fillColor=#f9f9f9;strokeColor=#999999;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="660" y="40" width="220" height="690" as="geometry"/></mxCell>
+        <mxCell id="fw" value="Firewall (ufw)&lt;br&gt;22 / 80 / 443 only" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="grp2"><mxGeometry x="20" y="54" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="caddy" value="Caddy reverse proxy&lt;br&gt;TLS (Let&#x27;s Encrypt)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="grp2"><mxGeometry x="20" y="146" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="app" value="fraud-cases container&lt;br&gt;Spring Boot 4 · JVM 21&lt;br&gt;1 GB, MaxRAMPercentage=75" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="grp2"><mxGeometry x="20" y="238" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="pg" value="PostgreSQL 17 container&lt;br&gt;Docker volume" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="grp2"><mxGeometry x="20" y="330" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="kc" value="Keycloak container&lt;br&gt;realm itl · own DB schema" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="grp2"><mxGeometry x="20" y="422" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="job" value="In-app scheduler&lt;br&gt;SLA breach check every 5 min" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="grp2"><mxGeometry x="20" y="514" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="backup" value="Cron: pg_dump daily&lt;br&gt;14-day retention" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="grp2"><mxGeometry x="20" y="606" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="grp3" value="Off-site" style="swimlane;whiteSpace=wrap;html=1;rounded=1;startSize=34;fillColor=#f9f9f9;strokeColor=#999999;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="970" y="40" width="220" height="138" as="geometry"/></mxCell>
+        <mxCell id="offsite" value="Backup storage&lt;br&gt;(object storage / other host)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="grp3"><mxGeometry x="20" y="54" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="e0" value="HTTPS 443" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="users" target="fw"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="fw" target="caddy"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" value="HTTP 8080 (internal network)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="caddy" target="app"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" value="JDBC 5432" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="app" target="pg"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" value="git push / PR" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="dev" target="gha"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5" value="push image:sha" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="gha" target="ghcr"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e6" value="SSH: compose pull &amp;&amp; up" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;dashed=1;" edge="1" parent="1" source="gha" target="app"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e7" value="docker pull" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;dashed=1;" edge="1" parent="1" source="ghcr" target="app"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e8" value="pg_dump" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="backup" target="pg"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e9" value="copy" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;dashed=1;" edge="1" parent="1" source="backup" target="offsite"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e10" value="auth.&lt;domain&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="caddy" target="kc"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e11" value="JWKS keys (cached)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;dashed=1;" edge="1" parent="1" source="app" target="kc"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e12" value="JDBC" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="kc" target="pg"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e13" value="triggers" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;dashed=1;" edge="1" parent="1" source="job" target="app"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,19 @@
+# Production-like: two replicas, managed PostgreSQL outside the cluster, secret provided by the platform
+# (External Secrets Operator, Sealed Secrets or the cloud's secret store CSI driver). Nothing secret is committed.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: sec-financials-graphql
+resources:
+  - ../../base
+images:
+  - name: sec-financials-graphql
+    newName: ghcr.io/OWNER/sec-financials-graphql
+    newTag: "0000000"          # pinned commit SHA, updated by CI in a pull request (GitOps)
+patches:
+  - target:
+      kind: Deployment
+      name: sec-financials-graphql
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 2

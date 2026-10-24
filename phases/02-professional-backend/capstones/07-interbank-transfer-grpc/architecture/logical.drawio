@@ -1,0 +1,30 @@
+<mxfile host="java-zero-hire" type="device">
+  <diagram id="07-interbank-transfer-grpc-logical" name="Interbank transfer gRPC service: logical architecture">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="grp0" value="Sending bank" style="swimlane;whiteSpace=wrap;html=1;rounded=1;startSize=34;fillColor=#f9f9f9;strokeColor=#999999;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="40" y="40" width="220" height="322" as="geometry"/></mxCell>
+        <mxCell id="ne" value="Name enquiry&lt;br&gt;cached 10 min" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="grp0"><mxGeometry x="20" y="54" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="tx" value="Transfer&lt;br&gt;local debit · send" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="grp0"><mxGeometry x="20" y="146" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="res" value="Status resolver&lt;br&gt;backoff · reverse" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="grp0"><mxGeometry x="20" y="238" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="grp1" value="Switch" style="swimlane;whiteSpace=wrap;html=1;rounded=1;startSize=34;fillColor=#f9f9f9;strokeColor=#999999;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="350" y="40" width="220" height="230" as="geometry"/></mxCell>
+        <mxCell id="route" value="Routing by bank code&lt;br&gt;message log" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="grp1"><mxGeometry x="20" y="54" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="set" value="Settlement&lt;br&gt;net positions stream" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="grp1"><mxGeometry x="20" y="146" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="grp2" value="Receiving bank" style="swimlane;whiteSpace=wrap;html=1;rounded=1;startSize=34;fillColor=#f9f9f9;strokeColor=#999999;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="660" y="40" width="220" height="138" as="geometry"/></mxCell>
+        <mxCell id="cr" value="Credit&lt;br&gt;idempotent by session id" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="grp2"><mxGeometry x="20" y="54" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="grp3" value="Data" style="swimlane;whiteSpace=wrap;html=1;rounded=1;startSize=34;fillColor=#f9f9f9;strokeColor=#999999;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="970" y="40" width="220" height="230" as="geometry"/></mxCell>
+        <mxCell id="db" value="accounts · transfers&lt;br&gt;per bank" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="grp3"><mxGeometry x="20" y="54" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="log" value="switch message log" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="grp3"><mxGeometry x="20" y="146" width="180" height="64" as="geometry"/></mxCell>
+        <mxCell id="e0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="tx" target="ne"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e1" value="FundsTransfer (deadline 10 s)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="tx" target="route"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="route" target="cr"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" value="TransactionStatus" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="res" target="route"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="tx" target="db"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="cr" target="db"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="route" target="log"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="set" target="log"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

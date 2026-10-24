@@ -1,0 +1,53 @@
+{
+  "realm": "itl",
+  "enabled": true,
+  "sslRequired": "external",
+  "accessTokenLifespan": 300,
+  "bruteForceProtected": true,
+  "roles": {
+    "realm": [
+      { "name": "CUSTOMER", "description": "A customer acting on their own resources" },
+      { "name": "OPS", "description": "Operations staff: support views and actuator endpoints" },
+      { "name": "ADMIN", "description": "Administrators: configuration and approvals" }
+    ]
+  },
+  "clientScopes": [
+    {
+      "name": "api.read",
+      "protocol": "openid-connect",
+      "attributes": { "include.in.token.scope": "true", "display.on.consent.screen": "true" }
+    },
+    {
+      "name": "api.write",
+      "protocol": "openid-connect",
+      "attributes": { "include.in.token.scope": "true", "display.on.consent.screen": "true" }
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "itl-cli",
+      "name": "Local development client (public, PKCE; password grant enabled for local testing only)",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": ["http://localhost:*"],
+      "webOrigins": ["+"],
+      "attributes": { "pkce.code.challenge.method": "S256" },
+      "defaultClientScopes": ["profile", "roles", "basic"],
+      "optionalClientScopes": ["api.read", "api.write"],
+      "protocolMappers": [
+        {
+          "name": "audience itl-api",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "itl-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    }
+  ]
+}

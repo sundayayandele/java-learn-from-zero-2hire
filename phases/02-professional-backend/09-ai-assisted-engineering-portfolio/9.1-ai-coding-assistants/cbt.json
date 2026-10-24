@@ -1,0 +1,99 @@
+{
+  "topic": "9.1",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A production incident log contains customers' names, account numbers and BVNs. You want an AI assistant's help to understand the stack trace.",
+      "question": "What should you do?",
+      "options": [
+        "Paste the whole log; the assistant needs full context",
+        "Remove or replace all personal data with synthetic values, and use only your employer's approved AI tool",
+        "Paste it into a personal free account to avoid company monitoring",
+        "Email the log to a friend who uses AI tools"
+      ],
+      "answer": 1,
+      "explanation": "Personal and regulated data must not be sent to AI services, and only approved tools may be used. The stack trace is usually enough once the personal data is removed."
+    },
+    {
+      "type": "single",
+      "scenario": "You ask an assistant: 'write a transfer service'. The result uses double for amounts, no locking and a library your project does not use.",
+      "question": "What is the most effective improvement?",
+      "options": [
+        "Ask the same question again until the result is better",
+        "Give context and constraints: point to the Money type and repository, require ordered locking and existing libraries, and define 'done' as specific tests passing",
+        "Accept it and fix it later",
+        "Switch to a different assistant without changing the prompt"
+      ],
+      "answer": 1,
+      "explanation": "Assistants follow the context they are given. Concrete files, constraints and a checkable definition of done produce code that fits the project."
+    },
+    {
+      "type": "single",
+      "scenario": "Your team repeatedly tells the assistant the same conventions (BigDecimal money, Problem Details, Flyway rules) at the start of every session.",
+      "question": "What should you do instead?",
+      "options": [
+        "Store the conventions in a personal note only you can see",
+        "Commit a project instruction file (for example CLAUDE.md, AGENTS.md or .github/copilot-instructions.md) with the conventions",
+        "Stop using the assistant",
+        "Paste the conventions into every commit message"
+      ],
+      "answer": 1,
+      "explanation": "Agentic tools read repository instruction files automatically, so conventions are applied consistently for everyone on the team."
+    },
+    {
+      "type": "multi",
+      "scenario": "You are deciding which tasks to hand to an AI assistant on a payments codebase.",
+      "question": "For which tasks is an assistant typically most helpful? (Choose two.)",
+      "options": [
+        "Explaining an unfamiliar legacy class and finding which tests cover it",
+        "Approving its own pull request for production",
+        "Generating DTO records, mappers and test data builders",
+        "Deciding the bank's fee policy without written requirements"
+      ],
+      "answer": [
+        0,
+        2
+      ],
+      "explanation": "Assistants excel at explanation and well-known patterns. Business policy needs humans with the requirements, and approval is a human control."
+    },
+    {
+      "type": "single",
+      "scenario": "An agentic assistant proposes to run a database migration command with the production connection string it found in your shell history.",
+      "question": "What is the right response?",
+      "options": [
+        "Allow it because the assistant explained the command",
+        "Allow it but watch the output",
+        "Disable all logging first",
+        "Refuse; agents must never have production credentials, and they should run in a sandbox or with permission prompts on development environments only"
+      ],
+      "answer": 3,
+      "explanation": "Agents can act quickly and wrongly. Keeping them away from production access and reviewing every command they run is basic safety."
+    },
+    {
+      "type": "single",
+      "scenario": "An assistant tells you that a Spring Boot property was renamed in the latest release, but your build ignores the new name.",
+      "question": "What is the likely explanation and action?",
+      "options": [
+        "The assistant is always right, so upgrade Java",
+        "The model's knowledge may be outdated or invented; check the official documentation or configuration metadata for your exact version",
+        "Properties are not documented anywhere",
+        "Your Spring Boot installation is broken"
+      ],
+      "answer": 1,
+      "explanation": "Models have training cut-offs and can hallucinate APIs. Version-specific facts must be verified against authoritative sources."
+    },
+    {
+      "type": "single",
+      "scenario": "After accepting a generated 200-line change, a reviewer asks you to explain why a particular lock is acquired before the balance check.",
+      "question": "What does professional practice require?",
+      "options": [
+        "You must understand and be able to explain every line you submit; if you cannot, study it or rewrite it before asking for review",
+        "Tell the reviewer the AI wrote it",
+        "Remove the lock to simplify the explanation",
+        "Ask the reviewer to ask the AI"
+      ],
+      "answer": 0,
+      "explanation": "The author of record is accountable for the code, whoever or whatever typed it. Being unable to explain it is a signal that it is not ready to ship."
+    }
+  ]
+}

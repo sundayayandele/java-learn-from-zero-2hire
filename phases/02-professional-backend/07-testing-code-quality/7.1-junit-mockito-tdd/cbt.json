@@ -1,0 +1,99 @@
+{
+  "topic": "7.1",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A test asserts assertEquals(new BigDecimal(\"1250.00\"), account.balance()) and fails with 'expected 1250.00 but was 1250.0', although the amounts are the same.",
+      "question": "What is the best fix?",
+      "options": [
+        "Compare their toString() values",
+        "Use AssertJ's isEqualByComparingTo (compareTo), or normalise money to a fixed scale in the Money type",
+        "Convert both values to double before comparing",
+        "Remove the assertion"
+      ],
+      "answer": 1,
+      "explanation": "BigDecimal.equals compares value and scale, so 1250.00 and 1250.0 differ. Comparing with compareTo, or a Money type that fixes the scale, expresses the intended equality; doubles lose precision."
+    },
+    {
+      "type": "single",
+      "scenario": "An interest test passes every day except on the last day of February in leap years, when CI fails at midnight runs.",
+      "question": "What is the root cause and fix?",
+      "options": [
+        "The code reads the real date (LocalDate.now()); inject a Clock and use fixed clocks in tests, including a leap-year case",
+        "Add a retry to the test",
+        "The CI server's timezone is wrong; change it",
+        "Leap years should be ignored in banking"
+      ],
+      "answer": 0,
+      "explanation": "Tests that depend on the real clock are non-deterministic. Injecting a Clock lets you test any date, deliberately, every time."
+    },
+    {
+      "type": "single",
+      "scenario": "A unit test for TransferService mocks AccountRepository, FeeCalculator, Money, TransferValidator, the Clock and TransferService itself, and verifies 14 interactions.",
+      "question": "What is the main problem?",
+      "options": [
+        "It does not mock enough classes",
+        "It is over-mocked: it mocks value objects and the class under test and verifies implementation details, so it is brittle and proves little",
+        "It should use @SpringBootTest instead",
+        "Mockito cannot mock 6 classes at once"
+      ],
+      "answer": 1,
+      "explanation": "Mock only real boundaries such as repositories, external clients and clocks. Use real value objects and domain collaborators, and assert on resulting state; verify calls only when they are the behaviour."
+    },
+    {
+      "type": "single",
+      "scenario": "A requirement says a debit alert must be sent exactly once for every successful transfer and never for a failed one.",
+      "question": "Which assertion style suits this requirement?",
+      "options": [
+        "Interaction-based: verify the notifier mock was called once on success, and verifyNoInteractions on failure",
+        "Assert on the log output text",
+        "Only assert that no exception was thrown",
+        "Do not test notifications"
+      ],
+      "answer": 0,
+      "explanation": "Sending the alert is itself the required behaviour, at a boundary you do not own, so verifying the interaction is appropriate here."
+    },
+    {
+      "type": "single",
+      "scenario": "You are practising TDD on a new 'stamp duty on transfers of ₦10,000 and above' rule.",
+      "question": "What is the correct first step?",
+      "options": [
+        "Implement the full rule, then write tests",
+        "Refactor the fee calculator before writing any test",
+        "Write all 20 tests at once, then implement",
+        "Write a failing test for a transfer of exactly ₦10,000.00 incurring the duty, and run it to see it fail"
+      ],
+      "answer": 3,
+      "explanation": "TDD proceeds in small red–green–refactor steps. Seeing the test fail first proves that it can detect the missing behaviour."
+    },
+    {
+      "type": "multi",
+      "scenario": "Your unit-test suite takes 9 minutes and fails randomly about once a week.",
+      "question": "Which changes address both problems? (Choose two.)",
+      "options": [
+        "Run tests in a fixed alphabetical order",
+        "Rerun failed tests automatically until they pass",
+        "Replace @SpringBootTest with plain unit tests for pure domain logic",
+        "Remove shared mutable static state between tests and replace Thread.sleep and now() with injected clocks or Awaitility"
+      ],
+      "answer": [
+        2,
+        3
+      ],
+      "explanation": "Starting Spring for logic tests is slow, and shared state, sleeps and real time cause flakiness. Rerunning or forcing an order hides the problems instead of fixing them."
+    },
+    {
+      "type": "single",
+      "scenario": "A fee rule has tiers at ₦5,000 and ₦50,000.",
+      "question": "Which set of test amounts gives the best boundary coverage?",
+      "options": [
+        "₦5,000 only, because it is the first boundary",
+        "₦0.01, ₦5,000.00, ₦5,000.01, ₦50,000.00 and ₦50,000.01, as a parameterised test",
+        "A random amount generated on each run",
+        "₦1,000 and ₦100,000 only"
+      ],
+      "answer": 1,
+      "explanation": "Bugs cluster at boundaries (< versus <=). Testing exactly on and just past each boundary, plus the smallest valid amount, catches them."
+    }
+  ]
+}

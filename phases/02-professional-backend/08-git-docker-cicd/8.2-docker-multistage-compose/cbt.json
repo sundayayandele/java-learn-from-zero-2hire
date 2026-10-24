@@ -1,0 +1,99 @@
+{
+  "topic": "8.2",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A team's image is 1.1 GB and contains the JDK, Maven, the source code and the .git directory. Security review rejects it.",
+      "question": "Which change addresses the main problems?",
+      "options": [
+        "Compress the image with gzip",
+        "A multi-stage build: compile in a JDK stage and copy only the extracted application layers into a slim JRE runtime stage, with a .dockerignore excluding .git, target and .env",
+        "Delete the .git folder at runtime",
+        "Use the latest tag of the JDK image"
+      ],
+      "answer": 1,
+      "explanation": "Build tools and sources never need to ship. Multi-stage builds keep them in a throwaway stage, and .dockerignore keeps sensitive files out of the build context."
+    },
+    {
+      "type": "single",
+      "scenario": "Every small code change causes the CI image build to download all Maven dependencies again and push 120 MB to the registry.",
+      "question": "What improves caching?",
+      "options": [
+        "Disable the Docker layer cache",
+        "Copy pom.xml and resolve dependencies before copying src, and copy Spring Boot's extracted layers (dependencies first, application last)",
+        "Add RUN apt-get update at the top of the Dockerfile",
+        "Combine all instructions into a single RUN"
+      ],
+      "answer": 1,
+      "explanation": "Docker reuses cached layers until an input changes. Putting slow-changing inputs first means a code change rebuilds and pushes only the small application layer."
+    },
+    {
+      "type": "single",
+      "scenario": "A service runs in a container limited to 1 GB, started with -Xmx1g. It is regularly killed by the orchestrator with exit code 137.",
+      "question": "What is the likely cause and fix?",
+      "options": [
+        "Heap plus non-heap memory exceeds the container limit; size the heap as a percentage (for example -XX:MaxRAMPercentage=75) so other JVM memory fits",
+        "The JVM ignores container limits; upgrade Docker",
+        "The image is too large; use Alpine",
+        "Exit code 137 means the tests failed"
+      ],
+      "answer": 0,
+      "explanation": "The JVM also uses metaspace, thread stacks, code cache and direct buffers. If the heap alone may use the entire limit, the container exceeds it and is OOM-killed (137)."
+    },
+    {
+      "type": "single",
+      "scenario": "In Docker Compose, the app container starts before PostgreSQL accepts connections and crashes with 'connection refused'.",
+      "question": "What is the correct fix?",
+      "options": [
+        "Add sleep 30 to the application's entrypoint",
+        "Give the postgres service a health check (pg_isready) and use depends_on with condition: service_healthy",
+        "Run PostgreSQL inside the application container",
+        "Use links instead of depends_on"
+      ],
+      "answer": 1,
+      "explanation": "depends_on alone waits only for the container to start. A health-check condition waits until the database is actually ready."
+    },
+    {
+      "type": "multi",
+      "scenario": "You are hardening the runtime image for a payments service.",
+      "question": "Which practices improve security? (Choose two.)",
+      "options": [
+        "Scan the image in CI (for example Trivy) and fail on fixable critical vulnerabilities",
+        "Pass the database password as a Docker build argument",
+        "Tag and deploy images as latest",
+        "Run as a dedicated non-root user"
+      ],
+      "answer": [
+        0,
+        3
+      ],
+      "explanation": "Non-root execution limits damage from a compromise, and scanning catches known vulnerabilities. Build arguments are visible in image history, and latest makes deployments non-reproducible."
+    },
+    {
+      "type": "single",
+      "scenario": "Inside Docker Compose, the app's datasource URL is jdbc:postgresql://localhost:5432/wallet and it cannot connect to the postgres service.",
+      "question": "Why?",
+      "options": [
+        "Inside the app container, localhost is the app container itself; use the service name, jdbc:postgresql://postgres:5432/wallet",
+        "Port 5432 must be published to the host",
+        "Compose networks block JDBC",
+        "PostgreSQL does not support Docker"
+      ],
+      "answer": 0,
+      "explanation": "Each container has its own network namespace. Compose provides DNS so services reach each other by service name."
+    },
+    {
+      "type": "single",
+      "scenario": "A platform team wants consistent, non-root, patchable images for 200 Spring Boot services without maintaining 200 Dockerfiles.",
+      "question": "Which approach fits?",
+      "options": [
+        "Cloud Native Buildpacks via spring-boot:build-image (Paketo), with base images updated centrally",
+        "A single Dockerfile copied into every repository and edited by hand",
+        "Building images manually on a developer laptop",
+        "Running services directly on hosts without containers"
+      ],
+      "answer": 0,
+      "explanation": "Buildpacks produce standardised, layered, non-root images with SBOMs, and base layers can be patched consistently across services."
+    }
+  ]
+}

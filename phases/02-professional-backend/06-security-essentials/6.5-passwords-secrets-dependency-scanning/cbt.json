@@ -1,0 +1,99 @@
+{
+  "topic": "6.5",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A legacy wallet stores passwords as SHA-256(salt + password). The team argues this is fine because each password has its own salt.",
+      "question": "Why is this still weak, and what should replace it?",
+      "options": [
+        "It should use MD5, which is faster to compute",
+        "It should be replaced with AES encryption so passwords can be recovered",
+        "SHA-256 is designed to be fast, so attackers can try billions of guesses per second; use a slow, memory-hard algorithm such as Argon2id (or BCrypt)",
+        "Salts make SHA-256 unbreakable, so nothing needs to change"
+      ],
+      "answer": 2,
+      "explanation": "Salting stops precomputed tables but not fast brute force. Password hashes must be deliberately slow and, ideally, memory-hard."
+    },
+    {
+      "type": "single",
+      "scenario": "You are moving users from BCrypt to Argon2id without forcing everyone to reset their password.",
+      "question": "Which approach works with Spring Security?",
+      "options": [
+        "Ask users to email their passwords to support",
+        "Use a DelegatingPasswordEncoder that recognises both {bcrypt} and Argon2 hashes, and re-hash with Argon2id when a user logs in successfully",
+        "Store both hashes and compare either",
+        "Decrypt the BCrypt hashes and re-hash them with Argon2id in a batch job"
+      ],
+      "answer": 1,
+      "explanation": "Hashes cannot be reversed, so upgrades happen at login when the plain password is briefly available. The prefix in the stored value tells the delegating encoder which algorithm to use."
+    },
+    {
+      "type": "single",
+      "scenario": "A developer accidentally pushed a live payment-gateway secret key to a private GitHub repository and removed it in the next commit an hour later.",
+      "question": "What is the first thing to do?",
+      "options": [
+        "Rewrite Git history and consider the incident closed",
+        "Nothing: the repository is private and the key was removed",
+        "Make the repository public so everyone can see it was removed",
+        "Revoke and rotate the key at the gateway immediately, then check its usage logs"
+      ],
+      "answer": 3,
+      "explanation": "Once pushed, a secret must be treated as compromised: history, clones, CI logs and integrations may have copied it. Rotation removes its value; history clean-up is secondary."
+    },
+    {
+      "type": "single",
+      "scenario": "A new CVE with CVSS 9.8 is announced for a logging library. Your manager asks within the hour which of your 40 services are affected.",
+      "question": "What lets you answer quickly?",
+      "options": [
+        "Searching each repository's pom.xml for the library name",
+        "Waiting for Dependabot to open pull requests",
+        "Asking each team lead",
+        "An SBOM (for example CycloneDX) generated for every build, listing all direct and transitive dependencies and versions"
+      ],
+      "answer": 3,
+      "explanation": "Most vulnerable libraries arrive transitively and do not appear in pom.xml. A stored SBOM per build lets you query exact versions across services in minutes."
+    },
+    {
+      "type": "multi",
+      "scenario": "You are designing how a Spring Boot service on AWS gets its database password in production.",
+      "question": "Which practices are appropriate? (Choose two.)",
+      "options": [
+        "Use a dedicated database user for this service with only the privileges it needs, and rotate the password regularly",
+        "Commit it to application-prod.yml in a private repository",
+        "Load it from AWS Secrets Manager at startup, with an IAM role allowing access only to this service's secret",
+        "Bake the password into the Docker image as an environment variable"
+      ],
+      "answer": [
+        0,
+        2
+      ],
+      "explanation": "Secrets belong in a managed store with least-privilege access and rotation. Anything in an image or a repository spreads to every copy and is hard to rotate."
+    },
+    {
+      "type": "single",
+      "scenario": "OWASP Dependency-Check flags a CVE in a library your service uses. The vulnerable function is in a module you do not call, and no fixed version exists yet.",
+      "question": "What is the professional response?",
+      "options": [
+        "Remove the library immediately even if the service stops working",
+        "Disable the scanner for the whole project",
+        "Document the analysis and add a suppression with a reason and an expiry date, then upgrade as soon as a fix is released",
+        "Suppress it permanently without comment"
+      ],
+      "answer": 2,
+      "explanation": "Triage means understanding reachability and recording the decision. An expiry forces a re-check, and the upgrade happens when possible."
+    },
+    {
+      "type": "single",
+      "scenario": "A KYC service must store customers' BVNs and also find a customer by BVN.",
+      "question": "Which design protects the data while keeping lookups possible?",
+      "options": [
+        "Store the BVN in plain text with a unique index",
+        "Encrypt it with AES-ECB using a key in application.yml",
+        "Encrypt the BVN with AES-GCM under a KMS-managed key, and store a separate keyed hash (HMAC) of the BVN for lookups",
+        "Store only an unsalted SHA-256 of the BVN and nothing else"
+      ],
+      "answer": 2,
+      "explanation": "Authenticated encryption with managed keys protects the value; a keyed hash allows equality lookups without decrypting everything. An unsalted plain hash of an 11-digit number is easy to brute-force, and ECB with a key in config is not protection."
+    }
+  ]
+}

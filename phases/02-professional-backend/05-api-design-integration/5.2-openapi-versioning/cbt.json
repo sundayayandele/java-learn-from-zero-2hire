@@ -1,0 +1,99 @@
+{
+  "topic": "5.2",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A partner bank will integrate with your new transfers API. Their architects want to review the request and response shapes and error cases before you write any code, and they will generate a client from the agreed document.",
+      "question": "Which approach fits best?",
+      "options": [
+        "Contract-first: agree an OpenAPI document, then generate server interfaces and the partner's client from it",
+        "Code-first: build the API, then email screenshots of Swagger UI",
+        "No documentation: the partner can read the source code",
+        "Write a Word document describing the endpoints"
+      ],
+      "answer": 0,
+      "explanation": "When consumers must review and code against the contract before implementation, contract-first works best, and generated interfaces stop your implementation drifting from what was agreed."
+    },
+    {
+      "type": "single",
+      "scenario": "Your OpenAPI document shows the transfer amount as type: number. A partner's generated TypeScript and Java clients now use floating-point types.",
+      "question": "What is the best fix?",
+      "options": [
+        "Remove the amount from the schema",
+        "Tell partners to round to two decimal places after every calculation",
+        "Change the server to use double so both sides agree",
+        "Document money fields as strings with a decimal pattern (for example @Schema(type = \"string\", example = \"2500.00\")) and send them as decimal strings"
+      ],
+      "answer": 3,
+      "explanation": "Floating point cannot represent most decimal amounts exactly. Treating money as a decimal string in the contract makes generated clients use precise types and parse it deliberately."
+    },
+    {
+      "type": "multi",
+      "scenario": "You maintain version 1 of a public payments API.",
+      "question": "Which changes are breaking and need a new major version? (Choose two.)",
+      "options": [
+        "Renaming the response field reference to transactionReference",
+        "Adding a new optional response field fee",
+        "Making the optional narration request field required",
+        "Adding a new endpoint GET /api/v1/banks"
+      ],
+      "answer": [
+        0,
+        2
+      ],
+      "explanation": "Renaming or removing fields and making optional inputs required break existing clients. Adding optional fields or new endpoints is backward compatible."
+    },
+    {
+      "type": "single",
+      "scenario": "Your Spring Boot 4 service is configured with configurer.useRequestHeader(\"API-Version\") and supported versions 1.0 and 2.0. A client sends API-Version: 3.0.",
+      "question": "What happens?",
+      "options": [
+        "The request is served by the default version 1.0",
+        "The request is rejected with 400 Bad Request because the version is not supported",
+        "The request is silently served by the newest handler",
+        "The application throws a 500 error"
+      ],
+      "answer": 1,
+      "explanation": "Spring Framework 7 validates the requested version against the supported versions and rejects unknown ones with 400, so clients learn immediately that they asked for something that does not exist."
+    },
+    {
+      "type": "single",
+      "scenario": "A handler is mapped with @GetMapping(path = \"/accounts/{id}/limits\", version = \"1.1+\"). The API supports versions 1.0, 1.1 and 2.0.",
+      "question": "Which versions does this handler serve?",
+      "options": [
+        "1.1 and 2.0",
+        "Only 1.1",
+        "1.0 and 1.1",
+        "All three versions"
+      ],
+      "answer": 0,
+      "explanation": "The plus sign makes 1.1 a baseline: the handler serves that version and later ones until a more specific mapping replaces it."
+    },
+    {
+      "type": "single",
+      "scenario": "Version 1 of your API will be switched off on 30 April 2027. Several merchants still call it.",
+      "question": "What is the professional way to manage this?",
+      "options": [
+        "Send Deprecation and Sunset headers (with a migration link) on version 1 responses, announce the date, and watch access logs to contact remaining callers",
+        "Switch version 1 off on the date and let failing merchants call support",
+        "Silently redirect version 1 calls to version 2",
+        "Keep version 1 forever"
+      ],
+      "answer": 0,
+      "explanation": "Machine-readable deprecation headers, advance notice and monitoring who still calls the old version let clients migrate before anything breaks."
+    },
+    {
+      "type": "single",
+      "scenario": "A colleague asks how to stop accidental breaking changes reaching the mobile app, which is generated from your OpenAPI document.",
+      "question": "Which CI step addresses this most directly?",
+      "options": [
+        "Disable Swagger UI in production",
+        "Generate the OpenAPI document in the build and fail if a diff tool such as oasdiff reports breaking changes against the released version",
+        "Run the mobile app's UI tests manually before each release",
+        "Increase unit-test coverage to 100%"
+      ],
+      "answer": 1,
+      "explanation": "Comparing the generated contract with the last released one detects removed fields, type changes and new required inputs automatically, before merge."
+    }
+  ]
+}

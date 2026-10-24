@@ -331,7 +331,7 @@ Class, object, constructor, encapsulation, abstraction, inheritance, polymorphis
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-23. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
 
 - [Object-Oriented Programming, Simplified](https://www.youtube.com/watch?v=pTB0EiLXUC8) · Programming with Mosh · 8 min. The four pillars of OOP in plain language: encapsulation, abstraction, inheritance, polymorphism.
 - [Java Polymorphism Fully Explained In 7 Minutes](https://www.youtube.com/watch?v=jhDUxynEQRI) · Coding with John · 7 min. Polymorphism in Java, shown with code you can type yourself.

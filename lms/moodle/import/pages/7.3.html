@@ -1,0 +1,293 @@
+<p><em>Week 20 · Module 7: Testing &amp; Code Quality</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Test the web layer in isolation with
+<strong><code>@WebMvcTest</code></strong>, <strong>MockMvc</strong> and
+the AssertJ-based <strong><code>MockMvcTester</code></strong>.</li>
+<li>Test the whole running application over HTTP with Spring Framework
+7's <strong><code>RestTestClient</code></strong> and with <strong>REST
+Assured</strong>.</li>
+<li>Assert on status, headers, JSON (with JSONPath) and Problem Details,
+including security cases.</li>
+<li>Write <strong>contract tests</strong> so a provider and its
+consumers cannot drift apart.</li>
+<li>Decide which API tests belong at which level of the test
+pyramid.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Your API is what partners, mobile apps and auditors see. A changed
+field name, a missing <code>Location</code> header, or a 500 instead of
+a 422 breaks integrations even when the business logic is correct. API
+tests are the executable specification of that contract: they prove that
+validation, error formats, security rules and serialisation (money as
+strings, dates in ISO 8601) behave exactly as documented, on every
+build.</p>
+<h2 id="1-choosing-the-level">1. Choosing the level</h2>
+<table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Tool</th>
+<th>Starts</th>
+<th>Use for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Web slice</td>
+<td><code>@WebMvcTest</code> +
+<code>MockMvc</code>/<code>MockMvcTester</code></td>
+<td>Controllers, advice, converters, security filters; services are
+mocks</td>
+<td>Validation, status codes, JSON shape, error mapping, URL
+security</td>
+</tr>
+<tr>
+<td>Full app, mock server</td>
+<td><code>@SpringBootTest</code> +
+<code>@AutoConfigureMockMvc</code></td>
+<td>Whole context, no real HTTP</td>
+<td>End-to-end flows through real services and Testcontainers DB</td>
+</tr>
+<tr>
+<td>Full app, real HTTP</td>
+<td><code>@SpringBootTest(webEnvironment = RANDOM_PORT)</code> +
+<code>RestTestClient</code> or REST Assured</td>
+<td>Embedded server on a random port</td>
+<td>Smoke tests, filters and servlet behaviour, black-box API
+checks</td>
+</tr>
+<tr>
+<td>Deployed environment</td>
+<td>REST Assured suite against staging</td>
+<td>Nothing locally</td>
+<td>Post-deployment smoke tests in the pipeline</td>
+</tr>
+</tbody>
+</table>
+<p>Most API tests should be web-slice tests (fast); a handful of
+full-application tests prove the wiring.</p>
+<h2 id="2-webmvctest-with-mockmvc">2. <code>@WebMvcTest</code> with
+MockMvc</h2>
+<pre class="java"><code>@WebMvcTest(TransferController.class)
+@Import({SecurityConfig.class, ApiExceptionHandler.class})
+class TransferControllerTest {
+
+    @Autowired MockMvc mvc;
+    @MockitoBean TransferService transfers;
+
+    @Test
+    void createsTransferAndReturnsLocation() throws Exception {
+        when(transfers.start(any())).thenReturn(completedTransfer(&quot;trf_1&quot;));
+
+        mvc.perform(post(&quot;/api/v1/transfers&quot;)
+                        .with(jwt().authorities(new SimpleGrantedAuthority(&quot;SCOPE_transfers:write&quot;)))
+                        .header(&quot;Idempotency-Key&quot;, &quot;k-1&quot;)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(&quot;&quot;&quot;
+                                {&quot;sourceAccount&quot;: &quot;0123456789&quot;, &quot;destinationAccount&quot;: &quot;9876543210&quot;,
+                                 &quot;amount&quot;: &quot;2500.00&quot;, &quot;currency&quot;: &quot;NGN&quot;}&quot;&quot;&quot;))
+           .andExpect(status().isCreated())
+           .andExpect(header().string(&quot;Location&quot;, endsWith(&quot;/api/v1/transfers/trf_1&quot;)))
+           .andExpect(jsonPath(&quot;$.amount&quot;).value(&quot;2500.00&quot;))     // money serialised as a string
+           .andExpect(jsonPath(&quot;$.status&quot;).value(&quot;COMPLETED&quot;));
+    }
+
+    @Test
+    void rejectsInvalidAccountNumberWithProblemDetails() throws Exception {
+        mvc.perform(post(&quot;/api/v1/transfers&quot;).with(jwt().authorities(new SimpleGrantedAuthority(&quot;SCOPE_transfers:write&quot;)))
+                        .header(&quot;Idempotency-Key&quot;, &quot;k-2&quot;).contentType(MediaType.APPLICATION_JSON)
+                        .content(&quot;&quot;&quot;
+                                {&quot;sourceAccount&quot;: &quot;12AB&quot;, &quot;destinationAccount&quot;: &quot;9876543210&quot;, &quot;amount&quot;: &quot;1.00&quot;, &quot;currency&quot;: &quot;NGN&quot;}&quot;&quot;&quot;))
+           .andExpect(status().isBadRequest())
+           .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+           .andExpect(jsonPath(&quot;$.type&quot;).value(endsWith(&quot;/validation-failed&quot;)))
+           .andExpect(jsonPath(&quot;$.errors[0].field&quot;).value(&quot;sourceAccount&quot;));
+        verifyNoInteractions(transfers);
+    }
+}</code></pre>
+<p><code>@WebMvcTest</code> (in Spring Boot 4 it comes from
+<code>spring-boot-starter-webmvc-test</code>) loads only web components,
+so it starts in well under a second. Mock the service layer with
+<code>@MockitoBean</code>.</p>
+<h3 id="mockmvctester-assertj-style"><code>MockMvcTester</code>: AssertJ
+style</h3>
+<p><code>MockMvcTester</code> wraps MockMvc with fluent AssertJ
+assertions and no checked exceptions:</p>
+<pre class="java"><code>@Autowired MockMvcTester mvc;
+
+@Test
+void insufficientFundsIs422() {
+    when(transfers.start(any())).thenThrow(new InsufficientFundsException(new BigDecimal(&quot;100.00&quot;)));
+
+    assertThat(mvc.post().uri(&quot;/api/v1/transfers&quot;)
+                  .with(jwt().authorities(new SimpleGrantedAuthority(&quot;SCOPE_transfers:write&quot;)))
+                  .header(&quot;Idempotency-Key&quot;, &quot;k-3&quot;)
+                  .contentType(MediaType.APPLICATION_JSON).content(validTransferJson()))
+            .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT)
+            .bodyJson()
+            .extractingPath(&quot;$.type&quot;).asString().endsWith(&quot;/insufficient-funds&quot;);
+}</code></pre>
+<p>Spring Boot auto-configures <code>MockMvcTester</code> in
+<code>@WebMvcTest</code> tests when AssertJ is on the classpath.</p>
+<h3 id="what-to-cover-per-endpoint">What to cover per endpoint</h3>
+<ul>
+<li>Happy path: status, <code>Location</code>/<code>ETag</code> headers,
+key JSON fields and their formats.</li>
+<li>Validation: each important constraint returns <code>400</code> with
+a field error, and the service is not called.</li>
+<li>Business errors: each domain exception maps to the documented
+<code>type</code> and status.</li>
+<li>Security: anonymous (401), wrong scope or role (403), another
+customer's resource (404).</li>
+<li>Content negotiation: wrong <code>Content-Type</code> returns
+<code>415</code>; malformed JSON returns <code>400</code>.</li>
+</ul>
+<h2 id="3-full-application-over-real-http">3. Full application over real
+HTTP</h2>
+<h3 id="resttestclient"><code>RestTestClient</code></h3>
+<p>Spring Framework 7 adds <code>RestTestClient</code>, a fluent test
+client for servlet applications (the counterpart of
+<code>WebTestClient</code>):</p>
+<pre class="java"><code>@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureRestTestClient
+@Import(TestcontainersConfiguration.class)
+class TransferApiIT {
+
+    @Autowired RestTestClient client;
+
+    @Test
+    void transferRoundTrip() {
+        String location = client.post().uri(&quot;/api/v1/transfers&quot;)
+                .headers(h -&gt; { h.setBearerAuth(testTokens.customer(&quot;c-1&quot;)); h.set(&quot;Idempotency-Key&quot;, &quot;it-1&quot;); })
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new TransferRequest(&quot;0123456789&quot;, &quot;9876543210&quot;, new BigDecimal(&quot;2500.00&quot;), &quot;NGN&quot;))
+                .exchange()
+                .expectStatus().isCreated()
+                .returnResult().getResponseHeaders().getLocation().toString();
+
+        client.get().uri(location).headers(h -&gt; h.setBearerAuth(testTokens.customer(&quot;c-1&quot;)))
+              .exchange()
+              .expectStatus().isOk()
+              .expectBody().jsonPath(&quot;$.status&quot;).isEqualTo(&quot;COMPLETED&quot;);
+    }
+}</code></pre>
+<p><code>RestTestClient.bindTo(mockMvc)</code> lets the same fluent
+style run against MockMvc without a server.</p>
+<h3 id="rest-assured">REST Assured</h3>
+<p>REST Assured is a popular, language-independent-feeling DSL for HTTP
+tests, often used for black-box suites that QA teams also maintain and
+run against deployed environments:</p>
+<pre class="java"><code>@LocalServerPort int port;
+
+@Test
+void listsTransactionsWithCursorPagination() {
+    given()
+        .port(port)
+        .auth().oauth2(testTokens.customer(&quot;c-1&quot;))
+        .queryParam(&quot;limit&quot;, 2)
+    .when()
+        .get(&quot;/api/v1/accounts/0123456789/transactions&quot;)
+    .then()
+        .statusCode(200)
+        .body(&quot;data&quot;, hasSize(2))
+        .body(&quot;nextCursor&quot;, notNullValue())
+        .body(&quot;data[0].amount.currency&quot;, equalTo(&quot;NGN&quot;));
+}</code></pre>
+<p>Point the same suite at staging after each deployment (base URI from
+an environment variable) as a smoke test.</p>
+<h2 id="4-contract-testing">4. Contract testing</h2>
+<p>Mocks in a consumer's tests encode <strong>assumptions</strong> about
+the provider. If the provider changes, both test suites stay green and
+production breaks. <strong>Contract tests</strong> close the gap:</p>
+<ul>
+<li><strong>Consumer-driven contracts (Pact):</strong> the consumer's
+tests record the interactions it relies on into a contract file; the
+provider's build replays them against the real provider and fails if any
+is broken. A Pact Broker shares contracts between teams.</li>
+<li><strong>Spring Cloud Contract:</strong> the provider writes
+contracts (Groovy, YAML or Java); the build generates provider tests and
+WireMock stubs that consumers download and use in their tests.</li>
+<li><strong>OpenAPI-based:</strong> validate real responses in your
+tests against the committed OpenAPI document (for example with a
+request/response validator library), and diff the document in CI (topic
+5.2).</li>
+</ul>
+<p>For a junior engineer the practical steps are: keep the OpenAPI file
+authoritative, validate responses against it in API tests, and use the
+provider's published stubs (or recorded WireMock mappings) in your
+consumer tests instead of hand-written ones.</p>
+<h2 id="5-making-api-tests-maintainable">5. Making API tests
+maintainable</h2>
+<ul>
+<li>Keep JSON request bodies in text blocks or small builder methods; do
+not repeat 30-line payloads.</li>
+<li>Assert what matters for the test, not every field
+(<code>jsonPath</code> on key fields, <code>isLenientlyEqualTo</code>
+for shape).</li>
+<li>Generate test tokens in one helper
+(<code>testTokens.customer(...)</code>,
+<code>testTokens.admin()</code>).</li>
+<li>Name tests after the behaviour and the expected status
+(<code>returns422WhenFundsAreInsufficient</code>).</li>
+</ul>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Only happy-path API tests; validation, errors and security
+untested.</li>
+<li>Full <code>@SpringBootTest</code> for every controller test.</li>
+<li>Asserting on whole JSON strings, so any harmless new field breaks
+tests.</li>
+<li>Testing that the mock returned what the mock was told to return (no
+real logic exercised).</li>
+<li>Ignoring headers (<code>Location</code>, <code>Content-Type</code>,
+<code>Retry-After</code>) that clients depend on.</li>
+<li>Hand-written consumer stubs that drift from the real provider.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Write a <code>@WebMvcTest</code> suite for one capstone controller
+covering the five categories in "What to cover per endpoint".</li>
+<li>Rewrite two of those tests with <code>MockMvcTester</code> and
+compare readability.</li>
+<li>Add one <code>RestTestClient</code> round-trip test and one REST
+Assured test against the running application with Testcontainers.</li>
+<li>Validate your API responses against your committed OpenAPI document
+in a test, and break a field name to see it fail.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Web slice test, <code>@WebMvcTest</code>, <code>MockMvc</code>,
+<code>MockMvcTester</code>, <code>@MockitoBean</code>,
+<code>jsonPath</code>, <code>@AutoConfigureMockMvc</code>,
+<code>RANDOM_PORT</code>, <code>@LocalServerPort</code>,
+<code>RestTestClient</code>, <code>@AutoConfigureRestTestClient</code>,
+REST Assured, given–when–then, black-box test, smoke test, contract
+test, consumer-driven contract, Pact, Spring Cloud Contract, stub,
+OpenAPI validation.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://docs.spring.io/spring-framework/reference/testing/mockmvc.html">Spring
+Framework reference: MockMvc and MockMvcTester</a></li>
+<li><a
+href="https://docs.spring.io/spring-framework/reference/testing/resttestclient.html">Spring
+Framework reference: RestTestClient</a></li>
+<li><a
+href="https://docs.spring.io/spring-boot/reference/testing/spring-boot-applications.html">Spring
+Boot reference: Testing Spring Boot applications</a></li>
+<li><a
+href="https://github.com/rest-assured/rest-assured/wiki/Usage">REST
+Assured usage guide</a></li>
+<li><a href="https://docs.pact.io/">Pact documentation: Introduction to
+contract testing</a></li>
+<li><a
+href="https://docs.spring.io/spring-cloud-contract/reference/">Spring
+Cloud Contract reference</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Spring Boot | Controller Unit Testing | Mockito | MockMVC</h3><p>TheCodeStorm · 17 min. Testing Spring MVC controllers with MockMvc.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/9-mX5MACs5U" title="Spring Boot | Controller Unit Testing | Mockito | MockMVC" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>REST Assured Beginner Tutorial 1 | Getting Started | What is Rest Assured</h3><p>Automation Step by Step · 7 min. REST Assured: given, when, then API tests in Java.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/oVNbaBlrhbo" title="REST Assured Beginner Tutorial 1 | Getting Started | What is Rest Assured" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Testing your REST APIs in Spring Boot 4 with the new RestTestClient (optional, longer)</h3><p>Dan Vega · 34 min. Spring Framework 7&#x27;s RestTestClient for API tests (optional).</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/dPM8n0uNhes" title="Testing your REST APIs in Spring Boot 4 with the new RestTestClient" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/02-professional-backend/07-testing-code-quality/7.3-api-tests-mockmvc-restassured/README.md">7.3 API tests with MockMvc and REST Assured</a></p>

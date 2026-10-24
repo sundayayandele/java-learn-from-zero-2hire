@@ -1,0 +1,33 @@
+%% Company financials GraphQL API: logical architecture
+flowchart LR
+    subgraph sg0["Capabilities"]
+        direction TB
+        imp[["Import<br/>concept mapping · restatements"]]
+        q["Query resolution<br/>batch loading · limits"]
+        ratio["Ratios<br/>BigDecimal · null-safe"]
+    end
+    subgraph sg1["Data"]
+        direction TB
+        co[("company<br/>CIK · ticker · name")]
+        f[("fact<br/>metric · period · value · filed")]
+        c[("query cache")]
+    end
+    imp --> co
+    imp --> f
+    q --> co
+    q -->|"one query per batch"| f
+    q --> ratio
+    q --> c
+    classDef actor fill:#dae8fc,stroke:#6c8ebf,color:#000
+    classDef svc fill:#d5e8d4,stroke:#82b366,color:#000
+    classDef comp fill:#ffffff,stroke:#666666,color:#000
+    classDef db fill:#fff2cc,stroke:#d6b656,color:#000
+    classDef store fill:#f5f5f5,stroke:#666666,color:#000
+    classDef ext fill:#f8cecc,stroke:#b85450,color:#000,stroke-dasharray: 5 3
+    classDef infra fill:#e1d5e7,stroke:#9673a6,color:#000
+    classDef job fill:#ffe6cc,stroke:#d79b00,color:#000
+    class ratio comp
+    class co,f db
+    class imp job
+    class c store
+    class q svc

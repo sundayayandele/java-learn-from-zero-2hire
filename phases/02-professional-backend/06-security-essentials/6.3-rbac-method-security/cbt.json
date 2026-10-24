@@ -1,0 +1,99 @@
+{
+  "topic": "6.3",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "GET /api/v1/accounts/{number} is protected with hasRole('CUSTOMER'). A tester logs in as customer A and requests customer B's account number. B's balance is returned.",
+      "question": "What vulnerability is this, and how should it be fixed?",
+      "options": [
+        "Broken object-level authorisation: check that the account belongs to the caller (ideally by querying with the customer ID) and return 404 otherwise",
+        "Broken authentication: require a stronger password",
+        "SQL injection: use prepared statements",
+        "CSRF: enable CSRF tokens"
+      ],
+      "answer": 0,
+      "explanation": "The role check is correct but says nothing about which account. Every access to an owned object must verify ownership; querying by number and customer ID makes other customers' data unreachable."
+    },
+    {
+      "type": "single",
+      "scenario": "A service class has a public method transferAll() that loops and calls this.transfer(...), where transfer is annotated with @PreAuthorize.",
+      "question": "Is the @PreAuthorize check applied to these inner calls?",
+      "options": [
+        "Only when running tests",
+        "Only if transfer is private",
+        "Yes: annotations always apply",
+        "No: method security works through a proxy, and calls on this inside the same class bypass it"
+      ],
+      "answer": 3,
+      "explanation": "Spring's proxy intercepts calls coming from outside the bean. Self-invocation goes straight to the method, so the check must be on the entry point or in another bean."
+    },
+    {
+      "type": "single",
+      "scenario": "The update-profile endpoint binds the request body directly onto the Customer JPA entity. A customer sends {\"email\": \"new@example.com\", \"kycTier\": 3}.",
+      "question": "What is the risk?",
+      "options": [
+        "Mass assignment: the customer raises their own KYC tier; use a DTO containing only the fields customers may change",
+        "The request will always fail with 400",
+        "None: JPA validates every field",
+        "Denial of service"
+      ],
+      "answer": 0,
+      "explanation": "Binding to entities exposes every property, including ones only staff should set. Role-specific request DTOs prevent it."
+    },
+    {
+      "type": "single",
+      "scenario": "A teller initiates a ₦20,000,000 transfer. Policy says transfers above ₦5,000,000 need approval by a different supervisor.",
+      "question": "Where must the 'maker cannot be the checker' rule be enforced?",
+      "options": [
+        "In the database backup process",
+        "In the server-side approve operation, comparing the approver with the maker, and recording both in the audit trail",
+        "Only in the web UI by hiding the Approve button for the maker",
+        "In the mobile app"
+      ],
+      "answer": 1,
+      "explanation": "Controls enforced only in a UI can be bypassed by calling the API directly. Segregation of duties must be checked where the action is executed, and audited."
+    },
+    {
+      "type": "single",
+      "scenario": "A multi-tenant banking-as-a-service platform reads the tenant from an X-Tenant-ID header sent by the client.",
+      "question": "What is the safer design?",
+      "options": [
+        "Encrypt the header",
+        "Derive the tenant from the authenticated token's claims and filter every query by it (with row-level security as a second defence)",
+        "Let each tenant choose a hard-to-guess tenant ID",
+        "Keep the header but document it clearly"
+      ],
+      "answer": 1,
+      "explanation": "A client-controlled header can simply be changed. The tenant must come from verified identity, and database-level policies add defence in depth."
+    },
+    {
+      "type": "multi",
+      "scenario": "You are designing authorisation for a support agent role.",
+      "question": "Which practices follow least privilege? (Choose two.)",
+      "options": [
+        "Support agents get the ADMIN role so they are never blocked",
+        "Support agents can read customer profiles with sensitive fields masked, but cannot move money",
+        "Privileged actions such as unfreezing an account require a reason and are audited with the agent's own user ID",
+        "Support agents share one 'support' login to save licences"
+      ],
+      "answer": [
+        1,
+        2
+      ],
+      "explanation": "Least privilege gives only the access a job needs and keeps actions attributable. Shared logins destroy accountability, and blanket admin rights defeat the model."
+    },
+    {
+      "type": "single",
+      "scenario": "A team keeps adding @PreAuthorize expressions such as \"hasRole('SUPPORT') or (hasRole('CUSTOMER') and @repo.findById(#id).get().owner == authentication.name)\" across many services.",
+      "question": "What improvement makes this safer and easier to maintain?",
+      "options": [
+        "Remove method security and rely on URL rules",
+        "Disable the checks in production for performance",
+        "Move the logic into a dedicated authorisation bean (or custom annotation) with its own unit tests, and reference it from the expressions",
+        "Copy the expression into every method for consistency"
+      ],
+      "answer": 2,
+      "explanation": "Complex SpEL strings are hard to read and impossible to unit test. A bean centralises the rule, can be tested directly, and is reused through simple expressions or a meta-annotation."
+    }
+  ]
+}

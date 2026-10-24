@@ -1,0 +1,351 @@
+<p><em>Week 15 · Module 5: API Design &amp; Integration</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Call third-party HTTP APIs with Spring's
+<strong><code>RestClient</code></strong> and declarative <strong>HTTP
+interface</strong> clients (<code>@HttpExchange</code>).</li>
+<li>Set <strong>connect and read timeouts</strong> on every outbound
+call, and explain why the defaults are dangerous.</li>
+<li>Retry <strong>only</strong> what is safe to retry, with exponential
+backoff and jitter, using Spring Framework 7's <code>@Retryable</code>
+or Resilience4j.</li>
+<li>Protect your service with a <strong>circuit breaker</strong> and a
+<strong>concurrency limit</strong> (bulkhead).</li>
+<li>Receive <strong>webhooks</strong> securely: verify HMAC signatures,
+de-duplicate events and handle out-of-order delivery.</li>
+<li>Test all of this deterministically with
+<strong>WireMock</strong>.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>A fintech backend is mostly integrations: payment gateways (Paystack,
+Flutterwave, Stripe), card processors, the NIP switch, BVN and NIN
+verification, credit bureaus, SMS and email providers, FX feeds. Each of
+them will be slow or down at some point. Without timeouts, one slow
+provider ties up every request thread and takes your whole service down
+with it. Without careful retries, a retried "charge card" call charges
+the customer twice. And an unverified webhook endpoint lets anyone tell
+your system that a payment succeeded. Integration resilience is one of
+the most common topics in fintech system-design interviews.</p>
+<h2 id="1-restclient-and-http-interfaces">1. RestClient and HTTP
+interfaces</h2>
+<p><code>RestClient</code> is Spring's synchronous HTTP client (it
+replaces <code>RestTemplate</code>; on Spring Boot 4 it comes with
+<code>spring-boot-starter-restclient</code>):</p>
+<pre class="java"><code>@Configuration
+class GatewayClientConfig {
+
+    @Bean
+    RestClient gatewayRestClient(RestClient.Builder builder, GatewayProperties props) {
+        return builder
+                .baseUrl(props.baseUrl())
+                .defaultHeader(HttpHeaders.AUTHORIZATION, &quot;Bearer &quot; + props.secretKey())
+                .requestFactory(ClientHttpRequestFactoryBuilder.jdk().build(
+                        HttpClientSettings.defaults()
+                                .withConnectTimeout(Duration.ofSeconds(2))
+                                .withReadTimeout(Duration.ofSeconds(5))))
+                .build();
+    }
+}</code></pre>
+<p>An <strong>HTTP interface</strong> declares the remote API as a Java
+interface; Spring generates the implementation:</p>
+<pre class="java"><code>@HttpExchange(&quot;/transaction&quot;)
+interface PaymentGatewayClient {
+
+    @PostExchange(&quot;/initialize&quot;)
+    InitializeResponse initialize(@RequestBody InitializeRequest request);
+
+    @GetExchange(&quot;/verify/{reference}&quot;)
+    VerifyResponse verify(@PathVariable String reference);
+}
+
+@Bean
+PaymentGatewayClient paymentGatewayClient(RestClient gatewayRestClient) {
+    return HttpServiceProxyFactory.builderFor(RestClientAdapter.create(gatewayRestClient))
+            .build()
+            .createClient(PaymentGatewayClient.class);
+}</code></pre>
+<p>Spring Framework 7 can also register groups of HTTP interfaces for
+you with
+<code>@ImportHttpServices(group = "gateway", types = PaymentGatewayClient.class)</code>,
+and Spring Boot 4 then configures each group from properties such as
+<code>spring.http.serviceclient.gateway.base-url</code>.</p>
+<p>Error handling: by default a 4xx or 5xx response throws
+<code>HttpClientErrorException</code> or
+<code>HttpServerErrorException</code>. Translate them at the boundary
+into your own exceptions (<code>PaymentDeclinedException</code>,
+<code>GatewayUnavailableException</code>) so the rest of your code never
+depends on the HTTP library.</p>
+<h2 id="2-timeouts-on-every-call">2. Timeouts on every call</h2>
+<table>
+<thead>
+<tr>
+<th>Timeout</th>
+<th>Guards against</th>
+<th>Typical value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Connect</td>
+<td>Host down or unreachable</td>
+<td>1–3 seconds</td>
+</tr>
+<tr>
+<td>Read (response)</td>
+<td>Host accepts the connection but answers slowly</td>
+<td>Just above the provider's p99 latency, often 3–10 seconds</td>
+</tr>
+<tr>
+<td>Overall deadline</td>
+<td>The whole operation including retries</td>
+<td>Less than your own client's timeout</td>
+</tr>
+</tbody>
+</table>
+<p>Many HTTP clients default to <strong>no</strong> read timeout. A
+thread waiting forever on a hung provider is a thread that cannot serve
+anyone else; with enough of them, your service stops. Set timeouts
+globally (<code>spring.http.clients.connect-timeout</code>,
+<code>spring.http.clients.read-timeout</code>) and per client when one
+provider is known to be slower.</p>
+<h2 id="3-retries-only-when-safe">3. Retries: only when safe</h2>
+<p>Retry when the failure is <strong>transient</strong> and the
+operation is <strong>idempotent</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Retry</th>
+<th>Do not retry</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Connect timeout, connection refused/reset</td>
+<td>400, 401, 403, 404, 409, 422 (the request is wrong or rejected)</td>
+</tr>
+<tr>
+<td>502, 503, 504, 429 (honour <code>Retry-After</code>)</td>
+<td>A non-idempotent call that may have reached the provider (read
+timeout on "charge card")</td>
+</tr>
+<tr>
+<td>Read timeout on a <code>GET</code> or an idempotent call with an
+idempotency key</td>
+<td>Anything after your own deadline has passed</td>
+</tr>
+</tbody>
+</table>
+<p>For a payment initialisation, send an <strong>idempotency key or your
+own unique reference</strong> to the provider. Then a retry after a read
+timeout is safe, because the provider recognises the duplicate. If the
+provider offers no such mechanism, do not retry blindly:
+<strong>verify</strong> the status first
+(<code>GET /transaction/verify/{reference}</code>).</p>
+<p>Always use <strong>exponential backoff with jitter</strong> (for
+example 200 ms, 400 ms, 800 ms, each ±25% random), a small attempt limit
+(2–3 retries), and a budget so retries cannot multiply load during an
+outage.</p>
+<p>Spring Framework 7 has retry built in:</p>
+<pre class="java"><code>@Configuration
+@EnableResilientMethods
+class ResilienceConfig { }
+
+@Service
+class FxRateClient {
+
+    @Retryable(includes = {ResourceAccessException.class, HttpServerErrorException.class},
+               maxRetries = 3, delay = 200, multiplier = 2, jitter = 50, maxDelay = 2000)
+    public Rates latest(String base) {
+        return fxApi.latest(base);   // GET: safe to retry
+    }
+}</code></pre>
+<p><code>@ConcurrencyLimit(10)</code> on a method caps how many threads
+may call it at once, which is a simple <strong>bulkhead</strong>: a slow
+provider can then block at most ten threads.</p>
+<h2 id="4-circuit-breakers">4. Circuit breakers</h2>
+<p>When a provider is clearly down, retrying every request just adds
+load and latency. A <strong>circuit breaker</strong> watches failures
+and short-circuits calls:</p>
+<ul>
+<li><strong>Closed</strong>: calls go through; failures and slow calls
+are counted in a sliding window.</li>
+<li><strong>Open</strong>: after the failure rate passes a threshold
+(say 50% of the last 20 calls), calls fail immediately with a fallback
+for a wait period (say 30 seconds).</li>
+<li><strong>Half-open</strong>: a few trial calls are let through; if
+they succeed, the breaker closes; if not, it opens again.</li>
+</ul>
+<p>Resilience4j (with <code>resilience4j-spring-boot4</code>) provides
+it:</p>
+<pre class="yaml"><code>resilience4j:
+  circuitbreaker:
+    instances:
+      gateway:
+        sliding-window-size: 20
+        failure-rate-threshold: 50
+        slow-call-duration-threshold: 3s
+        slow-call-rate-threshold: 80
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        ignore-exceptions: com.example.payments.PaymentDeclinedException   # business errors are not failures</code></pre>
+<pre class="java"><code>@CircuitBreaker(name = &quot;gateway&quot;, fallbackMethod = &quot;gatewayDown&quot;)
+public InitializeResponse initialize(InitializeRequest request) {
+    return client.initialize(request);
+}
+
+private InitializeResponse gatewayDown(InitializeRequest request, Throwable cause) {
+    throw new GatewayUnavailableException(cause);   // mapped to 503 + Retry-After
+}</code></pre>
+<p>Note <code>ignore-exceptions</code>: a declined card is a correct
+answer from a healthy provider and must not open the breaker. Expose
+breaker state through Actuator (<code>/actuator/health</code>, metrics
+<code>resilience4j.circuitbreaker.state</code>) so operations can see
+it.</p>
+<p>Order of wrapping, outermost first: <strong>bulkhead → circuit
+breaker → retry → timeout → call</strong>. Retries live inside the
+breaker so that a failed attempt series counts against it.</p>
+<h2 id="5-webhooks">5. Webhooks</h2>
+<p>Providers tell you about asynchronous outcomes (payment succeeded,
+transfer reversed, KYC verified) by calling <strong>your</strong>
+endpoint. Treat every webhook as hostile until proven otherwise.</p>
+<ol type="1">
+<li><strong>Verify the signature</strong> over the <strong>raw</strong>
+request body before parsing it. Paystack-style providers send
+<code>x-paystack-signature: HMAC-SHA512(rawBody, secretKey)</code>:</li>
+</ol>
+<pre class="java"><code>@PostMapping(&quot;/api/v1/webhooks/gateway&quot;)
+ResponseEntity&lt;Void&gt; receive(@RequestHeader(&quot;x-paystack-signature&quot;) String signature,
+                             @RequestBody byte[] rawBody) {
+    if (!signatures.isValid(rawBody, signature)) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+    GatewayEvent event = json.readValue(rawBody, GatewayEvent.class);
+    webhookInbox.accept(event);          // store and process asynchronously
+    return ResponseEntity.ok().build();  // acknowledge quickly
+}
+
+boolean isValid(byte[] body, String signatureHex) {
+    Mac mac = Mac.getInstance(&quot;HmacSHA512&quot;);
+    mac.init(new SecretKeySpec(secret, &quot;HmacSHA512&quot;));
+    byte[] expected = mac.doFinal(body);
+    return MessageDigest.isEqual(expected, HexFormat.of().parseHex(signatureHex));   // constant-time
+}</code></pre>
+<ol start="2" type="1">
+<li><strong>De-duplicate</strong> by the provider's event ID (a unique
+constraint on an <code>inbound_event</code> table). Delivery is at least
+once.</li>
+<li><strong>Do not trust the payload's claims alone.</strong> For money,
+call the provider's verify endpoint and check the amount, currency and
+reference against what you initialised before marking a payment
+successful.</li>
+<li><strong>Tolerate out-of-order and late events</strong>: apply state
+transitions only forward (<code>PENDING → SUCCEEDED</code> yes,
+<code>SUCCEEDED → PENDING</code> no).</li>
+<li><strong>Acknowledge fast</strong> (within a few seconds) and process
+in the background; providers retry slow or failed deliveries.</li>
+<li>Optionally restrict the endpoint to the provider's published IP
+ranges, and include a timestamp check against replayed old messages when
+the provider supports it.</li>
+</ol>
+<h2 id="6-testing-with-wiremock">6. Testing with WireMock</h2>
+<p>WireMock runs a fake HTTP server in your tests so you can script any
+behaviour of the provider, including the bad ones:</p>
+<pre class="java"><code>@SpringBootTest
+@EnableWireMock(@ConfigureWireMock(name = &quot;gateway&quot;, baseUrlProperties = &quot;gateway.base-url&quot;))
+class PaymentGatewayClientTest {
+
+    @InjectWireMock(&quot;gateway&quot;) WireMockServer gateway;
+    @Autowired PaymentService payments;
+
+    @Test
+    void retriesOnce503ThenSucceeds() {
+        gateway.stubFor(post(&quot;/transaction/initialize&quot;).inScenario(&quot;flaky&quot;)
+                .whenScenarioStateIs(STARTED).willReturn(serviceUnavailable())
+                .willSetStateTo(&quot;recovered&quot;));
+        gateway.stubFor(post(&quot;/transaction/initialize&quot;).inScenario(&quot;flaky&quot;)
+                .whenScenarioStateIs(&quot;recovered&quot;).willReturn(okJson(&quot;&quot;&quot;
+                        {&quot;status&quot;: true, &quot;data&quot;: {&quot;authorization_url&quot;: &quot;https://checkout.test/abc&quot;, &quot;reference&quot;: &quot;pay_1&quot;}}&quot;&quot;&quot;)));
+
+        assertThat(payments.initialize(order()).checkoutUrl()).isEqualTo(&quot;https://checkout.test/abc&quot;);
+        gateway.verify(2, postRequestedFor(urlEqualTo(&quot;/transaction/initialize&quot;)));
+    }
+
+    @Test
+    void readTimeoutIsNotRetriedWithoutIdempotency() {
+        gateway.stubFor(post(&quot;/transaction/charge&quot;).willReturn(ok().withFixedDelay(6_000)));
+        assertThatThrownBy(() -&gt; payments.chargeSavedCard(order())).isInstanceOf(GatewayUnavailableException.class);
+        gateway.verify(1, postRequestedFor(urlEqualTo(&quot;/transaction/charge&quot;)));
+    }
+}</code></pre>
+<p>(<code>@EnableWireMock</code> comes from the
+<code>wiremock-spring-boot</code> integration; you can also start a
+<code>WireMockServer</code> yourself in <code>@BeforeAll</code> and set
+the base URL with <code>@DynamicPropertySource</code>.)</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>No read timeout, so one slow provider exhausts the thread pool.</li>
+<li>Retrying 4xx responses, or non-idempotent calls after a read
+timeout.</li>
+<li>Retries without backoff, or retries at several layers (client,
+service and gateway) multiplying load.</li>
+<li>Counting business errors (card declined) as circuit-breaker
+failures.</li>
+<li>Parsing the webhook JSON before verifying the signature, or
+comparing signatures with <code>String.equals</code> (timing
+attack).</li>
+<li>Marking a payment successful because a webhook said so, without
+verifying amount and reference.</li>
+<li>Tests that call the real sandbox, so the build fails when the
+provider is down.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Build an HTTP interface client for the free Frankfurter FX API with
+timeouts, <code>@Retryable</code> on 5xx and connect failures, and a
+circuit breaker; write WireMock tests for a timeout, a 503 burst that
+opens the breaker, and a 400 that is not retried.</li>
+<li>Implement a webhook endpoint with HMAC-SHA512 verification and event
+de-duplication; test a valid event, a tampered body, and the same event
+delivered twice.</li>
+<li>Draw the sequence diagram for "initialise payment → customer pays →
+webhook → verify → credit wallet" and mark every point where a retry,
+timeout or duplicate can occur.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p><code>RestClient</code>, HTTP interface, <code>@HttpExchange</code>,
+<code>HttpServiceProxyFactory</code>, <code>@ImportHttpServices</code>,
+connect timeout, read timeout, deadline, transient failure, retry,
+exponential backoff, jitter, retry budget, <code>@Retryable</code>,
+<code>@EnableResilientMethods</code>, <code>@ConcurrencyLimit</code>,
+bulkhead, circuit breaker (closed, open, half-open), fallback, webhook,
+HMAC, constant-time comparison, at-least-once delivery, WireMock,
+scenario.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://docs.spring.io/spring-framework/reference/integration/rest-clients.html">Spring
+Framework reference: REST Clients (RestClient and HTTP
+interfaces)</a></li>
+<li><a
+href="https://docs.spring.io/spring-framework/reference/core/resilience.html">Spring
+Framework reference: Resilience features (@Retryable,
+@ConcurrencyLimit)</a></li>
+<li><a
+href="https://resilience4j.readme.io/docs/circuitbreaker">Resilience4j
+documentation: CircuitBreaker</a></li>
+<li><a
+href="https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/">AWS
+Builders' Library: Timeouts, retries, and backoff with jitter</a></li>
+<li><a href="https://paystack.com/docs/payments/webhooks/">Paystack
+documentation: Webhooks</a></li>
+<li><a href="https://wiremock.org/docs/stubbing/">WireMock
+documentation: Stubbing</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Creating REST Clients in Spring Boot 4 Just Got EASIER!</h3><p>Dan Vega · 18 min. RestClient, HTTP interface clients and timeouts in Spring Boot 4.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/TEd5e4Thu7M" title="Creating REST Clients in Spring Boot 4 Just Got EASIER!" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>11 Understanding the circuit breaker pattern - Spring Boot Microservices Level 2</h3><p>Java Brains · 7 min. The circuit breaker pattern: closed, open and half-open states.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/mJ8JSach2P4" title="11 Understanding the circuit breaker pattern - Spring Boot Microservices Level 2" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Spring Boot 3 | Circuit Breakers using Resilience4J | Microservices Resiliency Primer</h3><p>Tech Primers · 16 min. Resilience4j circuit breaker and retry in a Spring Boot service.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/3-ChrD3Zosg" title="Spring Boot 3 | Circuit Breakers using Resilience4J | Microservices Resiliency Primer" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Top 3 Things You Should Know About Webhooks!</h3><p>ByteByteGo · 4 min. How webhooks work, and how to make them reliable and secure.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/x_jjhcDrISk" title="Top 3 Things You Should Know About Webhooks!" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/02-professional-backend/05-api-design-integration/5.4-consuming-apis-resilience/README.md">5.4 Consuming third-party APIs: timeouts, retries, circuit breakers</a></p>

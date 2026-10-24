@@ -70,57 +70,57 @@ Projects: E-commerce relational schema with sample dataset; Double-entry ledger 
 
 Projects: Task manager REST API (CRUD, validation); Blog API with pagination and sorting; Product catalogue API with search and filters; Spring Boot 3 to 4 upgrade exercise.
 
-## Phase 2: Professional Backend (weeks 14-24) · planned
+## Phase 2: Professional Backend (weeks 14-24) · built
 
 API design, security, testing, Git, Docker, CI/CD and AI-assisted engineering. Ends with your junior portfolio and interview prep.
 
-### Module 5: API Design & Integration (weeks 14-16)
+### [Module 5: API Design & Integration](phases/02-professional-backend/05-api-design-integration/README.md) (weeks 14-16)
 
-- 5.1 Resource design, HTTP semantics and status codes
-- 5.2 OpenAPI/Swagger documentation and API versioning
-- 5.3 Standard error responses (Problem Details), pagination, idempotency keys
-- 5.4 Consuming third-party APIs: timeouts, retries, circuit breakers
-- 5.5 Introduction to GraphQL and gRPC, and when to use each
+- [5.1 Resource design, HTTP semantics and status codes](phases/02-professional-backend/05-api-design-integration/5.1-resource-design-http/README.md)
+- [5.2 OpenAPI/Swagger documentation and API versioning](phases/02-professional-backend/05-api-design-integration/5.2-openapi-versioning/README.md)
+- [5.3 Standard error responses (Problem Details), pagination, idempotency keys](phases/02-professional-backend/05-api-design-integration/5.3-errors-pagination-idempotency/README.md)
+- [5.4 Consuming third-party APIs: timeouts, retries, circuit breakers](phases/02-professional-backend/05-api-design-integration/5.4-consuming-apis-resilience/README.md)
+- [5.5 Introduction to GraphQL and gRPC, and when to use each](phases/02-professional-backend/05-api-design-integration/5.5-graphql-grpc/README.md)
 
 Projects: Payment gateway integration (sandbox) with webhooks; Weather or FX-rate service consuming external APIs; News aggregator from multiple sources; gRPC service for internal account lookups.
 
-### Module 6: Security Essentials (weeks 17-18)
+### [Module 6: Security Essentials](phases/02-professional-backend/06-security-essentials/README.md) (weeks 17-18)
 
-- 6.1 Spring Security filter chain and configuration
-- 6.2 JWT access and refresh tokens, OAuth2 / OpenID Connect login
-- 6.3 Role-based access control and method security
-- 6.4 OWASP Top 10 and how they show up in Java APIs
-- 6.5 Password hashing, secrets management, dependency scanning
+- [6.1 Spring Security filter chain and configuration](phases/02-professional-backend/06-security-essentials/6.1-spring-security-filter-chain/README.md)
+- [6.2 JWT access and refresh tokens, OAuth2 / OpenID Connect login](phases/02-professional-backend/06-security-essentials/6.2-jwt-oauth2-oidc/README.md)
+- [6.3 Role-based access control and method security](phases/02-professional-backend/06-security-essentials/6.3-rbac-method-security/README.md)
+- [6.4 OWASP Top 10 and how they show up in Java APIs](phases/02-professional-backend/06-security-essentials/6.4-owasp-top10-java/README.md)
+- [6.5 Password hashing, secrets management, dependency scanning](phases/02-professional-backend/06-security-essentials/6.5-passwords-secrets-dependency-scanning/README.md)
 
 Projects: Secure API with JWT and refresh tokens; Google/GitHub login via OAuth2 / Keycloak; Role-based admin vs customer endpoints.
 
-### Module 7: Testing & Code Quality (weeks 19-20)
+### [Module 7: Testing & Code Quality](phases/02-professional-backend/07-testing-code-quality/README.md) (weeks 19-20)
 
-- 7.1 Unit testing with JUnit and Mockito; test-driven development
-- 7.2 Integration tests with Testcontainers (real Postgres, Kafka, Redis)
-- 7.3 API tests with MockMvc and REST Assured
-- 7.4 Coverage with JaCoCo and static analysis with SonarQube
-- 7.5 Code review etiquette and pull-request standards
+- [7.1 Unit testing with JUnit and Mockito; test-driven development](phases/02-professional-backend/07-testing-code-quality/7.1-junit-mockito-tdd/README.md)
+- [7.2 Integration tests with Testcontainers (real Postgres, Kafka, Redis)](phases/02-professional-backend/07-testing-code-quality/7.2-testcontainers-integration/README.md)
+- [7.3 API tests with MockMvc and REST Assured](phases/02-professional-backend/07-testing-code-quality/7.3-api-tests-mockmvc-restassured/README.md)
+- [7.4 Coverage with JaCoCo and static analysis with SonarQube](phases/02-professional-backend/07-testing-code-quality/7.4-jacoco-sonarqube/README.md)
+- [7.5 Code review etiquette and pull-request standards](phases/02-professional-backend/07-testing-code-quality/7.5-code-review-pull-requests/README.md)
 
 Projects: Full test suite for the wallet application; TDD kata: tax and fee engine; Integration tests for the e-commerce API.
 
-### Module 8: Git, Docker & CI/CD (weeks 21-22)
+### [Module 8: Git, Docker & CI/CD](phases/02-professional-backend/08-git-docker-cicd/README.md) (weeks 21-22)
 
-- 8.1 Git branching, pull requests, rebasing and branch-protection rules
-- 8.2 Multi-stage Docker images for Spring Boot; Docker Compose
-- 8.3 CI/CD with GitHub Actions (build, test, scan, publish image), plus GitLab CI
-- 8.4 Overview of Jenkins and Azure DevOps pipelines used in enterprises
-- 8.5 Deploying a container to a cloud host
+- [8.1 Git branching, pull requests, rebasing and branch-protection rules](phases/02-professional-backend/08-git-docker-cicd/8.1-git-branching-prs/README.md)
+- [8.2 Multi-stage Docker images for Spring Boot; Docker Compose](phases/02-professional-backend/08-git-docker-cicd/8.2-docker-multistage-compose/README.md)
+- [8.3 CI/CD with GitHub Actions (build, test, scan, publish image), plus GitLab CI](phases/02-professional-backend/08-git-docker-cicd/8.3-ci-cd-github-actions-gitlab/README.md)
+- [8.4 Overview of Jenkins and Azure DevOps pipelines used in enterprises](phases/02-professional-backend/08-git-docker-cicd/8.4-jenkins-azure-devops/README.md)
+- [8.5 Deploying a container to a cloud host](phases/02-professional-backend/08-git-docker-cicd/8.5-deploying-containers-cloud/README.md)
 
 Projects: Team workflow with peer PR reviews; Dockerised Spring Boot + Postgres stack; GitHub Actions pipeline with quality gates.
 
-### Module 9: AI-Assisted Engineering & Junior Portfolio (weeks 23-24)
+### [Module 9: AI-Assisted Engineering & Junior Portfolio](phases/02-professional-backend/09-ai-assisted-engineering-portfolio/README.md) (weeks 23-24)
 
-- 9.1 Daily workflows with AI coding assistants (GitHub Copilot, Claude Code, Cursor and similar)
-- 9.2 Reviewing AI-generated code for bugs, security issues and licence risk
-- 9.3 Using AI to write tests, docs and refactors without losing understanding
-- 9.4 CV, GitHub profile and LinkedIn optimisation for Java roles
-- 9.5 Junior interview prep: core Java, Spring, SQL and live coding
+- [9.1 Daily workflows with AI coding assistants (GitHub Copilot, Claude Code, Cursor and similar)](phases/02-professional-backend/09-ai-assisted-engineering-portfolio/9.1-ai-coding-assistants/README.md)
+- [9.2 Reviewing AI-generated code for bugs, security issues and licence risk](phases/02-professional-backend/09-ai-assisted-engineering-portfolio/9.2-reviewing-ai-generated-code/README.md)
+- [9.3 Using AI to write tests, docs and refactors without losing understanding](phases/02-professional-backend/09-ai-assisted-engineering-portfolio/9.3-ai-tests-docs-refactors/README.md)
+- [9.4 CV, GitHub profile and LinkedIn optimisation for Java roles](phases/02-professional-backend/09-ai-assisted-engineering-portfolio/9.4-cv-github-linkedin/README.md)
+- [9.5 Junior interview prep: core Java, Spring, SQL and live coding](phases/02-professional-backend/09-ai-assisted-engineering-portfolio/9.5-junior-interview-prep/README.md)
 
 Projects: Polished junior portfolio (4-5 projects) with READMEs; Mock technical interview with feedback; Tailored CV and application plan.
 

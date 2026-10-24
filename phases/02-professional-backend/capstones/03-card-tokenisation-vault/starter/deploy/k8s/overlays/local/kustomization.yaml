@@ -1,0 +1,19 @@
+# Local cluster (kind or minikube) with an in-cluster PostgreSQL. For learning only.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: card-tokenisation-vault
+resources:
+  - namespace.yaml
+  - ../../base
+  - postgres.yaml
+images:
+  - name: card-tokenisation-vault
+    newName: ghcr.io/OWNER/card-tokenisation-vault   # your image; CI or Argo CD Image Updater changes the tag
+    newTag: latest
+secretGenerator:
+  # Local-cluster-only credentials, like .env.example. Real environments use External Secrets or Sealed Secrets.
+  - name: card-tokenisation-vault-db
+    literals:
+      - DB_URL=jdbc:postgresql://postgres:5432/app
+      - DB_USER=app
+      - DB_PASSWORD=local-cluster-only

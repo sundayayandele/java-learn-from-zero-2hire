@@ -1,0 +1,99 @@
+{
+  "topic": "5.5",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A bank's mobile home screen currently makes seven REST calls on startup and is slow on 3G networks. Each screen needs a different combination of customer, account, card and transaction fields.",
+      "question": "Which approach addresses this most directly?",
+      "options": [
+        "Adding more REST endpoints that each return everything",
+        "A GraphQL backend-for-frontend so the app fetches exactly the fields each screen needs in one request",
+        "Replacing REST with gRPC between the app and the backend",
+        "Increasing the server's thread pool"
+      ],
+      "answer": 1,
+      "explanation": "GraphQL solves under- and over-fetching for client-driven screens. Browsers and mobile apps cannot call gRPC directly without extra infrastructure, and bigger REST payloads make over-fetching worse."
+    },
+    {
+      "type": "single",
+      "scenario": "After adding a GraphQL field recentTransactions on Account resolved with @SchemaMapping, SQL logs show one transaction query per account in every request.",
+      "question": "What is the standard fix in Spring for GraphQL?",
+      "options": [
+        "Return all transactions in the Account type instead",
+        "Disable GraphQL introspection",
+        "Resolve the field with @BatchMapping (DataLoader) so transactions for all accounts are loaded in one query",
+        "Add more database connections"
+      ],
+      "answer": 2,
+      "explanation": "Per-parent resolvers cause the N+1 problem. Batch loading collects the parents and fetches the children in a single query."
+    },
+    {
+      "type": "single",
+      "scenario": "Card authorisation calls an internal fraud-scoring service on every payment and must respond in under 100 ms end to end. Both services are written in Java and owned by your bank.",
+      "question": "Which interface style fits this hot internal path best?",
+      "options": [
+        "REST with XML payloads",
+        "GraphQL with deep nested queries",
+        "gRPC with Protocol Buffers and a short deadline on each call",
+        "Email notifications"
+      ],
+      "answer": 2,
+      "explanation": "gRPC's binary format, HTTP/2 connections, strict contract and propagated deadlines make it well suited to low-latency internal calls."
+    },
+    {
+      "type": "single",
+      "scenario": "You need to remove the field middle_name = 4 from a protobuf message used by several services, and later add a new field preferred_name.",
+      "question": "What is the safe way to do this?",
+      "options": [
+        "Reuse number 4 for preferred_name because the old field is gone",
+        "Rename middle_name to preferred_name and keep number 4",
+        "Renumber all remaining fields to close the gap",
+        "Delete the field and mark 4 as reserved; give preferred_name a new, unused field number"
+      ],
+      "answer": 3,
+      "explanation": "Protobuf identifies fields by number. Reusing or renumbering corrupts data exchanged with older clients; reserving removed numbers prevents accidental reuse."
+    },
+    {
+      "type": "single",
+      "scenario": "A REST facade calls a gRPC account service with a 300 ms deadline. The gRPC call fails with DEADLINE_EXCEEDED.",
+      "question": "Which REST response should the facade return?",
+      "options": [
+        "400 Bad Request",
+        "504 Gateway Timeout as a Problem Details response",
+        "404 Not Found",
+        "200 OK with an empty body"
+      ],
+      "answer": 1,
+      "explanation": "DEADLINE_EXCEEDED means the upstream did not answer in time, which maps to 504. 404 would wrongly claim the account does not exist."
+    },
+    {
+      "type": "multi",
+      "scenario": "You are preparing a GraphQL API for production.",
+      "question": "Which controls are important? (Choose two.)",
+      "options": [
+        "Monitor the errors array in responses, not just HTTP status codes",
+        "Expose GraphiQL publicly for convenience",
+        "Limit query depth and complexity",
+        "Rely on CDN caching of POST /graphql responses"
+      ],
+      "answer": [
+        0,
+        2
+      ],
+      "explanation": "Unbounded queries can overload the backend, and GraphQL errors usually arrive with status 200. CDNs do not cache POSTs, and a public GraphiQL invites schema exploration."
+    },
+    {
+      "type": "single",
+      "scenario": "A fintech must publish an API that hundreds of merchants, using many languages and frameworks, will integrate with.",
+      "question": "Which style is usually the best default?",
+      "options": [
+        "GraphQL, because it is newer",
+        "REST with an OpenAPI document",
+        "A custom TCP protocol",
+        "gRPC, because it is faster"
+      ],
+      "answer": 1,
+      "explanation": "REST over HTTP with OpenAPI has the broadest tooling and the lowest barrier for external developers, and works with standard caches, gateways and security tools."
+    }
+  ]
+}

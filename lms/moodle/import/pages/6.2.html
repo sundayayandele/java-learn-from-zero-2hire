@@ -1,0 +1,313 @@
+<p><em>Week 17 · Module 6: Security Essentials</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Read a <strong>JWT</strong> and explain its header, claims and
+signature, and what makes a token valid.</li>
+<li>Explain the <strong>OAuth 2.0</strong> roles and the flows you will
+meet: authorization code with PKCE, client credentials, and refresh
+tokens.</li>
+<li>Explain what <strong>OpenID Connect</strong> adds (identity, the ID
+token).</li>
+<li>Configure a Spring Boot API as an <strong>OAuth2 resource
+server</strong> that validates tokens from
+<strong>Keycloak</strong>.</li>
+<li>Implement <strong>refresh-token rotation</strong> with reuse
+detection when you issue your own tokens.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Banks rarely let each application store passwords. Customers and
+staff sign in through an identity provider (Keycloak, Microsoft Entra
+ID, Okta, Auth0, Ping), and APIs accept <strong>access tokens</strong>
+that the provider issues. Open banking is built on OAuth 2.0: a fintech
+app gets the customer's <em>consent</em> to read their account data,
+receiving a scoped token rather than their password. Getting token
+validation wrong (accepting unsigned tokens, ignoring the audience,
+never expiring sessions) is one of the most common serious findings in
+fintech penetration tests.</p>
+<h2 id="1-json-web-tokens">1. JSON Web Tokens</h2>
+<p>A JWT is three Base64URL-encoded parts separated by dots:
+<code>header.payload.signature</code>.</p>
+<pre class="json"><code>// header
+{ &quot;alg&quot;: &quot;RS256&quot;, &quot;kid&quot;: &quot;2026-10-key-1&quot;, &quot;typ&quot;: &quot;JWT&quot; }
+
+// payload (claims)
+{
+  &quot;iss&quot;: &quot;https://auth.examplebank.ng/realms/retail&quot;,
+  &quot;sub&quot;: &quot;c-7f2a9c&quot;,
+  &quot;aud&quot;: &quot;wallet-api&quot;,
+  &quot;exp&quot;: 1792800900,
+  &quot;iat&quot;: 1792800000,
+  &quot;scope&quot;: &quot;accounts:read transfers:write&quot;,
+  &quot;realm_access&quot;: { &quot;roles&quot;: [&quot;customer&quot;] },
+  &quot;azp&quot;: &quot;mobile-app&quot;
+}</code></pre>
+<ul>
+<li><strong><code>iss</code></strong> (issuer) who created it;
+<strong><code>sub</code></strong> (subject) who it is about;
+<strong><code>aud</code></strong> (audience) which API it is for;
+<strong><code>exp</code></strong>, <strong><code>iat</code></strong>,
+<strong><code>nbf</code></strong> timing; custom claims for scopes and
+roles.</li>
+<li>The <strong>signature</strong> is made with the issuer's private key
+(RS256/ES256) or a shared secret (HS256). Anyone can <em>read</em> a JWT
+(it is only encoded); only someone with the key can <em>create a valid
+one</em>. <strong>Never put secrets or personal data you would not show
+the user into a JWT.</strong></li>
+</ul>
+<p>A token is valid only if <strong>all</strong> of these hold:</p>
+<ol type="1">
+<li>The signature verifies with the issuer's current public key (found
+by <code>kid</code> in the issuer's <strong>JWKS</strong>
+endpoint).</li>
+<li><code>alg</code> is one you expect (reject <code>none</code>, and
+reject HS256 when you expect RS256: the classic "algorithm confusion"
+attack).</li>
+<li><code>iss</code> is your issuer and <code>aud</code> includes your
+API.</li>
+<li>The current time is before <code>exp</code> (with a small clock-skew
+allowance) and after <code>nbf</code>.</li>
+</ol>
+<h3 id="access-tokens-should-be-short-lived">Access tokens should be
+short-lived</h3>
+<p>A signed JWT cannot be "logged out": it is valid until it expires. So
+keep access tokens short (5–15 minutes) and use <strong>refresh
+tokens</strong> to get new ones.</p>
+<h2 id="2-oauth-20-in-one-page">2. OAuth 2.0 in one page</h2>
+<p><strong>Roles:</strong> the <strong>resource owner</strong> (the
+customer), the <strong>client</strong> (the mobile app or a partner's
+server), the <strong>authorization server</strong> (Keycloak), and the
+<strong>resource server</strong> (your API).</p>
+<table>
+<thead>
+<tr>
+<th>Flow (grant)</th>
+<th>Use it for</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Authorization code + PKCE</strong></td>
+<td>Apps acting for a user: mobile, single-page and server web apps</td>
+<td>The user signs in at the authorization server; the app receives a
+code and exchanges it for tokens. PKCE stops intercepted codes being
+used.</td>
+</tr>
+<tr>
+<td><strong>Client credentials</strong></td>
+<td>Service-to-service calls with no user</td>
+<td>The client authenticates as itself (secret, private-key JWT or
+mutual TLS).</td>
+</tr>
+<tr>
+<td><strong>Refresh token</strong></td>
+<td>Getting a new access token without asking the user again</td>
+<td>Long-lived, must be stored securely, rotated on use.</td>
+</tr>
+<tr>
+<td><del>Implicit</del>, <del>Resource owner password</del></td>
+<td>Legacy</td>
+<td>Deprecated in OAuth 2.1; do not use for new systems.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Scopes</strong> describe what the client may do on the user's
+behalf (<code>accounts:read</code>, <code>payments:write</code>).
+<strong>Consent</strong> is the user approving those scopes, which is
+central to open banking.</p>
+<h3 id="openid-connect">OpenID Connect</h3>
+<p>OAuth 2.0 is about <em>authorisation</em> (access to APIs).
+<strong>OpenID Connect (OIDC)</strong> adds <em>authentication</em> on
+top: an <strong>ID token</strong> (a JWT about the user, for the client
+to read), a standard <code>userinfo</code> endpoint, and discovery
+(<code>/.well-known/openid-configuration</code>). When you "Sign in with
+Google" you are using OIDC.</p>
+<h2 id="3-your-api-as-a-resource-server">3. Your API as a resource
+server</h2>
+<p>Add <code>spring-boot-starter-security-oauth2-resource-server</code>
+and point it at the issuer:</p>
+<pre class="yaml"><code>spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://auth.examplebank.ng/realms/retail</code></pre>
+<p>At startup Spring reads the issuer's discovery document, finds the
+JWKS URL, and from then on validates every bearer token's signature,
+issuer and expiry, fetching new keys when the issuer rotates them. Add
+audience validation, which is not on by default:</p>
+<pre class="java"><code>@Bean
+JwtDecoder jwtDecoder(OAuth2ResourceServerProperties props) {
+    NimbusJwtDecoder decoder = JwtDecoders.fromIssuerLocation(props.getJwt().getIssuerUri());
+    OAuth2TokenValidator&lt;Jwt&gt; audience = new JwtClaimValidator&lt;List&lt;String&gt;&gt;(
+            JwtClaimNames.AUD, aud -&gt; aud != null &amp;&amp; aud.contains(&quot;wallet-api&quot;));
+    decoder.setJwtValidator(new DelegatingOAuth2TokenValidator&lt;&gt;(
+            JwtValidators.createDefaultWithIssuer(props.getJwt().getIssuerUri()), audience));
+    return decoder;
+}</code></pre>
+<p>Spring Boot also offers the simplest option as a property,
+<code>spring.security.oauth2.resourceserver.jwt.audiences=wallet-api</code>;
+use the bean when you need custom rules.</p>
+<h3 id="mapping-claims-to-authorities">Mapping claims to
+authorities</h3>
+<p>By default, <code>scope</code> claims become <code>SCOPE_...</code>
+authorities. Keycloak puts roles in <code>realm_access.roles</code>, so
+map them too:</p>
+<pre class="java"><code>@Bean
+JwtAuthenticationConverter jwtAuthenticationConverter() {
+    JwtGrantedAuthoritiesConverter scopes = new JwtGrantedAuthoritiesConverter();   // SCOPE_accounts:read ...
+    JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+    converter.setJwtGrantedAuthoritiesConverter(jwt -&gt; {
+        Collection&lt;GrantedAuthority&gt; authorities = new ArrayList&lt;&gt;(scopes.convert(jwt));
+        Map&lt;String, Object&gt; realm = jwt.getClaimAsMap(&quot;realm_access&quot;);
+        if (realm != null &amp;&amp; realm.get(&quot;roles&quot;) instanceof List&lt;?&gt; roles) {
+            roles.forEach(r -&gt; authorities.add(new SimpleGrantedAuthority(&quot;ROLE_&quot; + r.toString().toUpperCase())));
+        }
+        return authorities;
+    });
+    return converter;
+}</code></pre>
+<h2 id="4-keycloak-locally">4. Keycloak locally</h2>
+<p>Keycloak is an open-source identity provider (Apache License 2.0)
+widely used by banks. Run it with Docker Compose for development:</p>
+<pre class="yaml"><code>services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+    volumes:
+      - ./keycloak/realm-retail.json:/opt/keycloak/data/import/realm-retail.json:ro
+    ports: [&quot;8180:8080&quot;]</code></pre>
+<p>Create a realm (<code>retail</code>), a confidential client for your
+back-office web app, a public client with PKCE for the mobile app, realm
+roles (<code>customer</code>, <code>support</code>, <code>admin</code>),
+and client scopes (<code>accounts:read</code>,
+<code>transfers:write</code>). Export the realm to JSON (without user
+passwords or client secrets) and commit it so the whole team gets the
+same setup. To log in with GitHub or Google, add them as
+<strong>identity providers</strong> in Keycloak; your API does not
+change, because it only trusts Keycloak's tokens.</p>
+<p>Get a token for testing:</p>
+<pre class="bash"><code>curl -s -X POST http://localhost:8180/realms/retail/protocol/openid-connect/token \
+  -d grant_type=client_credentials -d client_id=reconciliation-job -d client_secret=&quot;$CLIENT_SECRET&quot; | jq -r .access_token</code></pre>
+<h3 id="logging-users-in-to-a-web-app-oidc-client">Logging users in to a
+web app (OIDC client)</h3>
+<p>For a server-rendered back-office app,
+<code>spring-boot-starter-security-oauth2-client</code> and
+<code>http.oauth2Login(Customizer.withDefaults())</code> implement the
+authorization-code flow with PKCE: users are redirected to Keycloak, and
+Spring stores the tokens in the server-side session. That app uses
+cookies, so <strong>CSRF protection stays on</strong> (topic 6.1).</p>
+<h2 id="5-when-you-issue-your-own-tokens">5. When you issue your own
+tokens</h2>
+<p>Sometimes a small service must issue its own tokens (for example a
+simple partner API before an identity provider exists). Spring
+Security's <code>NimbusJwtEncoder</code> signs JWTs; keep the private
+key in a secrets manager, never in the repository. The hard part is
+<strong>refresh tokens</strong>:</p>
+<ul>
+<li>Make refresh tokens <strong>opaque random values</strong> (256
+bits), store only their <strong>hash</strong> with the user, an expiry
+and a <strong>family ID</strong>.</li>
+<li><strong>Rotate on every use:</strong> <code>/auth/refresh</code>
+returns a new refresh token and marks the old one used.</li>
+<li><strong>Detect reuse:</strong> if a token that was already used is
+presented again, someone has stolen it. Revoke the whole family, forcing
+a fresh login.</li>
+</ul>
+<pre class="java"><code>@Transactional
+public TokenPair refresh(String presented) {
+    RefreshToken token = refreshTokens.findByHash(sha256(presented))
+            .orElseThrow(InvalidRefreshTokenException::new);
+    if (token.isUsed() || token.isRevoked()) {
+        refreshTokens.revokeFamily(token.familyId());          // theft detected
+        throw new InvalidRefreshTokenException();
+    }
+    if (token.expiresAt().isBefore(clock.instant())) throw new InvalidRefreshTokenException();
+    token.markUsed();
+    return issuePair(token.userId(), token.familyId());       // new access token + new refresh token, same family
+}</code></pre>
+<p>Prefer an established identity provider over home-grown token
+issuance whenever you can: it already handles key rotation, consent,
+multi-factor authentication, account lockout and audit.</p>
+<h2 id="6-testing-without-a-real-keycloak">6. Testing without a real
+Keycloak</h2>
+<ul>
+<li><strong>Slice tests:</strong> use <code>jwt()</code> from Spring
+Security Test (topic 6.1) to simulate tokens with chosen scopes and
+roles.</li>
+<li><strong>Integration tests:</strong> either start Keycloak with
+Testcontainers (the <code>testcontainers-keycloak</code> community
+module), or sign test tokens with your own RSA key and configure the
+decoder with the matching public key
+(<code>spring.security.oauth2.resourceserver.jwt.public-key-location</code>).
+The second is faster and fully offline.</li>
+</ul>
+<p>Always include negative tests: expired token, wrong issuer, wrong
+audience, tampered signature, <code>alg: none</code>.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Accepting tokens without checking the audience, so a token for
+another API works on yours.</li>
+<li>Writing your own JWT parsing and validation.</li>
+<li>Long-lived access tokens (hours or days) with no revocation.</li>
+<li>Storing refresh tokens in plain text, or never rotating them.</li>
+<li>Putting personal data (BVN, phone number, balance) in JWT
+claims.</li>
+<li>Using the implicit or password grants for new applications.</li>
+<li>Disabling CSRF on an <code>oauth2Login</code> web app.</li>
+<li>Committing Keycloak realm exports that contain client secrets or
+user passwords.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Run Keycloak with Docker Compose, create a <code>retail</code> realm
+with roles and scopes, and export it.</li>
+<li>Configure your capstone as a resource server with issuer and
+audience validation and the role converter above; call it with a token
+from <code>curl</code>.</li>
+<li>Write integration tests that sign tokens with a test RSA key and
+prove that expired, wrong-audience and tampered tokens are
+rejected.</li>
+<li>Implement login, refresh with rotation and reuse detection, and
+logout (project 6.A), with a test that replays an old refresh token and
+checks that the family is revoked.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>JWT, JWS, header, claims, <code>iss</code>, <code>sub</code>,
+<code>aud</code>, <code>exp</code>, <code>kid</code>, JWKS, RS256,
+HS256, algorithm confusion, access token, refresh token, rotation, reuse
+detection, token family, OAuth 2.0, resource owner, client,
+authorization server, resource server, authorization code flow, PKCE,
+client credentials, scope, consent, OpenID Connect, ID token, discovery
+document, Keycloak, realm, identity provider, <code>JwtDecoder</code>,
+<code>JwtAuthenticationConverter</code>.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a href="https://www.rfc-editor.org/rfc/rfc7519">RFC 7519: JSON Web
+Token (JWT)</a></li>
+<li><a href="https://www.rfc-editor.org/rfc/rfc9700">OAuth 2.0 Security
+Best Current Practice (RFC 9700)</a></li>
+<li><a
+href="https://openid.net/specs/openid-connect-core-1_0.html">OpenID
+Connect Core 1.0</a></li>
+<li><a
+href="https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/jwt.html">Spring
+Security reference: OAuth 2.0 Resource Server JWT</a></li>
+<li><a
+href="https://www.keycloak.org/docs/latest/server_admin/">Keycloak
+documentation: Server administration guide</a></li>
+<li><a
+href="https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_Cheat_Sheet.html">OWASP
+Cheat Sheet: JSON Web Token</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>JWT Explained In Under 10 Minutes (JSON Web Tokens)</h3><p>Ariel Weinberger · 9 min. What a JWT is: header, claims, signature, and what it does not protect.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/Y2H3DXDeS3Q" title="JWT Explained In Under 10 Minutes (JSON Web Tokens)" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>An Illustrated Guide to OAuth and OpenID Connect</h3><p>OktaDev · 17 min. OAuth 2.0 and OpenID Connect in plain English, from Okta.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/t18YB3xDfXI" title="An Illustrated Guide to OAuth and OpenID Connect" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Spring Security JWT: How to secure your Spring Boot REST APIs with JSON Web Tokens (optional, longer)</h3><p>Dan Vega · 43 min. Securing a Spring Boot API with JWTs end to end (long; optional).</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/KYNR5js2cXE" title="Spring Security JWT: How to secure your Spring Boot REST APIs with JSON Web Tokens" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Spring Security + Keycloak: JWT Authentication &amp; Role-Based Access (Spring Boot 4)</h3><p>HuseyinCodes · 11 min. Keycloak as the authorisation server for a Spring Boot 4 resource server.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/nrY5PUMDhYU" title="Spring Security + Keycloak: JWT Authentication &amp; Role-Based Access (Spring Boot 4)" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/02-professional-backend/06-security-essentials/6.2-jwt-oauth2-oidc/README.md">6.2 JWT access and refresh tokens, OAuth2 / OpenID Connect login</a></p>

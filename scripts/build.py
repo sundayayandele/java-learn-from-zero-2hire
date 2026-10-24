@@ -186,6 +186,9 @@ GUIDE_PAGES = [
     ("phases/01-foundations/deploy", "deploy"),
     ("phases/01-foundations/cicd", "cicd"),
     ("phases/01-foundations/getting-hired", "getting-hired"),
+    ("phases/02-professional-backend/deploy", "p2-deploy"),
+    ("phases/02-professional-backend/cicd", "p2-cicd"),
+    ("phases/02-professional-backend/getting-hired", "p2-getting-hired"),
 ]
 
 

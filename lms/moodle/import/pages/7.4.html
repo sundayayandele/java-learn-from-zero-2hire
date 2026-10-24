@@ -1,0 +1,260 @@
+<p><em>Week 20 · Module 7: Testing &amp; Code Quality</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Measure <strong>line and branch coverage</strong> with
+<strong>JaCoCo</strong> and enforce minimum thresholds in the Maven
+build.</li>
+<li>Explain what coverage does and does not tell you, and use
+<strong>mutation testing (PIT)</strong> to measure test strength.</li>
+<li>Run <strong>SonarQube</strong> (or SonarQube Cloud) analysis, read
+its issues (bugs, vulnerabilities, security hotspots, code smells,
+duplication) and configure a <strong>quality gate</strong>.</li>
+<li>Add fast static checks to the build (compiler warnings, Error Prone,
+Checkstyle, ArchUnit) and decide what to enforce.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Banks set measurable quality bars because change is risky and
+auditors ask for evidence. "No release without 80% coverage on new code
+and zero new critical issues" is a typical rule, enforced by a quality
+gate in the pipeline. Knowing how to read and improve these metrics, and
+knowing their limits, lets you meet the bar without gaming it. SonarQube
+is installed in most Nigerian banks and consultancies; you will see its
+dashboard on your first day.</p>
+<h2 id="1-coverage-with-jacoco">1. Coverage with JaCoCo</h2>
+<p>JaCoCo instruments classes while tests run and reports which lines
+and branches executed.</p>
+<pre class="xml"><code>&lt;plugin&gt;
+    &lt;groupId&gt;org.jacoco&lt;/groupId&gt;
+    &lt;artifactId&gt;jacoco-maven-plugin&lt;/artifactId&gt;
+    &lt;version&gt;0.8.15&lt;/version&gt;
+    &lt;executions&gt;
+        &lt;execution&gt;&lt;id&gt;prepare-agent&lt;/id&gt;&lt;goals&gt;&lt;goal&gt;prepare-agent&lt;/goal&gt;&lt;/goals&gt;&lt;/execution&gt;
+        &lt;execution&gt;&lt;id&gt;prepare-agent-it&lt;/id&gt;&lt;goals&gt;&lt;goal&gt;prepare-agent-integration&lt;/goal&gt;&lt;/goals&gt;&lt;/execution&gt;
+        &lt;execution&gt;&lt;id&gt;report&lt;/id&gt;&lt;phase&gt;verify&lt;/phase&gt;&lt;goals&gt;&lt;goal&gt;report&lt;/goal&gt;&lt;/goals&gt;&lt;/execution&gt;
+        &lt;execution&gt;
+            &lt;id&gt;check&lt;/id&gt;
+            &lt;phase&gt;verify&lt;/phase&gt;
+            &lt;goals&gt;&lt;goal&gt;check&lt;/goal&gt;&lt;/goals&gt;
+            &lt;configuration&gt;
+                &lt;rules&gt;
+                    &lt;rule&gt;
+                        &lt;element&gt;BUNDLE&lt;/element&gt;
+                        &lt;limits&gt;
+                            &lt;limit&gt;&lt;counter&gt;LINE&lt;/counter&gt;&lt;value&gt;COVEREDRATIO&lt;/value&gt;&lt;minimum&gt;0.80&lt;/minimum&gt;&lt;/limit&gt;
+                            &lt;limit&gt;&lt;counter&gt;BRANCH&lt;/counter&gt;&lt;value&gt;COVEREDRATIO&lt;/value&gt;&lt;minimum&gt;0.70&lt;/minimum&gt;&lt;/limit&gt;
+                        &lt;/limits&gt;
+                    &lt;/rule&gt;
+                &lt;/rules&gt;
+                &lt;excludes&gt;
+                    &lt;exclude&gt;**/*Application.class&lt;/exclude&gt;
+                    &lt;exclude&gt;**/config/**&lt;/exclude&gt;
+                &lt;/excludes&gt;
+            &lt;/configuration&gt;
+        &lt;/execution&gt;
+    &lt;/executions&gt;
+&lt;/plugin&gt;</code></pre>
+<p><code>./mvnw verify</code> now fails if coverage drops below the
+thresholds; the HTML report is in
+<code>target/site/jacoco/index.html</code>. Red lines are never
+executed; yellow diamonds are partially covered branches (an
+<code>if</code> whose <code>else</code> never ran).</p>
+<h3 id="what-coverage-means-and-what-it-does-not">What coverage means,
+and what it does not</h3>
+<ul>
+<li><strong>Low coverage is a reliable warning</strong>: code that never
+runs in a test is certainly not tested.</li>
+<li><strong>High coverage is not proof of good tests</strong>: a test
+that calls <code>transfer()</code> with no assertions covers the whole
+method and checks nothing.</li>
+<li><strong>Branch coverage</strong> matters more than line coverage for
+rule-heavy code (fees, limits, eligibility).</li>
+<li>Set thresholds on <strong>new code</strong> where possible
+(SonarQube does this), so legacy code does not block every change, and
+the codebase improves as it is touched.</li>
+<li>Exclude what has no logic (generated code, configuration,
+<code>main</code>), but do not exclude code to reach a number.</li>
+</ul>
+<h2 id="2-mutation-testing-with-pit">2. Mutation testing with PIT</h2>
+<p>Mutation testing asks: <em>if the code were wrong, would a test
+fail?</em> PIT makes small changes (<strong>mutants</strong>) to your
+bytecode (flip <code>&gt;</code> to <code>&gt;=</code>, replace a return
+value, remove a call) and runs the tests. A mutant that makes a test
+fail is <strong>killed</strong>; one that survives shows a gap.</p>
+<pre class="xml"><code>&lt;plugin&gt;
+    &lt;groupId&gt;org.pitest&lt;/groupId&gt;
+    &lt;artifactId&gt;pitest-maven&lt;/artifactId&gt;
+    &lt;version&gt;1.30.1&lt;/version&gt;
+    &lt;dependencies&gt;
+        &lt;dependency&gt;&lt;groupId&gt;org.pitest&lt;/groupId&gt;&lt;artifactId&gt;pitest-junit5-plugin&lt;/artifactId&gt;&lt;version&gt;1.2.3&lt;/version&gt;&lt;/dependency&gt;
+    &lt;/dependencies&gt;
+    &lt;configuration&gt;
+        &lt;targetClasses&gt;&lt;param&gt;ng.itlearning.wallet.domain.*&lt;/param&gt;&lt;/targetClasses&gt;
+        &lt;mutationThreshold&gt;75&lt;/mutationThreshold&gt;
+    &lt;/configuration&gt;
+&lt;/plugin&gt;</code></pre>
+<p>Run <code>./mvnw org.pitest:pitest-maven:mutationCoverage</code> and
+open <code>target/pit-reports</code>. A surviving mutant such as
+<em>"changed conditional boundary: amount &gt; 5000 → amount &gt;= 5000
+— SURVIVED"</em> tells you there is no test exactly at ₦5,000.00.
+Mutation testing is slower than coverage, so run it on domain packages,
+nightly or on demand, rather than on every commit.</p>
+<h2 id="3-sonarqube">3. SonarQube</h2>
+<p>SonarQube analyses source code and test reports and classifies
+findings:</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Meaning</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bug</td>
+<td>Code that is probably wrong</td>
+<td><code>BigDecimal.equals</code> used to compare amounts; a resource
+never closed</td>
+</tr>
+<tr>
+<td>Vulnerability</td>
+<td>Code that is exploitable</td>
+<td>SQL built by concatenation; weak cipher</td>
+</tr>
+<tr>
+<td>Security hotspot</td>
+<td>Security-sensitive code a human must review</td>
+<td>Use of a random generator, CORS configuration, a disabled CSRF
+protection</td>
+</tr>
+<tr>
+<td>Code smell</td>
+<td>Maintainability problem</td>
+<td>Method with cognitive complexity 42; duplicated block</td>
+</tr>
+</tbody>
+</table>
+<p>Each finding has a <strong>severity</strong>. Metrics include
+coverage (from the JaCoCo XML report), duplication, and ratings A–E for
+reliability, security and maintainability.</p>
+<h3 id="running-it">Running it</h3>
+<p>Locally, start SonarQube Community Build with Docker and analyse with
+the Maven scanner:</p>
+<pre class="bash"><code>docker run -d --name sonarqube -p 9000:9000 sonarqube:community
+./mvnw verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+  -Dsonar.host.url=http://localhost:9000 -Dsonar.token=&quot;$SONAR_TOKEN&quot; -Dsonar.projectKey=wallet-api</code></pre>
+<p>For public GitHub repositories, <strong>SonarQube Cloud</strong> is
+free and integrates with pull requests (it comments on new issues and
+reports the quality-gate status as a check).</p>
+<h3 id="quality-gates">Quality gates</h3>
+<p>A <strong>quality gate</strong> is a set of pass/fail conditions,
+usually on <strong>new code</strong>:</p>
+<ul>
+<li>Coverage on new code ≥ 80%</li>
+<li>Duplicated lines on new code ≤ 3%</li>
+<li>No new bugs or vulnerabilities rated above "minor"</li>
+<li>All new security hotspots reviewed</li>
+</ul>
+<p>In CI, wait for the gate and fail the pipeline if it fails
+(<code>-Dsonar.qualitygate.wait=true</code>). Combined with branch
+protection (topic 8.1), nothing merges to <code>main</code> that fails
+the gate.</p>
+<h3 id="handling-findings-well">Handling findings well</h3>
+<ul>
+<li>Fix real bugs and vulnerabilities first; they are often small.</li>
+<li>Review hotspots and mark them "safe" <strong>with a comment
+explaining why</strong>.</li>
+<li>Mark a finding as a false positive only with justification, and
+discuss recurring false positives with the team (adjust the rule set
+rather than mass-ignoring).</li>
+<li>Do not refactor code solely to please a metric if it makes the code
+less clear.</li>
+</ul>
+<h2 id="4-fast-static-checks-in-the-build">4. Fast static checks in the
+build</h2>
+<p>Sonar runs after the build. Some checks are cheap enough to run on
+every compile:</p>
+<ul>
+<li><strong>Compiler warnings as errors</strong> for important lints:
+<code>-Xlint:all -Werror</code> in <code>maven-compiler-plugin</code>
+(start with selected lints on legacy code).</li>
+<li><strong>Error Prone</strong> (Google) catches common bug patterns at
+compile time.</li>
+<li><strong>Checkstyle</strong> or <strong>Spotless</strong> enforce
+formatting, so code review is never about spaces.</li>
+<li><strong>ArchUnit</strong> tests architecture rules as unit
+tests:</li>
+</ul>
+<pre class="java"><code>@AnalyzeClasses(packages = &quot;ng.itlearning.wallet&quot;)
+class ArchitectureTest {
+    @ArchTest
+    static final ArchRule domainDoesNotDependOnWeb =
+            noClasses().that().resideInAPackage(&quot;..domain..&quot;)
+                       .should().dependOnClassesThat().resideInAPackage(&quot;..web..&quot;);
+
+    @ArchTest
+    static final ArchRule controllersDoNotUseRepositories =
+            noClasses().that().haveSimpleNameEndingWith(&quot;Controller&quot;)
+                       .should().dependOnClassesThat().haveSimpleNameEndingWith(&quot;Repository&quot;);
+}</code></pre>
+<h2 id="5-putting-it-into-the-pipeline">5. Putting it into the
+pipeline</h2>
+<p>A typical order in CI (topic 8.3): compile with lints → unit tests →
+integration tests (Failsafe) → JaCoCo check → Sonar analysis and quality
+gate → dependency and secret scans → build image. Fast checks first, so
+feedback arrives quickly.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Chasing 100% coverage with assertion-free tests.</li>
+<li>One global threshold that blocks all work on legacy code, so teams
+disable it.</li>
+<li>Excluding hard-to-test packages to raise the number.</li>
+<li>Marking every Sonar finding "won't fix".</li>
+<li>Running Sonar but never failing the build on the quality gate.</li>
+<li>Treating security hotspots as noise instead of reviewing them.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Add JaCoCo with 80% line and 70% branch thresholds to a capstone;
+find the least covered class and add meaningful tests.</li>
+<li>Run PIT on your domain package; kill at least five surviving mutants
+with new boundary tests and record the before/after mutation score.</li>
+<li>Analyse the capstone with SonarQube (local Docker or SonarQube
+Cloud), fix all bugs and vulnerabilities, review the hotspots, and
+configure a quality gate on new code.</li>
+<li>Add two ArchUnit rules that describe your intended
+architecture.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Code coverage, line coverage, branch coverage, JaCoCo,
+<code>prepare-agent</code>, <code>check</code> goal, coverage threshold,
+new code, mutation testing, PIT, mutant, killed, survived, mutation
+score, static analysis, SonarQube, SonarQube Cloud, bug, vulnerability,
+security hotspot, code smell, technical debt, cognitive complexity,
+duplication, quality gate, Error Prone, Checkstyle, Spotless,
+ArchUnit.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a href="https://www.jacoco.org/jacoco/trunk/doc/maven.html">JaCoCo
+documentation: Maven plugin</a></li>
+<li><a href="https://pitest.org/quickstart/maven/">PIT mutation testing:
+Quickstart for Maven</a></li>
+<li><a
+href="https://docs.sonarsource.com/sonarqube-server/latest/instance-administration/analysis-functions/quality-gates/">SonarQube
+documentation: Quality gates</a></li>
+<li><a
+href="https://docs.sonarsource.com/sonarqube-server/latest/analyzing-source-code/scanners/sonarscanner-for-maven/">SonarScanner
+for Maven</a></li>
+<li><a
+href="https://www.archunit.org/userguide/html/000_Index.html">ArchUnit
+user guide</a></li>
+<li><a href="https://martinfowler.com/bliki/TestCoverage.html">Martin
+Fowler: Test Coverage</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Using JaCoCo to measure system test coverage</h3><p>Sebastian Daschner · 8 min. How JaCoCo measures coverage, from Sebastian Daschner.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/E5KMvKrs89Q" title="Using JaCoCo to measure system test coverage" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Java Mutation Testing  with Pitest</h3><p>Diego Pacheco · 24 min. Mutation testing with PIT: finding tests that do not really test.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/lDeTsMIN8As" title="Java Mutation Testing  with Pitest" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>SonarQube: Ultimate Quality Gate for your CI/CD Pipeline.</h3><p>Dispatch · 4 min. SonarQube quality gates and how they block bad merges.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/HZT2sFWcVuI" title="SonarQube: Ultimate Quality Gate for your CI/CD Pipeline." style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/02-professional-backend/07-testing-code-quality/7.4-jacoco-sonarqube/README.md">7.4 Coverage with JaCoCo and static analysis with SonarQube</a></p>

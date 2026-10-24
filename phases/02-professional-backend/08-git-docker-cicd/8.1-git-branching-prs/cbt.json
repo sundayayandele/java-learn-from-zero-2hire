@@ -1,0 +1,99 @@
+{
+  "topic": "8.1",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A buggy commit that changed fee rounding was merged to main yesterday and deployed. Several other commits have been merged since.",
+      "question": "How should you undo it?",
+      "options": [
+        "git reset --hard to before the commit and force-push main",
+        "Edit the old commit with git commit --amend",
+        "Delete the main branch and recreate it",
+        "git revert <sha> on a branch, review and merge it, so a new commit reverses the change without rewriting shared history"
+      ],
+      "answer": 3,
+      "explanation": "Rewriting history on a shared branch breaks everyone's clones and loses later work. Revert adds a reversing commit that goes through the normal review and deployment flow."
+    },
+    {
+      "type": "single",
+      "scenario": "You rebased your own feature branch onto the latest main and now need to update the remote branch.",
+      "question": "Which push command is appropriate?",
+      "options": [
+        "Delete the remote branch and push to a new name every time",
+        "git push --force",
+        "git push origin main --force",
+        "git push --force-with-lease"
+      ],
+      "answer": 3,
+      "explanation": "Rebasing rewrites your branch's commits, so a forced update is needed. --force-with-lease refuses if someone else pushed to the branch since you last fetched, protecting their work."
+    },
+    {
+      "type": "single",
+      "scenario": "During a rebase you hit a conflict on the VAT_RATE constant: main changed the value's formatting and your branch added a rounding constant next to it.",
+      "question": "What is the correct way to resolve it?",
+      "options": [
+        "Always choose your own version",
+        "Abort and copy your files over main manually",
+        "Always choose main's version",
+        "Understand both changes, combine them correctly, remove the markers, run the tests, then git add and git rebase --continue"
+      ],
+      "answer": 3,
+      "explanation": "Conflict resolution must preserve both intentions and be verified, because a resolution can compile and still be wrong."
+    },
+    {
+      "type": "single",
+      "scenario": "After an accidental git reset --hard HEAD~3 on your local branch, three unpushed commits seem to be gone.",
+      "question": "How can you recover them?",
+      "options": [
+        "Use git reflog to find the commit the branch pointed to before the reset, then reset or branch to it",
+        "Run git revert HEAD~3",
+        "They are permanently deleted; rewrite the code",
+        "Clone the repository again"
+      ],
+      "answer": 0,
+      "explanation": "The reflog records where HEAD and branches pointed recently, so commits remain reachable for some time after a reset."
+    },
+    {
+      "type": "multi",
+      "scenario": "You are configuring protection for main in a payments repository.",
+      "question": "Which rules support the bank's change-control requirements? (Choose two.)",
+      "options": [
+        "Allow administrators to push directly to main in emergencies",
+        "Allow force pushes so history can be cleaned",
+        "Require pull requests with at least one approval, including CODEOWNERS for sensitive paths",
+        "Require status checks (build, tests, quality gate, scans) to pass before merging"
+      ],
+      "answer": [
+        2,
+        3
+      ],
+      "explanation": "Reviews and passing checks are enforceable controls. Bypasses and force pushes undermine traceability."
+    },
+    {
+      "type": "single",
+      "scenario": "A team keeps feature branches open for three to four weeks and spends two days resolving conflicts before every release.",
+      "question": "Which practice addresses the root cause?",
+      "options": [
+        "Assigning one person to do all merges",
+        "Trunk-based development: short-lived branches merged at least daily, with feature flags for unfinished work",
+        "Turning off CI on feature branches",
+        "Longer release cycles"
+      ],
+      "answer": 1,
+      "explanation": "Conflict size grows with branch age. Integrating small changes frequently keeps conflicts small and main releasable."
+    },
+    {
+      "type": "single",
+      "scenario": "You need to write a commit message for a change that adds webhook signature verification to the payments module.",
+      "question": "Which message follows Conventional Commits and good practice?",
+      "options": [
+        "updated code",
+        "feat(payments): verify HMAC-SHA512 signature on gateway webhooks (with a body explaining why and the ticket reference)",
+        "Fixed stuff in payments and other places",
+        "WIP"
+      ],
+      "answer": 1,
+      "explanation": "A typed, scoped, imperative subject plus a body with the reason and ticket makes history searchable and enables automated changelogs."
+    }
+  ]
+}

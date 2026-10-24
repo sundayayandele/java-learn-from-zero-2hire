@@ -223,7 +223,7 @@ Process, thread, concurrency, parallelism, CPU-bound, I/O-bound, thread states, 
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-23. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
 
 - [Multithreading in Java Explained in 10 Minutes](https://www.youtube.com/watch?v=r_MbozD32eo) · Coding with John · 10 min. Threads, Runnable and join() explained in ten minutes.
 - [Java ExecutorService - Part 1 - Introduction](https://www.youtube.com/watch?v=6Oo-9Can3H8) · Defog Tech · 10 min. Why thread pools exist and how ExecutorService manages them.

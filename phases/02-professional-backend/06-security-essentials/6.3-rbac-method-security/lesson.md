@@ -1,0 +1,184 @@
+## What you will be able to do
+
+- Distinguish **roles**, **authorities**, **scopes** and **permissions**, and design a role model for a banking product.
+- Use **method security** (`@PreAuthorize`, `@PostAuthorize`, `@PostFilter`) with Spring Expression Language.
+- Implement **object-level authorisation** so a customer can only ever access their own accounts, the number one API vulnerability.
+- Enforce **segregation of duties** (maker-checker) and audit privileged actions.
+- Prove your authorisation rules with a **test matrix**.
+
+## Why this matters in a bank or fintech
+
+The OWASP API Security Top 10 puts **Broken Object Level Authorization** first because it is everywhere: change `/accounts/0123456789` to `/accounts/0123456790` and see someone else's balance. Several real fintech breaches have been exactly this. Banks also have strict rules about *who may do what*: a support agent may view but not move money, a teller may initiate a large transfer but a supervisor must approve it, and every privileged action must be traceable. Regulators and auditors check these controls.
+
+## 1. Roles, authorities, scopes
+
+In Spring Security everything is a `GrantedAuthority` (a string). Conventions give them meaning:
+
+| Concept | Example | Meaning |
+| --- | --- | --- |
+| Role | `ROLE_SUPPORT` | A job function; `hasRole("SUPPORT")` adds the `ROLE_` prefix |
+| Permission | `transfers:approve` | A fine-grained capability; check with `hasAuthority(...)` |
+| Scope | `SCOPE_accounts:read` | What a *client application* may do on the user's behalf (OAuth2) |
+
+A good model keeps **roles coarse** (customer, teller, supervisor, support, admin) and **maps them to permissions** in one place, so code checks permissions (`hasAuthority('transfers:approve')`) and the role model can change without editing every controller. For an OAuth2 request, the effective rights are the **intersection**: the user must hold the role *and* the client must have been granted the scope.
+
+```java
+enum Role {
+    CUSTOMER(Set.of("accounts:read:own", "transfers:create:own")),
+    TELLER(Set.of("customers:read", "transfers:create")),
+    SUPERVISOR(Set.of("customers:read", "transfers:approve")),
+    SUPPORT(Set.of("customers:read", "accounts:read")),
+    ADMIN(Set.of("accounts:freeze", "users:manage"));
+
+    final Set<String> permissions;
+    Role(Set<String> permissions) { this.permissions = permissions; }
+}
+```
+
+## 2. Method security
+
+URL rules (topic 6.1) are coarse. Method security puts the rule next to the operation. Enable it:
+
+```java
+@Configuration
+@EnableMethodSecurity   // enables @PreAuthorize, @PostAuthorize, @PreFilter, @PostFilter
+class MethodSecurityConfig { }
+```
+
+```java
+@Service
+class AccountService {
+
+    @PreAuthorize("hasAuthority('accounts:freeze')")
+    public void freeze(String accountNumber, String reason) { ... }
+
+    @PreAuthorize("hasRole('SUPPORT') or @accountAccess.isOwner(authentication, #accountNumber)")
+    public AccountView view(String accountNumber) { ... }
+
+    @PostAuthorize("returnObject.ownerId() == authentication.name or hasRole('SUPPORT')")
+    public Statement statement(String statementId) { ... }
+}
+```
+
+- `#accountNumber` refers to the method parameter (compile with `-parameters`, which Spring Boot's Maven plugin does by default).
+- `@accountAccess` calls a Spring bean, which keeps complex logic in testable Java rather than long SpEL strings.
+- `@PostAuthorize` checks the **returned** object. Useful when ownership is only known after loading, but the method has already run, so never use it on methods with side effects.
+- Method security works through proxies: calling a secured method from **another method in the same class** bypasses the check. Put the check on the public entry point, or in a separate bean.
+
+You can also write your own annotation to avoid repeating expressions:
+
+```java
+@Target(ElementType.METHOD) @Retention(RetentionPolicy.RUNTIME)
+@PreAuthorize("@accountAccess.isOwner(authentication, #accountNumber)")
+@interface OwnsAccount { }
+```
+
+## 3. Object-level authorisation (BOLA)
+
+URL and role checks answer "may this kind of user call this endpoint?". Object-level checks answer "may **this** user access **this** object?". Every endpoint that takes an identifier needs one.
+
+```java
+@Component("accountAccess")
+class AccountAccess {
+    private final AccountRepository accounts;
+    AccountAccess(AccountRepository accounts) { this.accounts = accounts; }
+
+    public boolean isOwner(Authentication auth, String accountNumber) {
+        return accounts.existsByNumberAndCustomerId(accountNumber, auth.getName());
+    }
+}
+```
+
+An even stronger pattern is to make ownership part of the **query**, so data that is not yours is never loaded at all:
+
+```java
+// Instead of findByNumber(number) followed by a check:
+Optional<Account> findByNumberAndCustomerId(String number, String customerId);
+```
+
+and return **404** when nothing is found, so the API does not reveal which account numbers exist (topic 5.1). Apply the same thinking to **lists** (`/transactions?accountNumber=...` must filter by the caller's accounts), to **nested IDs** (`/accounts/A/transactions/T`: check that T belongs to A *and* A belongs to the caller), and to IDs inside **request bodies** (a transfer's `sourceAccount` must be the caller's).
+
+### Multi-tenant data
+
+When one platform serves several institutions (a banking-as-a-service provider, a white-label wallet), every query must also be filtered by **tenant**. Take the tenant from the token, never from a request header the client controls, and consider PostgreSQL row-level security as a second line of defence.
+
+## 4. Function-level authorisation and mass assignment
+
+- **Broken function-level authorisation** (OWASP API5): admin functions reachable by normal users because they are only hidden in the UI. Protect them on the server, ideally under a separate path (`/api/v1/admin/**`) with a URL rule *and* method security.
+- **Mass assignment / broken object property-level authorisation** (OWASP API3): binding a request straight onto an entity lets a customer send `"status": "ACTIVE"` or `"dailyLimit": 100000000`. Use request DTOs that contain only the fields a caller may change, and separate DTOs per role when admins can change more.
+
+## 5. Segregation of duties: maker-checker
+
+For high-risk operations (large transfers, limit increases, unfreezing accounts, changing a customer's phone number), one person *makes* the request and a different person *checks* (approves) it.
+
+```java
+@PreAuthorize("hasAuthority('transfers:approve')")
+@Transactional
+public Transfer approve(String transferId, Authentication checker) {
+    PendingTransfer pending = pendingTransfers.lockById(transferId);
+    if (pending.makerId().equals(checker.getName())) {
+        throw new SegregationOfDutiesException("The maker cannot approve their own transfer");
+    }
+    audit.record(checker.getName(), "TRANSFER_APPROVED", transferId);
+    return transfers.execute(pending);
+}
+```
+
+The rule that maker and checker differ must be enforced in the **server**, and both identities must be in the audit trail.
+
+## 6. Auditing privileged actions
+
+For every privileged or sensitive action record: who (user ID, not just "admin"), what, which object, when, from where (client ID, IP), the outcome, and a reason when one is required (freezing an account needs a reason). Store audit records append-only, separate from application logs, and never put full card numbers, passwords or tokens in them. Spring Security publishes `AuthorizationDeniedEvent`s you can listen to, so denied attempts can be audited and alerted on too.
+
+## 7. Test the matrix
+
+Authorisation bugs hide in combinations. Write a parameterised test that walks every role against every endpoint and resource owner:
+
+```java
+@ParameterizedTest(name = "{0} {1} {2} → {3}")
+@CsvSource({
+    "CUSTOMER,   GET,  /api/v1/accounts/OWN,   200",
+    "CUSTOMER,   GET,  /api/v1/accounts/OTHER, 404",
+    "SUPPORT,    GET,  /api/v1/accounts/OTHER, 200",
+    "SUPPORT,    POST, /api/v1/accounts/OTHER/freeze, 403",
+    "ADMIN,      POST, /api/v1/accounts/OTHER/freeze, 204",
+    "ANONYMOUS,  GET,  /api/v1/accounts/OWN,   401"
+})
+void accessMatrix(String role, String method, String path, int expected) throws Exception {
+    mvc.perform(request(HttpMethod.valueOf(method), resolve(path)).with(as(role)))
+       .andExpect(status().is(expected));
+}
+```
+
+Keep this matrix in the repository as living documentation of who may do what.
+
+## Common mistakes
+
+- Checking roles but not ownership (`hasRole('CUSTOMER')` on `/accounts/{id}`).
+- Trusting IDs from the request body, path or a tenant header without checking them against the caller.
+- Admin features hidden only in the front end.
+- Binding requests directly to JPA entities (mass assignment).
+- Calling a `@PreAuthorize` method from inside the same class and assuming it is checked.
+- `@PostAuthorize` on methods that change state.
+- Long, untested SpEL expressions instead of a bean with unit tests.
+- Maker-checker enforced only in the UI; audit logs that record "admin" instead of a person.
+
+## Practice
+
+1. Design a role and permission model for a wallet product with customers, support agents, tellers, supervisors and admins; document it as a table.
+2. Implement `@PreAuthorize` rules with an `accountAccess` bean and repository queries that include the customer ID; return 404 for other customers' accounts.
+3. Add a maker-checker flow for transfers above ₦5,000,000 and an append-only audit table.
+4. Write the full role × endpoint × owner test matrix for project 6.C.
+
+## Key terms
+
+Role, authority, permission, scope, RBAC, ABAC, least privilege, `@EnableMethodSecurity`, `@PreAuthorize`, `@PostAuthorize`, `@PostFilter`, SpEL, `authentication`, proxy self-invocation, object-level authorisation, BOLA, IDOR, function-level authorisation, mass assignment, multi-tenancy, row-level security, segregation of duties, maker-checker, audit trail, `AuthorizationDeniedEvent`.
+
+## Further reading
+
+- [Spring Security reference: Method security](https://docs.spring.io/spring-security/reference/servlet/authorization/method-security.html)
+- [Spring Security reference: Authorization architecture](https://docs.spring.io/spring-security/reference/servlet/authorization/architecture.html)
+- [OWASP API Security Top 10 (2023): API1 Broken Object Level Authorization](https://owasp.org/API-Security/editions/2023/en/0xa1-broken-object-level-authorization/)
+- [OWASP Cheat Sheet: Authorization](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html)
+- [OWASP Cheat Sheet: Mass Assignment](https://cheatsheetseries.owasp.org/cheatsheets/Mass_Assignment_Cheat_Sheet.html)
+- [PostgreSQL documentation: Row security policies](https://www.postgresql.org/docs/17/ddl-rowsecurity.html)

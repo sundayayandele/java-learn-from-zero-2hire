@@ -1,0 +1,99 @@
+{
+  "topic": "9.4",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A CV project line reads: 'Worked on a ledger project using Spring Boot and PostgreSQL.'",
+      "question": "Which rewrite is strongest for a junior backend role?",
+      "options": [
+        "\"Ledger project (see GitHub).\"",
+        "\"Expert in Spring Boot, PostgreSQL, Java, Kotlin, Kafka, Kubernetes and AWS.\"",
+        "\"Passionate about ledgers and banking.\"",
+        "\"Built a double-entry ledger (Spring Boot 4, PostgreSQL) with ordered row locking and idempotency keys; 50 concurrent transfers keep balances exact, proven by Testcontainers tests in CI.\""
+      ],
+      "answer": 3,
+      "explanation": "Strong bullets state what you built, how, and a verifiable result. Claims of expertise or passion without evidence carry little weight."
+    },
+    {
+      "type": "single",
+      "scenario": "A hiring manager opens your pinned repository and has three minutes.",
+      "question": "What should the README give them first?",
+      "options": [
+        "Screenshots of your IDE",
+        "The business problem, an architecture diagram, how to run it, API examples, key design decisions and evidence such as CI badges and a live link",
+        "The project's licence text",
+        "A full list of every dependency"
+      ],
+      "answer": 1,
+      "explanation": "A README is a sales document for your engineering judgement; it should quickly show the problem, the design and proof that it works."
+    },
+    {
+      "type": "single",
+      "scenario": "Your LinkedIn headline is 'Graduate | Learner | Dreamer'.",
+      "question": "Which headline will recruiters searching for Java engineers find and understand?",
+      "options": [
+        "Student",
+        "Aspiring developer looking for opportunities",
+        "Open to anything",
+        "Java Backend Engineer · Spring Boot · PostgreSQL · Payments & Fintech"
+      ],
+      "answer": 3,
+      "explanation": "Recruiters search by role and skill keywords. A clear, keyword-rich headline states what you do and the domain you target."
+    },
+    {
+      "type": "multi",
+      "scenario": "You are preparing your CV for applicant tracking systems and human screeners.",
+      "question": "Which practices help? (Choose two.)",
+      "options": [
+        "A simple single-column layout with standard section headings, exported as PDF",
+        "Placing key skills inside an image so the design looks better",
+        "Using the job ad's accurate terminology for skills you genuinely have",
+        "Adding every technology from the job ad, including ones you have never used"
+      ],
+      "answer": [
+        0,
+        2
+      ],
+      "explanation": "Parsable layouts and accurate keyword alignment help both software and people. Text in images cannot be parsed, and false claims fail in interviews and background checks."
+    },
+    {
+      "type": "single",
+      "scenario": "Your CV says 'reconciled 1 million records in 3 minutes', but the repository has no benchmark and you cannot reproduce the figure.",
+      "question": "What should you do?",
+      "options": [
+        "Move it to LinkedIn only",
+        "Remove or correct the claim, or add a reproducible benchmark with the method documented in the README",
+        "Keep it; nobody checks",
+        "Round it up to 10 million to sound better"
+      ],
+      "answer": 1,
+      "explanation": "Interviewers ask how you measured numbers on your CV. Every figure should be true and reproducible from your repository."
+    },
+    {
+      "type": "single",
+      "scenario": "You have applied cold to 60 roles with two responses.",
+      "question": "Which change usually has the biggest effect?",
+      "options": [
+        "Remove your projects to shorten the CV",
+        "Stop applying until you have five years of experience",
+        "Seek referrals from your network for specific roles and tailor each application with an evidence map",
+        "Send the same CV to 200 more roles"
+      ],
+      "answer": 2,
+      "explanation": "Referrals and targeted applications that map requirements to evidence convert far better than volume."
+    },
+    {
+      "type": "single",
+      "scenario": "A repository you want to pin has failing CI, no README and an old commit containing a test API key.",
+      "question": "What should you do before showcasing it?",
+      "options": [
+        "Make the repository private and pin it",
+        "Revoke the key, fix the build, write a proper README, and only then pin it (or leave it unpinned)",
+        "Delete the README to hide the problems",
+        "Pin it anyway; employers only look at the code"
+      ],
+      "answer": 1,
+      "explanation": "Pinned repositories are your evidence. Leaked secrets and broken builds are red flags; fix them or keep the repository out of your showcase."
+    }
+  ]
+}

@@ -207,7 +207,7 @@ LTS, end of support, JPMS, strong encapsulation, `jdeps`, `--add-opens`, Jakarta
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-23. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
 
 - [Ranking Java Features Added from Versions 8 to 21!](https://www.youtube.com/watch?v=RuMogS3ycKs) · Tales from the jar side · 27 min. Every major language and API change from Java 8 to 21, ranked by how much it matters day to day.
 - [Migrate to Java 21 using OpenRewrite](https://www.youtube.com/watch?v=uViRlX-RahA) · Moderne and OpenRewrite · 7 min. Automating a Java 21 migration with OpenRewrite recipes.

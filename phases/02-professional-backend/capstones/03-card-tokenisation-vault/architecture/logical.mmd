@@ -1,0 +1,36 @@
+%% Card tokenisation vault: logical architecture
+flowchart LR
+    subgraph sg0["Capabilities"]
+        direction TB
+        tok["Tokenise<br/>validate · lookup · encrypt"]
+        detok["Detokenise<br/>scope + purpose · audited"]
+        crypto["Envelope encryption<br/>AES-256-GCM · wrapped data keys"]
+        rot[["Key rotation<br/>maker-checker · batch re-wrap"]]
+    end
+    subgraph sg1["Data"]
+        direction TB
+        card[("card_token<br/>ciphertext · IV · wrapped key · KEK version · HMAC · last4")]
+        kek[("KEK versions<br/>(in KMS; never in the DB)")]
+        aud[("detokenise_audit")]
+    end
+    tok --> crypto
+    detok --> crypto
+    crypto -->|"wrap / unwrap"| kek
+    tok --> card
+    detok --> card
+    detok --> aud
+    rot -->|"re-wrap"| card
+    rot --> kek
+    classDef actor fill:#dae8fc,stroke:#6c8ebf,color:#000
+    classDef svc fill:#d5e8d4,stroke:#82b366,color:#000
+    classDef comp fill:#ffffff,stroke:#666666,color:#000
+    classDef db fill:#fff2cc,stroke:#d6b656,color:#000
+    classDef store fill:#f5f5f5,stroke:#666666,color:#000
+    classDef ext fill:#f8cecc,stroke:#b85450,color:#000,stroke-dasharray: 5 3
+    classDef infra fill:#e1d5e7,stroke:#9673a6,color:#000
+    classDef job fill:#ffe6cc,stroke:#d79b00,color:#000
+    class crypto comp
+    class card,aud db
+    class rot job
+    class kek store
+    class tok,detok svc

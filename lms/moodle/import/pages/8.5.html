@@ -1,0 +1,302 @@
+<p><em>Week 22 · Module 8: Git, Docker &amp; CI/CD</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Deploy a containerised Spring Boot service to a
+<strong>VPS</strong>, <strong>AWS (ECS Express Mode / Fargate)</strong>,
+<strong>Azure Container Apps</strong> and <strong>Google Cloud
+Run</strong>, from CI.</li>
+<li>Configure <strong>health checks</strong>, <strong>graceful
+shutdown</strong> and <strong>readiness</strong> so deployments cause no
+failed requests.</li>
+<li>Choose a <strong>deployment strategy</strong>: rolling, blue-green,
+canary, and know how to <strong>roll back</strong> fast.</li>
+<li>Run <strong>database migrations</strong> safely alongside
+deployments (expand and contract).</li>
+<li>Manage configuration and secrets per environment, and keep costs
+under control.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>"It works in CI" is not the end; customers only benefit when the
+change is running safely in production. Banks care about deployment as
+much as code: a failed release during month-end salary payments is a
+serious incident. Zero-downtime deployments, fast rollback and safe
+migrations are what let teams release often without fear, and they are
+standard system-design and DevOps interview topics.</p>
+<h2 id="1-what-a-deployable-service-needs">1. What a deployable service
+needs</h2>
+<p>Before choosing a platform, make the service easy to run
+anywhere:</p>
+<ul>
+<li><strong>Immutable image</strong> tagged with the commit SHA (topic
+8.2).</li>
+<li><strong>Configuration from the environment</strong>
+(<code>SPRING_DATASOURCE_URL</code>,
+<code>SPRING_PROFILES_ACTIVE</code>), secrets from the platform's secret
+store (topic 6.5).</li>
+<li><strong>Health endpoints:</strong> liveness
+(<code>/actuator/health/liveness</code>) answers "is the process
+alive?"; readiness (<code>/actuator/health/readiness</code>) answers
+"can it take traffic now?" (database reachable, warmed up). Enable them
+with <code>management.endpoint.health.probes.enabled=true</code> (on by
+default on Kubernetes).</li>
+<li><strong>Graceful shutdown:</strong> on <code>SIGTERM</code>, stop
+accepting new requests and finish in-flight ones:</li>
+</ul>
+<pre class="properties"><code>server.shutdown=graceful
+spring.lifecycle.timeout-per-shutdown-phase=30s</code></pre>
+<ul>
+<li><strong>Stateless instances:</strong> no local session state or
+local files that matter, so any instance can serve any request and
+instances can be replaced freely.</li>
+<li><strong>Logs to stdout</strong> in a structured format (Spring Boot:
+<code>logging.structured.format.console=ecs</code> or
+<code>logstash</code>), collected by the platform.</li>
+</ul>
+<h2 id="2-platform-options">2. Platform options</h2>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Model</th>
+<th>Good for</th>
+<th>Cost shape</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>VPS</strong> (for example SSDNodes) + Docker Compose +
+Caddy</td>
+<td>You manage the server</td>
+<td>Learning, small services, predictable cost</td>
+<td>Fixed monthly</td>
+</tr>
+<tr>
+<td><strong>AWS ECS Express Mode</strong> (Fargate)</td>
+<td>Managed containers with an HTTPS load balancer, auto scaling and
+deployment in one service</td>
+<td>Production on AWS without managing servers</td>
+<td>Per vCPU/GB-second plus load balancer</td>
+</tr>
+<tr>
+<td><strong>Azure Container Apps</strong></td>
+<td>Serverless containers on managed Kubernetes</td>
+<td>Production on Azure; scale to zero for non-production</td>
+<td>Per use; free monthly allowance</td>
+</tr>
+<tr>
+<td><strong>Google Cloud Run</strong></td>
+<td>Serverless containers, request-based</td>
+<td>Production on GCP; scale to zero</td>
+<td>Per request/use; free tier</td>
+</tr>
+<tr>
+<td><strong>Kubernetes</strong> (EKS, AKS, GKE)</td>
+<td>Full orchestration</td>
+<td>Many services, platform teams</td>
+<td>Cluster plus nodes (Phase 3)</td>
+</tr>
+</tbody>
+</table>
+<p>AWS App Runner was AWS's previous "just run my container" service and
+is closed to new customers; ECS Express Mode is the recommended path for
+new accounts. The Phase 1 <a
+href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/deploy/README.md">deployment guide</a> has
+sizing and the full commands for each platform; this lesson focuses on
+doing it safely and repeatably from CI.</p>
+<h3 id="vps-from-ci">VPS from CI</h3>
+<pre class="bash"><code># deploy/vps-deploy.sh, run by the pipeline with an SSH deploy key stored in the production environment
+ssh deploy@wallet.example.ng &quot;
+  cd /srv/wallet &amp;&amp;
+  export APP_IMAGE=ghcr.io/acme/wallet-api:$GIT_SHA &amp;&amp;
+  docker compose pull app &amp;&amp;
+  docker compose up -d app &amp;&amp;
+  docker image prune -f&quot;
+curl --fail --retry 10 --retry-delay 5 https://wallet.example.ng/actuator/health/readiness</code></pre>
+<p>A single VPS has a short gap while the container restarts; run two
+app containers behind Caddy (or use a blue-green pair, section 3) to
+avoid it.</p>
+<h3 id="azure-container-apps-cli-from-a-pipeline">Azure Container Apps
+(CLI from a pipeline)</h3>
+<pre class="bash"><code>az containerapp update --name wallet-api --resource-group rg-wallet-prod \
+  --image ghcr.io/acme/wallet-api:$GIT_SHA \
+  --revision-suffix ${GIT_SHA:0:7}</code></pre>
+<p>Container Apps creates a new <strong>revision</strong>; with
+multiple-revision mode you can split traffic between revisions for
+canary releases and switch back instantly.</p>
+<h3 id="google-cloud-run">Google Cloud Run</h3>
+<pre class="bash"><code>gcloud run deploy wallet-api --image europe-west1-docker.pkg.dev/acme/apps/wallet-api:$GIT_SHA \
+  --region europe-west1 --no-traffic --tag canary
+gcloud run services update-traffic wallet-api --region europe-west1 --to-tags canary=10</code></pre>
+<p>Deploying with <code>--no-traffic</code> and a tag gives the new
+revision its own URL for smoke tests before it receives real
+traffic.</p>
+<h3 id="aws-ecs-express-mode-or-a-classic-service">AWS ECS (Express Mode
+or a classic service)</h3>
+<p>The pipeline registers a new task definition revision with the new
+image and updates the service; ECS performs a rolling deployment, using
+the load balancer's health checks, and the <strong>deployment circuit
+breaker</strong>
+(<code>deploymentCircuitBreaker: {enable: true, rollback: true}</code>)
+rolls back automatically if new tasks fail to become healthy.</p>
+<h2 id="3-deployment-strategies">3. Deployment strategies</h2>
+<table>
+<thead>
+<tr>
+<th>Strategy</th>
+<th>How</th>
+<th>Pros</th>
+<th>Cons</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Recreate</td>
+<td>Stop old, start new</td>
+<td>Simple</td>
+<td>Downtime</td>
+</tr>
+<tr>
+<td><strong>Rolling</strong></td>
+<td>Replace instances a few at a time, each checked for readiness</td>
+<td>No downtime, default on most platforms</td>
+<td>Old and new versions run together briefly</td>
+</tr>
+<tr>
+<td><strong>Blue-green</strong></td>
+<td>Run the new version alongside the old; switch all traffic at
+once</td>
+<td>Instant switch and instant rollback</td>
+<td>Double capacity during the switch</td>
+</tr>
+<tr>
+<td><strong>Canary</strong></td>
+<td>Send a small share of traffic (1–10%) to the new version, watch
+metrics, then increase</td>
+<td>Limits blast radius; real-traffic validation</td>
+<td>Needs good metrics and traffic splitting</td>
+</tr>
+</tbody>
+</table>
+<p>During rolling, blue-green and canary releases, <strong>two versions
+run at the same time</strong>, so they must both work with the same
+database schema and the same message formats. That leads to the most
+important rule of deploying data-backed services.</p>
+<h2 id="4-database-migrations-without-downtime-expand-and-contract">4.
+Database migrations without downtime: expand and contract</h2>
+<p>Flyway runs migrations when the new version starts. If version N+1
+renames a column, version N (still running) breaks. Split breaking
+schema changes across releases:</p>
+<ol type="1">
+<li><strong>Expand:</strong> add the new column/table (nullable or with
+a default); version N ignores it. Deploy code that writes
+<strong>both</strong> old and new.</li>
+<li><strong>Migrate:</strong> backfill existing rows (in batches,
+outside peak hours for big tables).</li>
+<li><strong>Switch:</strong> deploy code that reads the new column.</li>
+<li><strong>Contract:</strong> in a later release, stop writing the old
+column, then drop it.</li>
+</ol>
+<p>Other rules: never edit an applied migration; avoid long locks on
+large tables (add indexes with <code>CREATE INDEX CONCURRENTLY</code> in
+a migration with <code>-- flyway:executeInTransaction=false</code>);
+test migrations against a copy of production-sized data; take a backup
+or snapshot before risky changes.</p>
+<h2 id="5-rolling-back">5. Rolling back</h2>
+<ul>
+<li><strong>Application rollback</strong> should take one command or one
+click: redeploy the previous image SHA, switch traffic back to the
+previous revision, or let the platform's circuit breaker do it.</li>
+<li>Because of expand and contract, the previous version still works
+with the current schema, so rollback does not need a database rollback.
+<strong>Forward-fix</strong> schema problems with a new migration rather
+than undoing applied ones.</li>
+<li>Use <strong>feature flags</strong> to switch off a risky feature
+without redeploying.</li>
+<li>Decide rollback criteria in advance: error rate above X%, p95
+latency above Y ms, failed smoke tests.</li>
+</ul>
+<h2 id="6-after-deployment">6. After deployment</h2>
+<ul>
+<li><strong>Smoke tests</strong> against the new version (topic 7.3) as
+a pipeline step.</li>
+<li><strong>Watch the dashboards</strong> (error rate, latency,
+saturation; Phase 3 builds them properly).</li>
+<li><strong>Record the deployment:</strong> which SHA, when, by whom,
+approved by whom. Many banks link it to a change ticket automatically
+from the pipeline.</li>
+</ul>
+<h2 id="7-cost-and-environments">7. Cost and environments</h2>
+<ul>
+<li>Separate <code>staging</code> and <code>production</code> (separate
+cloud accounts, subscriptions or projects where possible), with
+production data never copied to lower environments unmasked.</li>
+<li>Scale non-production to zero or tear it down after use; set budget
+alerts on every cloud account.</li>
+<li>Right-size containers from real metrics (Phase 1 sizing table is a
+starting point).</li>
+</ul>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>No readiness probe, so traffic hits instances that are still
+starting.</li>
+<li>Abrupt shutdown that kills in-flight payments during deploys.</li>
+<li>Renaming or dropping a column in the same release as the code
+change.</li>
+<li>Rollback that requires a database restore.</li>
+<li>Deploying <code>latest</code>, or not knowing which commit is in
+production.</li>
+<li>Manual production deployments from a laptop.</li>
+<li>Forgetting to delete a test environment and receiving a cloud
+bill.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Enable liveness and readiness probes and graceful shutdown in your
+capstone; prove with a load test (<code>hey</code> or <code>k6</code>)
+that a redeploy causes no failed requests.</li>
+<li>Deploy the capstone from CI to one managed platform (Container Apps,
+Cloud Run or ECS) and to a VPS, using the commit SHA as the tag.</li>
+<li>Perform a canary release (traffic split) and a rollback to the
+previous revision; time the rollback.</li>
+<li>Rename a column using expand and contract across three releases, and
+write the plan as an ADR.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Immutable image, environment configuration, liveness probe, readiness
+probe, graceful shutdown, <code>SIGTERM</code>, stateless service,
+structured logging, VPS, ECS Express Mode, Fargate, Azure Container
+Apps, revision, Cloud Run, traffic splitting, rolling deployment,
+blue-green deployment, canary release, deployment circuit breaker,
+rollback, roll-forward, expand and contract, backfill,
+<code>CREATE INDEX CONCURRENTLY</code>, feature flag, smoke test, change
+record.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://docs.spring.io/spring-boot/reference/web/graceful-shutdown.html">Spring
+Boot reference: Graceful shutdown</a></li>
+<li><a
+href="https://docs.spring.io/spring-boot/reference/actuator/endpoints.html#actuator.endpoints.kubernetes-probes">Spring
+Boot reference: Kubernetes probes (liveness and readiness)</a></li>
+<li><a
+href="https://learn.microsoft.com/en-us/azure/container-apps/revisions">Microsoft
+Learn: Revisions in Azure Container Apps</a></li>
+<li><a
+href="https://cloud.google.com/run/docs/rollouts-rollbacks-traffic-migration">Google
+Cloud: Rollbacks, gradual rollouts and traffic migration (Cloud
+Run)</a></li>
+<li><a
+href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/deployment-circuit-breaker.html">AWS
+documentation: Amazon ECS deployment circuit breaker</a></li>
+<li><a
+href="https://martinfowler.com/bliki/BlueGreenDeployment.html">Martin
+Fowler: Blue-green deployment</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Top 5 Most-Used Deployment Strategies</h3><p>ByteByteGo · 10 min. Deployment strategies: rolling, blue-green, canary, feature toggles.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/AWVTKBUnoIg" title="Top 5 Most-Used Deployment Strategies" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>How to deploy a container image to Cloud Run</h3><p>Google Cloud Tech · 3 min. Deploying a container image to Google Cloud Run.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/zihPR6TeqjY" title="How to deploy a container image to Cloud Run" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>The ONLY Azure Container Apps video you need in 2024</h3><p>Microsoft DevRadio · 6 min. Azure Container Apps overview from Microsoft.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/0HwQfsa03K8" title="The ONLY Azure Container Apps video you need in 2024" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>How do software projects achieve zero downtime database migrations?</h3><p>Web Dev Cody · 7 min. Zero-downtime database migrations with expand and contract.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/cw5K2O4AHJc" title="How do software projects achieve zero downtime database migrations?" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/02-professional-backend/08-git-docker-cicd/8.5-deploying-containers-cloud/README.md">8.5 Deploying a container to a cloud host</a></p>

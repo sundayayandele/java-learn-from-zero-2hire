@@ -1,0 +1,258 @@
+<p><em>Week 24 · Module 9: AI-Assisted Engineering &amp; Junior Portfolio</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Write a <strong>one-page CV</strong> for junior Java backend roles
+with <strong>quantified, evidence-based</strong> project bullets.</li>
+<li>Turn your GitHub account into a <strong>portfolio</strong>: profile
+README, pinned repositories, READMEs a hiring manager can read in three
+minutes, green CI and live links.</li>
+<li>Optimise <strong>LinkedIn</strong> (headline, about, featured,
+skills, experience) for recruiters searching for Java, Spring Boot and
+fintech skills.</li>
+<li>Tailor applications to a job description with an <strong>evidence
+map</strong>, and pass applicant tracking systems (ATS) without keyword
+stuffing.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Recruiters and hiring managers spend seconds on a first screen. For
+career changers and new graduates, your projects <em>are</em> your
+experience, and a strong GitHub portfolio of deployed, tested, secured
+financial services is what separates you from hundreds of applicants
+with the same course certificate. Banks also run background and
+reference checks, so everything you claim must be true and
+demonstrable.</p>
+<h2 id="1-the-cv">1. The CV</h2>
+<h3 id="format">Format</h3>
+<ul>
+<li><strong>One page</strong> for junior roles; PDF; simple
+single-column layout that ATS software can parse (no tables for core
+content, no text in images, standard section names).</li>
+<li>Sections, in order: <strong>Header</strong> (name, city or "Lagos,
+Nigeria · open to remote", email, phone, GitHub, LinkedIn, portfolio
+site) → <strong>Summary</strong> (2–3 lines) → <strong>Skills</strong> →
+<strong>Projects</strong> (your strongest section) →
+<strong>Experience</strong> (any work, including non-tech, briefly) →
+<strong>Education and certifications</strong>.</li>
+<li>No photo, date of birth, marital status or state of origin unless an
+employer explicitly asks; they invite bias and are not needed.</li>
+</ul>
+<h3 id="summary">Summary</h3>
+<blockquote>
+<p>Junior Java backend engineer who builds and deploys secure, tested
+Spring Boot services for payments and banking: a double-entry ledger, a
+payment-gateway integration hub with signed webhooks, and an AML
+monitoring engine over 5 million transactions. Comfortable with
+PostgreSQL, Docker, GitHub Actions and Keycloak.</p>
+</blockquote>
+<h3 id="skills">Skills</h3>
+<p>Group them and list only what you can discuss in an interview:</p>
+<ul>
+<li><strong>Languages:</strong> Java 21, SQL, Kotlin (basic)</li>
+<li><strong>Frameworks:</strong> Spring Boot 4, Spring Security (OAuth2,
+JWT), Spring Data JPA, JUnit 5, Mockito, Testcontainers</li>
+<li><strong>Data:</strong> PostgreSQL, Redis, MongoDB, Flyway</li>
+<li><strong>Delivery:</strong> Docker, GitHub Actions, GitLab CI,
+SonarQube, AWS/Azure container services, Linux</li>
+<li><strong>Practices:</strong> REST and OpenAPI, Problem Details,
+idempotency, TDD, code review</li>
+</ul>
+<h3 id="project-bullets-that-prove-impact">Project bullets that prove
+impact</h3>
+<p>Use the pattern <strong>action + what + how + result (with a
+number)</strong>:</p>
+<ul>
+<li>Weak: "Worked on a ledger project using Spring Boot."</li>
+<li>Strong: "Built a double-entry core-banking ledger (Spring Boot 4,
+PostgreSQL) with ordered row locking and idempotency keys; 50 concurrent
+transfers keep balances exact, verified by Testcontainers integration
+tests in CI."</li>
+<li>Strong: "Integrated a Paystack-style payment gateway with
+HMAC-verified, de-duplicated webhooks, timeouts, retries and a circuit
+breaker; WireMock tests cover 12 failure scenarios."</li>
+<li>Strong: "Wrote SQL window-function scenarios that flag structuring
+and fan-out across 5M AML transactions in under 4 seconds each after
+indexing (EXPLAIN ANALYZE before/after in README)."</li>
+</ul>
+<p>Every number must be real and reproducible from your repository. Link
+each project name to its GitHub repository.</p>
+<h3 id="what-not-to-do">What not to do</h3>
+<ul>
+<li>Lists of every technology you have heard of.</li>
+<li>"Expert" or self-ratings (stars, percentages) for skills.</li>
+<li>Generic objectives ("seeking a challenging role…").</li>
+<li>Spelling mistakes in technology names (it is "PostgreSQL",
+"JavaScript", "GitHub").</li>
+<li>Copying an AI-written CV without editing it into your own words;
+recruiters see many identical ones.</li>
+</ul>
+<h2 id="2-github-as-a-portfolio">2. GitHub as a portfolio</h2>
+<h3 id="profile-readme">Profile README</h3>
+<p>Create a repository named exactly like your username; its
+<code>README.md</code> appears on your profile:</p>
+<pre class="markdown"><code># Hi, I&#39;m Ada 👋
+Junior Java backend engineer building secure, tested payment and banking services.
+Looking for backend roles in Lagos or remote (Java, Spring Boot, PostgreSQL).
+
+**Featured projects**
+- [core-banking-ledger](https://github.com/ada/core-banking-ledger): double-entry ledger, concurrency-safe transfers · [live](https://ledger.ada.dev/actuator/health)
+- [payment-gateway-hub](https://github.com/ada/payment-gateway-hub): gateway integration, signed webhooks, resilience
+- [aml-monitoring](https://github.com/ada/aml-monitoring): SQL-driven AML scenarios over 5M transactions
+
+**Stack:** Java 21 · Spring Boot 4 · PostgreSQL · Docker · GitHub Actions · Keycloak
+**Writing:** [How I made transfers idempotent](https://dev.to/ada/idempotent-transfers)</code></pre>
+<h3 id="pinned-repositories">Pinned repositories</h3>
+<p>Pin four to six of your best repositories. Each one needs:</p>
+<ul>
+<li>A <strong>README</strong> a hiring manager can read in three
+minutes: the business problem, an architecture diagram, how to run it,
+API examples, design decisions and trade-offs, test and quality evidence
+(badges), data sources and licences, what you would do next.</li>
+<li><strong>Green CI</strong> with quality gates visible as badges.</li>
+<li>A <strong>live link</strong> (health endpoint or demo) or a 3-minute
+demo video.</li>
+<li>A clean, meaningful <strong>commit history</strong> (topic 8.1), and
+no secrets.</li>
+<li>An <strong>AI usage note</strong> if you used assistants (topic
+9.1).</li>
+</ul>
+<p>Delete or archive tutorial forks and half-finished experiments, or
+keep them unpinned. Quality beats quantity.</p>
+<h3 id="contribution-activity">Contribution activity</h3>
+<p>Regular commits show sustained work, but do not game the contribution
+graph. A few real <strong>open-source contributions</strong> (a
+documentation fix in a Spring project, a bug fix in a library you used)
+are worth more than months of empty commits.</p>
+<h2 id="3-linkedin">3. LinkedIn</h2>
+<ul>
+<li><strong>Headline</strong> (searchable): "Java Backend Engineer ·
+Spring Boot · PostgreSQL · Payments &amp; Fintech" rather than "Aspiring
+developer".</li>
+<li><strong>About:</strong> 3–5 short paragraphs: what you build, two or
+three projects with results, what roles you want, how to contact
+you.</li>
+<li><strong>Featured:</strong> links to your best repositories, demo
+videos and one technical post.</li>
+<li><strong>Experience:</strong> if you have no tech job yet, add your
+capstone portfolio as a project or a "Software Engineering Trainee,
+ITLearning" entry, and describe transferable experience from previous
+jobs (a bank teller who understands reconciliation is valuable to a
+fintech).</li>
+<li><strong>Skills:</strong> add the 10–15 most relevant (Java, Spring
+Boot, PostgreSQL, REST APIs, Docker…) so recruiter searches find you;
+ask classmates and mentors for endorsements you can justify.</li>
+<li><strong>Open to work:</strong> set it to recruiters only if you are
+currently employed.</li>
+<li><strong>Post occasionally:</strong> a short write-up of a problem
+you solved (with a diagram) builds visibility more than reposting
+news.</li>
+</ul>
+<p>Make your CV, GitHub and LinkedIn <strong>consistent</strong>: same
+job titles, dates and project names.</p>
+<h2 id="4-tailoring-to-a-job-description">4. Tailoring to a job
+description</h2>
+<p>For each role, build an <strong>evidence map</strong>: requirement →
+your proof.</p>
+<table>
+<thead>
+<tr>
+<th>Job ad says</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"Experience building RESTful APIs with Spring Boot"</td>
+<td>Payment hub API, OpenAPI document, MockMvc test suite</td>
+</tr>
+<tr>
+<td>"Knowledge of SQL and relational databases"</td>
+<td>Ledger schema with constraints; AML scenarios with window functions
+and EXPLAIN ANALYZE</td>
+</tr>
+<tr>
+<td>"Familiarity with CI/CD and Docker"</td>
+<td>GitHub Actions pipeline with quality gates; multi-stage Dockerfile;
+deployed on Azure Container Apps</td>
+</tr>
+<tr>
+<td>"Understanding of security best practices"</td>
+<td>Keycloak-secured API, object-level authorisation tests, dependency
+scanning</td>
+</tr>
+<tr>
+<td>"Payments or banking domain is a plus"</td>
+<td>Three financial capstones; Phase 1 &amp; 2 programme</td>
+</tr>
+</tbody>
+</table>
+<p>Then adjust your CV's summary, skills order and project bullets to
+put the matching evidence first, using the employer's vocabulary where
+it is accurate (ATS systems match keywords, and so do human screeners).
+Never claim a skill you cannot discuss.</p>
+<h2 id="5-applications-and-referrals">5. Applications and referrals</h2>
+<ul>
+<li><strong>Referrals</strong> have far higher response rates than cold
+applications: tell classmates, mentors and former colleagues what you
+are looking for, and ask for referrals to specific roles.</li>
+<li>Write a <strong>short, specific note</strong> with each application
+or LinkedIn message: one sentence on why this company, one on your most
+relevant project with a link.</li>
+<li><strong>Track</strong> applications (company, role, date, contact,
+status, follow-up date) in a spreadsheet or board; follow up once after
+a week.</li>
+<li>Expect rejections; treat each interview as practice and ask for
+feedback.</li>
+</ul>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Two-page CVs full of course names and no projects.</li>
+<li>Repositories without READMEs, with failing builds or committed
+secrets.</li>
+<li>Numbers you cannot reproduce or explain in an interview.</li>
+<li>A LinkedIn headline that hides what you do ("Graduate | Learner |
+Dreamer").</li>
+<li>The same generic CV sent to every job.</li>
+<li>Inconsistent dates and titles across CV and LinkedIn.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Write your one-page CV with at least three quantified project
+bullets; ask a mentor or peer to review it against this lesson.</li>
+<li>Create your GitHub profile README and pin your four best
+repositories; bring each README up to the three-minute standard.</li>
+<li>Rewrite your LinkedIn headline, about section and featured
+items.</li>
+<li>Pick three real job ads and build an evidence map for each; tailor
+the CV for one of them.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>ATS (applicant tracking system), one-page CV, summary, quantified
+bullet, action–what–how–result, portfolio, profile README, pinned
+repository, badge, demo video, contribution graph, open-source
+contribution, headline, featured section, endorsement, evidence map,
+keyword matching, referral, application tracker.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://docs.github.com/en/account-and-profile/how-tos/profile-customization/managing-your-profile-readme">GitHub
+Docs: Managing your profile README</a></li>
+<li><a
+href="https://docs.github.com/en/account-and-profile/how-tos/profile-customization/pinning-items-to-your-profile">GitHub
+Docs: Pinning items to your profile</a></li>
+<li><a
+href="https://www.linkedin.com/help/linkedin/answer/a540837">LinkedIn
+Help: Add sections to your profile</a></li>
+<li><a href="https://www.makeareadme.com/">Make a README</a></li>
+<li><a
+href="https://www.freecodecamp.org/news/writing-a-killer-software-engineering-resume-b11c91ef699d/">freeCodeCamp:
+How to write a developer resume hiring managers will read</a></li>
+<li><a href="https://www.techinterviewhandbook.org/resume/">Tech
+Interview Handbook: Resume guide</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>The Resume that got me into Google - Software Engineer Resume Tips</h3><p>NeetCode · 14 min. A software engineer CV that got interviews: what to keep, what to cut.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/bwgjvzMSlMQ" title="The Resume that got me into Google - Software Engineer Resume Tips" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>5 MUST-KNOW LinkedIn Profile Tips for Job Seekers!</h3><p>Jeff Su · 8 min. Five LinkedIn profile fixes that recruiters notice.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/B4OhuzwLc9o" title="5 MUST-KNOW LinkedIn Profile Tips for Job Seekers!" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>How To Build a Junior Developer LinkedIn Profile That Gets You HIRED [FULL GUIDE]</h3><p>Iman Musa · 10 min. Building a junior developer LinkedIn profile that gets responses.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/eMFGbNVRi-c" title="How To Build a Junior Developer LinkedIn Profile That Gets You HIRED [FULL GUIDE]" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/02-professional-backend/09-ai-assisted-engineering-portfolio/9.4-cv-github-linkedin/README.md">9.4 CV, GitHub profile and LinkedIn optimisation for Java roles</a></p>

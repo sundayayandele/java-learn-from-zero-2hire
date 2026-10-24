@@ -64,7 +64,7 @@ Phase 1 Modules 1–2 cover every objective of the **Oracle Certified Profession
 
 ## End-of-phase exam
 
-A 2-hour, 50-question scenario-based CBT covering every Phase 1 topic, taken on Moodle in week 13. Pass mark 70%.
+A 2-hour, 60-question scenario-based CBT covering every Phase 1 topic, taken on Moodle in week 13. Pass mark 70%.
 
 → [Exam information and blueprint](exam/README.md)
 

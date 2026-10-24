@@ -1,0 +1,294 @@
+<p><em>Week 18 · Module 6: Security Essentials</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Name the <strong>OWASP Top 10 (2025)</strong> and <strong>OWASP API
+Security Top 10 (2023)</strong> risks and recognise each in Spring Boot
+code.</li>
+<li>Prevent <strong>injection</strong> (SQL, JPQL, log, command, LDAP),
+<strong>SSRF</strong>, insecure deserialisation and XML attacks in
+Java.</li>
+<li>Avoid <strong>security misconfiguration</strong> in Spring Boot
+(Actuator, error pages, default credentials).</li>
+<li>Handle <strong>logging and monitoring</strong> of security events
+without leaking personal data.</li>
+<li>Use the OWASP lists as a <strong>review checklist</strong> for your
+own pull requests.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Penetration tests, regulators' IT examinations and many vendor
+due-diligence questionnaires are organised around the OWASP lists. When
+an auditor writes "finding: A01 Broken Access Control on
+/api/v1/statements", you need to know what it means and how to fix it in
+Spring. Interviewers for fintech roles regularly ask "how would you
+prevent SQL injection?" or "what is SSRF?" and expect concrete Java
+answers, not definitions.</p>
+<h2 id="1-the-two-lists">1. The two lists</h2>
+<p><strong>OWASP Top 10 (2025)</strong>, for web applications:</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Risk</th>
+<th>In a Spring API, for example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A01</td>
+<td>Broken Access Control</td>
+<td>Another customer's statement by changing an ID (topic 6.3); SSRF is
+now included here</td>
+</tr>
+<tr>
+<td>A02</td>
+<td>Security Misconfiguration</td>
+<td>Actuator <code>env</code> and <code>heapdump</code> exposed; stack
+traces in errors; permissive CORS</td>
+</tr>
+<tr>
+<td>A03</td>
+<td>Software Supply Chain Failures</td>
+<td>Vulnerable or malicious dependencies, unpinned build plugins,
+compromised CI (topic 6.5)</td>
+</tr>
+<tr>
+<td>A04</td>
+<td>Cryptographic Failures</td>
+<td>MD5 password hashes, TLS disabled for "internal" calls, homemade
+encryption</td>
+</tr>
+<tr>
+<td>A05</td>
+<td>Injection</td>
+<td>SQL built by string concatenation; untrusted input in log lines</td>
+</tr>
+<tr>
+<td>A06</td>
+<td>Insecure Design</td>
+<td>No rate limit on OTP verification; transfers without
+idempotency</td>
+</tr>
+<tr>
+<td>A07</td>
+<td>Authentication Failures</td>
+<td>No lockout, long-lived tokens, unchecked JWT audience (topic
+6.2)</td>
+</tr>
+<tr>
+<td>A08</td>
+<td>Software or Data Integrity Failures</td>
+<td>Unsigned webhooks, Java deserialisation of untrusted data</td>
+</tr>
+<tr>
+<td>A09</td>
+<td>Security Logging and Alerting Failures</td>
+<td>Failed logins not logged; logs full of card numbers; no alerts</td>
+</tr>
+<tr>
+<td>A10</td>
+<td>Mishandling of Exceptional Conditions</td>
+<td>Failing open on errors; leaking details in error messages</td>
+</tr>
+</tbody>
+</table>
+<p><strong>OWASP API Security Top 10 (2023)</strong>, specific to APIs:
+API1 Broken Object Level Authorization, API2 Broken Authentication, API3
+Broken Object Property Level Authorization (mass assignment and
+excessive data exposure), API4 Unrestricted Resource Consumption, API5
+Broken Function Level Authorization, API6 Unrestricted Access to
+Sensitive Business Flows, API7 Server Side Request Forgery, API8
+Security Misconfiguration, API9 Improper Inventory Management, API10
+Unsafe Consumption of APIs.</p>
+<p>(The 2025 edition reorganised the web list; when you read older
+reports you will see the 2021 numbering, where A03 was Injection and A10
+was SSRF.)</p>
+<h2 id="2-injection">2. Injection</h2>
+<h3 id="sql-and-jpql">SQL and JPQL</h3>
+<p>Vulnerable:</p>
+<pre class="java"><code>String sql = &quot;SELECT * FROM account WHERE customer_id = &#39;&quot; + customerId + &quot;&#39; ORDER BY &quot; + sort;</code></pre>
+<p>A <code>customerId</code> of <code>' OR '1'='1</code> returns every
+account. Fix with <strong>parameters</strong>, always:</p>
+<pre class="java"><code>jdbc.sql(&quot;SELECT * FROM account WHERE customer_id = :customerId&quot;)
+    .param(&quot;customerId&quot;, customerId)
+    .query(Account.class).list();
+
+@Query(&quot;select a from Account a where a.customerId = :customerId&quot;)
+List&lt;Account&gt; findForCustomer(@Param(&quot;customerId&quot;) String customerId);</code></pre>
+<p>Identifiers (column names in <code>ORDER BY</code>, table names)
+cannot be parameters; use an <strong>allow-list</strong>:</p>
+<pre class="java"><code>private static final Map&lt;String, String&gt; SORTABLE = Map.of(&quot;date&quot;, &quot;value_date&quot;, &quot;amount&quot;, &quot;amount&quot;);
+String column = Optional.ofNullable(SORTABLE.get(sort)).orElseThrow(() -&gt; new InvalidSortException(sort));</code></pre>
+<p>Spring Data derived queries and <code>Sort</code> with validated
+property names are safe; <code>@Query(nativeQuery = true)</code> with
+concatenated strings is not.</p>
+<h3 id="log-injection">Log injection</h3>
+<p>Untrusted input with line breaks can forge log entries
+(<code>"alice\n2026-10-24 INFO Transfer approved by supervisor"</code>),
+and some log pipelines once evaluated lookups in messages (Log4Shell).
+Use parameterised logging, structured (JSON) logs that escape values,
+and never log secrets:</p>
+<pre class="java"><code>log.info(&quot;Login failed for user={} ip={}&quot;, sanitise(username), ip);   // not &quot;Login failed for &quot; + username</code></pre>
+<h3 id="os-command-ldap-expression-and-template-injection">OS command,
+LDAP, expression and template injection</h3>
+<p>Avoid <code>Runtime.exec</code> with user input (use
+<code>ProcessBuilder</code> with a fixed command and separate
+arguments); escape LDAP filters; never evaluate SpEL, OGNL or template
+expressions built from user input.</p>
+<h2 id="3-server-side-request-forgery-ssrf">3. Server-side request
+forgery (SSRF)</h2>
+<p>A "fetch logo from URL" or "verify webhook URL" feature that lets
+users supply a URL can be pointed at internal addresses:
+<code>http://169.254.169.254/latest/meta-data/</code> (cloud instance
+credentials), <code>http://localhost:8080/actuator/env</code>, internal
+admin services. Defences:</p>
+<ul>
+<li>Do not fetch user-supplied URLs if you can avoid it.</li>
+<li>Otherwise <strong>allow-list</strong> hosts and schemes
+(<code>https</code> only), resolve the DNS name and <strong>reject
+private, loopback and link-local addresses</strong> (and re-check after
+redirects, or disable redirects).</li>
+<li>Run outbound fetches through an egress proxy; use IMDSv2 on
+AWS.</li>
+</ul>
+<h2 id="4-deserialisation-and-xml">4. Deserialisation and XML</h2>
+<ul>
+<li><strong>Java native serialisation</strong>
+(<code>ObjectInputStream</code>) of untrusted data can execute code
+through gadget chains. Do not use it for anything that crosses a trust
+boundary; use JSON with explicit DTOs. If you must, apply a
+serialisation filter (<code>jdk.serialFilter</code>, Phase 1 topic
+1.10).</li>
+<li><strong>Jackson polymorphic typing</strong>
+(<code>@JsonTypeInfo(use = Id.CLASS)</code> or default typing) lets a
+payload choose which class to create: avoid it, or use an allow-list of
+subtypes.</li>
+<li><strong>XML External Entities (XXE):</strong> many bank integrations
+still use XML (ISO 20022 messages, SOAP). Disable DTDs and external
+entities on every parser:</li>
+</ul>
+<pre class="java"><code>DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+dbf.setFeature(&quot;http://apache.org/xml/features/disallow-doctype-decl&quot;, true);
+dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+dbf.setXIncludeAware(false);
+dbf.setExpandEntityReferences(false);</code></pre>
+<h2 id="5-security-misconfiguration-in-spring-boot">5. Security
+misconfiguration in Spring Boot</h2>
+<ul>
+<li><strong>Actuator:</strong> expose only what you need
+(<code>management.endpoints.web.exposure.include=health,info,prometheus</code>),
+put it on a separate port or behind authentication, and never expose
+<code>env</code>, <code>heapdump</code>, <code>threaddump</code>,
+<code>configprops</code> or <code>loggers</code> publicly. A heap dump
+contains secrets and customer data in memory.</li>
+<li><strong>Errors:</strong>
+<code>server.error.include-stacktrace=never</code>,
+<code>server.error.include-message=never</code> (the defaults); return
+Problem Details without internals.</li>
+<li><strong>H2 console, Swagger UI, GraphiQL, debug endpoints:</strong>
+off in production profiles.</li>
+<li><strong>Default credentials:</strong> no
+<code>spring.security.user.password=admin</code>; change every default
+password in Compose files used beyond a laptop.</li>
+<li><strong>TLS everywhere</strong>, including between internal services
+and to the database (<code>sslmode=verify-full</code> for
+PostgreSQL).</li>
+<li><strong>Security headers</strong> stay on (topic 6.1).</li>
+</ul>
+<h2 id="6-insecure-design-and-business-logic-abuse">6. Insecure design
+and business-logic abuse</h2>
+<p>Some vulnerabilities are not bugs in code but missing controls in the
+design:</p>
+<ul>
+<li><strong>OTP and PIN brute force:</strong> a 6-digit OTP with no
+attempt limit falls in minutes. Limit attempts per OTP and per user,
+expire OTPs quickly, and alert on spikes.</li>
+<li><strong>Unrestricted resource consumption</strong> (API4): no
+pagination limits, no request size limits, no rate limits on expensive
+endpoints like statement generation.</li>
+<li><strong>Sensitive business flows</strong> (API6): automated abuse of
+sign-up bonuses, referral credits or airtime purchase. Use velocity
+limits, device fingerprinting and fraud rules (Phase 1 Capstone 7).</li>
+<li><strong>Race conditions on balances:</strong> two concurrent
+withdrawals both passing a balance check (Phase 1 topics 2.2 and 3.2).
+Use database locks or constraints.</li>
+</ul>
+<p>Threat-model new features with a simple question for each step:
+<em>what could a malicious user, partner or insider do here?</em></p>
+<h2 id="7-logging-monitoring-and-alerting">7. Logging, monitoring and
+alerting</h2>
+<p>Log security-relevant events in a structured form: logins (success
+and failure), token refresh and reuse detection, authorisation denials,
+privileged actions, changes to limits, beneficiaries and contact
+details, webhook signature failures. Include user ID, client ID, IP and
+trace ID. <strong>Never</strong> log passwords, tokens, full card
+numbers (PAN), CVV, PINs, BVN/NIN in full or OTPs; mask them
+(<code>5399********1234</code>). Alert on patterns: many 401s from one
+IP, refresh-token reuse, a spike in 403s on admin paths. Logs that
+nobody watches are not monitoring.</p>
+<h2 id="8-unsafe-consumption-of-apis">8. Unsafe consumption of APIs</h2>
+<p>Treat responses from partners and providers as untrusted input
+(API10): validate them against a schema, apply size limits and timeouts,
+do not follow redirects blindly, and never execute or evaluate their
+content. A compromised provider should not be able to compromise
+you.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>String-concatenated SQL in "just this one native query".</li>
+<li>Allowing users to choose arbitrary sort columns or URLs to
+fetch.</li>
+<li>Actuator fully exposed "for debugging".</li>
+<li>Logging request bodies that contain passwords, tokens or card
+data.</li>
+<li>Java serialisation or default typing on data from outside.</li>
+<li>XML parsers with default settings for ISO 20022 or SOAP
+messages.</li>
+<li>Treating security as a penetration-test phase instead of a design
+and review habit.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Find and fix the injection bugs in a deliberately vulnerable
+repository (the Moodle lab links one), writing a failing test for each
+first.</li>
+<li>Review your capstone against both OWASP lists and write
+<code>SECURITY.md</code> listing each risk, where it applies, and your
+mitigation.</li>
+<li>Lock down Actuator: separate management port, only
+<code>health</code>, <code>info</code> and <code>prometheus</code>
+exposed, authentication for everything else; prove with tests.</li>
+<li>Add an OTP verification endpoint with attempt limits and expiry, and
+a test that the sixth wrong attempt is refused.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>OWASP, Top 10 (2025), API Security Top 10 (2023), broken access
+control, security misconfiguration, supply chain, cryptographic
+failures, injection, parameterised query, allow-list, log injection,
+insecure design, threat modelling, integrity failures, deserialisation
+gadget, XXE, SSRF, IMDS, Actuator exposure, resource consumption,
+business-flow abuse, PAN masking, security logging and alerting.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a href="https://owasp.org/Top10/2025/">OWASP Top 10 (2025)</a></li>
+<li><a
+href="https://owasp.org/API-Security/editions/2023/en/0x11-t10/">OWASP
+API Security Top 10 (2023)</a></li>
+<li><a
+href="https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html">OWASP
+Cheat Sheet: SQL Injection Prevention</a></li>
+<li><a
+href="https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html">OWASP
+Cheat Sheet: Server-Side Request Forgery Prevention</a></li>
+<li><a
+href="https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html">OWASP
+Cheat Sheet: XML External Entity Prevention</a></li>
+<li><a
+href="https://docs.spring.io/spring-boot/reference/actuator/endpoints.html">Spring
+Boot reference: Actuator endpoints and security</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>OWASP Top 10 2025: Your complete guide to securing your applications</h3><p>Aikido Security · 25 min. The OWASP Top 10 2025 categories with examples.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/Jzr0Jdnq_EI" title="OWASP Top 10 2025: Your complete guide to securing your applications" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Hacking Websites with SQL Injection - Computerphile</h3><p>Computerphile · 9 min. How SQL injection works and why parameterised queries stop it.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/_jKylhJtPmI" title="Hacking Websites with SQL Injection - Computerphile" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>SSRF in 100 seconds</h3><p>Intigriti · 2 min. Server-side request forgery (SSRF) in a short visual explainer.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/3dKavgfL2pA" title="SSRF in 100 seconds" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/02-professional-backend/06-security-essentials/6.4-owasp-top10-java/README.md">6.4 OWASP Top 10 and how they show up in Java APIs</a></p>

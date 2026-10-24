@@ -1,0 +1,99 @@
+{
+  "topic": "5.4",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "Your wallet service calls a BVN-verification provider with a RestClient that has no read timeout. One afternoon the provider accepts connections but stops responding. Within minutes, unrelated endpoints of your service also stop responding.",
+      "question": "What is the most likely cause?",
+      "options": [
+        "The JVM garbage collector is paused",
+        "PostgreSQL ran out of disk space",
+        "The provider is sending your service malware",
+        "Request threads are stuck waiting forever on the provider, exhausting the server's thread pool"
+      ],
+      "answer": 3,
+      "explanation": "Without a read timeout each call blocks indefinitely. As traffic continues, every worker thread ends up waiting on the provider and nothing else can be served. Timeouts and a bulkhead contain the damage."
+    },
+    {
+      "type": "single",
+      "scenario": "A call to the gateway's 'charge saved card' endpoint times out on read after 8 seconds. The gateway offers no idempotency key for this endpoint.",
+      "question": "What should your service do?",
+      "options": [
+        "Assume the charge failed and tell the customer to try again",
+        "Not retry blindly; check the charge status with the gateway's verify endpoint (using your reference) before deciding",
+        "Assume the charge succeeded and credit the wallet",
+        "Retry immediately up to five times"
+      ],
+      "answer": 1,
+      "explanation": "A read timeout means the request may have been processed. Retrying a non-idempotent charge risks charging twice, and assuming either outcome risks a wrong balance. Verify first."
+    },
+    {
+      "type": "multi",
+      "scenario": "You are configuring retries for calls to an FX-rate API.",
+      "question": "Which responses or failures should normally be retried with backoff? (Choose two.)",
+      "options": [
+        "503 Service Unavailable",
+        "400 Bad Request",
+        "Connection refused",
+        "401 Unauthorized"
+      ],
+      "answer": [
+        0,
+        2
+      ],
+      "explanation": "503 and connection failures are typically transient. 400 and 401 mean the request or credentials are wrong; retrying sends the same bad request again."
+    },
+    {
+      "type": "single",
+      "scenario": "A circuit breaker protects calls to the card processor. During a busy hour, many customers' cards are declined for insufficient funds, and the breaker opens, blocking all card payments.",
+      "question": "What is the configuration mistake?",
+      "options": [
+        "The wait duration in the open state is too short",
+        "Circuit breakers should never be used for payments",
+        "The sliding window is too large",
+        "Business outcomes such as 'card declined' are being counted as failures; they should be ignored by the breaker"
+      ],
+      "answer": 3,
+      "explanation": "A decline is a correct, healthy response. Only technical failures (timeouts, 5xx, connection errors) should count towards opening the breaker."
+    },
+    {
+      "type": "single",
+      "scenario": "Your webhook endpoint receives a JSON body and an x-paystack-signature header.",
+      "question": "What is the correct order of processing?",
+      "options": [
+        "Parse the JSON, re-serialise it, then compute the HMAC over the re-serialised string",
+        "Parse the JSON and credit the wallet, then check the signature in a nightly job",
+        "Compute HMAC-SHA512 over the raw body bytes, compare with the header in constant time, then parse, de-duplicate by event ID and verify the transaction with the provider",
+        "Check that the request came over HTTPS; signatures are optional"
+      ],
+      "answer": 2,
+      "explanation": "Re-serialising changes bytes and breaks the signature; acting before verifying lets attackers fake payments. Verify the exact bytes received, then process idempotently and confirm with the provider."
+    },
+    {
+      "type": "single",
+      "scenario": "A payment-success webhook for reference pay_123 arrives twice, and an older 'pending' webhook for the same payment arrives after both.",
+      "question": "Which handling is correct?",
+      "options": [
+        "Process the first success, ignore the duplicate by event ID, and ignore the late 'pending' because state only moves forward",
+        "Credit the wallet twice, then reverse one later",
+        "Reject all three because they arrived out of order",
+        "Set the payment back to PENDING when the late event arrives"
+      ],
+      "answer": 0,
+      "explanation": "Webhooks are delivered at least once and not necessarily in order. De-duplicate by event ID and apply only forward state transitions."
+    },
+    {
+      "type": "single",
+      "scenario": "Your CI build fails every time the payment provider's sandbox is down for maintenance.",
+      "question": "What is the best fix?",
+      "options": [
+        "Replace calls to the real sandbox in automated tests with WireMock stubs that script success, failure, slow and duplicate scenarios",
+        "Delete the integration tests",
+        "Retry the build until it passes",
+        "Point tests at the live production API"
+      ],
+      "answer": 0,
+      "explanation": "Tests should be deterministic. WireMock lets you reproduce the provider's behaviours, including failures that a sandbox rarely produces, without depending on its availability."
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+%% Interbank transfer gRPC service: solution architecture
+flowchart LR
+    subgraph sg0["Users and clients"]
+        direction TB
+        mob(["Customers<br/>(mobile app)"])
+        ops(["Bank operations"])
+    end
+    subgraph sg1["Interbank transfer gRPC service (system boundary)"]
+        direction TB
+        bank1["Sending bank service"]
+        sw["Switch"]
+        db[("Databases")]
+    end
+    subgraph sg2["Platform"]
+        direction TB
+        kc["Keycloak<br/>(customer tokens)"]
+    end
+    subgraph sg3["External systems"]
+        direction TB
+        bank2[/"Receiving bank"/]
+    end
+    mob -->|"REST + JWT"| bank1
+    bank1 -->|"gRPC + mTLS"| sw
+    sw -->|"gRPC + mTLS"| bank2
+    bank1 --> db
+    sw --> db
+    ops -->|"settlement report"| sw
+    classDef actor fill:#dae8fc,stroke:#6c8ebf,color:#000
+    classDef svc fill:#d5e8d4,stroke:#82b366,color:#000
+    classDef comp fill:#ffffff,stroke:#666666,color:#000
+    classDef db fill:#fff2cc,stroke:#d6b656,color:#000
+    classDef store fill:#f5f5f5,stroke:#666666,color:#000
+    classDef ext fill:#f8cecc,stroke:#b85450,color:#000,stroke-dasharray: 5 3
+    classDef infra fill:#e1d5e7,stroke:#9673a6,color:#000
+    classDef job fill:#ffe6cc,stroke:#d79b00,color:#000
+    class mob,ops actor
+    class db db
+    class bank2 ext
+    class kc infra
+    class bank1,sw svc

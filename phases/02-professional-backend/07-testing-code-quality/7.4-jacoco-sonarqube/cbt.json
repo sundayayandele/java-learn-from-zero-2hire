@@ -1,0 +1,99 @@
+{
+  "topic": "7.4",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A service reports 95% line coverage. Code review finds that many tests call methods without any assertions.",
+      "question": "What does the coverage figure actually tell you?",
+      "options": [
+        "That mutation testing is unnecessary",
+        "That 95% of the code is correct",
+        "Which code was executed by tests, not whether the tests would detect a bug in it",
+        "That only 5% of bugs remain"
+      ],
+      "answer": 2,
+      "explanation": "Coverage measures execution. Assertion-free tests execute code without checking results; mutation testing reveals how many faults the tests would catch."
+    },
+    {
+      "type": "single",
+      "scenario": "PIT reports: 'changed conditional boundary: amount > 5000 → amount >= 5000 — SURVIVED' in the fee calculator.",
+      "question": "What should you do?",
+      "options": [
+        "Exclude the fee calculator from mutation testing",
+        "Increase the JaCoCo threshold",
+        "Add a test at exactly ₦5,000.00 that asserts the correct fee, so the mutant is killed",
+        "Change the code to >= so the mutant matches"
+      ],
+      "answer": 2,
+      "explanation": "A surviving boundary mutant means no test distinguishes > from >=. A test exactly on the boundary closes the gap."
+    },
+    {
+      "type": "single",
+      "scenario": "A team adds JaCoCo with an 80% threshold on the whole codebase of a 10-year-old service at 35% coverage. Every build now fails and developers want to remove the check.",
+      "question": "What is a more workable approach?",
+      "options": [
+        "Exclude all legacy packages permanently",
+        "Write assertion-free tests to raise the number quickly",
+        "Apply the threshold to new and changed code (for example via a SonarQube quality gate on new code) and raise the overall bar gradually",
+        "Remove coverage checks entirely"
+      ],
+      "answer": 2,
+      "explanation": "Gating new code improves quality as the code is touched without blocking all work; gaming or removing the metric helps no one."
+    },
+    {
+      "type": "single",
+      "scenario": "SonarQube marks a line that builds a CORS configuration as a security hotspot.",
+      "question": "What is the correct handling?",
+      "options": [
+        "A developer reviews it; if the configuration is safe (specific trusted origins), mark it reviewed with a written justification",
+        "Mark it as a false positive without looking",
+        "Delete the CORS configuration",
+        "Ignore hotspots because they are not bugs"
+      ],
+      "answer": 0,
+      "explanation": "Hotspots are security-sensitive code that needs human judgement. Reviewing and documenting the decision is what a quality gate expects."
+    },
+    {
+      "type": "multi",
+      "scenario": "You are defining a quality gate for pull requests.",
+      "question": "Which conditions are sensible? (Choose two.)",
+      "options": [
+        "Coverage on new code of at least 80%",
+        "At least 100 commits per week",
+        "Total lines of code below 10,000",
+        "No new bugs or vulnerabilities above minor severity"
+      ],
+      "answer": [
+        0,
+        3
+      ],
+      "explanation": "Gates should measure the quality of what is being changed. Code size and commit counts say nothing about correctness or risk."
+    },
+    {
+      "type": "single",
+      "scenario": "The architecture rule is that domain classes must never depend on web or persistence classes. A new developer imports a controller DTO into a domain service.",
+      "question": "Which tool can enforce this rule automatically in the unit-test phase?",
+      "options": [
+        "PIT",
+        "ArchUnit, with a rule that classes in ..domain.. must not depend on classes in ..web..",
+        "JaCoCo",
+        "Docker"
+      ],
+      "answer": 1,
+      "explanation": "ArchUnit expresses architecture constraints as tests that fail the build when dependencies cross forbidden boundaries."
+    },
+    {
+      "type": "single",
+      "scenario": "SonarQube flags a rule as a 'bug': amount.equals(BigDecimal.ZERO) is used to check for a zero balance.",
+      "question": "Why is this flagged, and what is the fix?",
+      "options": [
+        "BigDecimal cannot be compared; convert to double",
+        "Use == instead of equals",
+        "BigDecimal.equals also compares scale, so 0.00 is not equal to 0; use compareTo(BigDecimal.ZERO) == 0 or signum() == 0",
+        "It is a false positive; equals is always correct"
+      ],
+      "answer": 2,
+      "explanation": "A balance of 0.00 would not equal BigDecimal.ZERO with equals, so the check silently fails. compareTo or signum compares numeric value only."
+    }
+  ]
+}

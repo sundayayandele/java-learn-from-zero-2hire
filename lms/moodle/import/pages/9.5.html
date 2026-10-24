@@ -1,0 +1,332 @@
+<p><em>Week 24 · Module 9: AI-Assisted Engineering &amp; Junior Portfolio</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Describe the typical <strong>interview loop</strong> for junior Java
+backend roles in banks, fintechs and consultancies.</li>
+<li>Answer the most common <strong>core Java</strong>,
+<strong>Spring</strong>, <strong>SQL</strong> and
+<strong>HTTP/API</strong> questions clearly, with examples from your own
+projects.</li>
+<li>Approach <strong>live-coding</strong> problems with a repeatable
+method: clarify, plan, code, test, discuss complexity.</li>
+<li>Walk an interviewer through <strong>one of your capstones</strong>
+as a small system-design discussion.</li>
+<li>Prepare <strong>behavioural</strong> answers with the STAR method
+and ask good questions at the end.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Interviews test whether you can do the job <em>and</em> whether the
+team would trust you with production money movement. Candidates who have
+built real projects often fail interviews because they cannot explain
+their own decisions under pressure, or freeze in live coding without an
+AI assistant. Structured preparation fixes both. This lesson pulls
+together everything from Phases 1 and 2 into interview form.</p>
+<h2 id="1-the-typical-loop">1. The typical loop</h2>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Length</th>
+<th>What they check</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Recruiter screen</td>
+<td>15–30 min</td>
+<td>Motivation, communication, salary expectations, right to work,
+notice period</td>
+</tr>
+<tr>
+<td>Online assessment (some employers)</td>
+<td>60–90 min</td>
+<td>Coding problems (HackerRank, Codility) or a short take-home</td>
+</tr>
+<tr>
+<td>Technical interview</td>
+<td>45–60 min</td>
+<td>Core Java, Spring, SQL, APIs, testing; questions about your
+projects</td>
+</tr>
+<tr>
+<td>Live coding</td>
+<td>30–60 min</td>
+<td>Problem solving, code quality, testing, talking through your
+thinking</td>
+</tr>
+<tr>
+<td>Design / project deep-dive</td>
+<td>45–60 min</td>
+<td>One of your projects or a small system (wallet, payment API)</td>
+</tr>
+<tr>
+<td>Behavioural / hiring manager</td>
+<td>30–45 min</td>
+<td>Teamwork, ownership, learning, handling mistakes, values</td>
+</tr>
+</tbody>
+</table>
+<p>Banks may add aptitude tests, background checks and a panel
+interview; fintechs often have a take-home exercise. Ask the recruiter
+what each stage involves; it is a normal question.</p>
+<h2 id="2-core-java-questions-you-should-answer-cold">2. Core Java:
+questions you should answer cold</h2>
+<p>Practise saying these answers aloud, each in under two minutes, with
+a code example or a project reference.</p>
+<ol type="1">
+<li><strong><code>equals</code> and <code>hashCode</code></strong>: the
+contract, why both must be overridden together, and what happens in a
+<code>HashMap</code> when they are not.</li>
+<li><strong><code>String</code> immutability</strong> and the string
+pool; why <code>StringBuilder</code> in loops.</li>
+<li><strong><code>BigDecimal</code> for money</strong>: why not
+<code>double</code>; <code>setScale</code> with
+<code>RoundingMode.HALF_EVEN</code>; <code>compareTo</code> versus
+<code>equals</code> (Phase 1 topic 1.2).</li>
+<li><strong>Collections</strong>: <code>ArrayList</code> vs
+<code>LinkedList</code>; <code>HashMap</code> internals (buckets,
+hashing, resize, tree bins); <code>HashMap</code> vs
+<code>ConcurrentHashMap</code>; iteration order guarantees.</li>
+<li><strong>Generics</strong>: type erasure;
+<code>List&lt;? extends Number&gt;</code> vs
+<code>List&lt;? super Integer&gt;</code> (PECS).</li>
+<li><strong>Streams</strong>: lazy evaluation; <code>map</code> vs
+<code>flatMap</code>; <code>groupingBy</code> with downstream
+collectors; when a loop is clearer.</li>
+<li><strong>Records, sealed types, pattern matching</strong>: what they
+replace and why they help domain modelling.</li>
+<li><strong>Exceptions</strong>: checked vs unchecked; custom domain
+exceptions; try-with-resources.</li>
+<li><strong>Concurrency</strong>: race conditions;
+<code>synchronized</code> vs <code>ReentrantLock</code> vs atomics;
+deadlocks and lock ordering; <code>ExecutorService</code>;
+<code>CompletableFuture</code>; <strong>virtual threads</strong> and
+when they help (I/O-bound) or not (CPU-bound, pinning).</li>
+<li><strong>JVM memory</strong>: heap vs stack; garbage collection
+basics; <code>OutOfMemoryError</code> causes; container memory
+sizing.</li>
+</ol>
+<h2 id="3-spring-and-spring-boot">3. Spring and Spring Boot</h2>
+<ol type="1">
+<li><strong>Dependency injection and IoC</strong>: why constructor
+injection; bean scopes; how auto-configuration works (conditions on the
+classpath and properties).</li>
+<li><strong>The request path</strong>: <code>DispatcherServlet</code> →
+filters (security) → handler mapping → controller → message converters →
+advice for errors.</li>
+<li><strong><code>@Transactional</code></strong>: how the proxy works;
+propagation (<code>REQUIRED</code>, <code>REQUIRES_NEW</code>); why
+self-invocation and private methods are not transactional; rollback
+rules for checked exceptions.</li>
+<li><strong>JPA</strong>: entity lifecycle; lazy loading and
+<code>LazyInitializationException</code>; the N+1 problem and how to fix
+it (fetch joins, entity graphs, projections); optimistic locking with
+<code>@Version</code>.</li>
+<li><strong>Validation and errors</strong>: Bean Validation on DTO
+records; Problem Details; 400 vs 422.</li>
+<li><strong>Configuration</strong>: profiles;
+<code>@ConfigurationProperties</code>; secrets from the
+environment.</li>
+<li><strong>Security</strong>: filter chain; authentication vs
+authorisation; JWT resource server; object-level authorisation (topics
+6.1–6.3).</li>
+<li><strong>Testing</strong>: <code>@WebMvcTest</code> vs
+<code>@SpringBootTest</code>; Testcontainers;
+<code>@MockitoBean</code>.</li>
+<li><strong>Actuator</strong>: health, readiness and liveness;
+metrics.</li>
+<li><strong>What changed in Spring Boot 4</strong> (topic 4.6) and why
+you would upgrade.</li>
+</ol>
+<h2 id="4-sql-and-databases">4. SQL and databases</h2>
+<ul>
+<li>Write queries live: joins (inner, left), <code>GROUP BY</code> with
+<code>HAVING</code>, a <strong>window function</strong> (running
+balance, rank per group), a subquery or CTE. Example: "For each account,
+the last three transactions"
+(<code>ROW_NUMBER() OVER (PARTITION BY account_id ORDER BY created_at DESC)</code>).</li>
+<li>Explain <strong>indexes</strong>: B-tree basics, composite index
+column order, when an index is not used, reading
+<code>EXPLAIN ANALYZE</code> (Phase 1 topic 3.3).</li>
+<li><strong>Transactions and isolation</strong>: ACID;
+dirty/non-repeatable/phantom reads; <code>READ COMMITTED</code> vs
+<code>REPEATABLE READ</code> vs <code>SERIALIZABLE</code>;
+<code>SELECT ... FOR UPDATE</code>.</li>
+<li><strong>Normalisation</strong> and when to denormalise; constraints
+that protect invariants.</li>
+<li><strong>Migrations</strong> with Flyway and zero-downtime changes
+(expand and contract).</li>
+</ul>
+<h2 id="5-http-and-api-design">5. HTTP and API design</h2>
+<p>Expect "design a REST API for X" (wallet, loan application, merchant
+payouts). Cover: resources and URLs, methods and status codes,
+idempotency keys, pagination, error format, authentication, versioning,
+and what happens on timeouts and retries (Module 5).</p>
+<h2 id="6-live-coding-a-method">6. Live coding: a method</h2>
+<ol type="1">
+<li><strong>Clarify</strong> inputs, outputs, edge cases and constraints
+before typing. Restate the problem.</li>
+<li><strong>Give an example</strong> and walk through it by hand.</li>
+<li><strong>Outline</strong> an approach (start simple; mention a better
+one if you see it) and its time/space complexity.</li>
+<li><strong>Code</strong> cleanly with meaningful names, talking as you
+go. Use the standard library (<code>HashMap</code>, <code>Deque</code>,
+streams where clear).</li>
+<li><strong>Test</strong> with your example and edge cases (empty input,
+one element, duplicates, large values, negative amounts).</li>
+<li><strong>Discuss</strong> improvements and trade-offs.</li>
+</ol>
+<p>Common junior problem types: string and array manipulation, hash-map
+counting ("first non-repeating character", "two-sum"), sorting with
+comparators, stacks (balanced brackets), simple recursion, and
+<em>domain</em> problems such as:</p>
+<ul>
+<li>"Given a list of transactions, return each account's balance"
+(<code>groupingBy</code> + <code>reducing</code> with
+<code>BigDecimal</code>).</li>
+<li>"Detect accounts with more than three debits within 10 minutes"
+(sort by time, sliding window per account).</li>
+<li>"Merge two sorted statements" (two pointers).</li>
+<li>"Validate a NUBAN check digit" (arithmetic with weights).</li>
+<li>"Implement a simple rate limiter" (token bucket with a
+<code>Clock</code>).</li>
+</ul>
+<p>Practise without AI assistants and with a timer. Many interviews use
+a plain editor without autocomplete.</p>
+<h2 id="7-walking-through-your-project">7. Walking through your
+project</h2>
+<p>Prepare a 5-minute walkthrough of one capstone, then expect deep
+questions. Use this structure:</p>
+<ol type="1">
+<li><strong>Problem and users:</strong> "Mobile money operators need to
+detect fraud in real time…"</li>
+<li><strong>Architecture:</strong> draw it (solution and technical views
+from your architecture pack): components, data stores,
+integrations.</li>
+<li><strong>Key decisions and trade-offs:</strong> "pessimistic locking
+because contention on popular accounts is high"; "cursor pagination
+because histories are large"; "Keycloak instead of home-grown
+tokens".</li>
+<li><strong>How you know it works:</strong> test pyramid, coverage and
+mutation score, load test numbers, CI gates.</li>
+<li><strong>What went wrong and what you learned:</strong> one real bug
+or design mistake and the fix.</li>
+<li><strong>What you would do next:</strong> scaling, observability,
+Kafka (shows you know Phase 3 topics).</li>
+</ol>
+<p>Likely follow-ups: "What happens if two transfers hit the same
+account at the same time?", "What if the payment provider times out?",
+"How would this scale to 100x traffic?", "How do you deploy without
+downtime?", "How did you use AI tools on this, and how did you check the
+output?"</p>
+<h2 id="8-behavioural-questions-with-star">8. Behavioural questions with
+STAR</h2>
+<p>Answer with <strong>Situation, Task, Action, Result</strong>, about 2
+minutes each, focusing on <em>your</em> actions. Prepare five stories
+from projects, previous jobs or study:</p>
+<ul>
+<li>A difficult bug you found and fixed (with how you diagnosed
+it).</li>
+<li>A time you disagreed with someone (a code review) and how it was
+resolved.</li>
+<li>A mistake you made and what you changed afterwards.</li>
+<li>Learning something difficult quickly.</li>
+<li>Delivering under a deadline or with unclear requirements.</li>
+</ul>
+<p>Banks value integrity and care: stories about protecting customers'
+money or data, raising a risk, or following a control even when
+inconvenient land well.</p>
+<h2 id="9-your-questions-and-the-offer">9. Your questions and the
+offer</h2>
+<p>Ask 2–3 genuine questions: "What does a junior's first three months
+look like?", "How do you review code and deploy?", "What would make
+someone successful in this team?" For offers, know your market range
+(from peers and salary surveys), ask about learning budget, mentorship
+and on-call expectations, and get the offer in writing.</p>
+<h2 id="10-a-four-week-preparation-plan">10. A four-week preparation
+plan</h2>
+<table>
+<thead>
+<tr>
+<th>Week</th>
+<th>Focus</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Core Java and collections: answer section 2 aloud; 5 live-coding
+problems</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Spring, JPA, transactions and security: section 3; project
+walkthrough drafted</td>
+</tr>
+<tr>
+<td>3</td>
+<td>SQL and API design: 15 queries, two API designs on paper; 5 more
+problems</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Two mock interviews (project 9.B); STAR stories polished; weak areas
+revisited</td>
+</tr>
+</tbody>
+</table>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Memorised definitions with no examples; not knowing your own
+project's details.</li>
+<li>Starting to code before clarifying the problem; silence while
+coding.</li>
+<li>Never testing your solution or considering edge cases.</li>
+<li>Claiming knowledge you cannot defend.</li>
+<li>Blaming others in behavioural answers.</li>
+<li>Only practising with an AI assistant switched on.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Record yourself answering ten questions from sections 2–4; watch it
+back and improve two answers.</li>
+<li>Solve ten live-coding problems from section 6 without AI, timed (30
+minutes each), and write tests for each.</li>
+<li>Prepare and rehearse the 5-minute walkthrough of your best capstone,
+with the architecture diagram.</li>
+<li>Write five STAR stories and complete the mock interview (project
+9.B).</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Interview loop, recruiter screen, online assessment, take-home, live
+coding, time complexity, space complexity, edge case, project deep-dive,
+trade-off, STAR method, behavioural interview, hiring manager, offer,
+salary range, mock interview.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://www.techinterviewhandbook.org/coding-interview-prep/">Tech
+Interview Handbook: Coding interview preparation</a></li>
+<li><a
+href="https://www.baeldung.com/java-interview-questions">Baeldung: Java
+interview questions</a></li>
+<li><a
+href="https://www.baeldung.com/spring-interview-questions">Baeldung:
+Spring interview questions</a></li>
+<li><a href="https://leetcode.com/problemset/">LeetCode: Problem set
+(filter by Easy)</a></li>
+<li><a
+href="https://www.postgresql.org/docs/17/tutorial-window.html">PostgreSQL
+tutorial: Window functions</a></li>
+<li><a
+href="https://www.techinterviewhandbook.org/behavioral-interview-questions/">Tech
+Interview Handbook: Behavioral interview questions</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Top 50 Java Interview Questions and Answers | Ace Your Java Programming Interviews #java #interview</h3><p>ArcCode · 21 min. Common Java interview questions with concise answers.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/YlcvaqyD7Qs" title="Top 50 Java Interview Questions and Answers | Ace Your Java Programming Interviews #java #interview" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>STAR INTERVIEW QUESTIONS &amp; ANSWERS! (The STAR TECHNIQUE for Behavioural Interview Questions!)</h3><p>CareerVidz · 11 min. The STAR technique for behavioural questions, with examples.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/uQEuo7woEEk" title="STAR INTERVIEW QUESTIONS &amp; ANSWERS! (The STAR TECHNIQUE for Behavioural Interview Questions!)" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Cracking the Behavioral Interview for Software Developers</h3><p>Keep On Coding · 8 min. Behavioural interviews for software developers.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/ld0cvWnrVsU" title="Cracking the Behavioral Interview for Software Developers" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Answering behavioral interview questions is shockingly uncomplicated (optional, longer)</h3><p>Matt Huang · 32 min. Behavioural interviews made simple: structure and practice (optional).</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/WdyiUe7_3cA" title="Answering behavioral interview questions is shockingly uncomplicated" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/02-professional-backend/09-ai-assisted-engineering-portfolio/9.5-junior-interview-prep/README.md">9.5 Junior interview prep: core Java, Spring, SQL and live coding</a></p>

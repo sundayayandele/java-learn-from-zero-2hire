@@ -1,0 +1,43 @@
+# AWS CodeBuild: test, build the image and push it to Amazon ECR. Run it from AWS CodePipeline
+# (source: GitHub via CodeConnections; build: this project; optional deploy stage). See the Phase 1 CI/CD guide.
+# The CodeBuild project needs privileged mode (Docker) and an ECR repository named like IMAGE_REPO_NAME.
+version: 0.2
+
+env:
+  variables:
+    IMAGE_REPO_NAME: payment-gateway-hub
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto21
+  pre_build:
+    commands:
+      - ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+      - REGISTRY=$ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - REPO=$REGISTRY/$IMAGE_REPO_NAME
+      - TAG=$(echo "$CODEBUILD_RESOLVED_SOURCE_VERSION" | cut -c1-12)
+      - aws ecr get-login-password | docker login --username AWS --password-stdin "$REGISTRY"
+  build:
+    commands:
+      - ./mvnw -B verify
+      - docker build -t "$REPO:$TAG" -t "$REPO:latest" .
+  post_build:
+    commands:
+      - docker push "$REPO:$TAG"
+      - docker push "$REPO:latest"
+      - printf '{"ImageURI":"%s"}' "$REPO:$TAG" > imageDetail.json
+
+reports:
+  unit-tests:
+    files:
+      - "target/surefire-reports/TEST-*.xml"
+    file-format: JUNITXML
+
+artifacts:
+  files:
+    - imageDetail.json
+
+cache:
+  paths:
+    - /root/.m2/**/*

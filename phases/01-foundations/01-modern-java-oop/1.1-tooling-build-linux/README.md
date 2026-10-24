@@ -303,7 +303,7 @@ JDK, JRE, JVM, bytecode, LTS, `JAVA_HOME`, GAV coordinates, lifecycle phase, dep
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-23. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
 
 - [Creating your first Java application with IntelliJ IDEA](https://www.youtube.com/watch?v=V_vXRRydnYI) · IntelliJ IDEA, a JetBrains IDE · 11 min. JetBrains' own walkthrough: create, run and debug your first Java project in IntelliJ IDEA.
 - [Maven Tutorial - Crash Course](https://www.youtube.com/watch?v=Xatr8AZLOsE) · Marco Codes · 26 min. Maven from first principles: the pom, coordinates, scopes, lifecycle phases and plugins.

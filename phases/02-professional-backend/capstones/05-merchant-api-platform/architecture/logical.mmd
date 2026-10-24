@@ -1,0 +1,33 @@
+%% Merchant onboarding and API key platform: logical architecture
+flowchart LR
+    subgraph sg0["Capabilities"]
+        direction TB
+        reg["Merchant registration<br/>company verification"]
+        keys["API key lifecycle<br/>create · roll · revoke"]
+        auth["API key authentication<br/>hash · constant-time · signature"]
+        rl["Rate limiting<br/>per key"]
+    end
+    subgraph sg1["Data"]
+        direction TB
+        m[("merchant<br/>status · company")]
+        k[("api_key<br/>prefix · hash · scopes · mode")]
+        a[("key_audit")]
+        b[("rate-limit buckets")]
+    end
+    reg --> m
+    keys --> k
+    keys --> a
+    auth --> k
+    rl --> b
+    classDef actor fill:#dae8fc,stroke:#6c8ebf,color:#000
+    classDef svc fill:#d5e8d4,stroke:#82b366,color:#000
+    classDef comp fill:#ffffff,stroke:#666666,color:#000
+    classDef db fill:#fff2cc,stroke:#d6b656,color:#000
+    classDef store fill:#f5f5f5,stroke:#666666,color:#000
+    classDef ext fill:#f8cecc,stroke:#b85450,color:#000,stroke-dasharray: 5 3
+    classDef infra fill:#e1d5e7,stroke:#9673a6,color:#000
+    classDef job fill:#ffe6cc,stroke:#d79b00,color:#000
+    class auth,rl comp
+    class m,k,a db
+    class b store
+    class reg,keys svc

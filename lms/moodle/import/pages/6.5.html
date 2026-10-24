@@ -1,0 +1,310 @@
+<p><em>Week 18 · Module 6: Security Essentials</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Store passwords correctly with <strong>Argon2id</strong> or
+<strong>BCrypt</strong> through Spring Security's
+<code>PasswordEncoder</code>, and migrate old hashes safely.</li>
+<li>Keep <strong>secrets</strong> (database passwords, API keys, signing
+keys) out of code and Git, and load them from a <strong>secrets
+manager</strong> or vault.</li>
+<li>Detect leaked secrets with <strong>Gitleaks</strong> and GitHub
+secret scanning, and respond when one leaks.</li>
+<li>Scan dependencies for known vulnerabilities (<strong>OWASP
+Dependency-Check</strong>, Dependabot,
+<code>dependency-review-action</code>) and generate an
+<strong>SBOM</strong>.</li>
+<li>Encrypt sensitive data at rest when the database alone is not
+enough.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Leaked credentials and vulnerable dependencies cause a large share of
+real breaches. A database password committed to a public GitHub
+repository is found by automated scanners within minutes. Log4Shell
+(2021) showed that one vulnerable library deep in a dependency tree can
+expose a whole bank. Regulators and card schemes (PCI DSS) require
+strong password storage, key management and vulnerability management;
+customers' BVNs, NINs and card data must be protected even from your own
+engineers.</p>
+<h2 id="1-password-hashing">1. Password hashing</h2>
+<p>Never store passwords, not even encrypted. Store a <strong>slow,
+salted, one-way hash</strong>, so a stolen database does not reveal
+them.</p>
+<table>
+<thead>
+<tr>
+<th>Algorithm</th>
+<th>Use?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MD5, SHA-1, SHA-256 (even salted)</td>
+<td><strong>No</strong>: designed to be fast, so billions of guesses per
+second on a GPU</td>
+</tr>
+<tr>
+<td>PBKDF2</td>
+<td>Acceptable where FIPS compliance requires it, with a high iteration
+count</td>
+</tr>
+<tr>
+<td>BCrypt</td>
+<td>Good; widely supported (cost factor 10–12)</td>
+</tr>
+<tr>
+<td><strong>Argon2id</strong></td>
+<td>Best current choice; memory-hard, resists GPU attacks</td>
+</tr>
+<tr>
+<td>scrypt</td>
+<td>Good; memory-hard</td>
+</tr>
+</tbody>
+</table>
+<p>Spring Security's <code>DelegatingPasswordEncoder</code> stores the
+algorithm with the hash, so you can upgrade later:</p>
+<pre class="java"><code>@Bean
+PasswordEncoder passwordEncoder() {
+    String defaultId = &quot;argon2@SpringSecurity_v5_8&quot;;
+    Map&lt;String, PasswordEncoder&gt; encoders = Map.of(
+            defaultId, Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8(),
+            &quot;bcrypt&quot;, new BCryptPasswordEncoder(12));
+    return new DelegatingPasswordEncoder(defaultId, encoders);
+}</code></pre>
+<p>Stored values look like
+<code>{argon2@SpringSecurity_v5_8}$argon2id$v=19$m=16384,t=2,p=1$...</code>
+or <code>{bcrypt}$2a$12$...</code>. To migrate users from BCrypt to
+Argon2id, re-hash on successful login: Spring Security calls
+<code>UserDetailsPasswordService.updatePassword</code> when
+<code>upgradeEncoding</code> says the stored hash is outdated.</p>
+<p>Related controls: minimum length (12+) rather than complexity rules,
+checking new passwords against known-breached lists, account lockout or
+progressive delays after failed attempts, and multi-factor
+authentication for staff and high-risk customer actions. For customers'
+<strong>transaction PINs</strong>, the same hashing applies, with strict
+attempt limits because a 4-digit PIN has only 10,000 values.</p>
+<h2 id="2-secrets-keep-them-out-of-code">2. Secrets: keep them out of
+code</h2>
+<p>A <strong>secret</strong> is anything that grants access: database
+passwords, API keys for payment gateways, JWT signing keys, OAuth client
+secrets, encryption keys, webhook secrets.</p>
+<p>Rules:</p>
+<ol type="1">
+<li><strong>Never commit secrets</strong>, not even to a private
+repository, not even "temporarily". Git history keeps them forever.</li>
+<li>Configuration files in Git contain <strong>placeholders</strong>
+only: <code>spring.datasource.password=${DB_PASSWORD}</code>.</li>
+<li>Locally, use a git-ignored <code>.env</code> file (and commit an
+<code>.env.example</code> with fake values).</li>
+<li>In production, inject secrets from a <strong>secrets
+manager</strong>:</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Secrets manager</th>
+<th>Spring integration</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AWS</td>
+<td>Secrets Manager / SSM Parameter Store</td>
+<td>Spring Cloud AWS
+(<code>spring.config.import=aws-secretsmanager:prod/wallet/</code>) or
+ECS task secrets</td>
+</tr>
+<tr>
+<td>Azure</td>
+<td>Key Vault</td>
+<td>Spring Cloud Azure (Key Vault property source)</td>
+</tr>
+<tr>
+<td>GCP</td>
+<td>Secret Manager</td>
+<td>Spring Cloud GCP (<code>${sm@db-password}</code>)</td>
+</tr>
+<tr>
+<td>Self-hosted / multi-cloud</td>
+<td>HashiCorp Vault or OpenBao</td>
+<td>Spring Cloud Vault (<code>spring.config.import=vault://</code>)</td>
+</tr>
+<tr>
+<td>Kubernetes</td>
+<td>Secrets (encrypted at rest) or External Secrets Operator</td>
+<td>mounted as environment variables or files</td>
+</tr>
+</tbody>
+</table>
+<ol start="5" type="1">
+<li><strong>Least privilege and rotation:</strong> each service gets its
+own credentials with only the rights it needs, and secrets are rotated
+regularly and immediately after anyone with access leaves. Vault can
+issue short-lived <strong>dynamic database credentials</strong>, so
+there is no long-lived password to leak.</li>
+<li><strong>Do not log configuration</strong>
+(<code>/actuator/env</code>, debug logging of properties).</li>
+</ol>
+<p>Spring Boot also supports <strong>SSL bundles</strong>
+(<code>spring.ssl.bundle.*</code>) so certificates and private keys are
+loaded from mounted files rather than baked into images.</p>
+<h2 id="3-secret-scanning">3. Secret scanning</h2>
+<ul>
+<li><strong>Gitleaks</strong> scans the working tree and history for
+patterns like AWS keys, private keys and high-entropy strings. Run it as
+a pre-commit hook and in CI:</li>
+</ul>
+<pre class="yaml"><code># .github/workflows/ci.yml (job excerpt)
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with: { fetch-depth: 0 }
+      - uses: gitleaks/gitleaks-action@v2
+        env: { GITHUB_TOKEN: &quot;${{ secrets.GITHUB_TOKEN }}&quot; }</code></pre>
+<ul>
+<li><strong>GitHub secret scanning with push protection</strong> blocks
+pushes that contain known secret formats.</li>
+</ul>
+<h3 id="when-a-secret-leaks">When a secret leaks</h3>
+<ol type="1">
+<li><strong>Revoke and rotate it immediately.</strong> Deleting the
+commit is not enough; assume it has been copied.</li>
+<li>Check access logs of the affected system for misuse.</li>
+<li>Remove it from history if needed (<code>git filter-repo</code>), and
+force everyone to re-clone.</li>
+<li>Write a short incident note: how it leaked, how it was found, what
+changed so it cannot happen again.</li>
+</ol>
+<h2 id="4-dependency-vulnerabilities-and-the-supply-chain">4. Dependency
+vulnerabilities and the supply chain</h2>
+<p>A typical Spring Boot service has 100–200 transitive dependencies.
+Known vulnerabilities are published as <strong>CVEs</strong> and scored
+with <strong>CVSS</strong>.</p>
+<p><strong>OWASP Dependency-Check</strong> (Maven plugin) compares your
+dependencies with the National Vulnerability Database and fails the
+build above a threshold:</p>
+<pre class="xml"><code>&lt;plugin&gt;
+    &lt;groupId&gt;org.owasp&lt;/groupId&gt;
+    &lt;artifactId&gt;dependency-check-maven&lt;/artifactId&gt;
+    &lt;version&gt;13.0.0&lt;/version&gt;
+    &lt;configuration&gt;
+        &lt;failBuildOnCVSS&gt;7&lt;/failBuildOnCVSS&gt;
+        &lt;suppressionFiles&gt;
+            &lt;suppressionFile&gt;dependency-check-suppressions.xml&lt;/suppressionFile&gt;
+        &lt;/suppressionFiles&gt;
+        &lt;nvdApiKey&gt;${env.NVD_API_KEY}&lt;/nvdApiKey&gt;
+    &lt;/configuration&gt;
+&lt;/plugin&gt;</code></pre>
+<p>(The NVD API key is free and makes database updates much faster;
+store it as a CI secret.)</p>
+<p>Other layers:</p>
+<ul>
+<li><strong>Dependabot</strong> (or Renovate) opens pull requests to
+update vulnerable or outdated dependencies; your test suite is what
+makes merging them safe.</li>
+<li><strong><code>actions/dependency-review-action</code></strong> fails
+a pull request that <em>adds</em> a vulnerable dependency.</li>
+<li><strong>Image scanning</strong> (Trivy, Grype) covers the OS
+packages and JRE in your container (topic 8.2).</li>
+<li><strong>SBOM:</strong> a Software Bill of Materials lists every
+component and version. Generate one in CycloneDX format so that when the
+next Log4Shell happens you can answer "are we affected?" in
+minutes:</li>
+</ul>
+<pre class="xml"><code>&lt;plugin&gt;
+    &lt;groupId&gt;org.cyclonedx&lt;/groupId&gt;
+    &lt;artifactId&gt;cyclonedx-maven-plugin&lt;/artifactId&gt;
+    &lt;version&gt;2.9.3&lt;/version&gt;
+    &lt;executions&gt;&lt;execution&gt;&lt;phase&gt;package&lt;/phase&gt;&lt;goals&gt;&lt;goal&gt;makeAggregateBom&lt;/goal&gt;&lt;/goals&gt;&lt;/execution&gt;&lt;/executions&gt;
+&lt;/plugin&gt;</code></pre>
+<p>Supply-chain hygiene also means: keep the Spring Boot parent current
+(it manages most versions for you), pin plugin and GitHub Action
+versions, use the Maven Central or an internal proxy repository only,
+and review new dependencies before adding them (licence, maintenance,
+popularity, transitive weight).</p>
+<h3 id="triage-do-not-just-suppress">Triage, do not just suppress</h3>
+<p>When a scanner reports a CVE: check whether the vulnerable code path
+is reachable in your application, upgrade if a fix exists, and only then
+suppress, with a written reason and an expiry date in the suppression
+file. A growing suppression file nobody reviews is a finding in
+itself.</p>
+<h2 id="5-encrypting-sensitive-data-at-rest">5. Encrypting sensitive
+data at rest</h2>
+<p>Disk and database encryption (managed by the cloud provider) protect
+against stolen disks, not against someone who can query the database.
+For the most sensitive fields (BVN, NIN, card data, account numbers in
+some contexts), add <strong>application-level encryption</strong>:</p>
+<ul>
+<li>Use authenticated encryption (<strong>AES-256-GCM</strong>) with a
+unique IV per value, via a well-tested library (Google Tink) or your
+cloud KMS.</li>
+<li>Use <strong>envelope encryption</strong>: a data key encrypts the
+data; a master key in a KMS or HSM encrypts the data key. Rotate master
+keys without re-encrypting everything at once.</li>
+<li>For values you must search by (find a customer by BVN), store a
+separate keyed hash (HMAC) for lookups.</li>
+<li>For card numbers, prefer <strong>tokenisation</strong> by a
+PCI-compliant vault or processor, so your systems never store the PAN at
+all (Phase 2 Capstone 3).</li>
+</ul>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Fast hashes (SHA-256) or reversible encryption for passwords.</li>
+<li>Secrets in <code>application.yml</code>, Dockerfiles, CI logs or
+Postman collections committed to Git.</li>
+<li>Deleting a leaked secret from Git without rotating it.</li>
+<li>One shared database superuser for every service.</li>
+<li>Ignoring Dependabot pull requests for months.</li>
+<li>Suppressing scanner findings with no reason or expiry.</li>
+<li>Homemade encryption (AES-ECB, static IVs, keys in the code).</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Switch your capstone to a <code>DelegatingPasswordEncoder</code>
+with Argon2id as default, and write a test proving a BCrypt hash still
+verifies and is upgraded on login.</li>
+<li>Move every secret to environment variables with an
+<code>.env.example</code>; add Gitleaks as a pre-commit hook and a CI
+job, and prove it blocks a fake AWS key.</li>
+<li>Add OWASP Dependency-Check with <code>failBuildOnCVSS=7</code>,
+Dependabot for Maven and GitHub Actions, and a CycloneDX SBOM attached
+to each build.</li>
+<li>Run HashiCorp Vault in dev mode with Docker and load your database
+password through Spring Cloud Vault.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Hash, salt, work factor, BCrypt, Argon2id, PBKDF2,
+<code>PasswordEncoder</code>, <code>DelegatingPasswordEncoder</code>,
+password upgrade, credential stuffing, secret, secrets manager, Vault,
+dynamic credentials, rotation, <code>.env.example</code>, secret
+scanning, Gitleaks, push protection, CVE, CVSS, NVD, OWASP
+Dependency-Check, Dependabot, dependency review, SBOM, CycloneDX,
+software supply chain, envelope encryption, KMS, HSM, AES-GCM,
+tokenisation.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html">OWASP
+Cheat Sheet: Password Storage</a></li>
+<li><a
+href="https://docs.spring.io/spring-security/reference/features/authentication/password-storage.html">Spring
+Security reference: Password storage</a></li>
+<li><a
+href="https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html">OWASP
+Cheat Sheet: Secrets Management</a></li>
+<li><a href="https://owasp.org/www-project-dependency-check/">OWASP
+Dependency-Check</a></li>
+<li><a href="https://github.com/gitleaks/gitleaks">Gitleaks</a></li>
+<li><a href="https://cyclonedx.org/">CycloneDX: Software Bill of
+Materials standard</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Password Storage Tier List: encryption, hashing, salting, bcrypt, and beyond</h3><p>Studying With Alex · 10 min. Password storage ranked: plaintext to Argon2 and bcrypt, and why.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/qgpsIBLvrGY" title="Password Storage Tier List: encryption, hashing, salting, bcrypt, and beyond" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>HashiCorp Vault Explained in 180 seconds</h3><p>Cybr · 4 min. HashiCorp Vault in 180 seconds: secrets as a service.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/nG8fCdWkLzc" title="HashiCorp Vault Explained in 180 seconds" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Secrets Management: Secure Credentials &amp; Avoid Data Leaks</h3><p>IBM Technology · 10 min. Secrets management concepts from IBM: rotation, least privilege, auditing.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/BqekRTA6VCs" title="Secrets Management: Secure Credentials &amp; Avoid Data Leaks" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Software Bill of Materials (SBOM) Explained: What It Is and Why It Matters for Security</h3><p>Harness · 5 min. What an SBOM is and how it helps you respond to new vulnerabilities.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/B-y4lXinVLU" title="Software Bill of Materials (SBOM) Explained: What It Is and Why It Matters for Security" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/02-professional-backend/06-security-essentials/6.5-passwords-secrets-dependency-scanning/README.md">6.5 Password hashing, secrets management, dependency scanning</a></p>

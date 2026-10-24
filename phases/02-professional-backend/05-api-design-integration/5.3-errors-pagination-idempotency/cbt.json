@@ -1,0 +1,99 @@
+{
+  "topic": "5.3",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A merchant's integration needs to show a specific message when a transfer fails because the account is frozen, and a different one for insufficient funds.",
+      "question": "What should their code branch on in your Problem Details response?",
+      "options": [
+        "The HTTP status code alone",
+        "The stable type URI (for example .../problems/account-frozen)",
+        "The title, translated to the user's language",
+        "The human-readable detail text"
+      ],
+      "answer": 1,
+      "explanation": "Both failures are 422, and detail and title are for humans and may change. The documented type URI is the stable, machine-readable identifier."
+    },
+    {
+      "type": "single",
+      "scenario": "A corporate customer with 4 million transactions pages through their history with GET /transactions?page=80000&size=50 and the request times out.",
+      "question": "What change fixes the performance problem?",
+      "options": [
+        "Cache every page in Redis",
+        "Increase the page size to 5,000",
+        "Switch to keyset (cursor) pagination over an index on (account_id, created_at, id), returning an opaque next cursor",
+        "Add a COUNT(*) query to know the total in advance"
+      ],
+      "answer": 2,
+      "explanation": "OFFSET makes the database read and discard every skipped row. Seeking from the last seen key with a matching index costs the same for every page."
+    },
+    {
+      "type": "single",
+      "scenario": "A client retries POST /transfers with the same Idempotency-Key, but the amount in the body is now 5,000.00 instead of 500.00.",
+      "question": "How should the server respond?",
+      "options": [
+        "Reject it (for example 422 idempotency-key-reused), because the key was used for a different request",
+        "Process it as a new transfer",
+        "Update the original transfer to 5,000.00",
+        "Return the stored response of the first request"
+      ],
+      "answer": 0,
+      "explanation": "A key identifies one logical request. Storing a fingerprint of the original request lets the server detect a mismatched payload, which signals a client bug, and refuse it."
+    },
+    {
+      "type": "single",
+      "scenario": "Two identical requests with the same Idempotency-Key arrive at two instances of your service within a millisecond. Your code does SELECT ... WHERE key = ? and, if no row is found, processes the transfer and then inserts the key.",
+      "question": "What is wrong?",
+      "options": [
+        "Idempotency keys should be checked after the transfer, not before",
+        "The SELECT should be cached in memory on each instance",
+        "Both requests can pass the SELECT before either inserts, so the transfer is processed twice; insert the key first under a primary-key constraint instead",
+        "Nothing; the SELECT makes it safe"
+      ],
+      "answer": 2,
+      "explanation": "Check-then-act across concurrent requests is a race. Inserting the key first and letting the database's unique constraint pick a winner makes duplicates impossible."
+    },
+    {
+      "type": "multi",
+      "scenario": "You are reviewing an error response that a customer forwarded to support.",
+      "question": "Which items should never appear in a Problem Details response to a client? (Choose two.)",
+      "options": [
+        "A trace ID that support can look up in logs",
+        "A Java stack trace",
+        "The SQL statement and constraint name that failed",
+        "A stable type URI"
+      ],
+      "answer": [
+        1,
+        2
+      ],
+      "explanation": "Stack traces and SQL leak internals that help attackers and confuse users. A trace ID and a type URI are exactly what clients and support need."
+    },
+    {
+      "type": "single",
+      "scenario": "A partner exceeds its limit of 100 requests per minute.",
+      "question": "Which response lets a well-written client recover automatically?",
+      "options": [
+        "429 Too Many Requests with a Retry-After header and a Problem Details body",
+        "403 Forbidden",
+        "500 Internal Server Error",
+        "200 OK with an empty list"
+      ],
+      "answer": 0,
+      "explanation": "429 identifies the cause and Retry-After tells the client exactly how long to back off; other codes either look like bugs or like permanent refusals."
+    },
+    {
+      "type": "single",
+      "scenario": "Your idempotency handler records the key and stored response in one table, and the transfer's ledger postings in another.",
+      "question": "Why should both be written in the same database transaction?",
+      "options": [
+        "To make the response faster",
+        "Because PostgreSQL cannot write two tables in separate transactions",
+        "Because Spring requires @Transactional on every controller",
+        "So a crash cannot leave money moved without the key recorded (or the key recorded without the money moving)"
+      ],
+      "answer": 3,
+      "explanation": "Atomicity guarantees that either both the business effect and the idempotency record exist, or neither does, so a retry after a crash behaves correctly."
+    }
+  ]
+}

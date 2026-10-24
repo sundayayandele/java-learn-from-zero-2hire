@@ -1,0 +1,19 @@
+# Production-like: two replicas, managed PostgreSQL outside the cluster, secret provided by the platform
+# (External Secrets Operator, Sealed Secrets or the cloud's secret store CSI driver). Nothing secret is committed.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: bill-payments-aggregator
+resources:
+  - ../../base
+images:
+  - name: bill-payments-aggregator
+    newName: ghcr.io/OWNER/bill-payments-aggregator
+    newTag: "0000000"          # pinned commit SHA, updated by CI in a pull request (GitOps)
+patches:
+  - target:
+      kind: Deployment
+      name: bill-payments-aggregator
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 2

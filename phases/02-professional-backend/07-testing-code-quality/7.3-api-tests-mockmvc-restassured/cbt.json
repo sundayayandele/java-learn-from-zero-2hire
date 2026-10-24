@@ -1,0 +1,99 @@
+{
+  "topic": "7.3",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "You want to check that POST /api/v1/transfers returns 400 with a field error when the account number is invalid, and that the service is never called. The suite must stay fast.",
+      "question": "Which test setup fits best?",
+      "options": [
+        "@SpringBootTest with a real PostgreSQL container",
+        "A unit test calling the controller method directly with an invalid object",
+        "A REST Assured test against the staging environment",
+        "@WebMvcTest for the controller with the service mocked via @MockitoBean, asserting status, Problem Details and verifyNoInteractions"
+      ],
+      "answer": 3,
+      "explanation": "Validation and error mapping are web-layer behaviour. A web slice test exercises the real converters, validation and advice in milliseconds; calling the method directly skips them."
+    },
+    {
+      "type": "single",
+      "scenario": "A JSON assertion compares the entire response body as one string. After a colleague adds an optional field fee, 40 tests fail even though nothing is broken.",
+      "question": "What would make these tests less brittle?",
+      "options": [
+        "Sort the JSON keys alphabetically before comparing",
+        "Assert only the fields each test cares about (jsonPath / extractingPath) or compare leniently",
+        "Delete the tests",
+        "Forbid adding new response fields"
+      ],
+      "answer": 1,
+      "explanation": "Adding an optional response field is backward compatible, so tests should not break on it. Targeted assertions express what each test actually verifies."
+    },
+    {
+      "type": "single",
+      "scenario": "The mobile team's tests mock your API with hand-written JSON. You rename a field; your tests and theirs stay green, and the app breaks in production.",
+      "question": "What practice would have caught this?",
+      "options": [
+        "Higher code coverage on the provider",
+        "Contract testing (for example consumer-driven contracts or provider-published stubs) verified in the provider's build",
+        "More unit tests in the mobile app",
+        "Manual testing before each release"
+      ],
+      "answer": 1,
+      "explanation": "Contracts make the consumer's expectations executable against the real provider, so a breaking change fails the provider's build before release."
+    },
+    {
+      "type": "multi",
+      "scenario": "You are listing what a thorough API test suite should cover for a secured endpoint.",
+      "question": "Which cases should be included? (Choose two.)",
+      "options": [
+        "Each documented business error returns its Problem Details type and status",
+        "An anonymous request returns 401 and a token without the required scope returns 403",
+        "That the mock returns exactly what it was stubbed to return",
+        "That the controller class has a public constructor"
+      ],
+      "answer": [
+        0,
+        1
+      ],
+      "explanation": "Security and error contracts are part of the API's behaviour. Checking that a stub returns its stubbed value tests nothing."
+    },
+    {
+      "type": "single",
+      "scenario": "After each deployment to staging, the team wants an automatic check that the main endpoints respond correctly over real HTTP.",
+      "question": "What is a good fit?",
+      "options": [
+        "@WebMvcTest tests with mocked services",
+        "Mockito unit tests",
+        "Checking the application log for errors",
+        "A REST Assured (or RestTestClient) smoke suite run by the pipeline against the staging base URL"
+      ],
+      "answer": 3,
+      "explanation": "Post-deployment checks must exercise the deployed system over HTTP. Slice and unit tests run before deployment and use mocks."
+    },
+    {
+      "type": "single",
+      "scenario": "A test uses @SpringBootTest(webEnvironment = RANDOM_PORT) with @AutoConfigureRestTestClient.",
+      "question": "What does this give you?",
+      "options": [
+        "A client that calls production",
+        "Only the web layer with mocked services",
+        "A unit test with no Spring context",
+        "The full application running on an embedded server at a random port, with a RestTestClient bound to it"
+      ],
+      "answer": 3,
+      "explanation": "RANDOM_PORT starts the real server, avoiding port clashes in CI, and the auto-configured RestTestClient sends real HTTP requests to it."
+    },
+    {
+      "type": "single",
+      "scenario": "An endpoint must return amounts as JSON strings like \"2500.00\" so clients never parse floating point.",
+      "question": "How should a test verify this?",
+      "options": [
+        "Assert jsonPath(\"$.amount\").value(\"2500.00\") so both the type (string) and the scale are checked",
+        "Check that the service returned a BigDecimal",
+        "Assert that the amount equals 2500 as a number",
+        "Do not test serialisation formats"
+      ],
+      "answer": 0,
+      "explanation": "Serialisation is part of the contract. Checking the exact string catches a change to numeric output or a lost scale."
+    }
+  ]
+}

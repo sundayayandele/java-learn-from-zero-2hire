@@ -1,0 +1,352 @@
+<p><em>Week 14 · Module 5: API Design &amp; Integration</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Explain what an <strong>OpenAPI</strong> document is and why partner
+teams rely on it.</li>
+<li>Generate an OpenAPI 3.1 document and Swagger UI from a Spring Boot 4
+application with <strong>springdoc-openapi</strong>, and enrich it with
+annotations.</li>
+<li>Compare <strong>code-first</strong> and
+<strong>contract-first</strong> development, and generate a typed client
+or server stubs from a contract.</li>
+<li>Version an API with Spring Framework 7's built-in <strong>API
+versioning</strong> (header, path, query or media type), and deprecate
+old versions properly.</li>
+<li>Detect <strong>breaking changes</strong> before they reach
+clients.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>A payments API is consumed by mobile teams, merchants, aggregators
+and partner banks you will never meet. They integrate from the
+documentation, often generating client code from it. Open-banking and
+payment-scheme specifications are published as OpenAPI documents, and
+partner onboarding usually starts with "send us your OpenAPI file". When
+you change a field name without versioning, you break someone's
+production integration at 2 a.m. Good contracts and disciplined
+versioning are what let a bank change its systems without breaking its
+partners.</p>
+<h2 id="1-what-openapi-describes">1. What OpenAPI describes</h2>
+<p>An OpenAPI document (YAML or JSON) describes every path, method,
+parameter, request body, response, status code, security scheme and data
+schema of an HTTP API. A fragment:</p>
+<pre class="yaml"><code>openapi: 3.1.0
+info:
+  title: Wallet API
+  version: 1.4.0
+paths:
+  /api/v1/transfers:
+    post:
+      operationId: createTransfer
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, maxLength: 64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: &#39;#/components/schemas/TransferRequest&#39; }
+      responses:
+        &#39;201&#39;: { description: Transfer completed }
+        &#39;202&#39;: { description: Transfer accepted and pending }
+        &#39;422&#39;:
+          description: Business rule failed
+          content:
+            application/problem+json:
+              schema: { $ref: &#39;#/components/schemas/ProblemDetail&#39; }
+components:
+  schemas:
+    TransferRequest:
+      type: object
+      required: [sourceAccount, destinationAccount, amount, currency]
+      properties:
+        sourceAccount: { type: string, pattern: &#39;^\d{10}$&#39; }
+        destinationAccount: { type: string, pattern: &#39;^\d{10}$&#39; }
+        amount: { type: string, pattern: &#39;^\d+\.\d{2}$&#39;, example: &#39;2500.00&#39; }
+        currency: { type: string, enum: [NGN, USD, GBP, EUR] }</code></pre>
+<p>From one document, tools can render interactive docs (Swagger UI,
+Redoc), generate clients in a dozen languages, generate mock servers,
+validate requests in a gateway and detect breaking changes between
+versions.</p>
+<h2 id="2-code-first-with-springdoc-openapi">2. Code-first with
+springdoc-openapi</h2>
+<p>Add the starter (version 3.x supports Spring Boot 4):</p>
+<pre class="xml"><code>&lt;dependency&gt;
+    &lt;groupId&gt;org.springdoc&lt;/groupId&gt;
+    &lt;artifactId&gt;springdoc-openapi-starter-webmvc-ui&lt;/artifactId&gt;
+    &lt;version&gt;3.1.1&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
+<p>Start the app and you get:</p>
+<ul>
+<li><code>/v3/api-docs</code>: the generated OpenAPI JSON
+(<code>/v3/api-docs.yaml</code> for YAML).</li>
+<li><code>/swagger-ui.html</code>: interactive documentation.</li>
+</ul>
+<p>springdoc reads your controllers, DTO records and Bean Validation
+annotations (<code>@NotNull</code>, <code>@Size</code>,
+<code>@Pattern</code> become schema constraints). Add annotations where
+the code alone is not enough:</p>
+<pre class="java"><code>@Tag(name = &quot;Transfers&quot;, description = &quot;Move money between accounts&quot;)
+@RestController
+@RequestMapping(&quot;/api/v1/transfers&quot;)
+class TransferController {
+
+    @Operation(summary = &quot;Create a transfer&quot;,
+               description = &quot;Idempotent when the same Idempotency-Key is reused within 24 hours.&quot;)
+    @ApiResponse(responseCode = &quot;201&quot;, description = &quot;Transfer completed&quot;)
+    @ApiResponse(responseCode = &quot;202&quot;, description = &quot;Transfer accepted, awaiting the switch&quot;)
+    @ApiResponse(responseCode = &quot;422&quot;, description = &quot;Insufficient funds or limit exceeded&quot;,
+                 content = @Content(mediaType = &quot;application/problem+json&quot;,
+                                    schema = @Schema(implementation = ProblemDetail.class)))
+    @PostMapping
+    ResponseEntity&lt;TransferResponse&gt; create(
+            @Parameter(description = &quot;Client-generated unique key, max 64 characters&quot;)
+            @RequestHeader(&quot;Idempotency-Key&quot;) String idempotencyKey,
+            @Valid @RequestBody TransferRequest request) { ... }
+}
+
+record TransferRequest(
+        @Schema(example = &quot;0123456789&quot;) @Pattern(regexp = &quot;\\d{10}&quot;) String sourceAccount,
+        @Schema(example = &quot;9876543210&quot;) @Pattern(regexp = &quot;\\d{10}&quot;) String destinationAccount,
+        @Schema(type = &quot;string&quot;, example = &quot;2500.00&quot;) @NotNull @Positive BigDecimal amount,
+        @NotNull Currency currency) { }</code></pre>
+<p>Global information (title, version, contact, security schemes,
+servers) goes in an <code>OpenAPI</code> bean:</p>
+<pre class="java"><code>@Bean
+OpenAPI walletApi() {
+    return new OpenAPI()
+            .info(new Info().title(&quot;Wallet API&quot;).version(&quot;1.4.0&quot;)
+                    .contact(new Contact().name(&quot;Payments Platform&quot;).email(&quot;platform@example.com&quot;)))
+            .components(new Components().addSecuritySchemes(&quot;bearer&quot;,
+                    new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme(&quot;bearer&quot;).bearerFormat(&quot;JWT&quot;)))
+            .addSecurityItem(new SecurityRequirement().addList(&quot;bearer&quot;));
+}</code></pre>
+<p>In production, decide deliberately whether Swagger UI is public. Many
+banks expose it only on an internal network or behind authentication
+(<code>springdoc.swagger-ui.enabled=false</code> in the production
+profile), and publish the static YAML to a developer portal instead.</p>
+<h2 id="3-contract-first">3. Contract-first</h2>
+<p>In <strong>contract-first</strong> development, you write (or
+receive) the OpenAPI document first, review it with consumers, and then
+generate server interfaces and client code from it with the OpenAPI
+Generator Maven plugin:</p>
+<pre class="xml"><code>&lt;plugin&gt;
+    &lt;groupId&gt;org.openapitools&lt;/groupId&gt;
+    &lt;artifactId&gt;openapi-generator-maven-plugin&lt;/artifactId&gt;
+    &lt;version&gt;7.26.0&lt;/version&gt;
+    &lt;executions&gt;
+        &lt;execution&gt;
+            &lt;goals&gt;&lt;goal&gt;generate&lt;/goal&gt;&lt;/goals&gt;
+            &lt;configuration&gt;
+                &lt;inputSpec&gt;${project.basedir}/src/main/resources/openapi/wallet-api.yaml&lt;/inputSpec&gt;
+                &lt;generatorName&gt;spring&lt;/generatorName&gt;
+                &lt;configOptions&gt;
+                    &lt;interfaceOnly&gt;true&lt;/interfaceOnly&gt;
+                    &lt;useSpringBoot4&gt;true&lt;/useSpringBoot4&gt;
+                    &lt;useTags&gt;true&lt;/useTags&gt;
+                &lt;/configOptions&gt;
+            &lt;/configuration&gt;
+        &lt;/execution&gt;
+    &lt;/executions&gt;
+&lt;/plugin&gt;</code></pre>
+<p>The plugin generates <code>TransfersApi</code> (an interface with
+Spring MVC annotations) and model classes; your controller implements
+the interface, so the compiler fails if the implementation drifts from
+the contract. (<code>useSpringBoot4</code> makes it generate Jakarta EE
+code for Spring Boot 4.) The same file generates a Java client
+(<code>generatorName=java</code>, library <code>restclient</code>) for
+teams that call you.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Code-first</th>
+<th>Contract-first</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Speed for a new internal service</td>
+<td>Fast</td>
+<td>Slower to start</td>
+</tr>
+<tr>
+<td>Consumer review before coding</td>
+<td>Hard</td>
+<td>Natural</td>
+</tr>
+<tr>
+<td>Drift between docs and code</td>
+<td>Impossible (docs come from code)</td>
+<td>Prevented by generated interfaces</td>
+</tr>
+<tr>
+<td>Typical use</td>
+<td>Internal services, early-stage products</td>
+<td>Partner and public APIs, regulated integrations</td>
+</tr>
+</tbody>
+</table>
+<p>Either way, <strong>commit the OpenAPI document</strong> to the
+repository (generate it in CI for code-first) so every change to the
+contract shows up in pull-request diffs.</p>
+<h2 id="4-versioning-with-spring-framework-7">4. Versioning with Spring
+Framework 7</h2>
+<p>Spring Framework 7 (Spring Boot 4) has first-class API versioning.
+You choose <strong>where</strong> the version comes from, and map
+handlers to versions with the <code>version</code> attribute.</p>
+<pre class="java"><code>@Configuration
+class ApiVersioningConfig implements WebMvcConfigurer {
+    @Override
+    public void configureApiVersioning(ApiVersionConfigurer configurer) {
+        configurer.useRequestHeader(&quot;API-Version&quot;)   // or usePathSegment(1), useQueryParam(&quot;version&quot;), useMediaTypeParameter(...)
+                  .addSupportedVersions(&quot;1.0&quot;, &quot;1.1&quot;, &quot;2.0&quot;)
+                  .setDefaultVersion(&quot;1.0&quot;);
+    }
+}</code></pre>
+<p>The same settings are available as properties in Spring Boot:</p>
+<pre class="properties"><code>spring.mvc.apiversion.use.header=API-Version
+spring.mvc.apiversion.supported=1.0,1.1,2.0
+spring.mvc.apiversion.default=1.0</code></pre>
+<p>Then map versions on handlers:</p>
+<pre class="java"><code>@GetMapping(path = &quot;/accounts/{id}&quot;, version = &quot;1.0&quot;)
+AccountV1 getV1(@PathVariable String id) { ... }
+
+@GetMapping(path = &quot;/accounts/{id}&quot;, version = &quot;2.0&quot;)
+AccountV2 getV2(@PathVariable String id) { ... }   // e.g. balance split into ledger and available
+
+@GetMapping(path = &quot;/accounts/{id}/limits&quot;, version = &quot;1.1+&quot;)
+Limits limits(@PathVariable String id) { ... }      // added in 1.1, still served by 2.0</code></pre>
+<p>A request for an unsupported version gets
+<code>400 Bad Request</code> automatically. <code>"1.1+"</code> means
+"this version and later", so a handler keeps serving new versions until
+you deliberately replace it.</p>
+<h3 id="which-strategy">Which strategy?</h3>
+<table>
+<thead>
+<tr>
+<th>Strategy</th>
+<th>Example</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Path segment</td>
+<td><code>/api/v2/accounts/123</code></td>
+<td>Most visible, easy to route in gateways and to test with a browser;
+common in public fintech APIs</td>
+</tr>
+<tr>
+<td>Header</td>
+<td><code>API-Version: 2.0</code></td>
+<td>Clean URLs; easy to forget in clients, so set a default</td>
+</tr>
+<tr>
+<td>Query parameter</td>
+<td><code>/accounts/123?version=2.0</code></td>
+<td>Simple, but mixes versioning with filtering</td>
+</tr>
+<tr>
+<td>Media type</td>
+<td><code>Accept: application/vnd.bank.v2+json</code></td>
+<td>Purest HTTP, hardest for client developers</td>
+</tr>
+</tbody>
+</table>
+<p>Whatever you choose, use one strategy across the whole API.</p>
+<h3 id="what-is-a-breaking-change">What is a breaking change?</h3>
+<p>Breaking (needs a new major version): removing or renaming a field or
+endpoint, changing a field's type or meaning, making an optional request
+field required, adding a new required parameter, changing status codes
+clients rely on, tightening validation. <strong>Not breaking</strong>
+(minor version): adding optional request fields, adding response fields,
+adding new endpoints, adding enum values <em>only if</em> clients were
+told to tolerate unknown values. Write that last rule into your API
+guidelines; it saves many versions.</p>
+<h3 id="deprecation-and-sunset">Deprecation and sunset</h3>
+<p>When version 1 will be retired, tell clients in every response. The
+<code>Deprecation</code> and <code>Sunset</code> headers (RFC 9745 and
+RFC 8594) are machine-readable; Spring Framework 7 can add them through
+<code>configurer.setDeprecationHandler(...)</code> with a
+<code>StandardApiVersionDeprecationHandler</code>, so clients see:</p>
+<pre><code>Deprecation: @1767225600
+Sunset: Thu, 30 Apr 2027 00:00:00 GMT
+Link: &lt;https://developer.example.com/migrate-to-v2&gt;; rel=&quot;deprecation&quot;</code></pre>
+<p>Support at least two versions in parallel, announce sunset dates
+months ahead for partner APIs, and watch your access logs to see who
+still calls the old version before you switch it off.</p>
+<h2 id="5-catching-breaking-changes-in-ci">5. Catching breaking changes
+in CI</h2>
+<p>Generate the OpenAPI document during the build and compare it with
+the last released one using a diff tool such as
+<strong>openapi-diff</strong> or <strong>oasdiff</strong>. Fail the
+pipeline if a breaking change appears without a major version bump:</p>
+<pre class="bash"><code>oasdiff breaking docs/openapi/wallet-api-v1.yaml target/openapi.yaml --fail-on ERR</code></pre>
+<p>This turns "please don't break the mobile app" from a hope into a
+check.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Swagger UI and <code>/v3/api-docs</code> left open on the internet
+with internal endpoints listed.</li>
+<li>Documenting only happy paths; error responses
+(<code>application/problem+json</code>) are part of the contract.</li>
+<li><code>BigDecimal</code> documented as <code>number</code>, so
+generated clients use floating point. Mark money fields
+<code>type: string</code>.</li>
+<li>Versioning by copying the whole codebase or controller for every
+minor change.</li>
+<li>Breaking changes shipped as minor versions ("we only renamed one
+field").</li>
+<li>Removing an old version without checking who still calls it.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Add springdoc to your Phase 1 capstone, enrich three endpoints with
+<code>@Operation</code>, <code>@ApiResponse</code> and
+<code>@Schema</code>, and check the result in Swagger UI.</li>
+<li>Export the document to <code>docs/openapi.yaml</code> and commit it.
+Change a field name, regenerate, and diff the two files with
+oasdiff.</li>
+<li>Add header-based versioning with versions <code>1.0</code> and
+<code>2.0</code>; serve a changed account representation from version 2
+and keep version 1 working. Write MockMvc tests for both versions and
+for an unsupported version (400).</li>
+<li>Write a contract-first YAML for a small "beneficiaries" API and
+generate a Spring interface from it with the OpenAPI Generator
+plugin.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>OpenAPI Specification, Swagger UI, springdoc-openapi,
+<code>/v3/api-docs</code>, schema, <code>operationId</code>,
+<code>@Operation</code>, <code>@ApiResponse</code>,
+<code>@Schema</code>, code-first, contract-first, OpenAPI Generator, API
+versioning, <code>configureApiVersioning</code>, <code>version</code>
+attribute, baseline version (<code>1.1+</code>), breaking change,
+semantic versioning, <code>Deprecation</code> header,
+<code>Sunset</code> header, oasdiff.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a href="https://spec.openapis.org/oas/v3.1.0">OpenAPI Specification
+3.1</a></li>
+<li><a href="https://springdoc.org/">springdoc-openapi
+documentation</a></li>
+<li><a
+href="https://docs.spring.io/spring-framework/reference/web/webmvc-versioning.html">Spring
+Framework reference: API Versioning</a></li>
+<li><a
+href="https://openapi-generator.tech/docs/generators/spring/">OpenAPI
+Generator: Spring generator options</a></li>
+<li><a href="https://www.rfc-editor.org/rfc/rfc8594">RFC 8594: The
+Sunset HTTP Header Field</a></li>
+<li><a href="https://github.com/oasdiff/oasdiff">oasdiff: OpenAPI diff
+and breaking-change detection</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>API Versioning Made Simple with Spring Boot 4.0</h3><p>Dan Vega · 27 min. First-class API versioning in Spring Boot 4: header, path and media-type strategies.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/qjo2tYf01xo" title="API Versioning Made Simple with Spring Boot 4.0" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Spring Doc OpenApi Setup In SpringBoot | Swagger Setuo using SpringDoc Open api|SpringBoot tutorials</h3><p>KB Tutorials · 18 min. Adding springdoc-openapi to a Spring Boot app and reading the generated Swagger UI.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/LsD89_f9vjE" title="Spring Doc OpenApi Setup In SpringBoot | Swagger Setuo using SpringDoc Open api|SpringBoot tutorials" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>⭐Use contract-first approach and generate code with OpenAPI - Introduction to OpenAPI</h3><p>Nerdi Coda · 21 min. Contract-first design: write the OpenAPI spec, then generate code from it.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/1LpItQ3vPeQ" title="⭐Use contract-first approach and generate code with OpenAPI - Introduction to OpenAPI" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/02-professional-backend/05-api-design-integration/5.2-openapi-versioning/README.md">5.2 OpenAPI/Swagger documentation and API versioning</a></p>

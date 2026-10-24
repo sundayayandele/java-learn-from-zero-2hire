@@ -90,6 +90,7 @@ class Architecture:
     summary: str
     diagrams: list[Diagram]
     decisions: list[Decision] = field(default_factory=list)
+    phase: str = "01-foundations"          # folder under phases/ that holds this capstone
 
 
 def _mm_text(s: str) -> str:

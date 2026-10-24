@@ -158,7 +158,7 @@ Locale, BCP 47 language tag, default locale, `NumberFormat`, currency instance, 
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-23. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
 
 - [Localization and Internationalization in Java Tutorial Part 1](https://www.youtube.com/watch?v=h0educ2nosg) · Telusko · 4 min. Localization and internationalization basics: Locale and resource bundles.
 - [Formatting Money & Percents in Java using the NumberFormat Class](https://www.youtube.com/watch?v=zaTXwXJW328) · Logic Lambda · 4 min. Formatting money and percentages with NumberFormat.

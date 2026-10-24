@@ -1,0 +1,81 @@
+%% KYC identity verification orchestrator: technical architecture (inside the service)
+flowchart TB
+    subgraph sg0["Clients"]
+        direction TB
+        client(["HTTP clients<br/>(apps, partners, ops)"])
+    end
+    subgraph sg1["Web layer: Spring MVC"]
+        direction TB
+        sec["SecurityFilterChain<br/>JWT resource server · @PreAuthorize"]
+        c0["VerificationController"]
+        c1["ReviewController"]
+        c2["AddressWebhookController"]
+        advice["ApiExceptionHandler<br/>RFC 9457 Problem Details"]
+        valid["Bean Validation<br/>(DTO records)"]
+    end
+    subgraph sg2["Service layer"]
+        direction TB
+        s0["Orchestrator<br/>(sequence · parallel checks)"]
+        s1["TierPolicy · NameMatcher"]
+        s2["ProviderClients<br/>(timeouts · breakers)"]
+    end
+    subgraph sg3["Persistence"]
+        direction TB
+        r0["VerificationRepository"]
+        r1["VerificationEventRepository"]
+        flyway["Flyway migrations<br/>ddl-auto=validate"]
+    end
+    subgraph sg4["Cross-cutting"]
+        direction TB
+        cfg["@ConfigurationProperties<br/>(validated)"]
+        act["Actuator + Micrometer<br/>health · readiness · Prometheus"]
+        sched[["Scheduler<br/>purge raw provider data after 30 days"]]
+        http["RestClient<br/>timeouts · retries"]
+    end
+    subgraph sg5["Runtime dependencies"]
+        direction TB
+        pg[("PostgreSQL 17")]
+        prom["Prometheus / Grafana"]
+    end
+    subgraph sg6["External"]
+        direction TB
+        idp1[/"Identity number provider"/]
+        face[/"Face match provider"/]
+        watch[/"Watchlist provider"/]
+        addr[/"Address provider (async)"/]
+    end
+    client -->|"Bearer JWT over HTTPS"| sec
+    sec -->|"authenticated"| c0
+    c0 --> s0
+    c1 --> s1
+    c2 --> s2
+    s0 --> r0
+    s1 --> r1
+    s2 --> r1
+    r0 -->|"JDBC"| pg
+    r1 -->|"JDBC"| pg
+    flyway -->|"migrate on start"| pg
+    prom -.->|"scrape /actuator/prometheus"| act
+    c0 -.->|"exceptions"| advice
+    c0 -.->|"@Valid"| valid
+    sched -.->|"invokes"| s0
+    s0 -->|"fetch"| http
+    http -->|"HTTPS"| idp1
+    http -->|"HTTPS"| face
+    http -->|"HTTPS"| watch
+    http -->|"HTTPS + webhook"| addr
+    classDef actor fill:#dae8fc,stroke:#6c8ebf,color:#000
+    classDef svc fill:#d5e8d4,stroke:#82b366,color:#000
+    classDef comp fill:#ffffff,stroke:#666666,color:#000
+    classDef db fill:#fff2cc,stroke:#d6b656,color:#000
+    classDef store fill:#f5f5f5,stroke:#666666,color:#000
+    classDef ext fill:#f8cecc,stroke:#b85450,color:#000,stroke-dasharray: 5 3
+    classDef infra fill:#e1d5e7,stroke:#9673a6,color:#000
+    classDef job fill:#ffe6cc,stroke:#d79b00,color:#000
+    class client actor
+    class sec,c0,c1,c2,advice,valid,r0,r1,flyway,cfg,act,http comp
+    class pg db
+    class idp1,face,watch,addr ext
+    class prom infra
+    class sched job
+    class s0,s1,s2 svc

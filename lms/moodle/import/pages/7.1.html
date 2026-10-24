@@ -1,0 +1,316 @@
+<p><em>Week 19 · Module 7: Testing &amp; Code Quality</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Write clear, independent unit tests with <strong>JUnit 5</strong>
+(Jupiter) and <strong>AssertJ</strong>: naming, arrange–act–assert,
+parameterised tests, nested tests and exception assertions.</li>
+<li>Choose the right <strong>test double</strong> (dummy, stub, fake,
+mock, spy) and use <strong>Mockito</strong> without over-mocking.</li>
+<li>Control time and randomness (<code>Clock</code>, seeded generators)
+so tests are deterministic.</li>
+<li>Practise <strong>test-driven development</strong>: red, green,
+refactor.</li>
+<li>Recognise and fix <strong>flaky</strong>, brittle and slow
+tests.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Money code must be correct at the boundaries: exactly ₦5,000.00
+versus ₦5,000.01, the last day of the month, a leap year, a refund
+larger than the original payment. Unit tests are where you prove those
+rules cheaply, thousands of times per build. Banks treat test suites as
+evidence: auditors, change-approval boards and your future colleagues
+read them to understand what the system guarantees. In interviews, "how
+would you test this?" follows almost every coding question.</p>
+<h2 id="1-junit-5-essentials">1. JUnit 5 essentials</h2>
+<p>Spring Boot's test starter brings JUnit Jupiter, AssertJ, Mockito and
+Hamcrest.</p>
+<pre class="java"><code>class FeeCalculatorTest {
+
+    private final FeeCalculator fees = new FeeCalculator(FeeSchedule.standard());
+
+    @Test
+    void chargesFlatFeeUpToFiveThousandNaira() {
+        // arrange
+        Money amount = Money.ngn(&quot;5000.00&quot;);
+        // act
+        Money fee = fees.transferFee(amount);
+        // assert
+        assertThat(fee).isEqualTo(Money.ngn(&quot;10.75&quot;));
+    }
+
+    @ParameterizedTest(name = &quot;{0} → fee {1}&quot;)
+    @CsvSource({
+            &quot;0.01,      10.75&quot;,
+            &quot;5000.00,   10.75&quot;,
+            &quot;5000.01,   26.88&quot;,
+            &quot;50000.00,  26.88&quot;,
+            &quot;50000.01,  53.75&quot;
+    })
+    void appliesTierBoundaries(String amount, String expectedFee) {
+        assertThat(fees.transferFee(Money.ngn(amount))).isEqualTo(Money.ngn(expectedFee));
+    }
+
+    @Test
+    void rejectsZeroOrNegativeAmounts() {
+        assertThatThrownBy(() -&gt; fees.transferFee(Money.ngn(&quot;0.00&quot;)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining(&quot;positive&quot;);
+    }
+
+    @Nested
+    class StaffAccounts {
+        @Test
+        void areNotCharged() {
+            assertThat(fees.transferFee(Money.ngn(&quot;10000.00&quot;), CustomerType.STAFF)).isEqualTo(Money.ngn(&quot;0.00&quot;));
+        }
+    }
+}</code></pre>
+<p>Good unit tests are <strong>FIRST</strong>: Fast (milliseconds),
+Independent (no order dependence, no shared mutable state), Repeatable
+(same result every time, anywhere), Self-validating (pass or fail, no
+reading logs), Timely (written with or before the code).</p>
+<p>Name tests after <strong>behaviour</strong>, not methods:
+<code>appliesTierBoundaries</code> says more than
+<code>testTransferFee2</code>. One test, one reason to fail.</p>
+<h3 id="assertj">AssertJ</h3>
+<p>AssertJ reads like a sentence and gives precise failure messages:</p>
+<pre class="java"><code>assertThat(statement.lines())
+        .hasSize(3)
+        .extracting(StatementLine::narration)
+        .containsExactly(&quot;Opening balance&quot;, &quot;POS NG LAGOS&quot;, &quot;Transfer to 0123456789&quot;);
+
+assertThat(result).isInstanceOfSatisfying(TransferResult.Rejected.class,
+        r -&gt; assertThat(r.reason()).isEqualTo(RejectionReason.INSUFFICIENT_FUNDS));
+
+assertThat(balance).isEqualByComparingTo(&quot;1250.00&quot;);   // BigDecimal: compares value, ignores scale</code></pre>
+<p>Use <code>isEqualByComparingTo</code> for <code>BigDecimal</code>:
+<code>new BigDecimal("1.0").equals(new BigDecimal("1.00"))</code> is
+<code>false</code>.</p>
+<h2 id="2-test-doubles-and-mockito">2. Test doubles and Mockito</h2>
+<p>A unit test isolates the code under test from slow or uncontrollable
+collaborators.</p>
+<table>
+<thead>
+<tr>
+<th>Double</th>
+<th>What it does</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dummy</td>
+<td>Fills a parameter, never used</td>
+<td><code>null</code> or a placeholder object</td>
+</tr>
+<tr>
+<td>Stub</td>
+<td>Returns canned answers</td>
+<td>An exchange-rate provider returning 1,580.00</td>
+</tr>
+<tr>
+<td>Fake</td>
+<td>Working lightweight implementation</td>
+<td>An in-memory <code>AccountRepository</code> backed by a
+<code>HashMap</code></td>
+</tr>
+<tr>
+<td>Mock</td>
+<td>Records calls so you can verify them</td>
+<td>Verify that <code>notifier.sendDebitAlert(...)</code> was called
+once</td>
+</tr>
+<tr>
+<td>Spy</td>
+<td>Wraps a real object, overriding some calls</td>
+<td>Rarely needed; usually a design smell</td>
+</tr>
+</tbody>
+</table>
+<p>Mockito creates stubs and mocks:</p>
+<pre class="java"><code>@ExtendWith(MockitoExtension.class)
+class TransferServiceTest {
+
+    @Mock AccountRepository accounts;
+    @Mock DebitAlertNotifier notifier;
+    Clock clock = Clock.fixed(Instant.parse(&quot;2026-10-24T09:00:00Z&quot;), ZoneId.of(&quot;Africa/Lagos&quot;));
+
+    TransferService service;
+
+    @BeforeEach
+    void setUp() {
+        service = new TransferService(accounts, notifier, new FeeCalculator(FeeSchedule.standard()), clock);
+    }
+
+    @Test
+    void debitsSourceCreditsDestinationAndAlertsCustomer() {
+        Account source = Account.open(&quot;0123456789&quot;, Money.ngn(&quot;10000.00&quot;));
+        Account destination = Account.open(&quot;9876543210&quot;, Money.ngn(&quot;0.00&quot;));
+        when(accounts.lockBoth(&quot;0123456789&quot;, &quot;9876543210&quot;)).thenReturn(new AccountPair(source, destination));
+
+        service.transfer(new TransferCommand(&quot;0123456789&quot;, &quot;9876543210&quot;, Money.ngn(&quot;2500.00&quot;), &quot;ref-1&quot;));
+
+        assertThat(source.balance()).isEqualTo(Money.ngn(&quot;7489.25&quot;));       // 2,500 + 10.75 fee
+        assertThat(destination.balance()).isEqualTo(Money.ngn(&quot;2500.00&quot;));
+        verify(notifier).sendDebitAlert(eq(&quot;0123456789&quot;), eq(Money.ngn(&quot;2510.75&quot;)), any());
+        verifyNoMoreInteractions(notifier);
+    }
+
+    @Test
+    void doesNotAlertWhenFundsAreInsufficient() {
+        when(accounts.lockBoth(any(), any())).thenReturn(new AccountPair(
+                Account.open(&quot;0123456789&quot;, Money.ngn(&quot;100.00&quot;)), Account.open(&quot;9876543210&quot;, Money.ngn(&quot;0.00&quot;))));
+
+        assertThatThrownBy(() -&gt; service.transfer(new TransferCommand(&quot;0123456789&quot;, &quot;9876543210&quot;, Money.ngn(&quot;2500.00&quot;), &quot;ref-2&quot;)))
+                .isInstanceOf(InsufficientFundsException.class);
+        verifyNoInteractions(notifier);
+    }
+}</code></pre>
+<p>Useful Mockito tools: <code>ArgumentCaptor</code> to inspect what was
+passed, <code>thenThrow</code> to simulate failures,
+<code>inOrder(...)</code> when order matters, strict stubs (the default
+with <code>MockitoExtension</code>) which fail on unused stubbing.</p>
+<h3 id="mock-less">Mock less</h3>
+<ul>
+<li><strong>Mock at boundaries</strong> you do not own or that are slow:
+repositories, HTTP clients, message publishers, clocks. Do
+<strong>not</strong> mock value objects (<code>Money</code>), simple
+collaborators, or the class under test.</li>
+<li><strong>Prefer state over interaction:</strong> assert balances and
+results; verify calls only when the call <em>is</em> the behaviour (an
+alert must be sent).</li>
+<li><strong>Do not mock what you do not own</strong> without a contract
+test somewhere else: a mocked <code>RestClient</code> says nothing about
+the real provider (use WireMock, topic 5.4).</li>
+<li>If a test needs ten mocks, the class has too many
+responsibilities.</li>
+</ul>
+<h2 id="3-deterministic-time-and-randomness">3. Deterministic time and
+randomness</h2>
+<p>Code that calls <code>LocalDate.now()</code> or
+<code>UUID.randomUUID()</code> directly cannot be tested at month-end or
+with known IDs. Inject a <code>Clock</code> (Phase 1 already did this)
+and an ID generator:</p>
+<pre class="java"><code>class InterestAccrual {
+    private final Clock clock;
+    InterestAccrual(Clock clock) { this.clock = clock; }
+
+    Money dailyInterest(Account account) {
+        LocalDate today = LocalDate.now(clock);
+        int daysInYear = today.isLeapYear() ? 366 : 365;
+        ...
+    }
+}
+
+@Test
+void usesThreeHundredSixtySixDaysInALeapYear() {
+    Clock leapDay = Clock.fixed(Instant.parse(&quot;2028-02-29T12:00:00Z&quot;), ZoneOffset.UTC);
+    assertThat(new InterestAccrual(leapDay).dailyInterest(savings(&quot;1000000.00&quot;, &quot;0.10&quot;)))
+            .isEqualTo(Money.ngn(&quot;273.22&quot;));
+}</code></pre>
+<h2 id="4-test-driven-development">4. Test-driven development</h2>
+<p>TDD is a short loop:</p>
+<ol type="1">
+<li><strong>Red:</strong> write a small test for the next behaviour; run
+it; watch it fail (for the right reason).</li>
+<li><strong>Green:</strong> write the simplest code that passes.</li>
+<li><strong>Refactor:</strong> clean up names, duplication and design
+while all tests stay green.</li>
+</ol>
+<p>A few cycles on a VAT-on-fees rule:</p>
+<pre class="java"><code>// Red 1
+@Test void addsVatAtSevenAndAHalfPercentToTheFee() {
+    assertThat(fees.totalCharge(Money.ngn(&quot;5000.00&quot;))).isEqualTo(Money.ngn(&quot;11.56&quot;));   // 10.75 + 0.81 VAT
+}
+// Green 1: totalCharge = fee + fee × 0.075, rounded HALF_EVEN
+// Red 2
+@Test void staffPayNoFeeAndThereforeNoVat() { ... }
+// Green 2, then Refactor: extract a ChargeBreakdown record (fee, vat, total) because both tests needed the parts</code></pre>
+<p>Why teams use it: the tests describe behaviour before implementation
+details exist, design pressure pushes towards small, injectable
+collaborators, and you are never far from a green state. It works
+especially well for rule-heavy domain logic (fees, interest, limits,
+eligibility). It is less natural for exploratory or UI work; there,
+write tests immediately after.</p>
+<h2 id="5-flaky-brittle-and-slow-tests">5. Flaky, brittle and slow
+tests</h2>
+<ul>
+<li><strong>Flaky</strong> (sometimes fails): shared state between
+tests, real time (<code>Thread.sleep</code>, <code>now()</code>), random
+data without a seed, test order dependence, concurrency without proper
+synchronisation, real network calls. Fix the cause; never just
+rerun.</li>
+<li><strong>Brittle</strong> (breaks on harmless refactors): verifying
+every internal call, asserting on log text or exact
+<code>toString</code> output, mocking private details.</li>
+<li><strong>Slow:</strong> starting Spring for logic that needs no
+Spring. A plain unit test should not use <code>@SpringBootTest</code>.
+Keep the default <code>mvn test</code> fast; run integration tests in a
+separate phase (<code>mvn verify</code> with the Failsafe plugin), topic
+7.2.</li>
+</ul>
+<p>Test data builders keep tests readable as models grow:</p>
+<pre class="java"><code>Account account = anAccount().withNumber(&quot;0123456789&quot;).withBalance(&quot;10000.00&quot;).frozen().build();</code></pre>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Tests with no assertions, or that only check "no exception".</li>
+<li><code>assertEquals</code> on <code>BigDecimal</code> values with
+different scales.</li>
+<li>Mocking everything, including value objects and the class under
+test.</li>
+<li><code>@SpringBootTest</code> for pure logic, making the suite
+slow.</li>
+<li>Tests depending on each other's data or execution order.</li>
+<li><code>Thread.sleep</code> to wait for asynchronous work (use
+Awaitility in integration tests).</li>
+<li>Writing tests after the release "when there is time".</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Write parameterised boundary tests for your Phase 1 fee schedule and
+interest rules, including leap years and month-ends with a fixed
+<code>Clock</code>.</li>
+<li>Refactor one over-mocked test in your capstone into a state-based
+test with a fake repository.</li>
+<li>Do project 7.B (fee and tax engine kata) test-first, committing
+after each red, green and refactor step.</li>
+<li>Introduce a deliberate flaky test (using
+<code>LocalDateTime.now()</code>), observe it, and fix it with an
+injected <code>Clock</code>.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Unit test, JUnit Jupiter, <code>@Test</code>,
+<code>@ParameterizedTest</code>, <code>@CsvSource</code>,
+<code>@Nested</code>, <code>@BeforeEach</code>, AssertJ,
+<code>isEqualByComparingTo</code>, arrange–act–assert, FIRST, test
+double, dummy, stub, fake, mock, spy, Mockito, <code>@Mock</code>,
+<code>when/thenReturn</code>, <code>verify</code>,
+<code>ArgumentCaptor</code>, strict stubs, state-based vs
+interaction-based testing, <code>Clock</code>, test-driven development,
+red–green–refactor, flaky test, brittle test, test data builder.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a href="https://docs.junit.org/current/user-guide/">JUnit 5 User
+Guide</a></li>
+<li><a href="https://assertj.github.io/doc/">AssertJ documentation: Core
+assertions guide</a></li>
+<li><a
+href="https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html">Mockito
+documentation (Javadoc)</a></li>
+<li><a
+href="https://martinfowler.com/articles/mocksArentStubs.html">Martin
+Fowler: Mocks Aren't Stubs</a></li>
+<li><a
+href="https://martinfowler.com/bliki/TestDrivenDevelopment.html">Martin
+Fowler: Test-Driven Development</a></li>
+<li><a
+href="https://docs.spring.io/spring-boot/reference/testing/index.html">Spring
+Boot reference: Testing</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Java Testing - JUnit 5 Crash Course</h3><p>freeCodeCamp.org · 26 min. JUnit 5 course: assertions, lifecycle, parameterised tests.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/flpmSXVTqBI" title="Java Testing - JUnit 5 Crash Course" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Mock, When and ThenReturn with Mockito - JUnit Tutorial</h3><p>Aneesh Mistry · 11 min. Mockito basics: mocks, stubbing and verification.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/MztH6vkeFVk" title="Mock, When and ThenReturn with Mockito - JUnit Tutorial" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Test Driven Development - What? Why? And How?</h3><p>Modern Software Engineering · 17 min. Dave Farley on why and how test-driven development works.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/llaUBH5oayw" title="Test Driven Development - What? Why? And How?" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/02-professional-backend/07-testing-code-quality/7.1-junit-mockito-tdd/README.md">7.1 Unit testing with JUnit and Mockito; test-driven development</a></p>

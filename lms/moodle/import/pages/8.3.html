@@ -1,0 +1,342 @@
+<p><em>Week 22 · Module 8: Git, Docker &amp; CI/CD</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Explain <strong>continuous integration</strong>, <strong>continuous
+delivery</strong> and <strong>continuous deployment</strong>, and the
+stages of a pipeline.</li>
+<li>Write <strong>GitHub Actions</strong> workflows: triggers, jobs,
+steps, caching, matrices, artifacts, services, environments and
+secrets.</li>
+<li>Build a pipeline with <strong>quality gates</strong>: tests,
+coverage, static analysis, dependency, secret and image scans, then
+publish an image to <strong>GHCR</strong>.</li>
+<li>Authenticate to clouds from CI with <strong>OIDC</strong> instead of
+stored keys.</li>
+<li>Write the equivalent <strong>GitLab CI</strong> pipeline.</li>
+<li>Keep pipelines fast and secure.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>A pipeline is the bank's automated change-control process: it proves
+each change compiles, passes tests and security checks, was reviewed,
+and produced a known, scanned artifact, before anything reaches
+production. Regulators and auditors increasingly accept pipeline
+evidence instead of manual sign-off spreadsheets, but only if the
+pipeline cannot be bypassed. Platform and DevOps engineers are among the
+most sought-after hires in Nigerian fintech, and every backend engineer
+is expected to read and maintain their service's pipeline.</p>
+<h2 id="1-ci-cd-and-cd">1. CI, CD and CD</h2>
+<ul>
+<li><strong>Continuous integration (CI):</strong> every change is merged
+to the trunk frequently and automatically built and tested.</li>
+<li><strong>Continuous delivery:</strong> every change that passes the
+pipeline <em>could</em> be released at the push of a button; production
+deployment is a business decision.</li>
+<li><strong>Continuous deployment:</strong> every passing change
+<em>is</em> deployed to production automatically.</li>
+</ul>
+<p>Banks commonly practise continuous delivery to staging with a manual
+approval (or a change ticket) for production.</p>
+<p>A pipeline for a Spring Boot service, fastest checks first:</p>
+<pre><code>pull request:  compile → unit tests → integration tests → coverage gate → static analysis gate
+               → dependency review → secret scan
+main branch:   all of the above → build image → scan image → push image (tag = commit SHA)
+               → deploy to staging → smoke tests → [approval] → deploy to production → smoke tests</code></pre>
+<h2 id="2-github-actions-basics">2. GitHub Actions basics</h2>
+<p>Workflows are YAML files in <code>.github/workflows/</code>. A
+workflow has <strong>triggers</strong> (<code>on</code>),
+<strong>jobs</strong> (run in parallel unless they <code>needs:</code>
+each other) and <strong>steps</strong> (shell commands or reusable
+<strong>actions</strong>).</p>
+<pre class="yaml"><code>name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read            # least privilege for GITHUB_TOKEN by default
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true  # a new push cancels the previous run on the same branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: &#39;21&#39;
+          cache: maven          # caches ~/.m2 keyed on pom.xml
+      - name: Build, unit and integration tests, coverage gate
+        run: ./mvnw -B verify   # Surefire, Failsafe (Testcontainers) and JaCoCo check
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            target/surefire-reports
+            target/failsafe-reports</code></pre>
+<p>Key concepts:</p>
+<ul>
+<li><strong>Runners:</strong> GitHub-hosted (<code>ubuntu-latest</code>
+has Docker, so Testcontainers works) or self-hosted (inside a bank's
+network).</li>
+<li><strong>Caching</strong> dependencies keeps builds fast;
+<code>setup-java</code> does it for Maven.</li>
+<li><strong>Artifacts</strong> pass files between jobs or keep reports
+for download.</li>
+<li><strong>Matrix builds</strong> run a job across combinations (for
+example Java 21 and 25) with <code>strategy.matrix</code>.</li>
+<li><strong>Expressions and contexts:</strong>
+<code>${{ github.sha }}</code>, <code>${{ secrets.NAME }}</code>,
+<code>if: github.ref == 'refs/heads/main'</code>.</li>
+<li><strong>Reusable workflows</strong> (<code>workflow_call</code>) let
+a platform team define the standard pipeline once for every
+service.</li>
+</ul>
+<h2 id="3-quality-gates-as-jobs">3. Quality gates as jobs</h2>
+<pre class="yaml"><code>  quality:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with: { fetch-depth: 0 }                        # Sonar and Gitleaks need full history
+      - uses: actions/setup-java@v5
+        with: { distribution: temurin, java-version: &#39;21&#39;, cache: maven }
+      - name: SonarQube analysis with quality gate
+        run: ./mvnw -B verify sonar:sonar -Dsonar.qualitygate.wait=true
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+      - name: Secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env: { GITHUB_TOKEN: &quot;${{ secrets.GITHUB_TOKEN }}&quot; }
+
+  dependency-review:
+    if: github.event_name == &#39;pull_request&#39;
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/dependency-review-action@v5
+        with: { fail-on-severity: high }</code></pre>
+<p>Alternatively (or additionally) run <strong>CodeQL</strong>
+(<code>github/codeql-action</code>) for security analysis, free for
+public repositories. OWASP Dependency-Check (topic 6.5) can run as a
+Maven step too.</p>
+<p>Then make these jobs <strong>required status checks</strong> in
+branch protection (topic 8.1). A gate that does not block merges is only
+a report.</p>
+<h2 id="4-build-scan-and-publish-the-image">4. Build, scan and publish
+the image</h2>
+<pre class="yaml"><code>  image:
+    needs: [build, quality]
+    if: github.ref == &#39;refs/heads/main&#39;
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write           # push to GHCR with GITHUB_TOKEN
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: ghcr.io/${{ github.repository }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Scan image
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ghcr.io/${{ github.repository }}:${{ github.sha }}
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: &#39;1&#39;
+      - run: docker push ghcr.io/${{ github.repository }}:${{ github.sha }}</code></pre>
+<p>The image is tagged with the commit SHA, scanned
+<strong>before</strong> it is pushed, and the same immutable image is
+promoted through environments.</p>
+<h2 id="5-deploying-with-environments-approvals-and-oidc">5. Deploying
+with environments, approvals and OIDC</h2>
+<p><strong>Environments</strong> (<code>staging</code>,
+<code>production</code>) hold their own secrets and protection rules
+(required reviewers, wait timers, allowed branches):</p>
+<pre class="yaml"><code>  deploy-production:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    environment: production        # pauses for an approval configured on the environment
+    permissions:
+      id-token: write              # allow the job to request an OIDC token
+      contents: read
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/github-deploy-wallet
+          aws-region: eu-west-1
+      - run: ./deploy/ecs-deploy.sh ghcr.io/${{ github.repository }}:${{ github.sha }}</code></pre>
+<p><strong>OIDC federation:</strong> instead of storing long-lived cloud
+keys as secrets, the job requests a short-lived token from GitHub, and
+the cloud (AWS, Azure, GCP) trusts it for a specific repository, branch
+and environment. No key to leak or rotate. Use it for every cloud
+deployment.</p>
+<p>For a VPS, the deploy step SSHes to the server and runs
+<code>docker compose pull &amp;&amp; docker compose up -d</code> with
+the new tag (the Phase 1 deployment guide shows the full script).</p>
+<h2 id="6-pipeline-security">6. Pipeline security</h2>
+<p>The pipeline has the keys to production, so attackers target it:</p>
+<ul>
+<li>Set <code>permissions:</code> explicitly and minimally; default
+<code>GITHUB_TOKEN</code> to read-only.</li>
+<li><strong>Pin third-party actions</strong> to a full commit SHA
+(<code>uses: some/action@8f4b7f8...</code>) or at least a major version
+you trust; Dependabot can update them.</li>
+<li>Do not run untrusted pull-request code with access to secrets
+(<code>pull_request_target</code> with a checkout of the PR head is a
+classic mistake).</li>
+<li>Never <code>echo</code> secrets; GitHub masks known secrets, but
+derived values are not masked.</li>
+<li>Protect workflow files with CODEOWNERS so changes to the pipeline
+need platform-team review.</li>
+<li>Keep deployment credentials in environments that only
+<code>main</code> can use.</li>
+</ul>
+<h2 id="7-the-same-pipeline-in-gitlab-ci">7. The same pipeline in GitLab
+CI</h2>
+<pre class="yaml"><code># .gitlab-ci.yml
+stages: [build, test, quality, package, deploy]
+
+variables:
+  MAVEN_OPTS: &quot;-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository&quot;
+
+default:
+  image: eclipse-temurin:21-jdk
+  cache:
+    key: { files: [pom.xml] }
+    paths: [.m2/repository]
+
+verify:
+  stage: test
+  services: [docker:27-dind]               # Testcontainers needs a Docker daemon
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: &quot;&quot;
+    TESTCONTAINERS_HOST_OVERRIDE: docker
+  script: ./mvnw -B verify
+  artifacts:
+    when: always
+    reports:
+      junit: [target/surefire-reports/TEST-*.xml, target/failsafe-reports/TEST-*.xml]
+
+secret-scan:
+  stage: quality
+  image: { name: zricethezav/gitleaks:latest, entrypoint: [&quot;&quot;] }
+  script: gitleaks detect --source . --verbose
+
+build-image:
+  stage: package
+  image: docker:27
+  services: [docker:27-dind]
+  rules: [{ if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH }]
+  script:
+    - docker login -u &quot;$CI_REGISTRY_USER&quot; -p &quot;$CI_REGISTRY_PASSWORD&quot; &quot;$CI_REGISTRY&quot;
+    - docker build -t &quot;$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA&quot; .
+    - docker push &quot;$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA&quot;
+
+deploy-production:
+  stage: deploy
+  environment: production
+  when: manual                              # approval
+  rules: [{ if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH }]
+  script: ./deploy/vps-deploy.sh &quot;$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA&quot;</code></pre>
+<p>The concepts map one to one: stages and jobs, <code>services</code>
+(like GitHub's service containers), <code>rules</code> (like
+<code>if:</code>), protected environments and <code>when: manual</code>
+(approvals), CI/CD variables (secrets). GitLab also offers built-in
+SAST, dependency and container scanning templates. (Note that the job
+above is named <code>build-image</code>: <code>image</code> is a
+reserved keyword in GitLab CI and cannot be a job name.)</p>
+<h2 id="8-keeping-pipelines-fast">8. Keeping pipelines fast</h2>
+<ul>
+<li>Cache dependencies; cache Docker layers (<code>type=gha</code> cache
+in Buildx).</li>
+<li>Run independent jobs in parallel; fail fast on cheap checks.</li>
+<li>Keep unit tests fast (topic 7.1) and integration tests focused
+(topic 7.2).</li>
+<li>Cancel superseded runs with <code>concurrency</code>.</li>
+<li>Measure: a pull-request pipeline over 10–15 minutes changes
+developer behaviour for the worse.</li>
+</ul>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>A pipeline that runs tests but does not block merges.</li>
+<li>Long-lived cloud access keys stored as CI secrets instead of
+OIDC.</li>
+<li><code>permissions: write-all</code> and unpinned third-party
+actions.</li>
+<li>Building a different image for each environment instead of promoting
+one image.</li>
+<li>Deploying <code>latest</code>; no record of which commit is in
+production.</li>
+<li>Secrets printed in logs; <code>pull_request_target</code> with
+untrusted code.</li>
+<li>40-minute pipelines nobody waits for.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Build the full GitHub Actions pipeline from sections 2–5 for your
+capstone (project 8.C), with every gate as a required check.</li>
+<li>Configure <code>staging</code> and <code>production</code>
+environments with a required reviewer, and OIDC to AWS or Azure (or SSH
+to a VPS with a deploy key stored only in the environment).</li>
+<li>Open three pull requests that each break one gate (a failing test, a
+fake AWS key, a dependency with a known CVE) and screenshot the blocked
+merges.</li>
+<li>Mirror the repository to gitlab.com and get the GitLab pipeline
+green.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Continuous integration, continuous delivery, continuous deployment,
+pipeline, stage, job, step, workflow, trigger, runner, action, cache,
+artifact, matrix, reusable workflow, quality gate, required status
+check, GHCR, image tag, promotion, environment, protection rule,
+approval, OIDC federation, least-privilege token, action pinning,
+<code>pull_request_target</code>, GitLab CI,
+<code>.gitlab-ci.yml</code>, service container, Docker-in-Docker,
+<code>rules</code>, <code>when: manual</code>.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://docs.github.com/en/actions/get-started/understand-github-actions">GitHub
+Docs: Understanding GitHub Actions</a></li>
+<li><a
+href="https://docs.github.com/en/actions/tutorials/build-and-test-code/java-with-maven">GitHub
+Docs: Building and testing Java with Maven</a></li>
+<li><a
+href="https://docs.github.com/en/actions/reference/security/secure-use">GitHub
+Docs: Security hardening for GitHub Actions</a></li>
+<li><a
+href="https://docs.github.com/en/actions/concepts/security/openid-connect">GitHub
+Docs: OpenID Connect in cloud providers</a></li>
+<li><a href="https://docs.gitlab.com/ci/yaml/">GitLab Docs: CI/CD YAML
+syntax reference</a></li>
+<li><a
+href="https://java.testcontainers.org/supported_docker_environment/continuous_integration/gitlab_ci/">Testcontainers:
+Patterns for running tests inside a Docker container (GitLab
+CI)</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>How to use GitHub Actions | GitHub for Beginners</h3><p>GitHub · 8 min. GitHub Actions from GitHub: workflows, jobs, runners and events.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/BQrohJ3PT7I" title="How to use GitHub Actions | GitHub for Beginners" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>GitLab YAML pipeline Tutorial for Beginners. Setup Multi Stage, Multi Job Pipeline CI/CD.</h3><p>Sumit Raj · 16 min. GitLab CI/CD pipelines: stages, jobs and artefacts.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/dKpCYkcmjXI" title="GitLab YAML pipeline Tutorial for Beginners. Setup Multi Stage, Multi Job Pipeline CI/CD." style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>GitHub Actions Tutorial - Basic Concepts and CI/CD Pipeline with Docker (optional, longer)</h3><p>TechWorld with Nana · 32 min. GitHub Actions tutorial with a full CI/CD example (optional).</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/R8_veQiYBjI" title="GitHub Actions Tutorial - Basic Concepts and CI/CD Pipeline with Docker" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/02-professional-backend/08-git-docker-cicd/8.3-ci-cd-github-actions-gitlab/README.md">8.3 CI/CD with GitHub Actions (build, test, scan, publish image), plus GitLab CI</a></p>

@@ -1,6 +1,6 @@
 {
   "about": "Curated English YouTube videos for every topic. Source of truth for the Watch section of each topic README and for the Moodle topic pages. Rules: English audio and captions, embeddable, official or well-established channels first, 'optional' for anything over 30 minutes. Checked by lms/check_videos.py; minutes and published are filled from YouTube by `python lms/check_videos.py --fill`.",
-  "checked": "2026-10-23",
+  "checked": "2026-10-24",
   "topics": {
     "1.1": [
       {
@@ -989,6 +989,774 @@
         "minutes": 10.1,
         "published": "2024-06-16",
         "why": "Building custom Java runtimes with jlink, from the Java team."
+      }
+    ],
+    "5.1": [
+      {
+        "id": "36--CQc19u4",
+        "title": "8 Pragmatic REST API Design Tips (From Real Projects)",
+        "channel": "Milan Jovanović",
+        "minutes": 13.0,
+        "published": "2025-11-07",
+        "why": "Pragmatic REST API design: resource naming, nouns over verbs, consistent responses."
+      },
+      {
+        "id": "qmpUfWN7hh4",
+        "title": "HTTP Status Codes Explained In 5 Minutes",
+        "channel": "ByteByteGo",
+        "minutes": 5.1,
+        "published": "2023-10-12",
+        "why": "Which HTTP status code to return and why, in one clear diagram-led summary."
+      },
+      {
+        "id": "TgZnpp5wJWU",
+        "title": "HTTP Caching with E-Tags -  (Explained by Example)",
+        "channel": "Hussein Nasser",
+        "minutes": 16.8,
+        "published": "2018-08-19",
+        "why": "ETags and conditional requests: how caches and optimistic concurrency use them."
+      }
+    ],
+    "5.2": [
+      {
+        "id": "qjo2tYf01xo",
+        "title": "API Versioning Made Simple with Spring Boot 4.0",
+        "channel": "Dan Vega",
+        "minutes": 27.2,
+        "published": "2025-11-04",
+        "why": "First-class API versioning in Spring Boot 4: header, path and media-type strategies."
+      },
+      {
+        "id": "LsD89_f9vjE",
+        "title": "Spring Doc OpenApi Setup In SpringBoot | Swagger Setuo using SpringDoc Open api|SpringBoot tutorials",
+        "channel": "KB Tutorials",
+        "minutes": 17.9,
+        "published": "2023-04-07",
+        "why": "Adding springdoc-openapi to a Spring Boot app and reading the generated Swagger UI."
+      },
+      {
+        "id": "1LpItQ3vPeQ",
+        "title": "⭐Use contract-first approach and generate code with OpenAPI - Introduction to OpenAPI",
+        "channel": "Nerdi Coda",
+        "minutes": 20.9,
+        "published": "2023-07-21",
+        "why": "Contract-first design: write the OpenAPI spec, then generate code from it."
+      }
+    ],
+    "5.3": [
+      {
+        "id": "m6DtqSb1BDM",
+        "title": "Build a robust Payments service using Idempotency Keys",
+        "channel": "Arpit Bhayani",
+        "minutes": 16.6,
+        "published": "2022-04-05",
+        "why": "Idempotency keys for payment APIs: why retries must not charge twice."
+      },
+      {
+        "id": "zwDIN04lIpc",
+        "title": "Pagination in MySQL - offset vs. cursor",
+        "channel": "PlanetScale",
+        "minutes": 13.3,
+        "published": "2023-09-07",
+        "why": "Offset versus cursor pagination and why deep offsets get slow."
+      },
+      {
+        "id": "UNdUjBqsUqg",
+        "title": "Representing Problem Details in HTTP APIs: An Introduction to RFC 7807",
+        "channel": "Erik Wilde",
+        "minutes": 22.1,
+        "published": "2021-06-02",
+        "why": "RFC 9457 Problem Details explained by one of its authors."
+      }
+    ],
+    "5.4": [
+      {
+        "id": "TEd5e4Thu7M",
+        "title": "Creating REST Clients in Spring Boot 4 Just Got EASIER!",
+        "channel": "Dan Vega",
+        "minutes": 17.9,
+        "published": "2025-11-06",
+        "why": "RestClient, HTTP interface clients and timeouts in Spring Boot 4."
+      },
+      {
+        "id": "mJ8JSach2P4",
+        "title": "11 Understanding the circuit breaker pattern - Spring Boot Microservices Level 2",
+        "channel": "Java Brains",
+        "minutes": 7.2,
+        "published": "2019-07-09",
+        "why": "The circuit breaker pattern: closed, open and half-open states."
+      },
+      {
+        "id": "3-ChrD3Zosg",
+        "title": "Spring Boot 3 | Circuit Breakers using Resilience4J | Microservices Resiliency Primer",
+        "channel": "Tech Primers",
+        "minutes": 15.8,
+        "published": "2023-05-07",
+        "why": "Resilience4j circuit breaker and retry in a Spring Boot service."
+      },
+      {
+        "id": "x_jjhcDrISk",
+        "title": "Top 3 Things You Should Know About Webhooks!",
+        "channel": "ByteByteGo",
+        "minutes": 3.9,
+        "published": "2024-02-26",
+        "why": "How webhooks work, and how to make them reliable and secure."
+      }
+    ],
+    "5.5": [
+      {
+        "id": "eIQh02xuVw4",
+        "title": "GraphQL Explained in 100 Seconds",
+        "channel": "Fireship",
+        "minutes": 2.4,
+        "published": "2021-02-13",
+        "why": "GraphQL in 100 seconds: queries, schema and the problem it solves."
+      },
+      {
+        "id": "atA2OovQBic",
+        "title": "🍃 Introduction to Spring GraphQL with Spring Boot",
+        "channel": "Maciej Walkowiak 🍃 Spring Academy",
+        "minutes": 19.2,
+        "published": "2022-05-24",
+        "why": "Spring for GraphQL: schema-first controllers in Spring Boot."
+      },
+      {
+        "id": "gnchfOojMk4",
+        "title": "What is RPC? gRPC Introduction.",
+        "channel": "ByteByteGo",
+        "minutes": 6.2,
+        "published": "2022-12-01",
+        "why": "What gRPC is, how Protocol Buffers and HTTP/2 make it fast, and when to use it."
+      }
+    ],
+    "6.1": [
+      {
+        "id": "h-9vhFeM3MY",
+        "title": "Spring Security Architecture Explained",
+        "channel": "Amigoscode",
+        "minutes": 14.7,
+        "published": "2023-02-12",
+        "why": "Spring Security architecture: filters, authentication manager and providers."
+      },
+      {
+        "id": "lRQTqKSSiFs",
+        "title": "Spring Security Filter Chain Explained in 3 Minutes",
+        "channel": "Sergey Tech",
+        "minutes": 3.2,
+        "published": "2023-02-21",
+        "why": "The security filter chain in three minutes."
+      },
+      {
+        "id": "PczgM2L3w60",
+        "title": "Advanced Spring Security - How to create multiple Spring Security Configurations",
+        "channel": "Dan Vega",
+        "minutes": 24.4,
+        "published": "2023-04-20",
+        "why": "Multiple SecurityFilterChain beans for API and admin paths."
+      }
+    ],
+    "6.2": [
+      {
+        "id": "Y2H3DXDeS3Q",
+        "title": "JWT Explained In Under 10 Minutes (JSON Web Tokens)",
+        "channel": "Ariel Weinberger",
+        "minutes": 9.3,
+        "published": "2024-03-06",
+        "why": "What a JWT is: header, claims, signature, and what it does not protect."
+      },
+      {
+        "id": "t18YB3xDfXI",
+        "title": "An Illustrated Guide to OAuth and OpenID Connect",
+        "channel": "OktaDev",
+        "minutes": 16.6,
+        "published": "2019-11-05",
+        "why": "OAuth 2.0 and OpenID Connect in plain English, from Okta."
+      },
+      {
+        "id": "KYNR5js2cXE",
+        "title": "Spring Security JWT: How to secure your Spring Boot REST APIs with JSON Web Tokens",
+        "channel": "Dan Vega",
+        "minutes": 43.1,
+        "published": "2022-09-09",
+        "optional": true,
+        "why": "Securing a Spring Boot API with JWTs end to end (long; optional)."
+      },
+      {
+        "id": "nrY5PUMDhYU",
+        "title": "Spring Security + Keycloak: JWT Authentication & Role-Based Access (Spring Boot 4)",
+        "channel": "HuseyinCodes",
+        "minutes": 11.4,
+        "published": "2026-04-07",
+        "why": "Keycloak as the authorisation server for a Spring Boot 4 resource server."
+      }
+    ],
+    "6.3": [
+      {
+        "id": "e5585jgfTU8",
+        "title": "🔐 Spring Security - Method Security Explained | @PreAuthorize, @PostAuthorize",
+        "channel": "CodeSnippet by Chetan",
+        "minutes": 21.5,
+        "published": "2025-05-31",
+        "why": "Method security with @PreAuthorize and role/authority checks."
+      },
+      {
+        "id": "YciLnEY1AN0",
+        "title": "Broken Object Level Authorization (BOLA) Explained",
+        "channel": "The Cyber Mentors",
+        "minutes": 8.1,
+        "published": "2023-01-25",
+        "why": "Broken object level authorisation (BOLA), the top API risk, explained."
+      },
+      {
+        "id": "-x8-s3QnhMQ",
+        "title": "Authorization in Spring Security: permissions, roles and beyond by Daniel Garnier-Moiroux @Spring IO",
+        "channel": "Spring I/O",
+        "minutes": 49.5,
+        "published": "2025-08-19",
+        "optional": true,
+        "why": "Spring I/O talk on authorisation design in Spring Security (optional)."
+      }
+    ],
+    "6.4": [
+      {
+        "id": "Jzr0Jdnq_EI",
+        "title": "OWASP Top 10 2025: Your complete guide to securing your applications",
+        "channel": "Aikido Security",
+        "minutes": 24.6,
+        "published": "2025-12-15",
+        "why": "The OWASP Top 10 2025 categories with examples."
+      },
+      {
+        "id": "_jKylhJtPmI",
+        "title": "Hacking Websites with SQL Injection - Computerphile",
+        "channel": "Computerphile",
+        "minutes": 9.0,
+        "published": "2013-10-09",
+        "why": "How SQL injection works and why parameterised queries stop it."
+      },
+      {
+        "id": "3dKavgfL2pA",
+        "title": "SSRF in 100 seconds",
+        "channel": "Intigriti",
+        "minutes": 1.8,
+        "published": "2022-05-31",
+        "why": "Server-side request forgery (SSRF) in a short visual explainer."
+      }
+    ],
+    "6.5": [
+      {
+        "id": "qgpsIBLvrGY",
+        "title": "Password Storage Tier List: encryption, hashing, salting, bcrypt, and beyond",
+        "channel": "Studying With Alex",
+        "minutes": 10.3,
+        "published": "2021-07-20",
+        "why": "Password storage ranked: plaintext to Argon2 and bcrypt, and why."
+      },
+      {
+        "id": "nG8fCdWkLzc",
+        "title": "HashiCorp Vault Explained in 180 seconds",
+        "channel": "Cybr",
+        "minutes": 3.6,
+        "published": "2023-02-26",
+        "why": "HashiCorp Vault in 180 seconds: secrets as a service."
+      },
+      {
+        "id": "BqekRTA6VCs",
+        "title": "Secrets Management: Secure Credentials & Avoid Data Leaks",
+        "channel": "IBM Technology",
+        "minutes": 9.7,
+        "published": "2025-04-15",
+        "why": "Secrets management concepts from IBM: rotation, least privilege, auditing."
+      },
+      {
+        "id": "B-y4lXinVLU",
+        "title": "Software Bill of Materials (SBOM) Explained: What It Is and Why It Matters for Security",
+        "channel": "Harness",
+        "minutes": 4.8,
+        "published": "2025-03-10",
+        "why": "What an SBOM is and how it helps you respond to new vulnerabilities."
+      }
+    ],
+    "7.1": [
+      {
+        "id": "flpmSXVTqBI",
+        "title": "Java Testing - JUnit 5 Crash Course",
+        "channel": "freeCodeCamp.org",
+        "minutes": 26.1,
+        "published": "2021-01-12",
+        "why": "JUnit 5 course: assertions, lifecycle, parameterised tests."
+      },
+      {
+        "id": "MztH6vkeFVk",
+        "title": "Mock, When and ThenReturn with Mockito - JUnit Tutorial",
+        "channel": "Aneesh Mistry",
+        "minutes": 10.8,
+        "published": "2021-05-03",
+        "why": "Mockito basics: mocks, stubbing and verification."
+      },
+      {
+        "id": "llaUBH5oayw",
+        "title": "Test Driven Development - What? Why? And How?",
+        "channel": "Modern Software Engineering",
+        "minutes": 17.2,
+        "published": "2020-11-11",
+        "why": "Dave Farley on why and how test-driven development works."
+      }
+    ],
+    "7.2": [
+      {
+        "id": "sNg0bnMF_qY",
+        "title": "Testcontainers have forever changed the way I write tests",
+        "channel": "Dreams of Code",
+        "minutes": 12.2,
+        "published": "2024-04-23",
+        "why": "Testcontainers: real databases in your tests, explained clearly."
+      },
+      {
+        "id": "Q-0Z6KZF1xM",
+        "title": "Spring Boot 3 Integration Testing With TestContainers | Junit 5 | JavaTechie",
+        "channel": "Java Techie",
+        "minutes": 22.1,
+        "published": "2023-08-25",
+        "why": "Testcontainers with Spring Boot and PostgreSQL, step by step."
+      },
+      {
+        "id": "erp-7MCK5BU",
+        "title": "Spring Boot Testcontainers - Integration Testing made easy!",
+        "channel": "Dan Vega",
+        "minutes": 33.5,
+        "published": "2023-10-02",
+        "optional": true,
+        "why": "Dan Vega on Testcontainers and service connections (optional)."
+      }
+    ],
+    "7.3": [
+      {
+        "id": "9-mX5MACs5U",
+        "title": "Spring Boot | Controller Unit Testing | Mockito | MockMVC",
+        "channel": "TheCodeStorm",
+        "minutes": 16.6,
+        "published": "2024-08-10",
+        "why": "Testing Spring MVC controllers with MockMvc."
+      },
+      {
+        "id": "oVNbaBlrhbo",
+        "title": "REST Assured Beginner Tutorial 1 | Getting Started | What is Rest Assured",
+        "channel": "Automation Step by Step",
+        "minutes": 6.6,
+        "published": "2020-12-21",
+        "why": "REST Assured: given, when, then API tests in Java."
+      },
+      {
+        "id": "dPM8n0uNhes",
+        "title": "Testing your REST APIs in Spring Boot 4 with the new RestTestClient",
+        "channel": "Dan Vega",
+        "minutes": 34.5,
+        "published": "2025-11-04",
+        "optional": true,
+        "why": "Spring Framework 7's RestTestClient for API tests (optional)."
+      }
+    ],
+    "7.4": [
+      {
+        "id": "E5KMvKrs89Q",
+        "title": "Using JaCoCo to measure system test coverage",
+        "channel": "Sebastian Daschner",
+        "minutes": 7.5,
+        "published": "2021-11-01",
+        "why": "How JaCoCo measures coverage, from Sebastian Daschner."
+      },
+      {
+        "id": "lDeTsMIN8As",
+        "title": "Java Mutation Testing  with Pitest",
+        "channel": "Diego Pacheco",
+        "minutes": 24.4,
+        "published": "2020-08-03",
+        "why": "Mutation testing with PIT: finding tests that do not really test."
+      },
+      {
+        "id": "HZT2sFWcVuI",
+        "title": "SonarQube: Ultimate Quality Gate for your CI/CD Pipeline.",
+        "channel": "Dispatch",
+        "minutes": 4.1,
+        "published": "2024-06-16",
+        "why": "SonarQube quality gates and how they block bad merges."
+      }
+    ],
+    "7.5": [
+      {
+        "id": "d9_fweNDjKw",
+        "title": "Better Code Reviews in 6 SIMPLE STEPS",
+        "channel": "Modern Software Engineering",
+        "minutes": 20.5,
+        "published": "2024-12-20",
+        "why": "Dave Farley on what effective code review is for."
+      },
+      {
+        "id": "Y9sp8gONv9M",
+        "title": "Code Review Tips (How I Review Code as a Staff Software Engineer)",
+        "channel": "Cody Engel",
+        "minutes": 12.1,
+        "published": "2021-02-15",
+        "why": "Writing pull requests that are easy to review."
+      },
+      {
+        "id": "1Ge__2Yx_XQ",
+        "title": "Code Review Best Practices For Software Engineers",
+        "channel": "Clément Mihailescu",
+        "minutes": 15.4,
+        "published": "2021-01-25",
+        "why": "Giving and receiving code review feedback well."
+      }
+    ],
+    "8.1": [
+      {
+        "id": "U_IFGpJDbeU",
+        "title": "Branching Strategies Explained",
+        "channel": "DevOps & AI Toolkit",
+        "minutes": 18.3,
+        "published": "2021-05-10",
+        "why": "Git branching strategies compared: GitFlow, GitHub flow, trunk-based."
+      },
+      {
+        "id": "0chZFIZLR_0",
+        "title": "Git MERGE vs REBASE: Everything You Need to Know",
+        "channel": "ByteByteGo",
+        "minutes": 4.6,
+        "published": "2023-08-10",
+        "why": "Merge versus rebase, visually, from ByteByteGo."
+      },
+      {
+        "id": "DkWDHzmMvyg",
+        "title": "git rebase - Why, When & How to fix conflicts",
+        "channel": "Philomatics",
+        "minutes": 9.7,
+        "published": "2024-06-10",
+        "why": "Resolving rebase conflicts step by step."
+      }
+    ],
+    "8.2": [
+      {
+        "id": "_Q9KSFUZH0c",
+        "title": "Docker Multi-Stage Builds - Fast and Efficient Dockerfiles",
+        "channel": "Depot",
+        "minutes": 6.5,
+        "published": "2024-09-10",
+        "why": "Multi-stage Docker builds: small, secure production images."
+      },
+      {
+        "id": "Qw9zlE3t8Ko",
+        "title": "Docker Compose in 12 Minutes",
+        "channel": "Jake Wright",
+        "minutes": 12.0,
+        "published": "2017-03-14",
+        "why": "Docker Compose for multi-container local environments."
+      }
+    ],
+    "8.3": [
+      {
+        "id": "BQrohJ3PT7I",
+        "title": "How to use GitHub Actions | GitHub for Beginners",
+        "channel": "GitHub",
+        "minutes": 8.1,
+        "published": "2026-03-16",
+        "why": "GitHub Actions from GitHub: workflows, jobs, runners and events."
+      },
+      {
+        "id": "dKpCYkcmjXI",
+        "title": "GitLab YAML pipeline Tutorial for Beginners. Setup Multi Stage, Multi Job Pipeline CI/CD.",
+        "channel": "Sumit Raj",
+        "minutes": 15.9,
+        "published": "2023-01-02",
+        "why": "GitLab CI/CD pipelines: stages, jobs and artefacts."
+      },
+      {
+        "id": "R8_veQiYBjI",
+        "title": "GitHub Actions Tutorial - Basic Concepts and CI/CD Pipeline with Docker",
+        "channel": "TechWorld with Nana",
+        "minutes": 32.5,
+        "published": "2020-10-08",
+        "optional": true,
+        "why": "GitHub Actions tutorial with a full CI/CD example (optional)."
+      }
+    ],
+    "8.4": [
+      {
+        "id": "RsD2nzPY0is",
+        "title": "Jenkinsfile Beginner Tutorial 1 | What is Jenkinsfile | How to create jenkinsfile | Step by Step",
+        "channel": "Automation Step by Step",
+        "minutes": 12.4,
+        "published": "2021-01-14",
+        "why": "What a Jenkinsfile is and how to create one, step by step."
+      },
+      {
+        "id": "MY1w7sWW5ms",
+        "title": "Jenkinsfile - Jenkins Pipeline Tutorial for Beginners 3/4",
+        "channel": "TechWorld with Nana",
+        "minutes": 10.4,
+        "published": "2020-02-15",
+        "why": "Jenkinsfile structure: stages, steps, post actions and environment."
+      },
+      {
+        "id": "kDCEL4KoZ_g",
+        "title": "Learn Azure DevOps YAML Pipelines: Simple Guide for Beginners",
+        "channel": "The Journey of DevOps",
+        "minutes": 28.8,
+        "published": "2024-08-02",
+        "why": "Azure Pipelines YAML for beginners: triggers, stages, jobs and steps."
+      },
+      {
+        "id": "QHVIEEjCF5M",
+        "title": "Multi-Stage YAML Pipelines | Azure DevOps |A Comprehensive Guide for Beginners | OmegaCodex",
+        "channel": "OmegaCodex",
+        "minutes": 32.3,
+        "published": "2023-09-23",
+        "optional": true,
+        "why": "Multi-stage Azure Pipelines YAML with environments (optional)."
+      }
+    ],
+    "8.5": [
+      {
+        "id": "AWVTKBUnoIg",
+        "title": "Top 5 Most-Used Deployment Strategies",
+        "channel": "ByteByteGo",
+        "minutes": 10.0,
+        "published": "2023-06-06",
+        "why": "Deployment strategies: rolling, blue-green, canary, feature toggles."
+      },
+      {
+        "id": "zihPR6TeqjY",
+        "title": "How to deploy a container image to Cloud Run",
+        "channel": "Google Cloud Tech",
+        "minutes": 3.1,
+        "published": "2025-08-19",
+        "why": "Deploying a container image to Google Cloud Run."
+      },
+      {
+        "id": "0HwQfsa03K8",
+        "title": "The ONLY Azure Container Apps video you need in 2024",
+        "channel": "Microsoft DevRadio",
+        "minutes": 5.5,
+        "published": "2024-06-18",
+        "why": "Azure Container Apps overview from Microsoft."
+      },
+      {
+        "id": "cw5K2O4AHJc",
+        "title": "How do software projects achieve zero downtime database migrations?",
+        "channel": "Web Dev Cody",
+        "minutes": 7.1,
+        "published": "2023-08-03",
+        "why": "Zero-downtime database migrations with expand and contract."
+      }
+    ],
+    "9.1": [
+      {
+        "id": "2q0BoioYSxQ",
+        "title": "Copilot Best Practices (What Not To Do)",
+        "channel": "Visual Studio Code",
+        "minutes": 8.7,
+        "published": "2024-02-29",
+        "why": "Copilot best practices: what not to do, from the VS Code team."
+      },
+      {
+        "id": "gv0WHhKelSE",
+        "title": "Claude Code best practices | Code w/ Claude",
+        "channel": "Anthropic",
+        "minutes": 25.9,
+        "published": "2025-07-31",
+        "why": "Claude Code best practices from Anthropic: context, plans, verification."
+      },
+      {
+        "id": "9x4ekT65HX8",
+        "title": "Securing your code with GitHub Copilot: Best practices for beginners",
+        "channel": "GitHub",
+        "minutes": 8.0,
+        "published": "2025-04-14",
+        "why": "Using an AI assistant securely: secrets, reviews and policies."
+      }
+    ],
+    "9.2": [
+      {
+        "id": "X0UI0O8YzJM",
+        "title": "How Developers Secure AI-Generated Code: 5 Security Best Practices",
+        "channel": "IBM Technology",
+        "minutes": 11.4,
+        "published": "2026-09-14",
+        "why": "IBM: five practices for securing AI-generated code."
+      },
+      {
+        "id": "tK4NQtzfZbM",
+        "title": "Vibe Coding Has A Security Problem (And How To Fix It)",
+        "channel": "Chris Raroque",
+        "minutes": 16.2,
+        "published": "2026-03-16",
+        "why": "Why vibe-coded apps fail security checks, and how to fix it."
+      },
+      {
+        "id": "soFWS8NBcSU",
+        "title": "Top 10 Security Risks in AI Agents Explained",
+        "channel": "IBM Technology",
+        "minutes": 9.0,
+        "published": "2026-03-23",
+        "why": "Top security risks of AI agents, including prompt injection."
+      }
+    ],
+    "9.3": [
+      {
+        "id": "J3hRYO2JKHI",
+        "title": "Characterization Tests, code coverage for refactoring",
+        "channel": "Generation Engineered",
+        "minutes": 6.8,
+        "published": "2021-11-03",
+        "why": "Characterisation tests: pin behaviour before refactoring."
+      },
+      {
+        "id": "e4R6AZHpAD8",
+        "title": "Upgrading your Java & Spring Boot applications with OpenRewrite in IntelliJ",
+        "channel": "Dan Vega",
+        "minutes": 13.9,
+        "published": "2024-03-15",
+        "why": "Upgrading Java and Spring Boot with OpenRewrite recipes."
+      },
+      {
+        "id": "mwVRHDD0tEk",
+        "title": "Working Effectively with Legacy Code and AI Coding Assistant - Michael Feathers",
+        "channel": "Tech Lead Journal",
+        "minutes": 56.3,
+        "published": "2024-10-14",
+        "optional": true,
+        "why": "Michael Feathers on legacy code and AI assistants (optional)."
+      }
+    ],
+    "9.4": [
+      {
+        "id": "bwgjvzMSlMQ",
+        "title": "The Resume that got me into Google - Software Engineer Resume Tips",
+        "channel": "NeetCode",
+        "minutes": 13.7,
+        "published": "2022-05-02",
+        "why": "A software engineer CV that got interviews: what to keep, what to cut."
+      },
+      {
+        "id": "B4OhuzwLc9o",
+        "title": "5 MUST-KNOW LinkedIn Profile Tips for Job Seekers!",
+        "channel": "Jeff Su",
+        "minutes": 8.2,
+        "published": "2022-05-31",
+        "why": "Five LinkedIn profile fixes that recruiters notice."
+      },
+      {
+        "id": "eMFGbNVRi-c",
+        "title": "How To Build a Junior Developer LinkedIn Profile That Gets You HIRED [FULL GUIDE]",
+        "channel": "Iman Musa",
+        "minutes": 10.3,
+        "published": "2025-11-20",
+        "why": "Building a junior developer LinkedIn profile that gets responses."
+      }
+    ],
+    "9.5": [
+      {
+        "id": "YlcvaqyD7Qs",
+        "title": "Top 50 Java Interview Questions and Answers | Ace Your Java Programming Interviews #java #interview",
+        "channel": "ArcCode",
+        "minutes": 21.2,
+        "published": "2024-11-19",
+        "why": "Common Java interview questions with concise answers."
+      },
+      {
+        "id": "uQEuo7woEEk",
+        "title": "STAR INTERVIEW QUESTIONS & ANSWERS! (The STAR TECHNIQUE for Behavioural Interview Questions!)",
+        "channel": "CareerVidz",
+        "minutes": 11.2,
+        "published": "2022-01-31",
+        "why": "The STAR technique for behavioural questions, with examples."
+      },
+      {
+        "id": "ld0cvWnrVsU",
+        "title": "Cracking the Behavioral Interview for Software Developers",
+        "channel": "Keep On Coding",
+        "minutes": 8.2,
+        "published": "2020-09-25",
+        "why": "Behavioural interviews for software developers."
+      },
+      {
+        "id": "WdyiUe7_3cA",
+        "title": "Answering behavioral interview questions is shockingly uncomplicated",
+        "channel": "Matt Huang",
+        "minutes": 31.7,
+        "published": "2024-11-27",
+        "optional": true,
+        "why": "Behavioural interviews made simple: structure and practice (optional)."
+      }
+    ],
+    "p2-getting-hired": [
+      {
+        "id": "tQnkO-QpBQo",
+        "title": "How to Get Hired as a Software Engineer in 2026 (Junior Developers)",
+        "channel": "Daf James",
+        "minutes": 4.5,
+        "published": "2026-01-14",
+        "why": "How juniors get hired as software engineers in 2026."
+      },
+      {
+        "id": "fD0E57QYSPk",
+        "title": "How to make a Dev resume that actually gets you hired",
+        "channel": "Anthony Sistilli",
+        "minutes": 19.2,
+        "published": "2025-01-27",
+        "why": "A developer CV that gets interviews: structure and evidence."
+      },
+      {
+        "id": "T25I2FQ9Mok",
+        "title": "Top 10 Behavioral Software Engineering Interview Questions",
+        "channel": "Aced (formerly Exponent)",
+        "minutes": 6.0,
+        "published": "2024-07-09",
+        "why": "Ten common behavioural questions for software engineers."
+      }
+    ],
+    "p2-deploy": [
+      {
+        "id": "GdnC4n1ZeCk",
+        "title": "How to Deploy Containers with AWS App Runner | Amazon Web Services",
+        "channel": "Amazon Web Services",
+        "minutes": 9.1,
+        "published": "2024-07-19",
+        "why": "Deploying containers with AWS App Runner, from AWS."
+      },
+      {
+        "id": "WGcgiegv0W0",
+        "title": "Keycloak + Docker Compose: Setup & Authentication Tutorial",
+        "channel": "Rayan Slim",
+        "minutes": 16.3,
+        "published": "2025-02-18",
+        "why": "Running Keycloak with Docker Compose for local auth."
+      },
+      {
+        "id": "RgZyX-e6W9E",
+        "title": "Push Docker Images to GitHub Container Registry • #docker  #containers #github  #githubactions",
+        "channel": "Brian Morrison",
+        "minutes": 14.7,
+        "published": "2023-05-03",
+        "why": "Publishing Docker images to GitHub Container Registry."
+      }
+    ],
+    "p2-cicd": [
+      {
+        "id": "x7f9x30W_dI",
+        "title": "Build and Push Docker Images with GitHub Actions",
+        "channel": "Rishab in Cloud",
+        "minutes": 13.2,
+        "published": "2024-08-13",
+        "why": "Build and push Docker images with GitHub Actions."
+      },
+      {
+        "id": "-IH5inFyEqU",
+        "title": "Container Image Scanning with Trivy -- Ep. 1 Trivy Overview",
+        "channel": "Aqua Security Open Source",
+        "minutes": 6.0,
+        "published": "2022-10-20",
+        "why": "Scanning container images with Trivy, from Aqua Security."
       }
     ]
   }

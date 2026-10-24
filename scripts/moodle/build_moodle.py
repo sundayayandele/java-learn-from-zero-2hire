@@ -133,26 +133,30 @@ def videos_html(videos: list[dict]) -> str:
     return "\n".join(blocks)
 
 
-def combine_topic_banks() -> None:
-    """One file with every topic category, so all topic quizzes import in a single step. Public: these answers
-    are already in the topic READMEs. Written to lms/moodle/import/ (committed) for Moodle's URL downloader."""
+def combine_topic_banks(phase_number: int, topic_ids: list[str]) -> None:
+    """One file per phase with every topic category, so all topic quizzes import in a single step. Public: these
+    answers are already in the topic READMEs. Written to lms/moodle/import/ (committed) for Moodle's URL downloader."""
     blocks = []
-    for f in sorted((OUT / "questions").glob("topic-*.xml"), key=lambda p: [int(x) for x in p.stem[6:].split(".")]):
+    files = [OUT / "questions" / f"topic-{tid}.xml" for tid in topic_ids]
+    for f in sorted(files, key=lambda p: [int(x) for x in p.stem[6:].split(".")]):
         text = f.read_text(encoding="utf-8")
         blocks.append(text.split("<quiz>", 1)[1].rsplit("</quiz>", 1)[0].strip("\n"))
-    target = ROOT / "lms" / "moodle" / "import" / "phase-1-topic-quizzes.xml"
+    target = ROOT / "lms" / "moodle" / "import" / f"phase-{phase_number}-topic-quizzes.xml"
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text('<?xml version="1.0" encoding="UTF-8"?>\n<quiz>\n' + "\n".join(blocks) + "\n</quiz>\n",
                       encoding="utf-8")
 
+
+# Per phase: number of topic quizzes, week capstones start, capstone rubric total and pass mark.
+PHASE_FACTS = {1: (29, 5, 20, 14), 2: (25, 15, 24, 17)}
 
 START_HERE = """<h2>How this course works on ITLearning</h2>
 <ol>
 <li><strong>Work through the modules in order.</strong> Each topic has a <em>Lesson</em> page (read it and type the code yourself, then watch the embedded videos) followed by a <em>Check your understanding</em> quiz.</li>
 <li><strong>Pass every topic quiz at 70%.</strong> Attempts are unlimited and you see feedback straight away, so use the explanations to learn. A topic counts as complete when you've viewed the lesson and passed its quiz.</li>
 <li><strong>Do the practice tasks and module projects</strong> listed at the end of each lesson and module.</li>
-<li><strong>Build at least three capstones from week 5</strong>: Capstone 1 plus two others. Each capstone page has the brief, the architecture diagrams and a step-by-step build guide. Submit each one in its <em>Submission</em> assignment; it is marked out of 20 with the rubric, and 14 is a pass.</li>
-<li><strong>Sit the end-of-phase exam</strong> once you've passed all 29 topic quizzes: 60 questions, 2 hours, pass mark 70%, two attempts at least 48 hours apart.</li>
+<li><strong>Build at least three capstones from week {week}</strong>: Capstone 1 plus two others. Each capstone page has the brief, the architecture diagrams and a step-by-step build guide. Submit each one in its <em>Submission</em> assignment; it is marked out of {total} with the rubric, and {passmark} is a pass.</li>
+<li><strong>Sit the end-of-phase exam</strong> once you've passed all {quizzes} topic quizzes: 60 questions, 2 hours, pass mark 70%, two attempts at least 48 hours apart.</li>
 <li><strong>Get hired</strong>: work through the Getting hired section and submit your checklist.</li>
 </ol>
 <p>Stuck? Ask in the <em>Questions and help</em> forum in this section. Say which topic or capstone, what you tried, and paste the error message.</p>
@@ -188,6 +192,13 @@ def main() -> int:
         if phase["status"] != "built":
             continue
         pdir = ROOT / "phases" / phase["slug"]
+        n = phase["number"]
+        sub = "" if n == 1 else f"phase-{n}/"          # Phase 1 keeps the original flat paths already used by Moodle
+        vprefix = "" if n == 1 else f"p{n}-"
+        quizzes, cap_week, cap_total, cap_pass = PHASE_FACTS[n]
+        (OUT / "capstones" / sub).mkdir(parents=True, exist_ok=True)
+        (OUT / "guides" / sub).mkdir(parents=True, exist_ok=True)
+        topic_ids = [t["id"] for mod in phase["modules"] for t in mod["topics"]]
         sections = [{
             "name": f"Phase {phase['number']}: start here",
             "summary": f"How this phase works, the weekly plan and the exit criteria. Full content: {REPO_URL}/phases/{phase['slug']}/README.md",
@@ -219,22 +230,25 @@ def main() -> int:
             sections.append({"name": f"Module {mod['number']}: {mod['title']} (weeks {mod['weeks']})",
                              "summary": f"Topics, videos and graded checks for Module {mod['number']}.",
                              "activities": activities})
-        guides = {"start-here": (pdir / "phase.md", None), "getting-hired": (pdir / "getting-hired" / "guide.md", "getting-hired"),
-                  "deploy": (pdir / "deploy" / "guide.md", "deploy"), "cicd": (pdir / "cicd" / "guide.md", "cicd"),
+        guides = {"start-here": (pdir / "phase.md", None),
+                  "getting-hired": (pdir / "getting-hired" / "guide.md", vprefix + "getting-hired"),
+                  "deploy": (pdir / "deploy" / "guide.md", vprefix + "deploy"),
+                  "cicd": (pdir / "cicd" / "guide.md", vprefix + "cicd"),
                   "exam": (pdir / "exam" / "README.md", None)}
         for name, (src, video_key) in guides.items():
             md = src.read_text(encoding="utf-8") if name != "start-here" else (pdir / "README.md").read_text(encoding="utf-8")
             body = absolutise(lesson_html(md), src.parent if name != "start-here" else pdir)
             body = re.sub(r"<p>←.*?</p>", "", body, count=1, flags=re.S)
             if name == "start-here":
-                body = START_HERE + re.sub(r"<!--.*?-->", "", body, flags=re.S)
-            (OUT / "guides" / f"{name}.html").write_text(body + "\n" + videos_html(videos.get(video_key, []) if video_key else []),
+                body = START_HERE.format(week=cap_week, total=cap_total, passmark=cap_pass, quizzes=quizzes) \
+                    + re.sub(r"<!--.*?-->", "", body, flags=re.S)
+            (OUT / "guides" / f"{sub}{name}.html").write_text(body + "\n" + videos_html(videos.get(video_key, []) if video_key else []),
                                                         encoding="utf-8")
         overview = pdir / "capstones"
-        (OUT / "capstones" / "00-overview.html").write_text(
+        (OUT / "capstones" / f"{sub}00-overview.html").write_text(
             absolutise(lesson_html((overview / "README.md").read_text(encoding="utf-8")), overview), encoding="utf-8")
         for cdir in sorted(p for p in (pdir / "capstones").iterdir() if (p / "GUIDE.md").exists()):
-            (OUT / "capstones" / f"{cdir.name}.html").write_text(capstone_html(cdir), encoding="utf-8")
+            (OUT / "capstones" / f"{sub}{cdir.name}.html").write_text(capstone_html(cdir), encoding="utf-8")
         sections.append({"name": f"Phase {phase['number']} capstones",
                          "summary": "Ten financial-institution capstones; complete at least three, including Capstone 1.",
                          "activities": [{"type": "url", "name": "Capstone briefs",
@@ -242,7 +256,7 @@ def main() -> int:
                                         {"type": "url", "name": "Deployment and CI/CD guide",
                                          "url": f"{REPO_URL}/phases/{phase['slug']}/deploy/README.md"},
                                         {"type": "assign", "name": "Capstone submissions (one per capstone)",
-                                         "settings": {"grade": 20, "pass": 14, "rubric": "capstones README rubric"}}]})
+                                         "settings": {"grade": cap_total, "pass": cap_pass, "rubric": "capstones README rubric"}}]})
         exam_src = ROOT / "assessments" / "private" / f"phase-{phase['number']}-exam.json"
         exam_activity = {"type": "url", "name": "Exam information",
                          "url": f"{REPO_URL}/phases/{phase['slug']}/exam/README.md"}
@@ -271,9 +285,9 @@ def main() -> int:
                                                "shortname": f"JAVA-Z2H-P{phase['number']}",
                                                "idnumber": f"java-z2h-2026-p{phase['number']}"},
                                     "sections": sections})
+        combine_topic_banks(n, topic_ids)
 
     (OUT / "course-structure.json").write_text(json.dumps(structure, indent=2) + "\n", encoding="utf-8")
-    combine_topic_banks()
     publish_pages()
     n_q = len(list((OUT / "questions").glob("*.xml")))
     n_p = len(list((OUT / "pages").glob("*.html")))

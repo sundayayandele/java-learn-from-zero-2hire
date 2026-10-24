@@ -1,0 +1,99 @@
+{
+  "topic": "6.1",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A request with a valid access token for a customer calls an admin-only endpoint.",
+      "question": "Which status should the API return?",
+      "options": [
+        "400 Bad Request",
+        "404 Not Found in every case",
+        "403 Forbidden: the caller is authenticated but not authorised",
+        "401 Unauthorized: the caller is not authenticated"
+      ],
+      "answer": 2,
+      "explanation": "401 means 'who are you?' has not been answered. Here identity is proven but the permission is missing, which is 403."
+    },
+    {
+      "type": "single",
+      "scenario": "A configuration contains, in this order: requestMatchers(\"/api/**\").permitAll(), then requestMatchers(\"/api/v1/admin/**\").hasRole(\"ADMIN\"), then anyRequest().authenticated().",
+      "question": "Who can call /api/v1/admin/users?",
+      "options": [
+        "Nobody",
+        "Any authenticated user",
+        "Only ADMIN users",
+        "Anyone, including anonymous callers, because the first matching rule (/api/**) permits all"
+      ],
+      "answer": 3,
+      "explanation": "Spring Security evaluates request rules in order and the first match wins. The broad permitAll rule shadows the admin rule; specific rules must come first."
+    },
+    {
+      "type": "single",
+      "scenario": "A REST API authenticates every request with an Authorization: Bearer header and creates no sessions or cookies.",
+      "question": "Is it acceptable to disable CSRF protection for this API?",
+      "options": [
+        "Yes, because HTTPS prevents CSRF",
+        "No, because JWTs are cookies",
+        "No: CSRF protection must always be enabled",
+        "Yes: CSRF exploits credentials the browser attaches automatically, such as cookies, and browsers do not add the Authorization header to cross-site requests by themselves"
+      ],
+      "answer": 3,
+      "explanation": "CSRF relies on ambient credentials. Bearer tokens sent explicitly by client code are not ambient, so token-based APIs commonly disable it. Cookie-based web apps must keep it."
+    },
+    {
+      "type": "single",
+      "scenario": "A developer configures CORS with allowedOrigins(\"*\") and says the API is now 'protected by CORS'.",
+      "question": "What is wrong with this statement?",
+      "options": [
+        "CORS only applies to GET requests",
+        "CORS replaces authentication",
+        "CORS only controls which browser pages may read responses; it does not stop curl, servers or attackers' scripts from calling the API",
+        "Nothing: CORS is a server-side access-control mechanism"
+      ],
+      "answer": 2,
+      "explanation": "CORS relaxes the browser's same-origin policy for chosen origins. Access control must come from authentication and authorisation, and the wildcard origin should not be used for authenticated APIs."
+    },
+    {
+      "type": "single",
+      "scenario": "You want a new endpoint that a colleague forgets to configure to be protected automatically.",
+      "question": "Which rule achieves this?",
+      "options": [
+        "Annotate each controller with @Secured",
+        "Rely on CORS",
+        "End the rule list with anyRequest().permitAll()",
+        "End the rule list with anyRequest().authenticated() (or denyAll())"
+      ],
+      "answer": 3,
+      "explanation": "A deny-by-default final rule means anything not explicitly opened requires authentication."
+    },
+    {
+      "type": "multi",
+      "scenario": "You are writing tests for a secured transfer endpoint with MockMvc.",
+      "question": "Which tests are important to include? (Choose two.)",
+      "options": [
+        "A test that the response is 200 for every caller",
+        "A token lacking the required scope returns 403",
+        "A test that disables security to check the controller logic only",
+        "A request with no credentials returns 401"
+      ],
+      "answer": [
+        1,
+        3
+      ],
+      "explanation": "Negative tests prove that protection works. Tests with security disabled say nothing about access control."
+    },
+    {
+      "type": "single",
+      "scenario": "Your service needs HTTP Basic for /actuator/** (used by the operations team) and JWT bearer tokens for /api/**.",
+      "question": "How do you configure this cleanly?",
+      "options": [
+        "Two SecurityFilterChain beans with different securityMatcher settings",
+        "One chain that accepts both everywhere",
+        "Run Actuator in a separate application",
+        "Disable security for Actuator"
+      ],
+      "answer": 0,
+      "explanation": "Each SecurityFilterChain applies to the requests matched by its securityMatcher, so different parts of the application can use different authentication mechanisms and rules."
+    }
+  ]
+}

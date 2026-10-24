@@ -1,0 +1,36 @@
+%% Bill payments aggregator: logical architecture
+flowchart LR
+    subgraph sg0["Capabilities"]
+        direction TB
+        pay["Pay bill<br/>idempotency · validate"]
+        wal["Wallet postings<br/>double entry"]
+        ad["Biller adapters<br/>REST · async · XML"]
+        res[["Unknown resolution"]]
+        rec["Reconciliation"]
+    end
+    subgraph sg1["Data"]
+        direction TB
+        p[("bill_payment<br/>status · token (encrypted)")]
+        w[("wallet · posting")]
+        s[("settlement files")]
+    end
+    pay --> wal
+    pay --> ad
+    pay --> p
+    wal --> w
+    res -->|"status query"| ad
+    rec --> s
+    rec --> p
+    classDef actor fill:#dae8fc,stroke:#6c8ebf,color:#000
+    classDef svc fill:#d5e8d4,stroke:#82b366,color:#000
+    classDef comp fill:#ffffff,stroke:#666666,color:#000
+    classDef db fill:#fff2cc,stroke:#d6b656,color:#000
+    classDef store fill:#f5f5f5,stroke:#666666,color:#000
+    classDef ext fill:#f8cecc,stroke:#b85450,color:#000,stroke-dasharray: 5 3
+    classDef infra fill:#e1d5e7,stroke:#9673a6,color:#000
+    classDef job fill:#ffe6cc,stroke:#d79b00,color:#000
+    class wal,ad comp
+    class p,w db
+    class res job
+    class s store
+    class pay,rec svc

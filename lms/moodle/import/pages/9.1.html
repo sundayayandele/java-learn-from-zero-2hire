@@ -1,0 +1,234 @@
+<p><em>Week 23 · Module 9: AI-Assisted Engineering &amp; Junior Portfolio</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Describe the main kinds of AI coding tools: inline completion, chat,
+and <strong>agentic</strong> assistants that read your repository, run
+commands and edit files (GitHub Copilot, Claude Code, Cursor and
+similar).</li>
+<li>Use them effectively for everyday Java work: understanding
+unfamiliar code, scaffolding, writing tests, debugging and
+refactoring.</li>
+<li>Write <strong>good prompts and context</strong>: goals, constraints,
+examples, and project instruction files.</li>
+<li>Work in a <strong>tight loop</strong>: small steps, tests as the
+safety net, review every change.</li>
+<li>Follow your employer's <strong>policy</strong> on data, secrets and
+approved tools.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Most engineering teams now use AI assistants daily, and job
+descriptions increasingly mention them. Used well, they remove drudgery
+(boilerplate, test data, mapping code, explaining legacy code) and help
+juniors ramp up on large codebases quickly. Used badly, they produce
+plausible code you do not understand, leak confidential code or customer
+data to external services, and introduce subtle bugs in exactly the
+places banks cannot afford them. Employers want engineers who are faster
+<em>and</em> still accountable for every line they ship.</p>
+<h2 id="1-kinds-of-tools">1. Kinds of tools</h2>
+<table>
+<thead>
+<tr>
+<th>Kind</th>
+<th>What it does</th>
+<th>Examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Inline completion</td>
+<td>Suggests the next lines as you type</td>
+<td>GitHub Copilot, JetBrains AI, Cursor Tab</td>
+</tr>
+<tr>
+<td>Chat in the IDE</td>
+<td>Answers questions about selected code, proposes edits</td>
+<td>Copilot Chat, JetBrains AI Assistant, Cursor chat</td>
+</tr>
+<tr>
+<td>Agentic assistant</td>
+<td>Plans a task, reads files, runs tests and commands, edits multiple
+files, iterates</td>
+<td>Claude Code, Copilot agent mode and coding agent, Cursor agent,
+Codex, Gemini CLI</td>
+</tr>
+<tr>
+<td>Review bots</td>
+<td>Comment on pull requests</td>
+<td>Copilot code review, CodeRabbit and others</td>
+</tr>
+</tbody>
+</table>
+<p>All of them are built on large language models: systems that predict
+likely text from enormous training data. They are very good at common
+patterns and very confident even when wrong. They do not <em>know</em>
+your bank's rules unless you tell them.</p>
+<h2 id="2-what-they-are-good-at-in-java-work">2. What they are good at
+in Java work</h2>
+<ul>
+<li><strong>Explaining code:</strong> "Explain what
+<code>LedgerPostingService.post</code> does, including the locking order
+and what happens on <code>DataIntegrityViolationException</code>."</li>
+<li><strong>Navigating a large codebase:</strong> "Where is the transfer
+fee calculated, and which tests cover it?"</li>
+<li><strong>Boilerplate:</strong> DTO records, mappers, Flyway migration
+skeletons, <code>@ConfigurationProperties</code> classes, OpenAPI
+annotations.</li>
+<li><strong>Tests:</strong> parameterised boundary cases, test data
+builders, WireMock stubs (topic 9.3).</li>
+<li><strong>Debugging:</strong> paste a stack trace and the relevant
+code; ask for hypotheses, then verify them yourself.</li>
+<li><strong>Upgrades and refactors:</strong> Boot 3 to 4 migration
+steps, replacing <code>RestTemplate</code> with <code>RestClient</code>,
+extracting a class, with tests guarding behaviour.</li>
+<li><strong>Learning:</strong> "Show me how Spring Security's
+<code>BearerTokenAuthenticationFilter</code> fits into the filter chain"
+(then check the docs).</li>
+</ul>
+<p>They are weaker at: business rules nobody wrote down, subtle
+concurrency and transaction behaviour, security edge cases, the newest
+library versions (training data lags), and anything requiring knowledge
+of your production systems.</p>
+<h2
+id="3-prompting-give-context-constraints-and-a-definition-of-done">3.
+Prompting: give context, constraints and a definition of done</h2>
+<p>Weak: "write a transfer service".</p>
+<p>Better:</p>
+<pre class="text"><code>In this Spring Boot 4.1 / Java 21 project, add a TransferService.transfer(TransferCommand) method.
+
+Context: accounts are in the `account` table (see V3__accounts.sql); AccountRepository has
+lockForUpdate(id). Money is the Money record in domain/Money.java; never use double.
+
+Requirements:
+- Lock both accounts in ascending account-number order to avoid deadlocks.
+- Reject if the source is frozen (AccountFrozenException) or has insufficient funds
+  (InsufficientFundsException); both map to 422 in ApiExceptionHandler.
+- Post a balanced journal (debit source, credit destination) in one @Transactional method.
+- Idempotent on command.reference(): if a journal with that reference exists, return it.
+
+Done when: existing tests pass and you add unit tests for frozen, insufficient funds and
+idempotent replay, plus an integration test with 20 concurrent transfers (Testcontainers).
+Do not change the public API of existing classes. Ask before adding dependencies.</code></pre>
+<p>Patterns that help:</p>
+<ul>
+<li><strong>Point at real files</strong> rather than describing them;
+agentic tools can read them.</li>
+<li><strong>State constraints</strong>: versions, libraries allowed,
+patterns to follow, what <em>not</em> to change.</li>
+<li><strong>Give a definition of done</strong> that the tool can check
+itself: tests to pass, commands to run.</li>
+<li><strong>Ask for a plan first</strong> on bigger tasks, review it,
+then let it implement step by step.</li>
+<li><strong>One task at a time</strong>; start a fresh session for
+unrelated work so stale context does not mislead it.</li>
+</ul>
+<h3 id="project-instruction-files">Project instruction files</h3>
+<p>Agentic tools read instruction files from the repository on every
+session: <code>CLAUDE.md</code> (Claude Code),
+<code>.github/copilot-instructions.md</code> (Copilot),
+<code>.cursor/rules</code> (Cursor), <code>AGENTS.md</code> (several
+tools). Put team conventions there once:</p>
+<pre class="markdown"><code># Project conventions
+- Java 21, Spring Boot 4.1, Maven wrapper. Run `./mvnw verify` before declaring work done.
+- Money: domain/Money.java (BigDecimal, HALF_EVEN). Never use double or float for amounts.
+- Errors: throw domain exceptions; ApiExceptionHandler maps them to RFC 9457 Problem Details.
+- Database: new Flyway migration per change; never edit an applied migration; ddl-auto=validate.
+- Security: every endpoint needs authorisation and an ownership check with negative tests.
+- Never put real customer data, secrets or tokens in code, tests or prompts.</code></pre>
+<h2 id="4-the-working-loop">4. The working loop</h2>
+<ol type="1">
+<li><strong>Understand the task yourself first</strong>, at least well
+enough to judge the result.</li>
+<li>Ask for a <strong>small</strong> change; let the tool run the tests
+(agentic tools can run <code>./mvnw test</code>).</li>
+<li><strong>Read the diff line by line.</strong> You are the author of
+record (topic 9.2).</li>
+<li>Run the tests and the application yourself; try the edge cases.</li>
+<li>Commit in small steps, so you can roll back a bad suggestion
+easily.</li>
+<li>When the tool goes in circles, stop, simplify the request, or do
+that part by hand.</li>
+</ol>
+<p>A useful habit: after accepting generated code, explain it out loud
+(or in the pull request description) without looking at the tool's
+explanation. If you cannot, you are not ready to ship it.</p>
+<h2 id="5-data-protection-and-policy">5. Data protection and policy</h2>
+<p>Banks set rules on AI tools; follow them exactly:</p>
+<ul>
+<li>Use only <strong>approved tools and accounts</strong> (enterprise
+versions usually guarantee your code is not used for training and is not
+retained).</li>
+<li><strong>Never paste</strong> customer data (names, BVNs, account
+numbers, card numbers), production logs with personal data, secrets,
+keys or tokens into a prompt. Use synthetic data.</li>
+<li>Be careful with <strong>confidential code and architecture</strong>
+on personal accounts.</li>
+<li>Agentic tools can run commands: keep them in a sandbox or with
+permission prompts, never give them production credentials, and review
+what they intend to run.</li>
+<li>Respect licences: see topic 9.2 on licence risk of generated
+code.</li>
+<li>Nigeria's Data Protection Act 2023 (NDPA) and the GDPR apply to
+personal data in prompts as in any other processing.</li>
+</ul>
+<h2 id="6-measuring-whether-it-helps">6. Measuring whether it helps</h2>
+<p>Track your own outcomes rather than impressions: time to a reviewed,
+merged pull request; defects found in review or after release; how often
+you had to rewrite generated code. Teams that benefit most combine AI
+tools with strong tests, CI quality gates and code review, the practices
+of Modules 7 and 8.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Accepting large generated changes without reading them.</li>
+<li>Vague prompts with no constraints, then blaming the tool.</li>
+<li>Trusting answers about library versions and APIs without checking
+the documentation (models lag behind releases).</li>
+<li>Pasting secrets, customer data or production logs into prompts.</li>
+<li>Letting an agent run commands against real environments.</li>
+<li>Using AI to skip learning the fundamentals you will be interviewed
+on.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Add a <code>CLAUDE.md</code> or <code>copilot-instructions.md</code>
+(or <code>AGENTS.md</code>) to your capstone with your conventions.</li>
+<li>Use an assistant to explain an unfamiliar part of a Phase 1
+reference solution, then verify each claim against the code and
+documentation; note what it got wrong.</li>
+<li>Implement one small capstone feature with an agentic assistant using
+the plan → small steps → tests loop; record time spent and every
+correction you made.</li>
+<li>Write a one-page personal policy: tools you use, what you never
+paste, how you review output.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Large language model, inline completion, chat assistant, agentic
+coding assistant, context window, prompt, constraint, definition of
+done, plan mode, project instruction file (<code>CLAUDE.md</code>,
+<code>AGENTS.md</code>, <code>copilot-instructions.md</code>),
+hallucination, training cut-off, synthetic data, data protection,
+approved tools, sandbox, human in the loop.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://docs.github.com/en/copilot/get-started/best-practices">GitHub
+Docs: Best practices for using GitHub Copilot</a></li>
+<li><a
+href="https://docs.claude.com/en/docs/claude-code/common-workflows">Claude
+Code documentation: Common workflows</a></li>
+<li><a href="https://docs.cursor.com/">Cursor documentation</a></li>
+<li><a
+href="https://www.anthropic.com/engineering/claude-code-best-practices">Anthropic:
+Claude Code best practices for agentic coding</a></li>
+<li><a
+href="https://owasp.org/www-project-top-10-for-large-language-model-applications/">OWASP
+Top 10 for Large Language Model Applications</a></li>
+<li><a href="https://ndpc.gov.ng/resources/">Nigeria Data Protection
+Commission: Nigeria Data Protection Act 2023</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Copilot Best Practices (What Not To Do)</h3><p>Visual Studio Code · 9 min. Copilot best practices: what not to do, from the VS Code team.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/2q0BoioYSxQ" title="Copilot Best Practices (What Not To Do)" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Claude Code best practices | Code w/ Claude</h3><p>Anthropic · 26 min. Claude Code best practices from Anthropic: context, plans, verification.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/gv0WHhKelSE" title="Claude Code best practices | Code w/ Claude" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Securing your code with GitHub Copilot: Best practices for beginners</h3><p>GitHub · 8 min. Using an AI assistant securely: secrets, reviews and policies.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/9x4ekT65HX8" title="Securing your code with GitHub Copilot: Best practices for beginners" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/02-professional-backend/09-ai-assisted-engineering-portfolio/9.1-ai-coding-assistants/README.md">9.1 Daily workflows with AI coding assistants (GitHub Copilot, Claude Code, Cursor and similar)</a></p>

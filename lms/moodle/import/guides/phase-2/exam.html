@@ -1,0 +1,157 @@
+<h1 id="phase-2-end-of-phase-exam">Phase 2 end-of-phase exam</h1>
+
+<table>
+<tbody>
+<tr>
+<td>When</td>
+<td>Week 24, after all 25 Phase 2 topic CBTs are passed</td>
+</tr>
+<tr>
+<td>Where</td>
+<td>Moodle (itlearning.tech), "Phase 2 end-of-phase exam" quiz</td>
+</tr>
+<tr>
+<td>Format</td>
+<td><strong>60 scenario-based multiple-choice questions</strong>, each a
+short workplace situation with one best answer</td>
+</tr>
+<tr>
+<td>Time</td>
+<td><strong>2 hours</strong> (120 minutes), one sitting; the timer keeps
+running if you close the browser</td>
+</tr>
+<tr>
+<td>Pass mark</td>
+<td><strong>70%</strong></td>
+</tr>
+<tr>
+<td>Attempts</td>
+<td>2, at least 48 hours apart; highest grade counts</td>
+</tr>
+<tr>
+<td>Order</td>
+<td>Questions and answer options are shuffled for every attempt</td>
+</tr>
+<tr>
+<td>Resources</td>
+<td>Closed book. No IDE, no AI assistants, no notes</td>
+</tr>
+<tr>
+<td>Review</td>
+<td>Correct answers and explanations are shown after the exam closes for
+the cohort</td>
+</tr>
+</tbody>
+</table>
+<h2 id="blueprint">Blueprint</h2>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Questions</th>
+<th>Weight</th>
+<th>Topics</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>5. API Design &amp; Integration</td>
+<td>14</td>
+<td>23%</td>
+<td>Resource design and HTTP semantics (5.1), OpenAPI and versioning
+(5.2), Problem Details, pagination and idempotency (5.3), consuming
+APIs, resilience and webhooks (5.4), GraphQL and gRPC (5.5)</td>
+</tr>
+<tr>
+<td>6. Security Essentials</td>
+<td>14</td>
+<td>23%</td>
+<td>Filter chain (6.1), JWT, OAuth2 and OIDC (6.2), RBAC, method
+security and object-level authorisation (6.3), OWASP Top 10 for Java
+(6.4), passwords, secrets and dependency scanning (6.5)</td>
+</tr>
+<tr>
+<td>7. Testing &amp; Code Quality</td>
+<td>12</td>
+<td>20%</td>
+<td>JUnit, Mockito and TDD (7.1), Testcontainers and WireMock (7.2), API
+tests (7.3), coverage, mutation testing and quality gates (7.4), code
+review (7.5)</td>
+</tr>
+<tr>
+<td>8. Git, Docker &amp; CI/CD</td>
+<td>10</td>
+<td>17%</td>
+<td>Git workflow (8.1), Docker images and Compose (8.2), GitHub Actions
+and GitLab CI (8.3), Jenkins and Azure DevOps (8.4), deploying
+containers safely (8.5)</td>
+</tr>
+<tr>
+<td>9. AI-Assisted Engineering &amp; Portfolio</td>
+<td>10</td>
+<td>17%</td>
+<td>AI coding assistants (9.1), reviewing AI code (9.2), AI for tests,
+docs and refactors (9.3), CV, GitHub and LinkedIn (9.4), interview
+preparation (9.5)</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>60</strong></td>
+<td><strong>100%</strong></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="what-the-questions-look-like">What the questions look like</h2>
+<p>Two examples in the exam's style (these two are not in the exam):</p>
+<p><strong>Example 1.</strong> A merchant's server retries
+<code>POST /payments</code> after a timeout, and the customer is charged
+twice. What is the most robust fix on the API side?</p>
+<ul>
+<li>A. Tell merchants not to retry</li>
+<li>B. Require an <code>Idempotency-Key</code> header and replay the
+original result for repeated keys with the same payload</li>
+<li>C. Increase the server timeout</li>
+<li>D. Return 500 on every retry</li>
+</ul>
+<details><summary>Answer</summary>
+
+<p><strong>B.</strong> Retries after timeouts are normal; idempotency
+keys make them safe, and the key must be claimed atomically so
+concurrent duplicates are handled too.</p>
+</details>
+
+<p><strong>Example 2.</strong> An API test passes a JWT with
+<code>ROLE_CUSTOMER</code> and gets 200 for <code>GET /cards/{id}</code>
+with another customer's card id. What kind of defect is this?</p>
+<ul>
+<li>A. Broken authentication</li>
+<li>B. Broken object level authorisation</li>
+<li>C. Cross-site request forgery</li>
+<li>D. Security logging failure</li>
+</ul>
+<details><summary>Answer</summary>
+
+<p><strong>B.</strong> The caller is authenticated and has the right
+role, but the service never checks that the card belongs to them.</p>
+</details>
+
+<h2 id="how-to-prepare">How to prepare</h2>
+<ol type="1">
+<li>Retake all 25 Phase 2 topic CBTs without notes until you score
+90%+.</li>
+<li>Re-read each lesson's "Common mistakes" section.</li>
+<li>Explain your Capstone 1 aloud: idempotency, webhooks, resilience,
+security model and test strategy.</li>
+<li>Practise under time pressure: about 2 minutes per question.</li>
+</ol>
+<h2 id="for-instructors">For instructors</h2>
+<p>The question bank (with answers and explanations) is
+<strong>not</strong> stored in this public repository. It lives in the
+private repository
+<code>sundayayandele/java-zero-hire-assessments</code> (access on
+request) as <code>phase-2-exam.json</code>. Clone it into
+<code>assessments/private/</code> (git-ignored here) and run
+<code>scripts/moodle/build_moodle.py</code> to produce the Moodle
+XML.</p>
+

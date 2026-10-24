@@ -1,0 +1,249 @@
+<p><em>Week 19 · Module 7: Testing &amp; Code Quality</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Explain why integration tests against <strong>real</strong>
+PostgreSQL, Redis and Kafka beat in-memory substitutes such as H2.</li>
+<li>Write integration tests with <strong>Testcontainers 2</strong> and
+Spring Boot's <strong><code>@ServiceConnection</code></strong>.</li>
+<li>Share containers across test classes so the suite stays fast, and
+keep tests independent.</li>
+<li>Test transactions, locking, migrations, caching and messaging the
+way they behave in production.</li>
+<li>Separate fast unit tests from integration tests in Maven (Surefire
+and Failsafe).</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>The bugs that cost banks money rarely live in pure functions. They
+live where code meets infrastructure: a Flyway migration that works on
+H2 but not on PostgreSQL, a <code>SELECT ... FOR UPDATE</code> that does
+not lock what you think, a deadlock under concurrent transfers, a JSONB
+query, a Redis key that never expires, a Kafka consumer that commits
+offsets before processing. Testcontainers lets you catch these on your
+laptop and in CI, with the same database version as production.</p>
+<h2 id="1-why-not-h2">1. Why not H2?</h2>
+<p>H2 in "PostgreSQL mode" is not PostgreSQL. It differs in SQL
+functions, <code>ON CONFLICT</code>, JSONB, window functions, locking,
+isolation behaviour, sequences, and Flyway migrations written for
+PostgreSQL. Tests that pass on H2 give false confidence. Testcontainers
+starts a real PostgreSQL 17 in Docker for your tests in a few
+seconds.</p>
+<h2 id="2-testcontainers-with-spring-boot-4">2. Testcontainers with
+Spring Boot 4</h2>
+<p>Dependencies (versions managed by the Spring Boot parent;
+Testcontainers 2 renamed its modules):</p>
+<pre class="xml"><code>&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-testcontainers&lt;/artifactId&gt;
+    &lt;scope&gt;test&lt;/scope&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.testcontainers&lt;/groupId&gt;
+    &lt;artifactId&gt;testcontainers-junit-jupiter&lt;/artifactId&gt;
+    &lt;scope&gt;test&lt;/scope&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.testcontainers&lt;/groupId&gt;
+    &lt;artifactId&gt;testcontainers-postgresql&lt;/artifactId&gt;
+    &lt;scope&gt;test&lt;/scope&gt;
+&lt;/dependency&gt;</code></pre>
+<p>Define containers once, in a test configuration:</p>
+<pre class="java"><code>@TestConfiguration(proxyBeanMethods = false)
+public class TestcontainersConfiguration {
+
+    @Bean
+    @ServiceConnection
+    PostgreSQLContainer postgres() {
+        return new PostgreSQLContainer(DockerImageName.parse(&quot;postgres:17-alpine&quot;));
+    }
+
+    @Bean
+    @ServiceConnection(name = &quot;redis&quot;)
+    GenericContainer&lt;?&gt; redis() {
+        return new GenericContainer&lt;&gt;(DockerImageName.parse(&quot;redis:8-alpine&quot;)).withExposedPorts(6379);
+    }
+}</code></pre>
+<p><code>@ServiceConnection</code> tells Spring Boot to read the
+container's host, port and credentials and configure the
+<code>DataSource</code> (or Redis connection) automatically; no
+<code>@DynamicPropertySource</code> needed. Because the containers are
+beans, Spring starts them once per application context and the context
+cache reuses them across test classes with the same configuration.</p>
+<pre class="java"><code>@SpringBootTest
+@Import(TestcontainersConfiguration.class)
+class TransferIntegrationTest {
+
+    @Autowired TransferService transfers;
+    @Autowired JdbcClient jdbc;
+
+    @Test
+    void transferMovesMoneyAndBalancesTheJournal() {
+        transfers.transfer(new TransferCommand(&quot;0123456789&quot;, &quot;9876543210&quot;, Money.ngn(&quot;2500.00&quot;), &quot;it-ref-1&quot;));
+
+        BigDecimal journalSum = jdbc.sql(&quot;SELECT SUM(CASE WHEN direction = &#39;DEBIT&#39; THEN amount ELSE -amount END) FROM posting WHERE journal_ref = &#39;it-ref-1&#39;&quot;)
+                .query(BigDecimal.class).single();
+        assertThat(journalSum).isEqualByComparingTo(&quot;0.00&quot;);
+    }
+}</code></pre>
+<p>Flyway migrations run at startup against the container, so every
+integration test also proves your migrations work on real
+PostgreSQL.</p>
+<p>You can also run the application locally with the same containers: a
+<code>TestApplication</code> class in <code>src/test/java</code> that
+calls
+<code>SpringApplication.from(Application::main).with(TestcontainersConfiguration.class).run(args)</code>
+gives every developer a working database without installing
+PostgreSQL.</p>
+<h2 id="3-keeping-tests-independent">3. Keeping tests independent</h2>
+<p>A shared container is fast, but tests must not depend on each other's
+data:</p>
+<ul>
+<li>Use <strong>unique references</strong> per test
+(<code>"it-ref-" + UUID.randomUUID()</code>), so tests do not
+collide.</li>
+<li>Or clean tables before each test
+(<code>TRUNCATE ... RESTART IDENTITY CASCADE</code> in a
+<code>@BeforeEach</code>).</li>
+<li><code>@Transactional</code> on a test class rolls back after each
+test, which is convenient, <strong>but</strong> it hides bugs: code that
+relies on commits (locking across transactions,
+<code>REQUIRES_NEW</code>, events after commit, other threads) behaves
+differently. Do not use it for concurrency or transaction-boundary
+tests.</li>
+</ul>
+<h2 id="4-testing-what-only-a-real-database-can-show">4. Testing what
+only a real database can show</h2>
+<h3 id="concurrency-and-locking">Concurrency and locking</h3>
+<pre class="java"><code>@Test
+void fiftyConcurrentTransfersNeverOverdraw() throws Exception {
+    seedAccounts(10, &quot;1000.00&quot;);
+    try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+        List&lt;Future&lt;?&gt;&gt; futures = IntStream.range(0, 50)
+                .mapToObj(i -&gt; executor.submit(() -&gt; safeTransfer(randomPair(), &quot;150.00&quot;, &quot;c-&quot; + i)))
+                .toList();
+        for (Future&lt;?&gt; f : futures) f.get();
+    }
+    assertThat(totalBalance()).isEqualByComparingTo(&quot;10000.00&quot;);          // money is conserved
+    assertThat(minBalance()).isGreaterThanOrEqualTo(BigDecimal.ZERO);     // nobody overdrawn
+}</code></pre>
+<p>This test would pass on an in-memory map with a global lock and could
+fail on a real database with a wrong lock order. That is exactly why it
+belongs here.</p>
+<h3 id="constraints-and-migrations">Constraints and migrations</h3>
+<p>Insert a posting with a negative amount and assert that the
+<code>CHECK</code> constraint rejects it; run a migration test that
+applies all migrations to an empty database and checks the schema
+version.</p>
+<h2 id="5-redis-and-kafka">5. Redis and Kafka</h2>
+<p><strong>Redis</strong> (caching from Phase 1 topic 3.6):</p>
+<pre class="java"><code>@Test
+void ratesAreCachedAndEvictedAfterImport() {
+    rateService.rate(&quot;USD&quot;, &quot;NGN&quot;, today);           // miss → database
+    rateService.rate(&quot;USD&quot;, &quot;NGN&quot;, today);           // hit → Redis
+    assertThat(cacheMisses()).isEqualTo(1);
+    importer.importDaily();                          // @CacheEvict
+    rateService.rate(&quot;USD&quot;, &quot;NGN&quot;, today);
+    assertThat(cacheMisses()).isEqualTo(2);
+}</code></pre>
+<p><strong>Kafka</strong> (introduced properly in Phase 3; useful here
+for event publishing):</p>
+<pre class="java"><code>@Bean
+@ServiceConnection
+KafkaContainer kafka() {
+    return new KafkaContainer(DockerImageName.parse(&quot;apache/kafka-native:4.4.0&quot;));
+}</code></pre>
+<p>Asynchronous effects need waiting, not sleeping.
+<strong>Awaitility</strong> polls until a condition holds or a timeout
+expires:</p>
+<pre class="java"><code>await().atMost(Duration.ofSeconds(10))
+       .untilAsserted(() -&gt; assertThat(testListener.received()).extracting(TransferCompleted::reference).contains(&quot;it-ref-7&quot;));</code></pre>
+<h2 id="6-maven-surefire-and-failsafe">6. Maven: Surefire and
+Failsafe</h2>
+<p>Keep <code>mvn test</code> fast for developers and run integration
+tests in <code>mvn verify</code>:</p>
+<ul>
+<li><strong>Surefire</strong> runs <code>*Test</code> classes in the
+<code>test</code> phase (unit tests).</li>
+<li><strong>Failsafe</strong> runs <code>*IT</code> classes in the
+<code>integration-test</code> phase and checks results in
+<code>verify</code>.</li>
+</ul>
+<pre class="xml"><code>&lt;plugin&gt;
+    &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+    &lt;artifactId&gt;maven-failsafe-plugin&lt;/artifactId&gt;
+    &lt;executions&gt;
+        &lt;execution&gt;&lt;goals&gt;&lt;goal&gt;integration-test&lt;/goal&gt;&lt;goal&gt;verify&lt;/goal&gt;&lt;/goals&gt;&lt;/execution&gt;
+    &lt;/executions&gt;
+&lt;/plugin&gt;</code></pre>
+<p>Rename integration tests to <code>TransferIT</code>,
+<code>RateCacheIT</code>. CI runs <code>./mvnw verify</code>, which runs
+both. (GitHub-hosted Linux runners have Docker installed, so
+Testcontainers works there without extra setup.)</p>
+<h3 id="speed-tips">Speed tips</h3>
+<ul>
+<li>One shared configuration (same beans) for all integration tests, so
+Spring caches one context.</li>
+<li>Alpine or slim images; pre-pull images in CI.</li>
+<li>Reusable containers (<code>testcontainers.reuse.enable=true</code>
+in <code>~/.testcontainers.properties</code>) for local runs only.</li>
+<li>Do not mix many different <code>@MockitoBean</code> combinations
+across tests; each combination creates a new context.</li>
+</ul>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>H2 in tests, PostgreSQL in production.</li>
+<li><code>@Transactional</code> on concurrency tests, so nothing is ever
+committed or locked across threads.</li>
+<li>Tests depending on data left by earlier tests.</li>
+<li><code>Thread.sleep</code> for asynchronous assertions.</li>
+<li>Integration tests in the unit-test phase, making every local build
+slow.</li>
+<li>A different container image version from production.</li>
+<li>A new Spring context per test class because of scattered
+<code>@MockitoBean</code>s.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Replace any H2 tests in your capstone with Testcontainers PostgreSQL
+using <code>@ServiceConnection</code> and a shared configuration.</li>
+<li>Write the 50-concurrent-transfers test; break the lock ordering
+deliberately and watch it detect the deadlock or lost update.</li>
+<li>Add Redis to the test configuration and test cache hits, misses and
+eviction.</li>
+<li>Split tests into <code>*Test</code> (Surefire) and <code>*IT</code>
+(Failsafe) and measure <code>mvn test</code> versus
+<code>mvn verify</code> times.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Integration test, Testcontainers, <code>PostgreSQLContainer</code>,
+<code>GenericContainer</code>, <code>KafkaContainer</code>,
+<code>@ServiceConnection</code>, <code>@TestConfiguration</code>,
+context caching, <code>@Import</code>, test isolation,
+<code>@Transactional</code> rollback, Awaitility, Surefire, Failsafe,
+<code>*IT</code>, reusable containers, Docker image tag pinning.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a href="https://java.testcontainers.org/">Testcontainers for Java
+documentation</a></li>
+<li><a
+href="https://docs.spring.io/spring-boot/reference/testing/testcontainers.html">Spring
+Boot reference: Testcontainers</a></li>
+<li><a
+href="https://testcontainers.com/guides/testing-spring-boot-rest-api-using-testcontainers/">Testcontainers
+guide: Testing a Spring Boot REST API with Testcontainers</a></li>
+<li><a
+href="https://github.com/awaitility/awaitility/wiki/Usage">Awaitility
+documentation</a></li>
+<li><a
+href="https://maven.apache.org/surefire/maven-failsafe-plugin/">Maven
+Failsafe Plugin</a></li>
+<li><a
+href="https://martinfowler.com/articles/practical-test-pyramid.html">Martin
+Fowler: The Practical Test Pyramid</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Testcontainers have forever changed the way I write tests</h3><p>Dreams of Code · 12 min. Testcontainers: real databases in your tests, explained clearly.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/sNg0bnMF_qY" title="Testcontainers have forever changed the way I write tests" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Spring Boot 3 Integration Testing With TestContainers | Junit 5 | JavaTechie</h3><p>Java Techie · 22 min. Testcontainers with Spring Boot and PostgreSQL, step by step.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/Q-0Z6KZF1xM" title="Spring Boot 3 Integration Testing With TestContainers | Junit 5 | JavaTechie" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Spring Boot Testcontainers - Integration Testing made easy! (optional, longer)</h3><p>Dan Vega · 34 min. Dan Vega on Testcontainers and service connections (optional).</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/erp-7MCK5BU" title="Spring Boot Testcontainers - Integration Testing made easy!" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/02-professional-backend/07-testing-code-quality/7.2-testcontainers-integration/README.md">7.2 Integration tests with Testcontainers (real Postgres, Kafka, Redis)</a></p>

@@ -1,0 +1,179 @@
+<h1 id="cicd-guide-phase-2-quality-gates-on-six-platforms">CI/CD guide
+(Phase 2): quality gates on six platforms</h1>
+
+<p>Phase 1 gave every starter the same build-test-publish pipeline on
+six platforms (<a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/cicd/README.md">Phase 1
+CI/CD guide</a>: read it first). Phase 2 adds <strong>quality
+gates</strong>: automatic checks that stop code from merging or images
+from shipping when they fall below the team's bar. This is what "the
+pipeline is green" means in a professional team (topics 7.4, 7.5, 8.3,
+8.4).</p>
+<h2 id="1-the-gates">1. The gates</h2>
+<pre class="mermaid"><code>flowchart LR
+    pr[Pull request] --&gt; verify[./mvnw verify&lt;br/&gt;unit + Testcontainers + API tests]
+    verify --&gt; cov{JaCoCo coverage&lt;br/&gt;≥ threshold?}
+    pr --&gt; scan[Trivy: dependencies&lt;br/&gt;and committed secrets]
+    pr --&gt; review[Dependency review&lt;br/&gt;new vulnerable deps?]
+    cov --&gt;|yes| merge[Merge allowed&lt;br/&gt;+ 1 human approval]
+    scan --&gt; merge
+    review --&gt; merge
+    merge --&gt; main[main] --&gt; image[Build image] --&gt; iscan{Trivy image scan&lt;br/&gt;HIGH/CRITICAL?}
+    iscan --&gt;|clean| publish[(Publish by commit SHA&lt;br/&gt;+ SBOM)] --&gt; deploy[Deploy]</code></pre>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Tool</th>
+<th>Where it's configured</th>
+<th>Fails when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tests</td>
+<td>JUnit 6, Testcontainers, MockMvc</td>
+<td><code>./mvnw verify</code></td>
+<td>Any test fails</td>
+</tr>
+<tr>
+<td>Coverage</td>
+<td>JaCoCo 0.8.15</td>
+<td><code>pom.xml</code> (<code>coverage.minimum</code>, default
+0.70)</td>
+<td>Line coverage below the threshold</td>
+</tr>
+<tr>
+<td>Dependency vulnerabilities and secrets</td>
+<td>Trivy (<code>aquasecurity/trivy-action@v0.36.0</code>)</td>
+<td><code>scan</code> job</td>
+<td>HIGH/CRITICAL with a fix available, or a secret in the
+repository</td>
+</tr>
+<tr>
+<td>New vulnerable dependencies in a PR</td>
+<td><code>actions/dependency-review-action@v5</code></td>
+<td><code>dependency-review</code> job</td>
+<td>The PR adds a dependency with a high-severity advisory</td>
+</tr>
+<tr>
+<td>Image vulnerabilities</td>
+<td>Trivy image scan</td>
+<td><code>image</code> job, before pushing</td>
+<td>HIGH/CRITICAL fixable vulnerabilities in the image</td>
+</tr>
+<tr>
+<td>SBOM</td>
+<td>CycloneDX (managed by Spring Boot)</td>
+<td><code>pom.xml</code></td>
+<td>Never fails: it's evidence, stored as an artefact</td>
+</tr>
+<tr>
+<td>Human review</td>
+<td>Branch protection / merge request approvals</td>
+<td>Repository settings</td>
+<td>No approving review</td>
+</tr>
+</tbody>
+</table>
+<p>Gates only work if they're <strong>required</strong>: in GitHub,
+<em>Settings → Branches → Branch protection rule for
+<code>main</code></em>: require a pull request with one approval,
+require status checks <code>build</code>, <code>scan</code> (and
+<code>dependency-review</code> for PRs), and block force pushes.</p>
+<p><strong>When a gate fails:</strong> read it, don't silence it. Raise
+coverage by testing behaviour, not by excluding classes. For a
+vulnerability, upgrade the dependency (often a Spring Boot patch release
+fixes it). If a finding is a genuine false positive or not exploitable
+in your use, record it in <code>.trivyignore</code> with a comment, a
+reason and an expiry date, and get it reviewed like code.</p>
+<h2 id="2-github-actions-primary">2. GitHub Actions (primary)</h2>
+<p>Already in every Phase 2 starter
+(<code>.github/workflows/ci.yml</code>): jobs <code>build</code>,
+<code>scan</code>, <code>dependency-review</code> (PRs only) and
+<code>image</code> (main only: build, scan, then push). To add the
+deployment from the <a
+href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/deploy/README.md#37-deploy-updates">Phase 1
+guide</a>, add a <code>deploy</code> job with <code>needs: image</code>,
+and protect it with a GitHub <strong>environment</strong>
+(<code>environment: production</code>) that requires a reviewer: a
+manual approval gate before production.</p>
+<p>Optional, recommended for portfolios: <strong>SonarQube
+Cloud</strong> (free for public repositories) adds code smells,
+duplication and a quality gate on new code. Import the repository at
+sonarcloud.io, add <code>SONAR_TOKEN</code> as a repository secret and
+follow its "With GitHub Actions" instructions for Maven; JaCoCo's XML
+report (<code>target/site/jacoco/jacoco.xml</code>) feeds its
+coverage.</p>
+<h2 id="3-gitlab-cicd-secondary">3. GitLab CI/CD (secondary)</h2>
+<p><code>.gitlab-ci.yml</code> adds a <code>scan</code> stage with
+<code>trivy fs</code> and keeps the coverage gate inside
+<code>./mvnw verify</code>. In the project: <em>Settings → Merge
+requests → Pipelines must succeed</em>, and <em>Settings → Repository →
+Protected branches</em> for <code>main</code>. GitLab can display
+coverage in merge requests: add
+<code>coverage: '/Total.*?([0-9]{1,3})%/'</code> to the
+<code>test</code> job and print the JaCoCo summary, or publish
+<code>jacoco.xml</code> as a <code>coverage_report</code> artefact.</p>
+<h2 id="4-azure-devops">4. Azure DevOps</h2>
+<p>The starter's <code>azure-pipelines.yml</code> runs
+<code>./mvnw verify</code>, so the coverage gate already applies. Add a
+scan step to the Test stage:</p>
+<pre class="yaml"><code>    - script: |
+        docker run --rm -v &quot;$(Build.SourcesDirectory)&quot;:/src aquasec/trivy:0.75.0 \
+          fs --scanners vuln,secret --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 /src
+      displayName: Trivy dependency and secret scan</code></pre>
+<p>Publish coverage to the pipeline UI with
+<code>PublishCodeCoverageResults@2</code>
+(<code>summaryFileLocation: target/site/jacoco/jacoco.xml</code>). Make
+the pipeline a required <strong>build validation</strong> branch policy
+on <code>main</code>.</p>
+<h2 id="5-aws-codebuild-and-codepipeline">5. AWS CodeBuild and
+CodePipeline</h2>
+<p><code>buildspec.yml</code> already runs <code>./mvnw verify</code>.
+Add a Trivy step in the <code>build</code> phase before
+<code>docker push</code> (download the Trivy release binary or run the
+container, as above, against the built image), and enable <strong>Amazon
+ECR enhanced scanning</strong> (Amazon Inspector) on the repository for
+continuous image scanning after publication. Add a <em>Manual
+approval</em> action in CodePipeline before the production deploy
+stage.</p>
+<h2 id="6-jenkins">6. Jenkins</h2>
+<p>Add a stage to the starter's <code>Jenkinsfile</code> after
+<code>Test</code>:</p>
+<pre class="groovy"><code>        stage(&#39;Security scan&#39;) {
+            steps {
+                sh &#39;docker run --rm -v &quot;$WORKSPACE&quot;:/src aquasec/trivy:0.75.0 fs --scanners vuln,secret --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 /src&#39;
+            }
+        }</code></pre>
+<p>Record coverage with the <strong>Coverage</strong> plugin
+(<code>recordCoverage(tools: [[parser: 'JACOCO']])</code>) and, for
+approvals, use an <code>input</code> step before deployment. In a
+multibranch pipeline, require the Jenkins status check in your Git
+host's branch protection.</p>
+<h2 id="7-argo-cd-gitops">7. Argo CD (GitOps)</h2>
+<p>GitOps moves the "deploy" gate into Git: CI opens a pull request that
+changes the image tag in
+<code>deploy/k8s/overlays/production/kustomization.yaml</code>, a human
+approves it, and Argo CD syncs the cluster. Only images that passed the
+image scan get a tag PR. Add an admission policy (for example Kyverno or
+Sigstore policy-controller) in Phase 3 to reject unsigned or unscanned
+images in the cluster itself.</p>
+<h2 id="8-checklist-for-every-phase-2-capstone">8. Checklist for every
+Phase 2 capstone</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" /><code>main</code> is protected: PR,
+one approval, required checks.</label></li>
+<li><label><input type="checkbox" />Coverage threshold raised as tests
+grow (aim for 80% on capstones).</label></li>
+<li><label><input type="checkbox" />Trivy finds no HIGH/CRITICAL fixable
+issues; any <code>.trivyignore</code> entry has a reason and an
+expiry.</label></li>
+<li><label><input type="checkbox" />The published image is tagged by
+commit SHA and its SBOM is attached to the run.</label></li>
+<li><label><input type="checkbox" />Production deployment needs a human
+approval.</label></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Build and Push Docker Images with GitHub Actions</h3><p>Rishab in Cloud · 13 min. Build and push Docker images with GitHub Actions.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/x7f9x30W_dI" title="Build and Push Docker Images with GitHub Actions" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Container Image Scanning with Trivy -- Ep. 1 Trivy Overview</h3><p>Aqua Security Open Source · 6 min. Scanning container images with Trivy, from Aqua Security.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/-IH5inFyEqU" title="Container Image Scanning with Trivy -- Ep. 1 Trivy Overview" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>

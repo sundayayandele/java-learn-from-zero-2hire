@@ -1,0 +1,99 @@
+{
+  "topic": "8.4",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A bank's Jenkins controller is slow and occasionally crashes during busy periods. Builds run directly on the controller.",
+      "question": "What is the recommended architecture change?",
+      "options": [
+        "Run all builds sequentially",
+        "Run builds on separate agents (VMs, containers or Kubernetes pods) and keep the controller for scheduling and configuration",
+        "Give the controller more plugins",
+        "Move the Jenkinsfile into the Jenkins UI"
+      ],
+      "answer": 1,
+      "explanation": "Builds on the controller compete with scheduling and can affect its security and stability. Agents isolate and scale build workloads."
+    },
+    {
+      "type": "single",
+      "scenario": "A Jenkinsfile contains sh \"docker login -u ${REG_USER} -p ${REG_PASS} registry.example.ng\" inside withCredentials.",
+      "question": "What is the risk and fix?",
+      "options": [
+        "Credentials must be hard-coded in the Jenkinsfile instead",
+        "There is no risk because Jenkins masks everything",
+        "Groovy interpolates the secret into the command string, where it can leak via logs or process lists; use single quotes so the shell expands it, and pass the password with --password-stdin",
+        "docker login cannot be used in Jenkins"
+      ],
+      "answer": 2,
+      "explanation": "Double-quoted Groovy strings interpolate secrets before the shell runs. Letting the shell read environment variables, and avoiding passwords on the command line, keeps them out of logs."
+    },
+    {
+      "type": "single",
+      "scenario": "Production deployments from a Jenkins pipeline must be approved by a member of the release-managers group.",
+      "question": "Which declarative feature implements this?",
+      "options": [
+        "A buildDiscarder option",
+        "A parallel block",
+        "An input directive on the deployment stage with submitter 'release-managers'",
+        "A post { success { ... } } block"
+      ],
+      "answer": 2,
+      "explanation": "The input directive pauses the pipeline until an authorised user approves, which is recorded in the build history."
+    },
+    {
+      "type": "single",
+      "scenario": "An Azure DevOps pipeline stores the Azure Container Registry admin password in a pipeline variable to push images.",
+      "question": "What is the better practice?",
+      "options": [
+        "Mark the variable as not secret so it is easier to debug",
+        "Disable authentication on the registry",
+        "Put the password in azure-pipelines.yml",
+        "Use a service connection (ideally with workload identity federation) so the pipeline authenticates without a stored password"
+      ],
+      "answer": 3,
+      "explanation": "Service connections centralise and restrict credentials; workload identity federation removes long-lived secrets, like OIDC in GitHub Actions."
+    },
+    {
+      "type": "multi",
+      "scenario": "You are mapping a GitHub Actions workflow to Azure Pipelines.",
+      "question": "Which mappings are correct? (Choose two.)",
+      "options": [
+        "GitHub environment with required reviewers → Azure Pipelines environment with approvals and checks",
+        "GitHub action (uses:) → Azure Pipelines task (for example Docker@2)",
+        "GitHub runner → Azure Boards work item",
+        "GitHub secrets → Azure Repos branch policy"
+      ],
+      "answer": [
+        0,
+        1
+      ],
+      "explanation": "Environments with approvals and reusable building blocks map directly. Runners map to agents/pools, and secrets to secret variables or Key Vault."
+    },
+    {
+      "type": "single",
+      "scenario": "A platform team supports 150 services on Jenkins and wants every service to use the same build, test, scan and publish steps.",
+      "question": "Which Jenkins feature is designed for this?",
+      "options": [
+        "Copying the full pipeline into each job's configuration page",
+        "A shared library exposing a standard pipeline step that each Jenkinsfile calls",
+        "Disabling Jenkinsfiles",
+        "One giant job that builds all services"
+      ],
+      "answer": 1,
+      "explanation": "Shared libraries version and centralise pipeline logic, like reusable workflows in GitHub or templates in Azure Pipelines."
+    },
+    {
+      "type": "single",
+      "scenario": "A bank is moving from Jenkins to GitHub Actions and wants to avoid a risky big-bang switch.",
+      "question": "What is a sensible migration approach?",
+      "options": [
+        "Let each team design its own pipeline without gates",
+        "Switch every service in one weekend and delete Jenkins",
+        "Migrate service by service, keeping the same stages and gates, and retire each Jenkins job only after the new pipeline has deployed to production",
+        "Remove quality gates during migration to save time"
+      ],
+      "answer": 2,
+      "explanation": "Incremental migration with equivalent controls keeps change-management evidence continuous and limits blast radius."
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "topic": "8.3",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "Your pipeline runs SonarQube and Gitleaks on every pull request, but developers still merge PRs where those jobs failed.",
+      "question": "What is missing?",
+      "options": [
+        "Running the jobs only on main",
+        "Branch protection that lists those jobs as required status checks for main",
+        "More detailed log output",
+        "A faster runner"
+      ],
+      "answer": 1,
+      "explanation": "A gate only works if failing it blocks the merge. Required status checks make the pipeline result enforceable."
+    },
+    {
+      "type": "single",
+      "scenario": "Deployments to AWS use an IAM user's access key stored as a repository secret for two years.",
+      "question": "What is the more secure approach?",
+      "options": [
+        "Use the AWS root account key",
+        "Rotate the access key every five years",
+        "Store the key in the workflow YAML instead",
+        "OIDC federation: the workflow requests a short-lived token and assumes an IAM role trusted only for this repository, branch and environment"
+      ],
+      "answer": 3,
+      "explanation": "OIDC removes long-lived credentials entirely, and the trust policy restricts which workflows can assume the role."
+    },
+    {
+      "type": "single",
+      "scenario": "The team builds a new image for staging and then rebuilds it from the same commit for production.",
+      "question": "Why is promoting one image better?",
+      "options": [
+        "Promoted images run faster",
+        "It saves disk space on developers' laptops",
+        "The exact artifact that was tested and scanned is what runs in production; rebuilding can pick up different base images or dependencies",
+        "Rebuilding is not allowed by Docker"
+      ],
+      "answer": 2,
+      "explanation": "Build once, deploy many: an immutable image tagged with the commit SHA guarantees that what you tested is what you release."
+    },
+    {
+      "type": "multi",
+      "scenario": "You are hardening a GitHub Actions workflow that deploys to production.",
+      "question": "Which practices reduce supply-chain and credential risk? (Choose two.)",
+      "options": [
+        "Pin third-party actions to a commit SHA or trusted version, updated by Dependabot",
+        "Use pull_request_target to run code from forks with production secrets",
+        "Set minimal permissions for GITHUB_TOKEN and grant extra permissions only to jobs that need them",
+        "Print secrets to the log for debugging"
+      ],
+      "answer": [
+        0,
+        2
+      ],
+      "explanation": "Least-privilege tokens and pinned actions limit what a compromised step can do. Running untrusted code with secrets, or logging them, exposes production."
+    },
+    {
+      "type": "single",
+      "scenario": "Production deployments must be approved by a release manager, while staging deploys automatically after every merge.",
+      "question": "How do you model this in GitHub Actions?",
+      "options": [
+        "A separate repository for production",
+        "A production environment with required reviewers; the deploy job declares environment: production",
+        "Comment 'approved' in the commit message",
+        "An if: condition checking the release manager's name"
+      ],
+      "answer": 1,
+      "explanation": "Environments carry protection rules such as required reviewers, and their secrets are only available once the rules are satisfied."
+    },
+    {
+      "type": "single",
+      "scenario": "A GitLab pipeline defines a job named image that builds the Docker image, and GitLab rejects the file.",
+      "question": "Why?",
+      "options": [
+        "Job names must be uppercase",
+        "GitLab cannot build Docker images",
+        "image is a reserved keyword in .gitlab-ci.yml and cannot be used as a job name; rename the job (for example build-image)",
+        "The job must be in the test stage"
+      ],
+      "answer": 2,
+      "explanation": "GitLab reserves several top-level keywords (such as image, services, stages and variables). A job with one of those names is invalid."
+    },
+    {
+      "type": "single",
+      "scenario": "Integration tests using Testcontainers pass on GitHub-hosted runners but fail in GitLab CI with 'Could not find a valid Docker environment'.",
+      "question": "What does the GitLab job need?",
+      "options": [
+        "A Docker daemon, for example a docker:dind service with DOCKER_HOST and related variables configured",
+        "H2 instead of PostgreSQL",
+        "The tests marked @Disabled in CI",
+        "A larger runner"
+      ],
+      "answer": 0,
+      "explanation": "Testcontainers starts containers through a Docker daemon. GitHub's Ubuntu runners include one; in GitLab you provide it, typically with Docker-in-Docker."
+    }
+  ]
+}

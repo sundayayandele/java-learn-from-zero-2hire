@@ -1,0 +1,44 @@
+%% KYC identity verification orchestrator: solution architecture
+flowchart LR
+    subgraph sg0["Users and clients"]
+        direction TB
+        app(["Onboarding app"])
+        comp(["Compliance"])
+    end
+    subgraph sg1["KYC identity verification orchestrator (system boundary)"]
+        direction TB
+        api["KYC orchestrator API"]
+        db[("Verifications")]
+    end
+    subgraph sg2["Platform"]
+        direction TB
+        kc["Keycloak"]
+    end
+    subgraph sg3["External systems"]
+        direction TB
+        idp1[/"Identity provider"/]
+        face[/"Face match"/]
+        watch[/"Watchlists"/]
+        addr[/"Address verification"/]
+    end
+    app -->|"HTTPS + JWT"| api
+    comp -->|"review REFER"| api
+    api --> db
+    api --> idp1
+    api --> face
+    api --> watch
+    api --> addr
+    addr -.->|"signed webhook"| api
+    classDef actor fill:#dae8fc,stroke:#6c8ebf,color:#000
+    classDef svc fill:#d5e8d4,stroke:#82b366,color:#000
+    classDef comp fill:#ffffff,stroke:#666666,color:#000
+    classDef db fill:#fff2cc,stroke:#d6b656,color:#000
+    classDef store fill:#f5f5f5,stroke:#666666,color:#000
+    classDef ext fill:#f8cecc,stroke:#b85450,color:#000,stroke-dasharray: 5 3
+    classDef infra fill:#e1d5e7,stroke:#9673a6,color:#000
+    classDef job fill:#ffe6cc,stroke:#d79b00,color:#000
+    class app,comp actor
+    class db db
+    class idp1,face,watch,addr ext
+    class kc infra
+    class api svc

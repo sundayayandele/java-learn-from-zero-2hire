@@ -16,7 +16,7 @@ It implements the [ITLearning Java Backend Engineer Training Program](https://it
 | Phase | Weeks | Status |
 | --- | --- | --- |
 | [Phase 1: Foundations](phases/01-foundations/README.md) | 1–13 | **Built (pilot)**: 29 topics, 10 capstones, exam, Getting Hired |
-| [Phase 2: Professional Backend](phases/02-professional-backend/README.md) | 14–24 | Mapped, to be built after the Phase 1 review |
+| [Phase 2: Professional Backend](phases/02-professional-backend/README.md) | 14–24 | **Built**: 25 topics, 10 capstones, exam, Getting Hired |
 | [Phase 3: Enterprise & Cloud-Native](phases/03-enterprise-cloud-native/README.md) | 25–36 | Mapped, to be built after the Phase 1 review |
 
 The [full curriculum](CURRICULUM.md) lists every phase, module and topic.
@@ -32,6 +32,12 @@ The [full curriculum](CURRICULUM.md) lists every phase, module and topic.
 - An **Oracle certification map** ([docs/certifications.md](docs/certifications.md)): every OCP Java SE 21/25 objective mapped to a topic.
 - **CI/CD on six platforms** (GitHub Actions, GitLab, Azure DevOps, AWS CodeBuild/CodePipeline, Jenkins, Argo CD) and **architecture and system-design packs** for every capstone (solution, logical, technical, infrastructure and cloud diagrams in Mermaid, draw.io, SVG and PNG, plus ADRs).
 
+## What's in Phase 2
+
+- **25 topics** across API design and integration, security, testing and code quality, Git/Docker/CI/CD, and AI-assisted engineering with the junior portfolio, each with a full lesson, verified videos and a **scenario-based CBT** (175 questions in total).
+- **10 integration- and security-heavy capstones** (payment gateway hub, open banking, card vault, KYC orchestration, merchant API keys, SEC financials GraphQL, interbank gRPC, bill payments, mortgage decisions, fraud case management) on public data or simulators. Every starter is generated from the new [secure service starter](templates/spring-boot-secure-service-starter/README.md) (Keycloak, OAuth2 resource server, OpenAPI, JaCoCo gate, SBOM, Trivy scans); Capstones 1 and 2 have complete, tested reference solutions.
+- **Deployment guide with an identity provider**, a **CI/CD quality-gates guide** for all six platforms, a **60-question exam** ([blueprint](phases/02-professional-backend/exam/README.md)) and a junior-launch **Getting Hired** guide.
+
 ## How to study
 
 Start at [Phase 1](phases/01-foundations/README.md). For each topic: read and code along, watch the videos, take the CBT, do the practice tasks. Each module has a project; from week 5 you build capstones. On Moodle the same content appears as pages and graded quizzes, with progress tracking and certificates.
@@ -41,8 +47,9 @@ Start at [Phase 1](phases/01-foundations/README.md). For each topic: read and co
 ```text
 curriculum.json                 phases, modules and topics (source of truth for structure)
 phases/01-foundations/          Phase 1: modules, topics (lesson.md + cbt.json), capstones, deploy, exam, getting-hired
-phases/02-..., phases/03-...    planned phases (topic lists)
-templates/                      Spring Boot 4 service starter and Java CLI starter (built and tested)
+phases/02-professional-backend/ Phase 2: same structure, plus cicd/ (quality gates)
+phases/03-...                   planned phase (topic list)
+templates/                      Spring Boot 4 service starter, secure service starter (Phase 2) and Java CLI starter
 labs/                           hands-on labs referenced by module projects
 lms/videos.json                 every video, verified by lms/check_videos.py
 lms/moodle/BLUEPRINT.md         how the Moodle course is set up

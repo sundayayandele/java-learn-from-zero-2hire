@@ -183,7 +183,7 @@ Classpath, module path, source launcher, compact source file, instance main meth
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-23. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
 
 - [Introduction to Java Modules | Java for Beginners](https://www.youtube.com/watch?v=3KP5YiKLkeo) · Microsoft Developer · 13 min. An introduction to Java modules, from Microsoft Developer.
 - [Java Platform Module System (JPMS) Overview](https://www.youtube.com/watch?v=fijrwxgnEro) · MyExamCloud · 14 min. The Java Platform Module System overview: requires, exports, opens, services.

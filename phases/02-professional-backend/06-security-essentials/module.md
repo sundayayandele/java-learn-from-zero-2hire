@@ -1,0 +1,38 @@
+## What this module gives you
+
+Two weeks to secure the APIs you built in Module 5: how Spring Security's filter chain works and how to configure it for a stateless API (week 17), JSON Web Tokens, refresh tokens and OAuth2/OpenID Connect with Keycloak (week 17), role- and object-level authorisation so one customer can never read another's account (week 18), the OWASP Top 10 and API Security Top 10 as they appear in real Spring code (week 18), and password hashing, secrets management and dependency scanning (week 18).
+
+Security mistakes in fintech are expensive and public. Every project in this module must include **negative tests**: requests that must be rejected (no token, expired token, wrong role, another customer's resource) are tested as carefully as the happy path.
+
+**Exit check for Module 6:** all five topic CBTs passed; project 6.A completed; 6.B or 6.C optional.
+
+## Module projects
+
+### Project 6.A: Secure API with JWT access and refresh tokens
+
+- `POST /auth/login` (username and password, hashed with Argon2id or BCrypt), returning a short-lived **access token** (15 minutes, signed JWT) and a long-lived **refresh token** (opaque, stored hashed in PostgreSQL, rotated on every use).
+- `POST /auth/refresh` rotates the refresh token and detects reuse: presenting an already-used refresh token revokes the whole token family (a stolen token is caught).
+- `POST /auth/logout` revokes the family. Resource endpoints are an OAuth2 **resource server** that validates the JWT signature, issuer, audience and expiry.
+- **Acceptance:** tests for an expired access token (401), a tampered token (401), refresh-token reuse (401 and family revoked), and login rate limiting after five failed attempts.
+
+### Project 6.B: Google/GitHub login via OAuth2 and Keycloak
+
+- Run **Keycloak** in Docker Compose with a realm export checked into the repository (no secrets in it). Configure GitHub or Google as an identity provider in Keycloak.
+- A small web front-end (Thymeleaf is fine) uses `oauth2Login` (authorization code with PKCE); the API is a resource server that trusts Keycloak's tokens.
+- Map Keycloak realm roles to Spring authorities with a custom `JwtAuthenticationConverter`.
+
+### Project 6.C: Role-based admin vs customer endpoints
+
+- A wallet API with three roles: `CUSTOMER` (own wallets only), `SUPPORT` (read any wallet, masked PII), `ADMIN` (freeze/unfreeze, with a mandatory reason, audited).
+- Enforce object-level authorisation (`@PreAuthorize` with a bean that checks ownership) so changing an ID in the URL never exposes another customer's data (OWASP API1: Broken Object Level Authorization).
+- **Acceptance:** a parameterised test matrix of role × endpoint × resource owner proving every allowed and denied combination.
+
+## How these projects are assessed
+
+| Criterion | Not yet | Competent | Strong |
+| --- | --- | --- | --- |
+| Authentication | Custom token code or `alg: none` accepted | Standard resource server, signature, issuer, audience and expiry validated | Key rotation (JWKS) and clock skew handled; refresh rotation with reuse detection |
+| Authorisation | Role checks only in the UI or missing | URL and method security with least privilege | Object-level checks everywhere data is owned, proven by a test matrix |
+| Secrets and passwords | Secrets in Git, plain or MD5 passwords | Argon2id/BCrypt, secrets from the environment or a vault | Secret scanning in CI, documented rotation procedure |
+| Defensive coding | Stack traces and PII in responses or logs | Problem Details without internals, PII masked in logs | Security headers, rate limiting, audit trail for privileged actions |
+| Testing | Happy paths only | Negative tests for 401 and 403 cases | Full role × endpoint matrix and dependency scan gate in CI |

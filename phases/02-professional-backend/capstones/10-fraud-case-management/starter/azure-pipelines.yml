@@ -1,0 +1,56 @@
+# Azure DevOps Pipelines: same stages as GitHub Actions (test on every push/PR, image from main).
+# Setup: Project settings > Service connections > New > Docker Registry (e.g. Azure Container Registry),
+# named "container-registry". See the Phase 1 CI/CD guide.
+trigger:
+  branches:
+    include: [main]
+pr:
+  branches:
+    include: ['*']
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  MAVEN_CACHE_FOLDER: $(Pipeline.Workspace)/.m2/repository
+  imageRepository: fraud-case-management
+  containerRegistry: container-registry
+
+stages:
+  - stage: Test
+    jobs:
+      - job: BuildAndTest
+        steps:
+          - task: JavaToolInstaller@0
+            inputs:
+              versionSpec: "21"
+              jdkArchitectureOption: x64
+              jdkSourceOption: PreInstalled
+          - task: Cache@2
+            inputs:
+              key: 'maven | "$(Agent.OS)" | pom.xml'
+              path: $(MAVEN_CACHE_FOLDER)
+          - script: ./mvnw -B verify -Dmaven.repo.local=$(MAVEN_CACHE_FOLDER)
+            displayName: Build and test (unit + Testcontainers)
+          - task: PublishTestResults@2
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFormat: JUnit
+              testResultsFiles: '**/surefire-reports/TEST-*.xml'
+
+  - stage: Image
+    dependsOn: Test
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - job: BuildAndPush
+        steps:
+          - task: Docker@2
+            displayName: Build and push image
+            inputs:
+              command: buildAndPush
+              containerRegistry: $(containerRegistry)
+              repository: $(imageRepository)
+              dockerfile: Dockerfile
+              tags: |
+                $(Build.SourceVersion)
+                latest

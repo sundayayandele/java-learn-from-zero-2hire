@@ -1,0 +1,324 @@
+<p><em>Week 16 · Module 5: API Design &amp; Integration</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Explain the problems <strong>GraphQL</strong> and
+<strong>gRPC</strong> solve that REST handles poorly, and the problems
+they introduce.</li>
+<li>Build a GraphQL API with <strong>Spring for GraphQL</strong>:
+schema, <code>@QueryMapping</code>, <code>@SchemaMapping</code>,
+<code>@BatchMapping</code> and mutations.</li>
+<li>Define a service in <strong>Protocol Buffers</strong> and implement
+unary and streaming RPCs with <strong>Spring gRPC</strong>, including
+deadlines and status codes.</li>
+<li>Choose between REST, GraphQL and gRPC for a given banking scenario,
+and defend the choice.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Most public and partner APIs in banking are REST. Inside a bank,
+though, you will meet GraphQL behind mobile and web apps (one request
+that fetches exactly the account, cards and recent transactions a screen
+needs) and gRPC between internal services (fast, strongly typed calls
+such as account lookups and fraud scoring on the payment path). Knowing
+all three, and when each is right, shows interviewers that you think in
+trade-offs rather than fashions.</p>
+<h2 id="1-the-problems-rest-has">1. The problems REST has</h2>
+<p>A mobile "home" screen needs the customer's name, three accounts with
+balances, the two most recent transactions per account, and card status.
+With REST that can mean:</p>
+<ul>
+<li><strong>Under-fetching:</strong> many round trips (<code>/me</code>,
+<code>/accounts</code>, <code>/accounts/{id}/transactions</code> × 3,
+<code>/cards</code>), painful on a 3G connection.</li>
+<li><strong>Over-fetching:</strong> each response includes fields the
+screen does not use.</li>
+</ul>
+<p>Between internal services, JSON over HTTP/1.1 also has costs: text
+parsing, no strict contract unless you add OpenAPI, and one request per
+connection at a time.</p>
+<h2 id="2-graphql">2. GraphQL</h2>
+<p>GraphQL exposes <strong>one endpoint</strong>
+(<code>POST /graphql</code>) and a <strong>typed schema</strong>; the
+client asks for exactly the fields it needs.</p>
+<pre class="graphql"><code># src/main/resources/graphql/schema.graphqls
+type Query {
+    me: Customer!
+    account(number: ID!): Account
+}
+
+type Customer {
+    id: ID!
+    fullName: String!
+    accounts: [Account!]!
+}
+
+type Account {
+    number: ID!
+    type: AccountType!
+    balance: Money!
+    recentTransactions(limit: Int = 5): [Transaction!]!
+}
+
+type Money { amount: String!  currency: String! }
+type Transaction { id: ID!  amount: Money!  narration: String  valueDate: String! }
+enum AccountType { SAVINGS CURRENT DOMICILIARY }
+
+type Mutation {
+    renameAccount(number: ID!, nickname: String!): Account!
+}</code></pre>
+<p>The mobile app's query:</p>
+<pre class="graphql"><code>query HomeScreen {
+  me {
+    fullName
+    accounts {
+      number
+      balance { amount currency }
+      recentTransactions(limit: 2) { amount { amount } narration }
+    }
+  }
+}</code></pre>
+<h3 id="spring-for-graphql">Spring for GraphQL</h3>
+<p>With <code>spring-boot-starter-graphql</code> and
+<code>spring-boot-starter-webmvc</code>, annotated controllers resolve
+fields:</p>
+<pre class="java"><code>@Controller
+class CustomerGraphController {
+
+    @QueryMapping
+    Customer me(@AuthenticationPrincipal Jwt jwt) {
+        return customers.byId(jwt.getSubject());
+    }
+
+    @SchemaMapping(typeName = &quot;Customer&quot;)
+    List&lt;Account&gt; accounts(Customer customer) {
+        return accounts.ownedBy(customer.id());
+    }
+
+    @BatchMapping(typeName = &quot;Account&quot;)
+    Map&lt;Account, List&lt;Transaction&gt;&gt; recentTransactions(List&lt;Account&gt; accounts) {
+        return transactions.recentFor(accounts, 5);   // ONE query for all accounts
+    }
+
+    @MutationMapping
+    Account renameAccount(@Argument String number, @Argument String nickname) {
+        return accounts.rename(number, nickname);
+    }
+}</code></pre>
+<p><code>@BatchMapping</code> matters: resolving
+<code>recentTransactions</code> with a plain <code>@SchemaMapping</code>
+would run one query per account, the <strong>N+1 problem</strong> from
+Phase 1 topic 4.3, now triggered by clients. Batch loading (built on
+DataLoader) fetches them together.</p>
+<h3 id="graphql-costs-and-controls">GraphQL costs and controls</h3>
+<ul>
+<li><strong>Caching</strong> is harder: everything is a
+<code>POST</code> to one URL, so HTTP caches and CDNs do not help.</li>
+<li><strong>Expensive queries:</strong> clients can nest deeply
+(<code>accounts { transactions { counterparty { accounts { ... } } } }</code>).
+Limit query depth and complexity, and paginate list fields (the Relay
+"connection" pattern with cursors).</li>
+<li><strong>Errors</strong> come back as <code>200 OK</code> with an
+<code>errors</code> array, so monitoring must read the body.</li>
+<li><strong>Authorisation</strong> must be applied per field or per
+resolver, not just per URL.</li>
+<li>Turn off schema <strong>introspection</strong> and the GraphiQL UI
+in production for non-public APIs.</li>
+</ul>
+<h2 id="3-grpc">3. gRPC</h2>
+<p>gRPC is a remote-procedure-call framework over
+<strong>HTTP/2</strong> with <strong>Protocol Buffers</strong>
+(protobuf) as a compact binary format and a strict contract.</p>
+<pre class="protobuf"><code>// src/main/proto/account_lookup.proto
+syntax = &quot;proto3&quot;;
+package bank.accounts.v1;
+option java_multiple_files = true;
+option java_package = &quot;ng.itlearning.accounts.grpc&quot;;
+
+service AccountLookup {
+  rpc GetAccount (GetAccountRequest) returns (Account);
+  rpc ResolveAccountName (ResolveRequest) returns (ResolveResponse);       // NIP-style name enquiry
+  rpc ListAccountsByCustomer (CustomerRequest) returns (stream Account);   // server streaming
+}
+
+message GetAccountRequest { string account_number = 1; }
+message ResolveRequest { string bank_code = 1; string account_number = 2; }
+message ResolveResponse { string account_name = 1; bool active = 2; }
+message CustomerRequest { string customer_id = 1; }
+message Account {
+  string account_number = 1;
+  string currency = 2;
+  string available_balance = 3;   // decimal as string, as in REST
+  AccountStatus status = 4;
+}
+enum AccountStatus { ACCOUNT_STATUS_UNSPECIFIED = 0; ACTIVE = 1; FROZEN = 2; CLOSED = 3; }</code></pre>
+<p>The <code>protobuf-maven-plugin</code> generates Java classes and a
+service base class at build time. With <strong>Spring gRPC</strong>
+(<code>spring-grpc-server-spring-boot-starter</code>), any bean that
+extends the generated base becomes a service:</p>
+<pre class="java"><code>@Service
+class AccountLookupService extends AccountLookupGrpc.AccountLookupImplBase {
+
+    @Override
+    public void getAccount(GetAccountRequest request, StreamObserver&lt;Account&gt; response) {
+        accounts.find(request.getAccountNumber()).ifPresentOrElse(
+                a -&gt; { response.onNext(toProto(a)); response.onCompleted(); },
+                () -&gt; response.onError(Status.NOT_FOUND
+                        .withDescription(&quot;No account &quot; + mask(request.getAccountNumber()))
+                        .asRuntimeException()));
+    }
+
+    @Override
+    public void listAccountsByCustomer(CustomerRequest request, StreamObserver&lt;Account&gt; response) {
+        accounts.ownedBy(request.getCustomerId()).forEach(a -&gt; response.onNext(toProto(a)));
+        response.onCompleted();
+    }
+}</code></pre>
+<p>The server listens on <code>spring.grpc.server.port</code> (9090 by
+default). A client calls with a <strong>deadline</strong>, which travels
+with the request so downstream services stop working on calls nobody is
+waiting for any more:</p>
+<pre class="java"><code>Account account = stub.withDeadlineAfter(300, TimeUnit.MILLISECONDS)
+                      .getAccount(GetAccountRequest.newBuilder().setAccountNumber(number).build());</code></pre>
+<p>gRPC has its own status codes; map them carefully at a REST
+facade:</p>
+<table>
+<thead>
+<tr>
+<th>gRPC status</th>
+<th>REST equivalent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>NOT_FOUND</code></td>
+<td>404</td>
+</tr>
+<tr>
+<td><code>INVALID_ARGUMENT</code></td>
+<td>400</td>
+</tr>
+<tr>
+<td><code>FAILED_PRECONDITION</code></td>
+<td>422 or 409</td>
+</tr>
+<tr>
+<td><code>PERMISSION_DENIED</code> / <code>UNAUTHENTICATED</code></td>
+<td>403 / 401</td>
+</tr>
+<tr>
+<td><code>DEADLINE_EXCEEDED</code></td>
+<td>504</td>
+</tr>
+<tr>
+<td><code>UNAVAILABLE</code></td>
+<td>503 (retryable)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="protobuf-evolution-rules">Protobuf evolution rules</h3>
+<p>Field <strong>numbers</strong>, not names, are the contract. Never
+reuse or change a field number; mark removed fields
+<code>reserved</code>; add new fields with new numbers (old clients
+ignore them). Keep <code>0</code> as an <code>UNSPECIFIED</code> enum
+value. Version packages (<code>bank.accounts.v1</code>) for breaking
+changes.</p>
+<h3 id="grpc-costs">gRPC costs</h3>
+<p>Browsers cannot call gRPC directly (gRPC-Web or a gateway is needed),
+binary payloads are harder to debug with <code>curl</code> (use
+<code>grpcurl</code>), and load balancers must understand HTTP/2
+long-lived connections.</p>
+<h2 id="4-choosing">4. Choosing</h2>
+<table>
+<thead>
+<tr>
+<th>Situation</th>
+<th>Good fit</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Public or partner API (merchants, open banking)</td>
+<td><strong>REST</strong> + OpenAPI</td>
+<td>Universal tooling, HTTP caching, easy for any language</td>
+</tr>
+<tr>
+<td>Mobile and web apps with varied screens</td>
+<td><strong>GraphQL</strong> (often as a backend-for-frontend)</td>
+<td>One round trip, client-shaped responses</td>
+</tr>
+<tr>
+<td>Internal service-to-service calls on a hot path (fraud scoring,
+account lookup)</td>
+<td><strong>gRPC</strong></td>
+<td>Low latency, strict contracts, streaming, deadlines</td>
+</tr>
+<tr>
+<td>Event notifications</td>
+<td>Neither: messaging (Kafka) or webhooks</td>
+<td>Asynchronous (Phase 3)</td>
+</tr>
+</tbody>
+</table>
+<p>Many banks run all three: gRPC inside, a GraphQL backend-for-frontend
+for their own apps, and REST at the edge for partners.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Choosing GraphQL or gRPC because it is new, for an API that partners
+must consume.</li>
+<li>N+1 resolvers in GraphQL (no <code>@BatchMapping</code> or
+DataLoader).</li>
+<li>No depth or complexity limits on public GraphQL endpoints.</li>
+<li>Monitoring only HTTP status codes for GraphQL (errors arrive with
+<code>200</code>).</li>
+<li>Reusing protobuf field numbers or changing their types.</li>
+<li>gRPC calls without deadlines.</li>
+<li>Returning <code>UNKNOWN</code> for every gRPC error.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Add a GraphQL endpoint to a Phase 1 capstone for a "home screen"
+query; prove with SQL logging that <code>@BatchMapping</code> runs one
+transaction query for all accounts.</li>
+<li>Add a query depth limit and test that a deeply nested query is
+rejected.</li>
+<li>Write the <code>account_lookup.proto</code> above, generate code
+with the protobuf Maven plugin, implement <code>GetAccount</code> and
+<code>ListAccountsByCustomer</code> with Spring gRPC, and call them with
+<code>grpcurl</code>.</li>
+<li>Build a REST facade over the gRPC service that maps
+<code>NOT_FOUND</code>, <code>DEADLINE_EXCEEDED</code> and
+<code>UNAVAILABLE</code> to Problem Details.</li>
+<li>Write a one-page decision record choosing REST, GraphQL or gRPC for:
+a merchant payments API, a mobile app dashboard, and fraud scoring
+during card authorisation.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Over-fetching, under-fetching, GraphQL schema, query, mutation,
+resolver, <code>@QueryMapping</code>, <code>@SchemaMapping</code>,
+<code>@BatchMapping</code>, DataLoader, N+1, query depth and complexity,
+introspection, backend-for-frontend, gRPC, HTTP/2, Protocol Buffers,
+field number, <code>reserved</code>, unary RPC, server streaming,
+<code>StreamObserver</code>, deadline, gRPC status code,
+<code>grpcurl</code>.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a href="https://graphql.org/learn/">GraphQL Foundation: Learn
+GraphQL</a></li>
+<li><a href="https://docs.spring.io/spring-graphql/reference/">Spring
+for GraphQL reference documentation</a></li>
+<li><a href="https://grpc.io/docs/what-is-grpc/core-concepts/">gRPC:
+Introduction and core concepts</a></li>
+<li><a href="https://protobuf.dev/programming-guides/proto3/">Protocol
+Buffers: Language guide (proto3)</a></li>
+<li><a href="https://docs.spring.io/spring-grpc/reference/">Spring gRPC
+reference documentation</a></li>
+<li><a href="https://spring.io/guides/gs/graphql-server">Spring guide:
+Building a GraphQL service</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>GraphQL Explained in 100 Seconds</h3><p>Fireship · 2 min. GraphQL in 100 seconds: queries, schema and the problem it solves.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/eIQh02xuVw4" title="GraphQL Explained in 100 Seconds" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>🍃 Introduction to Spring GraphQL with Spring Boot</h3><p>Maciej Walkowiak 🍃 Spring Academy · 19 min. Spring for GraphQL: schema-first controllers in Spring Boot.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/atA2OovQBic" title="🍃 Introduction to Spring GraphQL with Spring Boot" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>What is RPC? gRPC Introduction.</h3><p>ByteByteGo · 6 min. What gRPC is, how Protocol Buffers and HTTP/2 make it fast, and when to use it.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/gnchfOojMk4" title="What is RPC? gRPC Introduction." style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/02-professional-backend/05-api-design-integration/5.5-graphql-grpc/README.md">5.5 Introduction to GraphQL and gRPC, and when to use each</a></p>

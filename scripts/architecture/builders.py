@@ -21,6 +21,8 @@ class Profile:
     redis: bool = False
     mongo: bool = False
     files: bool = False                        # object storage for uploaded/imported files
+    idp: bool = False                          # OAuth2/OIDC identity provider (Keycloak) issuing the JWTs
+    phase: str = "01-foundations"
     controllers: list[str] = field(default_factory=list)
     services: list[str] = field(default_factory=list)
     repositories: list[str] = field(default_factory=list)
@@ -37,6 +39,8 @@ def infra(p: Profile) -> Diagram:
         vps.append(Node("mongo", "MongoDB 8 container", "store"))
     if p.files:
         vps.append(Node("vol", "File volume\n(uploads / imports)", "store"))
+    if p.idp:
+        vps.append(Node("kc", "Keycloak container\nrealm itl · own DB schema", "infra"))
     if p.job:
         vps.append(Node("job", f"In-app scheduler\n{p.job}", "job"))
     vps.append(Node("backup", "Cron: pg_dump daily\n14-day retention", "job"))
@@ -57,16 +61,20 @@ def infra(p: Profile) -> Diagram:
         edges.append(Edge("app", "mongo", "27017"))
     if p.files:
         edges.append(Edge("app", "vol", "read / write"))
+    if p.idp:
+        edges += [Edge("caddy", "kc", "auth.<domain>"), Edge("app", "kc", "JWKS keys (cached)", True), Edge("kc", "pg", "JDBC")]
     if p.job:
         edges.append(Edge("job", "app", "triggers", True))
     if p.externals:
         columns.append(Group("External systems", [Node(i, l, "ext") for i, l, _ in p.externals]))
         edges += [Edge("app", i, proto) for i, _, proto in p.externals]
+    idp_note = (" Keycloak is published on its own subdomain through Caddy so users and client apps can obtain tokens; "
+                "the API only fetches its public signing keys (JWKS) and validates tokens locally.") if p.idp else ""
     expl = (f"**Infrastructure architecture** shows *where things run* on the cheapest production-like target, a single "
             f"VPS (for example SSDNodes). Only Caddy is reachable from the internet; it terminates TLS and forwards to "
             f"`{p.app}` on Docker's internal network, so the database is never exposed (Docker port publishing bypasses "
             f"`ufw`, so nothing else publishes ports). Images are built once by GitHub Actions, stored in GHCR by commit "
-            f"SHA, and pulled onto the server; backups leave the machine daily. Sizing and every command are in the "
+            f"SHA, and pulled onto the server; backups leave the machine daily.{idp_note} Sizing and every command are in the "
             f"[deployment guide](../../../deploy/README.md#3-deploy-to-a-vps).")
     return Diagram("infra", f"{p.title}: infrastructure architecture (VPS)", expl, columns, edges)
 
@@ -84,6 +92,8 @@ def cloud(p: Profile) -> Diagram:
                 Node("cw", "CloudWatch\nlogs · metrics · alarms", "infra")]
     if p.job:
         platform.append(Node("sched", f"EventBridge Scheduler\n{p.job}", "job"))
+    if p.idp:
+        platform.append(Node("idp", "Identity provider\nKeycloak on ECS or Amazon Cognito", "infra"))
     columns = [
         Group("Users", [Node("users", "Users and client apps", "actor")]),
         Group("AWS: Edge", [Node("alb", "ECS Express Mode\nHTTPS Application Load Balancer", "infra")]),
@@ -103,6 +113,8 @@ def cloud(p: Profile) -> Diagram:
         edges.append(Edge("ecs", "s3", "IAM role · HTTPS"))
     if p.job:
         edges.append(Edge("sched", "alb", "calls admin endpoint", True))
+    if p.idp:
+        edges += [Edge("users", "idp", "OAuth2 / OIDC: get token"), Edge("ecs", "idp", "JWKS (cached)", True)]
     if p.externals:
         columns.append(Group("External systems", [Node(i, l, "ext") for i, l, _ in p.externals]))
         edges += [Edge("ecs", i, f"{proto} (egress)") for i, _, proto in p.externals]
@@ -113,6 +125,9 @@ def cloud(p: Profile) -> Diagram:
                 "CloudWatch | Azure Monitor / Log Analytics | Cloud Logging & Monitoring"]
     if p.job:
         services.append("EventBridge Scheduler | Container Apps jobs | Cloud Scheduler")
+    if p.idp:
+        services.append("Keycloak on ECS / Amazon Cognito | Keycloak on Container Apps / Microsoft Entra ID | "
+                        "Keycloak on Cloud Run / Identity Platform")
     if p.redis:
         services.append("ElastiCache | Azure Cache for Redis / Managed Redis | Memorystore")
     if p.files:
@@ -130,7 +145,8 @@ def cloud(p: Profile) -> Diagram:
 
 
 def technical(p: Profile) -> Diagram:
-    web = [Node(f"c{i}", c, "comp") for i, c in enumerate(p.controllers)] + \
+    web = ([Node("sec", "SecurityFilterChain\nJWT resource server · @PreAuthorize", "comp")] if p.idp else []) + \
+          [Node(f"c{i}", c, "comp") for i, c in enumerate(p.controllers)] + \
           [Node("advice", "ApiExceptionHandler\nRFC 9457 Problem Details", "comp"),
            Node("valid", "Bean Validation\n(DTO records)", "comp")]
     svc = [Node(f"s{i}", s, "service") for i, s in enumerate(p.services)]
@@ -154,7 +170,8 @@ def technical(p: Profile) -> Diagram:
     columns = [Group("Clients", [Node("client", "HTTP clients\n(apps, partners, ops)", "actor")]),
                Group("Web layer: Spring MVC", web), Group("Service layer", svc),
                Group("Persistence", per), Group("Cross-cutting", cross), Group("Runtime dependencies", infra_nodes)]
-    edges = [Edge("client", "c0", "JSON over HTTPS")]
+    edges = ([Edge("client", "sec", "Bearer JWT over HTTPS"), Edge("sec", "c0", "authenticated")] if p.idp
+             else [Edge("client", "c0", "JSON over HTTPS")])
     edges += [Edge(f"c{i}", f"s{min(i, len(p.services) - 1)}") for i in range(len(p.controllers))]
     edges += [Edge(f"s{i}", f"r{min(i, len(p.repositories) - 1)}") for i in range(len(p.services))]
     edges += [Edge(f"r{i}", "pg", "JDBC") for i in range(len(p.repositories))]

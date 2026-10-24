@@ -1,0 +1,39 @@
+%% Mortgage application decision API: solution architecture
+flowchart LR
+    subgraph sg0["Users and clients"]
+        direction TB
+        off(["Loan officers"])
+        uw(["Underwriters"])
+        risk(["Risk / admins"])
+    end
+    subgraph sg1["Mortgage application decision API (system boundary)"]
+        direction TB
+        api["Decision API"]
+        db[("Applications and decisions")]
+    end
+    subgraph sg2["Platform"]
+        direction TB
+        kc["Keycloak<br/>roles"]
+    end
+    subgraph sg3["External systems"]
+        direction TB
+        hmda[/"HMDA data (FFIEC/CFPB)"/]
+    end
+    off -->|"submit"| api
+    uw -->|"override"| api
+    risk -->|"rule sets, backtests"| api
+    api -->|"import CSV"| hmda
+    api --> db
+    classDef actor fill:#dae8fc,stroke:#6c8ebf,color:#000
+    classDef svc fill:#d5e8d4,stroke:#82b366,color:#000
+    classDef comp fill:#ffffff,stroke:#666666,color:#000
+    classDef db fill:#fff2cc,stroke:#d6b656,color:#000
+    classDef store fill:#f5f5f5,stroke:#666666,color:#000
+    classDef ext fill:#f8cecc,stroke:#b85450,color:#000,stroke-dasharray: 5 3
+    classDef infra fill:#e1d5e7,stroke:#9673a6,color:#000
+    classDef job fill:#ffe6cc,stroke:#d79b00,color:#000
+    class off,uw,risk actor
+    class db db
+    class hmda ext
+    class kc infra
+    class api svc

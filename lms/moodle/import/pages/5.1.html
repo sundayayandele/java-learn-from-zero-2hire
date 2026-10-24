@@ -1,0 +1,494 @@
+<p><em>Week 14 · Module 5: API Design &amp; Integration</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Model an API around <strong>resources</strong> (nouns) and their
+relationships instead of remote procedure calls.</li>
+<li>Choose the right HTTP method for an operation, and explain
+<strong>safety</strong> and <strong>idempotency</strong>.</li>
+<li>Return the correct <strong>status code</strong> for success, client
+errors and server errors, with the right headers (<code>Location</code>,
+<code>ETag</code>, <code>Retry-After</code>).</li>
+<li>Use <strong>conditional requests</strong>
+(<code>ETag</code>/<code>If-Match</code>) to stop lost updates, and
+caching headers where they help.</li>
+<li>Design endpoints for operations that do not map neatly onto CRUD,
+such as transfers, reversals and approvals.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Your API is a contract with mobile apps, partner banks, merchants and
+other internal teams. They write code against it and cannot change at
+the same pace as you. A badly designed API leaks into every client: a
+<code>200 OK</code> that hides an error makes a mobile app show
+"Transfer successful" when no money moved; a <code>POST</code> that
+cannot be safely retried turns a network timeout into a double debit.
+Interviewers for fintech roles almost always ask you to design a small
+payments or wallet API on a whiteboard, and they listen for exactly
+these details.</p>
+<h2 id="1-resources-not-actions">1. Resources, not actions</h2>
+<p>REST (Representational State Transfer) asks you to expose
+<strong>resources</strong>: things with identity that a client can
+retrieve and change. URLs name resources; HTTP methods say what to do
+with them.</p>
+<table>
+<thead>
+<tr>
+<th>Avoid (RPC style)</th>
+<th>Prefer (resource style)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>POST /getAccount?id=123</code></td>
+<td><code>GET /api/v1/accounts/123</code></td>
+</tr>
+<tr>
+<td><code>POST /createCustomer</code></td>
+<td><code>POST /api/v1/customers</code></td>
+</tr>
+<tr>
+<td><code>POST /updateCustomerEmail</code></td>
+<td><code>PATCH /api/v1/customers/42</code></td>
+</tr>
+<tr>
+<td><code>GET /deleteCard?id=9</code></td>
+<td><code>DELETE /api/v1/cards/9</code></td>
+</tr>
+<tr>
+<td><code>POST /listTransactionsForAccount</code></td>
+<td><code>GET /api/v1/accounts/123/transactions?from=2026-10-01</code></td>
+</tr>
+</tbody>
+</table>
+<p>Conventions that keep an API predictable:</p>
+<ul>
+<li><strong>Plural nouns</strong> for collections
+(<code>/accounts</code>), an identifier for one item
+(<code>/accounts/{accountNumber}</code>).</li>
+<li><strong>Nest only for ownership</strong>, and at most one level:
+<code>/accounts/{id}/transactions</code> reads well;
+<code>/customers/{c}/accounts/{a}/transactions/{t}/disputes</code> does
+not. Once a sub-resource has its own identity, give it a top-level path
+too (<code>/disputes/{id}</code>).</li>
+<li><strong>Lower-case, hyphenated</strong> path segments
+(<code>/standing-orders</code>), <strong>camelCase</strong> JSON fields
+(<code>accountNumber</code>), and ISO 8601 for dates and times
+(<code>2026-10-24T09:15:00Z</code>).</li>
+<li><strong>Money as a decimal string with a currency</strong>, never a
+floating-point number:
+<code>{"amount": "2500.00", "currency": "NGN"}</code>.</li>
+<li><strong>Opaque identifiers</strong> for anything sensitive. Expose
+<code>"id": "pay_7Hq2..."</code>, not the database's sequential primary
+key, which leaks volumes and invites enumeration.</li>
+</ul>
+<h3 id="operations-that-are-not-crud">Operations that are not CRUD</h3>
+<p>Real banking has operations like "transfer", "reverse", "freeze" and
+"approve". Two good patterns:</p>
+<ol type="1">
+<li><strong>Make the operation a resource.</strong> A transfer is a
+thing with identity, status and history, so create it:
+<code>POST /api/v1/transfers</code> returns <code>201 Created</code>
+with <code>Location: /api/v1/transfers/trf_81c...</code>. A reversal is
+a new resource too:
+<code>POST /api/v1/transfers/trf_81c.../reversals</code>.</li>
+<li><strong>State changes as sub-resources or controlled
+fields.</strong> Freezing an account can be
+<code>POST /api/v1/accounts/123/freeze</code> (an action sub-resource,
+acceptable when it is a genuine command with side effects and an audit
+trail) or <code>PATCH /api/v1/accounts/123</code> with
+<code>{"status": "FROZEN", "reason": "..."}</code>. Pick one style per
+API and use it everywhere.</li>
+</ol>
+<h2 id="2-http-methods-safety-and-idempotency">2. HTTP methods, safety
+and idempotency</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Meaning</th>
+<th>Safe?</th>
+<th>Idempotent?</th>
+<th>Typical success</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET</code></td>
+<td>Read a representation</td>
+<td>Yes</td>
+<td>Yes</td>
+<td><code>200 OK</code> (or <code>304 Not Modified</code>)</td>
+</tr>
+<tr>
+<td><code>HEAD</code></td>
+<td>Like <code>GET</code> without a body</td>
+<td>Yes</td>
+<td>Yes</td>
+<td><code>200 OK</code></td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td>Create a subordinate resource, or run a command</td>
+<td>No</td>
+<td><strong>No</strong></td>
+<td><code>201 Created</code> + <code>Location</code>, or
+<code>202 Accepted</code>, or <code>200 OK</code></td>
+</tr>
+<tr>
+<td><code>PUT</code></td>
+<td>Replace the resource at this URL entirely</td>
+<td>No</td>
+<td>Yes</td>
+<td><code>200 OK</code> or <code>204 No Content</code> (<code>201</code>
+if it created it)</td>
+</tr>
+<tr>
+<td><code>PATCH</code></td>
+<td>Partially update</td>
+<td>No</td>
+<td>Not guaranteed</td>
+<td><code>200 OK</code> or <code>204 No Content</code></td>
+</tr>
+<tr>
+<td><code>DELETE</code></td>
+<td>Remove</td>
+<td>No</td>
+<td>Yes</td>
+<td><code>204 No Content</code></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Safe</strong> means the request does not change server
+state, so crawlers, prefetchers and retries can call it freely. Never
+change state on a <code>GET</code>.</li>
+<li><strong>Idempotent</strong> means sending the same request once or
+ten times leaves the server in the same state.
+<code>PUT /accounts/123/nickname</code> with <code>"Savings"</code> is
+idempotent; <code>POST /transfers</code> is not. Clients, proxies and
+load balancers retry idempotent requests automatically after a network
+error, which is why the distinction matters so much for money.</li>
+</ul>
+<p>Because <code>POST /transfers</code> is not idempotent, payment APIs
+add an <strong><code>Idempotency-Key</code></strong> header so a client
+can retry safely. You will implement that in topic 5.3.</p>
+<h2 id="3-status-codes-clients-can-act-on">3. Status codes clients can
+act on</h2>
+<p>A status code tells the client <strong>what to do next</strong>,
+before it reads the body.</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Use it when</th>
+<th>Client action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>200 OK</code></td>
+<td>Read succeeded, or an update returns the new state</td>
+<td>Use the body</td>
+</tr>
+<tr>
+<td><code>201 Created</code></td>
+<td>A new resource exists; include <code>Location</code></td>
+<td>Store the new URL or ID</td>
+</tr>
+<tr>
+<td><code>202 Accepted</code></td>
+<td>Work queued (for example an NIP transfer awaiting the switch)</td>
+<td>Poll the status URL or wait for a webhook</td>
+</tr>
+<tr>
+<td><code>204 No Content</code></td>
+<td>Success with nothing to return</td>
+<td>Nothing</td>
+</tr>
+<tr>
+<td><code>304 Not Modified</code></td>
+<td>Conditional <code>GET</code> and nothing changed</td>
+<td>Use the cached copy</td>
+</tr>
+<tr>
+<td><code>400 Bad Request</code></td>
+<td>Malformed JSON or failed validation</td>
+<td>Fix the request; do not retry unchanged</td>
+</tr>
+<tr>
+<td><code>401 Unauthorized</code></td>
+<td>Missing or invalid credentials</td>
+<td>Authenticate (refresh the token)</td>
+</tr>
+<tr>
+<td><code>403 Forbidden</code></td>
+<td>Authenticated but not allowed</td>
+<td>Do not retry; show "not permitted"</td>
+</tr>
+<tr>
+<td><code>404 Not Found</code></td>
+<td>The resource does not exist (or the caller may not know it
+exists)</td>
+<td>Stop</td>
+</tr>
+<tr>
+<td><code>409 Conflict</code></td>
+<td>The request conflicts with current state (duplicate reference,
+account already closed)</td>
+<td>Re-read state, then decide</td>
+</tr>
+<tr>
+<td><code>412 Precondition Failed</code></td>
+<td><code>If-Match</code> ETag no longer matches</td>
+<td>Re-read, merge, retry</td>
+</tr>
+<tr>
+<td><code>415 Unsupported Media Type</code></td>
+<td>Wrong <code>Content-Type</code></td>
+<td>Fix the header</td>
+</tr>
+<tr>
+<td><code>422 Unprocessable Content</code></td>
+<td>Well-formed but breaks a business rule (insufficient funds, limit
+exceeded)</td>
+<td>Show the reason to the user</td>
+</tr>
+<tr>
+<td><code>429 Too Many Requests</code></td>
+<td>Rate limit hit; send <code>Retry-After</code></td>
+<td>Back off</td>
+</tr>
+<tr>
+<td><code>500 Internal Server Error</code></td>
+<td>Unexpected failure on your side</td>
+<td>Retry later, if the operation is idempotent</td>
+</tr>
+<tr>
+<td><code>502</code>/<code>503</code>/<code>504</code></td>
+<td>Upstream failure, overload or timeout</td>
+<td>Retry with backoff (honour <code>Retry-After</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>Two rules that save real money:</p>
+<ol type="1">
+<li><strong>Never return <code>200</code> with
+<code>{"success": false}</code>.</strong> Monitoring, retries and client
+error handling all key off the status code.</li>
+<li><strong>Return <code>404</code> rather than <code>403</code> for
+resources the caller must not even know exist</strong> (another
+customer's account), so the API does not confirm which account numbers
+are real.</li>
+</ol>
+<h2 id="4-writing-it-in-spring-boot">4. Writing it in Spring Boot</h2>
+<pre class="java"><code>@RestController
+@RequestMapping(&quot;/api/v1/transfers&quot;)
+class TransferController {
+
+    private final TransferService transfers;
+
+    TransferController(TransferService transfers) {
+        this.transfers = transfers;
+    }
+
+    @PostMapping
+    ResponseEntity&lt;TransferResponse&gt; create(@Valid @RequestBody TransferRequest request,
+                                            UriComponentsBuilder uri) {
+        Transfer transfer = transfers.start(request);
+        URI location = uri.path(&quot;/api/v1/transfers/{id}&quot;).buildAndExpand(transfer.id()).toUri();
+        return transfer.isPending()
+                ? ResponseEntity.accepted().location(location).body(TransferResponse.from(transfer))
+                : ResponseEntity.created(location).body(TransferResponse.from(transfer));
+    }
+
+    @GetMapping(&quot;/{id}&quot;)
+    ResponseEntity&lt;TransferResponse&gt; get(@PathVariable String id) {
+        return transfers.find(id)
+                .map(t -&gt; ResponseEntity.ok().eTag(t.version()).body(TransferResponse.from(t)))
+                .orElseThrow(() -&gt; new TransferNotFoundException(id));
+    }
+}</code></pre>
+<ul>
+<li><code>ResponseEntity.created(location)</code> sets <code>201</code>
+and the <code>Location</code> header in one call.</li>
+<li>A pending transfer returns <code>202 Accepted</code> with the same
+<code>Location</code>, so the client polls it or waits for a
+webhook.</li>
+<li>Domain exceptions (<code>TransferNotFoundException</code>,
+<code>InsufficientFundsException</code>) are mapped to status codes
+once, in a <code>@RestControllerAdvice</code> (Phase 1, topic 4.2, and
+topic 5.3 here).</li>
+</ul>
+<h2 id="5-conditional-requests-stop-lost-updates">5. Conditional
+requests stop lost updates</h2>
+<p>Two support agents open the same customer profile. Agent A changes
+the phone number, agent B changes the address, and B's save silently
+overwrites A's change. An <strong>ETag</strong> prevents this.</p>
+<ol type="1">
+<li><code>GET /api/v1/customers/42</code> returns <code>ETag: "7"</code>
+(the entity's version).</li>
+<li>The client sends the update with <code>If-Match: "7"</code>.</li>
+<li>If someone else has saved in between (version now <code>8</code>),
+the server returns <strong><code>412 Precondition Failed</code></strong>
+instead of overwriting.</li>
+</ol>
+<pre class="java"><code>@PatchMapping(&quot;/{id}&quot;)
+ResponseEntity&lt;CustomerResponse&gt; patch(@PathVariable long id,
+                                       @RequestHeader(HttpHeaders.IF_MATCH) String ifMatch,
+                                       @Valid @RequestBody CustomerPatch patch) {
+    long expectedVersion = Long.parseLong(ifMatch.replace(&quot;\&quot;&quot;, &quot;&quot;));
+    Customer updated = customers.update(id, expectedVersion, patch);   // throws StaleVersionException
+    return ResponseEntity.ok().eTag(String.valueOf(updated.version())).body(CustomerResponse.from(updated));
+}</code></pre>
+<p>Map JPA's <code>@Version</code> field to the ETag and translate
+<code>ObjectOptimisticLockingFailureException</code> (or your own
+<code>StaleVersionException</code>) to <code>412</code>. For reads,
+Spring's <code>ShallowEtagHeaderFilter</code> can add ETags to any
+<code>GET</code> response and answer <code>If-None-Match</code> with
+<code>304</code>, which saves bandwidth for mobile clients even though
+the server still builds the response.</p>
+<h2 id="6-caching-headers">6. Caching headers</h2>
+<ul>
+<li>Reference data that rarely changes (bank list, fee schedule, FX
+rates for a past date) can be cached:
+<code>Cache-Control: public, max-age=3600</code>.</li>
+<li>Anything personal (balances, statements, profile) must not be stored
+by shared caches: <code>Cache-Control: no-store</code> (Spring Security
+adds sensible defaults when it is on the classpath).</li>
+<li><code>Vary: Accept-Language</code> or
+<code>Vary: Authorization</code> when the representation depends on
+those headers.</li>
+</ul>
+<h2 id="7-collections-filtering-sorting-sparse-responses">7.
+Collections: filtering, sorting, sparse responses</h2>
+<ul>
+<li>Filters as query parameters:
+<code>GET /api/v1/accounts/123/transactions?type=DEBIT&amp;from=2026-10-01&amp;to=2026-10-31</code>.</li>
+<li>Sorting with an allow-list: <code>?sort=valueDate,desc</code>.
+Reject unknown sort fields with <code>400</code> (sorting on arbitrary
+columns invites slow queries and, if concatenated into SQL,
+injection).</li>
+<li>Always paginate collections that can grow. Topic 5.3 compares offset
+and cursor pagination.</li>
+</ul>
+<h2 id="worked-example-a-wallet-api-on-one-page">Worked example: a
+wallet API on one page</h2>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>Request</th>
+<th>Success</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Open a wallet</td>
+<td><code>POST /api/v1/wallets</code></td>
+<td><code>201</code> +
+<code>Location: /api/v1/wallets/wal_9f3</code></td>
+</tr>
+<tr>
+<td>View a wallet</td>
+<td><code>GET /api/v1/wallets/wal_9f3</code></td>
+<td><code>200</code> + <code>ETag</code></td>
+</tr>
+<tr>
+<td>Rename</td>
+<td><code>PATCH /api/v1/wallets/wal_9f3</code> with
+<code>If-Match</code></td>
+<td><code>200</code>, or <code>412</code> if stale</td>
+</tr>
+<tr>
+<td>Fund by card</td>
+<td><code>POST /api/v1/wallets/wal_9f3/fundings</code> +
+<code>Idempotency-Key</code></td>
+<td><code>201</code>, or <code>202</code> while the gateway
+confirms</td>
+</tr>
+<tr>
+<td>Transfer</td>
+<td><code>POST /api/v1/transfers</code> +
+<code>Idempotency-Key</code></td>
+<td><code>201</code>, <code>202</code>, <code>422</code> (insufficient
+funds), <code>409</code> (duplicate reference)</td>
+</tr>
+<tr>
+<td>History</td>
+<td><code>GET /api/v1/wallets/wal_9f3/transactions?cursor=...&amp;limit=50</code></td>
+<td><code>200</code> with <code>nextCursor</code></td>
+</tr>
+<tr>
+<td>Freeze</td>
+<td><code>POST /api/v1/wallets/wal_9f3/freeze</code> (admin only)</td>
+<td><code>204</code>, <code>409</code> if already frozen</td>
+</tr>
+</tbody>
+</table>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Verbs in URLs (<code>/createTransfer</code>) and <code>POST</code>
+for everything.</li>
+<li>Changing state on <code>GET</code> (a "confirm" link in an email
+that moves money).</li>
+<li><code>200 OK</code> with an error flag in the body.</li>
+<li><code>500</code> for validation errors or business-rule
+failures.</li>
+<li>Exposing sequential database IDs or full account numbers where a
+masked or opaque ID would do.</li>
+<li>Floating-point money in JSON.</li>
+<li>Unbounded collection endpoints with no pagination.</li>
+<li>Ignoring concurrent updates (no ETag or version check).</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Redesign this RPC API as resources and write the method, path and
+success status for each: <code>createAccount</code>,
+<code>getBalance</code>, <code>doTransfer</code>,
+<code>cancelTransfer</code>, <code>listCards</code>,
+<code>blockCard</code>, <code>getStatement(month)</code>.</li>
+<li>Implement <code>POST /api/v1/transfers</code> returning
+<code>201</code> with <code>Location</code>, or <code>202</code> when
+the transfer is queued, and a <code>GET</code> that returns an
+<code>ETag</code>.</li>
+<li>Add <code>If-Match</code> handling to a <code>PATCH</code> endpoint
+and write a test where two updates race and the second gets
+<code>412</code>.</li>
+<li>Use <code>curl -i</code> to call every endpoint and check the status
+line and headers, not just the body.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Resource, representation, REST, RPC, collection, sub-resource, safe
+method, idempotent method, <code>Location</code> header,
+<code>201 Created</code>, <code>202 Accepted</code>,
+<code>204 No Content</code>, <code>400</code> vs <code>422</code>,
+<code>401</code> vs <code>403</code>, <code>409 Conflict</code>,
+<code>412 Precondition Failed</code>,
+<code>429 Too Many Requests</code>, <code>Retry-After</code>, ETag,
+<code>If-Match</code>, <code>If-None-Match</code>, conditional request,
+<code>Cache-Control</code>, opaque identifier.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a href="https://www.rfc-editor.org/rfc/rfc9110">RFC 9110: HTTP
+Semantics (methods, status codes, conditional requests)</a></li>
+<li><a
+href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status">MDN:
+HTTP response status codes</a></li>
+<li><a
+href="https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller.html">Spring
+Framework reference: Annotated Controllers</a></li>
+<li><a
+href="https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-caching.html">Spring
+Framework reference: HTTP caching</a></li>
+<li><a
+href="https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md">Microsoft
+REST API Guidelines</a></li>
+<li><a href="https://cloud.google.com/apis/design/resources">Google
+Cloud API design guide: resource-oriented design</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>8 Pragmatic REST API Design Tips (From Real Projects)</h3><p>Milan Jovanović · 13 min. Pragmatic REST API design: resource naming, nouns over verbs, consistent responses.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/36--CQc19u4" title="8 Pragmatic REST API Design Tips (From Real Projects)" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>HTTP Status Codes Explained In 5 Minutes</h3><p>ByteByteGo · 5 min. Which HTTP status code to return and why, in one clear diagram-led summary.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/qmpUfWN7hh4" title="HTTP Status Codes Explained In 5 Minutes" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>HTTP Caching with E-Tags -  (Explained by Example)</h3><p>Hussein Nasser · 17 min. ETags and conditional requests: how caches and optimistic concurrency use them.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/TgZnpp5wJWU" title="HTTP Caching with E-Tags -  (Explained by Example)" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/02-professional-backend/05-api-design-integration/5.1-resource-design-http/README.md">5.1 Resource design, HTTP semantics and status codes</a></p>

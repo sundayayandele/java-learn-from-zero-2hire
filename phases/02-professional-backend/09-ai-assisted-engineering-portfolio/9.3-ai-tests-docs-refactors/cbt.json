@@ -1,0 +1,99 @@
+{
+  "topic": "9.3",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "You ask an assistant to generate tests for an existing fee calculator. It runs the code, records the outputs and asserts them. One expected fee in the tests is actually wrong according to the written fee policy.",
+      "question": "What went wrong?",
+      "options": [
+        "The assistant should have used more mocks",
+        "The tests mirror the current implementation, including its bug; expected values must come from the specification",
+        "Parameterised tests cannot test fees",
+        "Nothing; generated tests are always correct"
+      ],
+      "answer": 1,
+      "explanation": "Tests that encode whatever the code currently does cannot find bugs in it. Deciding expected results from the requirements is what gives tests their value."
+    },
+    {
+      "type": "single",
+      "scenario": "You must refactor a 600-line legacy statement generator that nobody fully understands, with an assistant's help.",
+      "question": "What should you do first?",
+      "options": [
+        "Ask the assistant to rewrite the whole class in one go",
+        "Add characterisation tests that pin down its current outputs for representative inputs, then refactor in small steps, running them each time",
+        "Refactor first and add tests at the end",
+        "Delete the old class and write a new one from memory"
+      ],
+      "answer": 1,
+      "explanation": "Characterisation tests detect any behaviour change, which makes small, AI-assisted refactoring steps safe to verify."
+    },
+    {
+      "type": "single",
+      "scenario": "A team needs to migrate 40 services from Spring Boot 3.5 to 4.1.",
+      "question": "Which approach is most reliable for the mechanical part of the migration?",
+      "options": [
+        "Ask an assistant to rewrite each service freely",
+        "Skip the upgrade",
+        "Run the OpenRewrite Spring Boot 4 recipe, review its diff, and use an assistant only for the remaining manual fixes",
+        "Edit every file by hand"
+      ],
+      "answer": 2,
+      "explanation": "Recipe-based tools apply tested, repeatable transformations. Free-form generation across 40 services is harder to review and less consistent."
+    },
+    {
+      "type": "multi",
+      "scenario": "An assistant drafted the README's 'How to run locally' section and a runbook entry for gateway outages.",
+      "question": "What must you verify before merging? (Choose two.)",
+      "options": [
+        "That the text uses many headings",
+        "Claims about behaviour (for example 'retries three times with backoff') match the code and configuration",
+        "That the assistant's name is mentioned in every paragraph",
+        "Every command, port, property name and version actually works with this repository"
+      ],
+      "answer": [
+        1,
+        3
+      ],
+      "explanation": "Fluent but inaccurate documentation misleads people during incidents. Commands and behavioural claims must be checked against reality."
+    },
+    {
+      "type": "single",
+      "scenario": "After three months of relying on an assistant for everything, a junior engineer struggles in a live-coding interview without it.",
+      "question": "Which habit best prevents this?",
+      "options": [
+        "Avoiding all AI tools",
+        "Regularly predicting answers before asking, explaining accepted code in your own words, and practising problems without AI",
+        "Memorising generated code",
+        "Using a more powerful assistant"
+      ],
+      "answer": 1,
+      "explanation": "Skills grow through effortful practice. Using AI as a reviewer and partner rather than a replacement keeps understanding current."
+    },
+    {
+      "type": "single",
+      "scenario": "You want AI help to add idempotency to a refund endpoint while staying in control of what the system must do.",
+      "question": "Which workflow keeps you in control?",
+      "options": [
+        "Ask the assistant to deploy directly to production",
+        "Let the assistant decide the behaviour and write both code and tests",
+        "Implement it yourself and ask the assistant to delete the old tests",
+        "Write the failing tests for the required behaviour yourself, then let the assistant implement until they pass, and review the diff"
+      ],
+      "answer": 3,
+      "explanation": "Writing the tests first makes you the author of the specification; the assistant fills in an implementation that must satisfy it."
+    },
+    {
+      "type": "single",
+      "scenario": "An upgrade pull request contains dependency bumps, 300 automated recipe changes, manual fixes and an unrelated new feature.",
+      "question": "How should it be restructured?",
+      "options": [
+        "Split it into separate pull requests: dependency bumps, recipe changes, manual fixes, then the feature",
+        "Merge it without review because recipes are automated",
+        "Keep it as one PR to save review time",
+        "Squash it into a single commit"
+      ],
+      "answer": 0,
+      "explanation": "Separating mechanical, manual and functional changes lets reviewers apply the right level of scrutiny to each and makes rollback easier."
+    }
+  ]
+}

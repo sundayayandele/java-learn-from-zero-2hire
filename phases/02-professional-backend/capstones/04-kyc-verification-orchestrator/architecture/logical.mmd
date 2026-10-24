@@ -1,0 +1,33 @@
+%% KYC identity verification orchestrator: logical architecture
+flowchart LR
+    subgraph sg0["Capabilities"]
+        direction TB
+        orch["Orchestration<br/>sequence · parallel · async"]
+        match["Name / DOB matching"]
+        tier["Tier policy<br/>Tier 1–3 · REFER"]
+        rev["Manual review"]
+        purge[["Data minimisation<br/>mask · purge"]]
+    end
+    subgraph sg1["Data"]
+        direction TB
+        ver[("verification<br/>masked id · HMAC · tier · status")]
+        ev[("verification_event<br/>append-only")]
+    end
+    orch --> match
+    orch --> tier
+    orch --> ver
+    orch --> ev
+    rev --> ver
+    purge --> ev
+    classDef actor fill:#dae8fc,stroke:#6c8ebf,color:#000
+    classDef svc fill:#d5e8d4,stroke:#82b366,color:#000
+    classDef comp fill:#ffffff,stroke:#666666,color:#000
+    classDef db fill:#fff2cc,stroke:#d6b656,color:#000
+    classDef store fill:#f5f5f5,stroke:#666666,color:#000
+    classDef ext fill:#f8cecc,stroke:#b85450,color:#000,stroke-dasharray: 5 3
+    classDef infra fill:#e1d5e7,stroke:#9673a6,color:#000
+    classDef job fill:#ffe6cc,stroke:#d79b00,color:#000
+    class match,tier comp
+    class ver,ev db
+    class purge job
+    class orch,rev svc

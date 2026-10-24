@@ -1,0 +1,221 @@
+<h1 id="getting-hired-after-phase-2-week-24-then-ongoing">Getting hired
+after Phase 2 (week 24, then ongoing)</h1>
+
+<p>Phase 2 is the junior launch point. After week 24 you can compete for
+<strong>junior Java backend engineer</strong> roles at Nigerian fintechs
+and banks, for graduate and associate roles at consultancies, and for
+remote junior roles that ask for Java, Spring Boot, REST, security and
+CI/CD. Phase 1's advice still holds (read it if you skipped it); this
+page adds what changes now that you have integration, security, testing
+and delivery skills.</p>
+<h2 id="what-you-can-honestly-claim-after-phase-2">What you can honestly
+claim after Phase 2</h2>
+<table>
+<thead>
+<tr>
+<th>You can say</th>
+<th>Evidence they'll check</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"I design and integrate REST APIs, including payment providers and
+webhooks"</td>
+<td>Capstone 1: OpenAPI contract, signed webhooks, idempotency keys, a
+WireMock test suite</td>
+</tr>
+<tr>
+<td>"I secure APIs with Spring Security, OAuth2 and JWTs, and I prevent
+broken object level authorisation"</td>
+<td>A Keycloak-secured capstone with 401/403/404 tests for every
+endpoint</td>
+</tr>
+<tr>
+<td>"I write a real test pyramid: unit, integration with Testcontainers,
+API tests, coverage gates"</td>
+<td>A green pipeline with the coverage gate and the test report</td>
+</tr>
+<tr>
+<td>"I ship through quality-gated CI/CD and Docker"</td>
+<td>Required checks on <code>main</code>, Trivy scans, an SBOM, a
+deployed service</td>
+</tr>
+<tr>
+<td>"I use AI coding assistants productively and review their output
+critically"</td>
+<td>A PR where you rejected or corrected AI-generated code, with the
+reason; your project instruction file</td>
+</tr>
+<tr>
+<td>"I work in pull requests with reviews"</td>
+<td>PR history with descriptions and review comments</td>
+</tr>
+</tbody>
+</table>
+<p>Still don't claim Kafka, Kubernetes in production, microservices or
+cloud certifications: Phase 3 covers those.</p>
+<h2 id="your-junior-portfolio-45-projects">Your junior portfolio (4–5
+projects)</h2>
+<p>Pin <strong>four or five</strong> repositories and order them for the
+jobs you want:</p>
+<ol type="1">
+<li><strong>Capstone 1 (payment gateway hub)</strong>: your headline
+project for payments and fintech roles.</li>
+<li><strong>Two more Phase 2 capstones</strong> chosen for your target
+employers: open banking or KYC for banks, tokenisation or merchant
+platform for payment companies, GraphQL or gRPC for product engineering
+teams.</li>
+<li><strong>Phase 1 Capstone 1 (ledger)</strong> or your best Phase 1
+capstone: it shows SQL and concurrency depth.</li>
+<li>Optional: an open-source contribution or the Module 9 portfolio
+project.</li>
+</ol>
+<p>Each README leads with a one-line result, for example "Payment hub:
+provider failover in under a second, duplicate webhooks applied once,
+94% line coverage, deployed with Keycloak." Add the architecture
+diagram, the threat model and a 3-minute demo video.</p>
+<h2 id="cv-for-a-phase-2-graduate">CV for a Phase 2 graduate</h2>
+<ul>
+<li>Title it for the role: <strong>Junior Java Backend
+Engineer</strong>.</li>
+<li>Three project entries, each with stack, what you built, and one
+verifiable result (see topic 9.4 for strong bullet patterns).</li>
+<li>Skills, grouped and honest: Java 21, Kotlin basics, SQL · Spring
+Boot 4, Spring Security 7, Spring Data, springdoc OpenAPI · PostgreSQL,
+Redis, MongoDB, Flyway · JUnit, Mockito, Testcontainers, WireMock,
+JaCoCo · Docker, GitHub Actions, GitLab CI, Jenkins, Azure DevOps ·
+Keycloak, OAuth2/OIDC, OWASP Top 10.</li>
+<li>Mention responsible AI-assisted development in one line, with
+evidence, not as a headline.</li>
+<li>Keep it to one page; export to PDF; no skills in images (topic
+9.4).</li>
+</ul>
+<h2 id="interview-loop-whats-new-at-junior-level">Interview loop: what's
+new at junior level</h2>
+<table>
+<thead>
+<tr>
+<th>Round</th>
+<th>What it tests now</th>
+<th>How to prepare</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Online assessment</td>
+<td>Core Java, SQL, one medium coding problem</td>
+<td>Weekly timed practice continues: 2 easy, 1 medium, 10 SQL</td>
+</tr>
+<tr>
+<td>Technical: API design</td>
+<td>Resource design, status codes, idempotency, pagination, versioning,
+error format</td>
+<td>Design an API on a whiteboard for "refunds" or "standing orders" in
+20 minutes, then compare with Capstone 1</td>
+</tr>
+<tr>
+<td>Technical: security</td>
+<td>Filter chain, JWT validation, OAuth2 flows, roles vs scopes, BOLA,
+OWASP, password storage, secrets</td>
+<td>Explain your capstone's security model end to end, and how each test
+proves it</td>
+</tr>
+<tr>
+<td>Technical: testing</td>
+<td>Unit vs integration, mocks vs real dependencies, Testcontainers,
+what coverage does and doesn't tell you</td>
+<td>Walk through one bug that a test caught</td>
+</tr>
+<tr>
+<td>Live coding or take-home</td>
+<td>A small secured API with tests, or extending an existing
+codebase</td>
+<td>Do the "secured wallet API with tests in 2 hours" exercise twice;
+once without AI tools</td>
+</tr>
+<tr>
+<td>System design (light)</td>
+<td>A small service with a database, a provider integration and failure
+handling</td>
+<td>Use your capstone's five architecture views as the template</td>
+</tr>
+<tr>
+<td>Behavioural</td>
+<td>Ownership, collaboration, review, learning, mistakes</td>
+<td>Seven STAR stories (below)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="questions-you-should-be-able-to-answer-cold">Questions you
+should be able to answer cold</h3>
+<ol type="1">
+<li>What happens to a request in Spring Security before it reaches your
+controller?</li>
+<li>How does a resource server validate a JWT, and which claims must it
+check?</li>
+<li>Client credentials vs authorisation code with PKCE: who uses each,
+and why?</li>
+<li>Roles vs scopes vs ownership: give an example of each in a payment
+API.</li>
+<li>What is BOLA, and how do your tests prove you prevented it?</li>
+<li>How would you make a payment initialisation endpoint idempotent? And
+a webhook receiver?</li>
+<li>Timeouts, retries, circuit breakers: how do they interact, and what
+must never be retried?</li>
+<li>Offset vs cursor pagination: trade-offs.</li>
+<li>What does Testcontainers give you that an H2 database doesn't?</li>
+<li>What does 80% line coverage not tell you? How would you find weak
+tests?</li>
+<li>Merge vs rebase, and what makes a good pull request?</li>
+<li>How do you review AI-generated code before merging it?</li>
+</ol>
+<h3 id="seven-star-stories">Seven STAR stories</h3>
+<p>The five from Phase 1, plus:</p>
+<ol start="6" type="1">
+<li><strong>An integration that failed in an unexpected way</strong> (a
+timeout, a duplicate webhook, a provider contract surprise) and how you
+made the system robust to it.</li>
+<li><strong>A review that changed your code</strong>, or a review you
+gave that prevented a defect, including AI-generated code you
+rejected.</li>
+</ol>
+<h2 id="applications-and-the-first-90-days">Applications and the first
+90 days</h2>
+<ul>
+<li>Re-map your shortlist to evidence (60%+ match rule from Phase 1).
+Phase 2 widens it: junior backend engineer, integration engineer, API
+developer, payments engineer, junior DevSecOps.</li>
+<li>Lead with referrals: share your capstone write-ups on LinkedIn and
+in meetups, and ask for feedback rather than jobs.</li>
+<li>Prepare for the first 90 days in a job, a common interview question:
+"learn the codebase and on-call runbooks, ship a small fix in week two,
+write tests where you touch code, ask good questions in reviews."</li>
+<li>Phase 3 (Kafka, microservices, Kubernetes, cloud) continues in week
+25; each module adds a line to your CV.</li>
+</ul>
+<h2 id="phase-2-getting-hired-checklist">Phase 2 Getting Hired
+checklist</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" />Four or five pinned repositories,
+each passing the three-minute README test, three of them
+deployed</label></li>
+<li><label><input type="checkbox" />Junior Java Backend Engineer CV
+reviewed by a mentor or peer</label></li>
+<li><label><input type="checkbox" />LinkedIn headline and projects
+updated (topic 9.4)</label></li>
+<li><label><input type="checkbox" />One technical post about an
+integration or security problem you solved</label></li>
+<li><label><input type="checkbox" />The 12 questions above answered
+aloud and recorded once</label></li>
+<li><label><input type="checkbox" />Seven STAR stories written
+down</label></li>
+<li><label><input type="checkbox" />One mock interview each for API
+design, security and live coding, with written feedback</label></li>
+<li><label><input type="checkbox" />Shortlist of 20 roles mapped to
+evidence; first wave of 5 applications sent</label></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>How to Get Hired as a Software Engineer in 2026 (Junior Developers)</h3><p>Daf James · 4 min. How juniors get hired as software engineers in 2026.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/tQnkO-QpBQo" title="How to Get Hired as a Software Engineer in 2026 (Junior Developers)" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>How to make a Dev resume that actually gets you hired</h3><p>Anthony Sistilli · 19 min. A developer CV that gets interviews: structure and evidence.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/fD0E57QYSPk" title="How to make a Dev resume that actually gets you hired" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Top 10 Behavioral Software Engineering Interview Questions</h3><p>Aced (formerly Exponent) · 6 min. Ten common behavioural questions for software engineers.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/T25I2FQ9Mok" title="Top 10 Behavioral Software Engineering Interview Questions" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>

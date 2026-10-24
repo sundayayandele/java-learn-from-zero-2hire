@@ -1,0 +1,39 @@
+%% Payment gateway integration hub: logical architecture
+flowchart LR
+    subgraph sg0["Capabilities"]
+        direction TB
+        init["Initialise payment<br/>idempotency key check"]
+        route["Provider routing<br/>priority · circuit breaker"]
+        hook["Webhook intake<br/>signature · dedup"]
+        sm["Payment state machine<br/>legal transitions only"]
+        recon[["Reconciliation<br/>verify stale · abandon"]]
+        refund["Refunds<br/>never above amount"]
+    end
+    subgraph sg1["Data (PostgreSQL)"]
+        direction TB
+        payment[("payment<br/>reference · merchant · amount · status")]
+        event[("payment_event<br/>append-only history")]
+        idem[("idempotency_key<br/>merchant · key · request hash · response")]
+        wh[("webhook_event<br/>provider · event id (unique)")]
+    end
+    init --> idem
+    init --> route
+    init --> payment
+    hook -->|"insert once"| wh
+    hook --> sm
+    recon --> sm
+    refund --> sm
+    sm --> payment
+    sm --> event
+    classDef actor fill:#dae8fc,stroke:#6c8ebf,color:#000
+    classDef svc fill:#d5e8d4,stroke:#82b366,color:#000
+    classDef comp fill:#ffffff,stroke:#666666,color:#000
+    classDef db fill:#fff2cc,stroke:#d6b656,color:#000
+    classDef store fill:#f5f5f5,stroke:#666666,color:#000
+    classDef ext fill:#f8cecc,stroke:#b85450,color:#000,stroke-dasharray: 5 3
+    classDef infra fill:#e1d5e7,stroke:#9673a6,color:#000
+    classDef job fill:#ffe6cc,stroke:#d79b00,color:#000
+    class route,sm comp
+    class payment,event,idem,wh db
+    class recon job
+    class init,hook,refund svc

@@ -1,0 +1,305 @@
+<p><em>Week 21 · Module 8: Git, Docker &amp; CI/CD</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Explain how Git stores history (commits, branches,
+<code>HEAD</code>) well enough to recover from mistakes.</li>
+<li>Use a team branching strategy: <strong>trunk-based
+development</strong> with short-lived feature branches, compared with
+Gitflow.</li>
+<li>Choose between <strong>merge</strong>, <strong>rebase</strong> and
+<strong>squash</strong>, and rebase interactively to tidy your own
+branch.</li>
+<li>Resolve <strong>merge conflicts</strong> confidently.</li>
+<li>Write <strong>conventional commits</strong> and configure
+<strong>branch protection</strong> (required reviews, status checks,
+linear history, signed commits).</li>
+<li>Undo safely: <code>revert</code>, <code>reset</code>,
+<code>reflog</code>, <code>restore</code>.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Banks treat source control as part of their change-management
+control: every production change must be traceable to a reviewed,
+approved commit linked to a ticket. Teams of ten or more engineers
+working on one payments service depend on a disciplined branching model
+to release several times a day without breaking each other. Messing up
+Git in your first week (force-pushing over a colleague's work,
+committing a secret) is memorable for the wrong reasons; recovering
+calmly from a Git mistake is a quiet sign of seniority.</p>
+<h2 id="1-how-git-thinks">1. How Git thinks</h2>
+<ul>
+<li>A <strong>commit</strong> is a snapshot of the whole project plus
+metadata (author, message, parent commits), identified by a SHA
+hash.</li>
+<li>A <strong>branch</strong> is just a movable pointer to a commit.
+<code>HEAD</code> points to the branch (or commit) you have checked
+out.</li>
+<li>Your work moves through three areas: <strong>working tree</strong> →
+<code>git add</code> → <strong>staging area (index)</strong> →
+<code>git commit</code> → <strong>repository</strong>.</li>
+<li><code>origin/main</code> is your local copy of the remote's
+<code>main</code>, updated by <code>git fetch</code>.</li>
+</ul>
+<p>Because branches are only pointers and commits are never really
+deleted immediately, almost every mistake is recoverable (section
+6).</p>
+<h2 id="2-branching-strategies">2. Branching strategies</h2>
+<h3 id="trunk-based-development-recommended">Trunk-based development
+(recommended)</h3>
+<ul>
+<li>Everyone integrates into <code>main</code> (the trunk) at least
+daily through <strong>short-lived feature branches</strong> (hours to a
+couple of days).</li>
+<li><code>main</code> is always releasable; CI runs on every pull
+request and every merge.</li>
+<li>Unfinished features hide behind <strong>feature flags</strong>, so
+code can merge before the feature is switched on.</li>
+<li>Releases are tags or deployments from <code>main</code>.</li>
+</ul>
+<p>This is what high-performing teams use (and what the DORA research
+associates with better delivery performance), and it suits CI/CD.</p>
+<h3 id="gitflow">Gitflow</h3>
+<p>Long-lived <code>develop</code> and <code>main</code> branches, plus
+<code>feature/*</code>, <code>release/*</code> and <code>hotfix/*</code>
+branches. You will still meet it in banks with scheduled quarterly
+releases and long regression cycles. It works, but long-lived branches
+cause painful merges and slow feedback. If your team uses it, keep
+feature branches short anyway.</p>
+<h3 id="branch-naming">Branch naming</h3>
+<p><code>feat/TRF-214-idempotency-key</code>,
+<code>fix/TRF-230-fee-rounding</code>,
+<code>chore/upgrade-boot-4.1</code>: the type, the ticket ID and a short
+description.</p>
+<h2 id="3-commits-that-tell-a-story">3. Commits that tell a story</h2>
+<p>Small, focused commits that each build and pass tests make review,
+<code>git bisect</code> and reverting easy. Use <strong>Conventional
+Commits</strong>:</p>
+<pre><code>feat(transfers): honour Idempotency-Key header on POST /transfers
+
+Stores a SHA-256 fingerprint and the response in idempotency_key and
+replays it for identical retries. Different payloads with the same key
+return 422.
+
+Refs: TRF-214</code></pre>
+<p>Types: <code>feat</code>, <code>fix</code>, <code>refactor</code>,
+<code>test</code>, <code>docs</code>, <code>build</code>,
+<code>ci</code>, <code>chore</code>, <code>perf</code>; <code>!</code>
+or a <code>BREAKING CHANGE:</code> footer for breaking changes. Tools
+can generate changelogs and semantic version numbers from them.</p>
+<p>The subject line: imperative mood ("add", not "added"), under about
+72 characters, says <em>what</em>; the body says <em>why</em>.</p>
+<h2 id="4-merge-rebase-squash">4. Merge, rebase, squash</h2>
+<p>You open a branch from <code>main</code>; meanwhile colleagues merge
+to <code>main</code>. How do you bring your branch up to date, and how
+does it land?</p>
+<p><strong>Merge</strong> <code>main</code> into your branch: a merge
+commit joins the histories. Safe, never rewrites history, but busy
+branches get noisy merge commits.</p>
+<p><strong>Rebase</strong> your branch onto <code>main</code>: your
+commits are replayed on top of the latest <code>main</code>, as if you
+had started there.</p>
+<pre class="bash"><code>git fetch origin
+git rebase origin/main          # replay my commits on top of the latest main
+# resolve conflicts if any, then:
+git add &lt;files&gt; &amp;&amp; git rebase --continue
+git push --force-with-lease     # my branch&#39;s history changed</code></pre>
+<p>The golden rule: <strong>only rebase commits that nobody else has
+based work on</strong> (your own feature branch). Never rebase
+<code>main</code> or a shared branch. Use
+<code>--force-with-lease</code>, never plain <code>--force</code>: it
+refuses to overwrite the remote if someone else pushed in the
+meantime.</p>
+<p><strong>Interactive rebase</strong> tidies your branch before
+review:</p>
+<pre class="bash"><code>git rebase -i origin/main
+# pick a1b2c3 feat(transfers): add idempotency table
+# fixup d4e5f6 fix typo
+# reword 7a8b9c add replay logic</code></pre>
+<p><strong>Landing the pull request</strong> (repository setting):</p>
+<table>
+<thead>
+<tr>
+<th>Strategy</th>
+<th>Result on <code>main</code></th>
+<th>Good when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Merge commit</td>
+<td>All branch commits + a merge commit</td>
+<td>Commits are well curated and you want the branch visible</td>
+</tr>
+<tr>
+<td>Squash and merge</td>
+<td>One commit per PR</td>
+<td>Most teams; clean, revertable history, PR title becomes the
+message</td>
+</tr>
+<tr>
+<td>Rebase and merge</td>
+<td>Branch commits replayed linearly</td>
+<td>Curated commits and linear history</td>
+</tr>
+</tbody>
+</table>
+<h2 id="5-resolving-conflicts">5. Resolving conflicts</h2>
+<p>A conflict means two changes touched the same lines. Git marks
+them:</p>
+<pre class="java"><code>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD (main)
+private static final BigDecimal VAT_RATE = new BigDecimal(&quot;0.075&quot;);
+=======
+private static final BigDecimal VAT_RATE = new BigDecimal(&quot;0.0750&quot;);
+private static final RoundingMode ROUNDING = RoundingMode.HALF_EVEN;
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; feat/TRF-230-fee-rounding</code></pre>
+<ol type="1">
+<li>Understand <strong>both</strong> changes (read the other PR if
+needed); do not just pick "mine".</li>
+<li>Edit to the correct combined result, remove the markers.</li>
+<li>Compile and run the tests before continuing; a conflict resolution
+can compile and still be wrong.</li>
+<li><code>git add</code> the file and continue the merge or rebase.</li>
+</ol>
+<p>Small, frequent integration means small conflicts. A week-old branch
+means big ones.</p>
+<h2 id="6-undoing-things-safely">6. Undoing things safely</h2>
+<table>
+<thead>
+<tr>
+<th>Situation</th>
+<th>Command</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Discard uncommitted changes to a file</td>
+<td><code>git restore &lt;file&gt;</code></td>
+</tr>
+<tr>
+<td>Unstage a file</td>
+<td><code>git restore --staged &lt;file&gt;</code></td>
+</tr>
+<tr>
+<td>Fix the last commit (not yet pushed)</td>
+<td><code>git commit --amend</code></td>
+</tr>
+<tr>
+<td>Undo a commit that is already on <code>main</code></td>
+<td><code>git revert &lt;sha&gt;</code> (a new commit that reverses it;
+safe for shared history)</td>
+</tr>
+<tr>
+<td>Move your branch back (local only)</td>
+<td><code>git reset --soft HEAD~1</code> (keep changes staged) or
+<code>--hard</code> (discard)</td>
+</tr>
+<tr>
+<td>"I lost a commit after a reset or rebase"</td>
+<td><code>git reflog</code>, then
+<code>git branch rescue &lt;sha&gt;</code></td>
+</tr>
+<tr>
+<td>Find which commit introduced a bug</td>
+<td><code>git bisect start</code>, <code>git bisect bad</code>,
+<code>git bisect good &lt;sha&gt;</code>, test, repeat</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Never</strong> rewrite history on <code>main</code> (no
+<code>reset</code> + force push). Use <code>revert</code>. And if you
+commit a <strong>secret</strong>, rotating it is the fix; rewriting
+history is secondary (topic 6.5).</p>
+<h2 id="7-branch-protection-and-repository-rules">7. Branch protection
+and repository rules</h2>
+<p>On GitHub (Settings → Rules → Rulesets, or branch protection) for
+<code>main</code>:</p>
+<ul>
+<li>Require a <strong>pull request</strong> before merging, with at
+least one <strong>approving review</strong>; dismiss stale approvals
+when new commits are pushed.</li>
+<li>Require review from <strong>CODEOWNERS</strong> for sensitive paths
+(migrations, security configuration, CI files).</li>
+<li>Require <strong>status checks</strong> to pass (build, tests,
+quality gate, scans) and require the branch to be <strong>up to
+date</strong> before merging.</li>
+<li>Require <strong>linear history</strong> (squash or rebase merges
+only).</li>
+<li>Require <strong>signed commits</strong> if your organisation
+mandates it (GPG, SSH or S/MIME signing proves who made a commit).</li>
+<li>Block <strong>force pushes</strong> and <strong>deletions</strong>;
+do not let administrators bypass the rules.</li>
+</ul>
+<p>GitLab offers the same through protected branches and merge-request
+approval rules.</p>
+<h2 id="8-useful-extras">8. Useful extras</h2>
+<ul>
+<li><code>.gitignore</code> from the start (<code>target/</code>,
+<code>.idea/</code>, <code>.env</code>, <code>*.log</code>).</li>
+<li><code>.gitattributes</code> with <code>* text=auto</code> and
+<code>*.sh text eol=lf</code> (no more <code>^M</code> in shell scripts
+on Windows).</li>
+<li>A <strong>pre-commit hook</strong> (for example with the
+<code>pre-commit</code> framework) to run formatting and Gitleaks before
+each commit.</li>
+<li><code>git log --oneline --graph --decorate --all</code> to see the
+shape of history.</li>
+</ul>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Long-lived feature branches that drift for weeks.</li>
+<li><code>git push --force</code> over a shared branch.</li>
+<li>Rebasing <code>main</code> or a branch others have pulled.</li>
+<li>Giant commits titled "updates" or "fix".</li>
+<li>Resolving conflicts by blindly choosing one side.</li>
+<li>Rewriting <code>main</code> to remove a bad commit instead of
+reverting it.</li>
+<li>Committing build output, IDE files or <code>.env</code>.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>In a scratch repository, create a conflict between two branches,
+resolve it by rebasing, and push with
+<code>--force-with-lease</code>.</li>
+<li>Use <code>git rebase -i</code> to squash fixup commits and reword
+messages into conventional commits.</li>
+<li>"Lose" a commit with <code>git reset --hard</code>, then recover it
+with <code>git reflog</code>.</li>
+<li>Use <code>git bisect</code> to find the commit that broke a test in
+a prepared repository.</li>
+<li>Configure branch protection on your capstone's <code>main</code> as
+in section 7, and prove a direct push is rejected.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Commit, SHA, branch, <code>HEAD</code>, working tree, staging area,
+remote, <code>origin/main</code>, fetch, pull, trunk-based development,
+feature branch, feature flag, Gitflow, Conventional Commits, merge
+commit, rebase, interactive rebase, squash, fast-forward,
+<code>--force-with-lease</code>, merge conflict, <code>revert</code>,
+<code>reset</code>, <code>reflog</code>, <code>bisect</code>, branch
+protection, ruleset, required status check, CODEOWNERS, signed commit,
+<code>.gitattributes</code>.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a href="https://git-scm.com/book/en/v2">Pro Git book (free,
+official)</a></li>
+<li><a
+href="https://www.atlassian.com/git/tutorials/merging-vs-rebasing">Atlassian
+Git tutorials: Merging vs. rebasing</a></li>
+<li><a href="https://trunkbaseddevelopment.com/">Trunk Based
+Development</a></li>
+<li><a
+href="https://www.conventionalcommits.org/en/v1.0.0/">Conventional
+Commits 1.0.0</a></li>
+<li><a
+href="https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches">GitHub
+Docs: About protected branches</a></li>
+<li><a
+href="https://dora.dev/capabilities/trunk-based-development/">DORA
+research: Trunk-based development capability</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Branching Strategies Explained</h3><p>DevOps &amp; AI Toolkit · 18 min. Git branching strategies compared: GitFlow, GitHub flow, trunk-based.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/U_IFGpJDbeU" title="Branching Strategies Explained" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Git MERGE vs REBASE: Everything You Need to Know</h3><p>ByteByteGo · 5 min. Merge versus rebase, visually, from ByteByteGo.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/0chZFIZLR_0" title="Git MERGE vs REBASE: Everything You Need to Know" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>git rebase - Why, When &amp; How to fix conflicts</h3><p>Philomatics · 10 min. Resolving rebase conflicts step by step.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/DkWDHzmMvyg" title="git rebase - Why, When &amp; How to fix conflicts" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/02-professional-backend/08-git-docker-cicd/8.1-git-branching-prs/README.md">8.1 Git branching, pull requests, rebasing and branch-protection rules</a></p>

@@ -272,7 +272,7 @@ Record, component, compact constructor, canonical constructor, value equality, s
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-23. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
 
 - [Records In Java - Full Tutorial - The Best New Java Feature You're Not Using](https://www.youtube.com/watch?v=gJ9DYC-jswo) · Coding with John · 14 min. Records: what they generate for you and when to use them.
 - [Sealed Classes in Java | Java 17 features](https://www.youtube.com/watch?v=glvYULuaf-k) · Telusko · 10 min. Sealed classes and interfaces: closing a type hierarchy on purpose.

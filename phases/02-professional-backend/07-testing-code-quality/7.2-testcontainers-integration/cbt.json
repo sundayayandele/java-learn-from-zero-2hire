@@ -1,0 +1,99 @@
+{
+  "topic": "7.2",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "All tests pass with H2 in PostgreSQL mode, but the first deployment fails because a Flyway migration uses INSERT ... ON CONFLICT and a JSONB column.",
+      "question": "What change to the test strategy prevents this?",
+      "options": [
+        "Disable Flyway in tests",
+        "Add more unit tests with Mockito",
+        "Write separate migrations for H2 and PostgreSQL",
+        "Run integration tests against the same PostgreSQL version as production using Testcontainers"
+      ],
+      "answer": 3,
+      "explanation": "In-memory databases only approximate PostgreSQL. Running migrations and queries against a real PostgreSQL container catches dialect, constraint and locking differences before production."
+    },
+    {
+      "type": "single",
+      "scenario": "A test configuration declares @Bean @ServiceConnection PostgreSQLContainer postgres().",
+      "question": "What does @ServiceConnection do?",
+      "options": [
+        "It lets Spring Boot derive the DataSource URL, username and password from the running container automatically",
+        "It creates a production database connection pool",
+        "It mocks the database so no container is needed",
+        "It disables Flyway migrations"
+      ],
+      "answer": 0,
+      "explanation": "Spring Boot creates connection details from the container, replacing manual @DynamicPropertySource wiring."
+    },
+    {
+      "type": "single",
+      "scenario": "A concurrency test runs 50 parallel transfers on virtual threads and then checks total balances. The test class is annotated with @Transactional.",
+      "question": "Why is this test unreliable?",
+      "options": [
+        "Testcontainers does not support transactions",
+        "The test's transaction is rolled back and does not cover work done in other threads' transactions, so commits, locks and visibility do not behave as in production",
+        "Virtual threads cannot use JDBC",
+        "@Transactional makes tests run sequentially"
+      ],
+      "answer": 1,
+      "explanation": "Test-managed rollback suits simple repository tests. Concurrency and transaction-boundary tests must let real transactions commit, with independent data or clean-up instead."
+    },
+    {
+      "type": "single",
+      "scenario": "An integration test publishes a TransferCompleted event and then calls Thread.sleep(3000) before asserting that the listener received it. It fails intermittently on CI.",
+      "question": "What is the better approach?",
+      "options": [
+        "Run the test only locally",
+        "Increase the sleep to 30 seconds",
+        "Use Awaitility to poll for the condition with a timeout (for example up to 10 seconds)",
+        "Remove the assertion"
+      ],
+      "answer": 2,
+      "explanation": "Fixed sleeps are either too short (flaky) or too long (slow). Polling until the condition holds, with an upper bound, is both fast and reliable."
+    },
+    {
+      "type": "multi",
+      "scenario": "Developers complain that mvn test now takes six minutes because of Testcontainers tests.",
+      "question": "Which changes help? (Choose two.)",
+      "options": [
+        "Start a new container in every test method",
+        "Use one shared test configuration so Spring's context cache reuses the same containers across classes",
+        "Name integration tests *IT and run them with the Failsafe plugin in mvn verify, keeping mvn test for fast unit tests",
+        "Replace every container with H2"
+      ],
+      "answer": [
+        1,
+        2
+      ],
+      "explanation": "Separating phases keeps the inner loop fast, and sharing the context and containers avoids repeated start-up. Per-test containers are slow; H2 reintroduces dialect bugs."
+    },
+    {
+      "type": "single",
+      "scenario": "Several test classes each declare different @MockitoBean fields while also importing the shared Testcontainers configuration. The suite starts many Spring contexts.",
+      "question": "Why does this happen?",
+      "options": [
+        "Spring caches only one context per JVM",
+        "Testcontainers forces a new context per class",
+        "@MockitoBean always disables caching",
+        "Each distinct combination of mock beans changes the context configuration, so Spring cannot reuse the cached context"
+      ],
+      "answer": 3,
+      "explanation": "The context cache key includes bean overrides. Standardising them (or moving mocks into a shared configuration) lets classes share one context and one set of containers."
+    },
+    {
+      "type": "single",
+      "scenario": "Production runs PostgreSQL 17. A colleague uses postgres:latest in the test container.",
+      "question": "What is the risk?",
+      "options": [
+        "Tests may silently run on a different major version from production; pin the same version tag",
+        "There is no risk; newer is always better",
+        "Testcontainers rejects the latest tag",
+        "The tests will run faster but less securely"
+      ],
+      "answer": 0,
+      "explanation": "Tests should mirror production. A floating tag can change behaviour, defaults or extensions without any change in your code."
+    }
+  ]
+}

@@ -285,7 +285,7 @@
       "slug": "02-professional-backend",
       "title": "Professional Backend",
       "weeks": "14-24",
-      "status": "planned",
+      "status": "built",
       "summary": "API design, security, testing, Git, Docker, CI/CD and AI-assisted engineering. Ends with your junior portfolio and interview prep.",
       "modules": [
         {
@@ -296,23 +296,38 @@
           "topics": [
             {
               "id": "5.1",
-              "title": "Resource design, HTTP semantics and status codes"
+              "slug": "5.1-resource-design-http",
+              "title": "Resource design, HTTP semantics and status codes",
+              "week": 14,
+              "covers": "REST resource modelling, HTTP methods, safety and idempotency, status codes, caching headers"
             },
             {
               "id": "5.2",
-              "title": "OpenAPI/Swagger documentation and API versioning"
+              "slug": "5.2-openapi-versioning",
+              "title": "OpenAPI/Swagger documentation and API versioning",
+              "week": 14,
+              "covers": "OpenAPI 3.1 with springdoc, contract-first vs code-first, API versioning strategies, deprecation"
             },
             {
               "id": "5.3",
-              "title": "Standard error responses (Problem Details), pagination, idempotency keys"
+              "slug": "5.3-errors-pagination-idempotency",
+              "title": "Standard error responses (Problem Details), pagination, idempotency keys",
+              "week": 15,
+              "covers": "RFC 9457 Problem Details catalogues, offset and cursor pagination, Idempotency-Key handling"
             },
             {
               "id": "5.4",
-              "title": "Consuming third-party APIs: timeouts, retries, circuit breakers"
+              "slug": "5.4-consuming-apis-resilience",
+              "title": "Consuming third-party APIs: timeouts, retries, circuit breakers",
+              "week": 15,
+              "covers": "RestClient and HTTP interfaces, timeouts, retries with backoff, circuit breakers, webhooks and signatures"
             },
             {
               "id": "5.5",
-              "title": "Introduction to GraphQL and gRPC, and when to use each"
+              "slug": "5.5-graphql-grpc",
+              "title": "Introduction to GraphQL and gRPC, and when to use each",
+              "week": 16,
+              "covers": "Spring for GraphQL, gRPC with Protocol Buffers, choosing REST vs GraphQL vs gRPC"
             }
           ],
           "projects": [
@@ -330,23 +345,38 @@
           "topics": [
             {
               "id": "6.1",
-              "title": "Spring Security filter chain and configuration"
+              "slug": "6.1-spring-security-filter-chain",
+              "title": "Spring Security filter chain and configuration",
+              "week": 17,
+              "covers": "SecurityFilterChain, authentication vs authorisation, stateless APIs, CORS and CSRF"
             },
             {
               "id": "6.2",
-              "title": "JWT access and refresh tokens, OAuth2 / OpenID Connect login"
+              "slug": "6.2-jwt-oauth2-oidc",
+              "title": "JWT access and refresh tokens, OAuth2 / OpenID Connect login",
+              "week": 17,
+              "covers": "JWT structure and validation, access and refresh tokens, OAuth2 resource server, OIDC login with Keycloak"
             },
             {
               "id": "6.3",
-              "title": "Role-based access control and method security"
+              "slug": "6.3-rbac-method-security",
+              "title": "Role-based access control and method security",
+              "week": 18,
+              "covers": "Roles vs authorities vs scopes, @PreAuthorize, object-level authorisation, multi-tenant checks"
             },
             {
               "id": "6.4",
-              "title": "OWASP Top 10 and how they show up in Java APIs"
+              "slug": "6.4-owasp-top10-java",
+              "title": "OWASP Top 10 and how they show up in Java APIs",
+              "week": 18,
+              "covers": "OWASP Top 10 (2025) and API Security Top 10 in Spring applications"
             },
             {
               "id": "6.5",
-              "title": "Password hashing, secrets management, dependency scanning"
+              "slug": "6.5-passwords-secrets-dependency-scanning",
+              "title": "Password hashing, secrets management, dependency scanning",
+              "week": 18,
+              "covers": "Password hashing with Argon2/BCrypt, secrets managers, SBOMs, OWASP Dependency-Check, Dependabot"
             }
           ],
           "projects": [
@@ -363,23 +393,38 @@
           "topics": [
             {
               "id": "7.1",
-              "title": "Unit testing with JUnit and Mockito; test-driven development"
+              "slug": "7.1-junit-mockito-tdd",
+              "title": "Unit testing with JUnit and Mockito; test-driven development",
+              "week": 19,
+              "covers": "JUnit 5, AssertJ, Mockito, test doubles, red-green-refactor"
             },
             {
               "id": "7.2",
-              "title": "Integration tests with Testcontainers (real Postgres, Kafka, Redis)"
+              "slug": "7.2-testcontainers-integration",
+              "title": "Integration tests with Testcontainers (real Postgres, Kafka, Redis)",
+              "week": 19,
+              "covers": "Testcontainers 2 with PostgreSQL, Redis and Kafka, @ServiceConnection, reusable containers"
             },
             {
               "id": "7.3",
-              "title": "API tests with MockMvc and REST Assured"
+              "slug": "7.3-api-tests-mockmvc-restassured",
+              "title": "API tests with MockMvc and REST Assured",
+              "week": 20,
+              "covers": "MockMvc and MockMvcTester, RestTestClient, REST Assured, contract tests"
             },
             {
               "id": "7.4",
-              "title": "Coverage with JaCoCo and static analysis with SonarQube"
+              "slug": "7.4-jacoco-sonarqube",
+              "title": "Coverage with JaCoCo and static analysis with SonarQube",
+              "week": 20,
+              "covers": "JaCoCo coverage rules, mutation testing with PIT, SonarQube quality gates"
             },
             {
               "id": "7.5",
-              "title": "Code review etiquette and pull-request standards"
+              "slug": "7.5-code-review-pull-requests",
+              "title": "Code review etiquette and pull-request standards",
+              "week": 20,
+              "covers": "Pull-request size and description, review checklists, giving and receiving feedback"
             }
           ],
           "projects": [
@@ -396,23 +441,38 @@
           "topics": [
             {
               "id": "8.1",
-              "title": "Git branching, pull requests, rebasing and branch-protection rules"
+              "slug": "8.1-git-branching-prs",
+              "title": "Git branching, pull requests, rebasing and branch-protection rules",
+              "week": 21,
+              "covers": "Trunk-based development, feature branches, rebase vs merge, conventional commits, branch protection"
             },
             {
               "id": "8.2",
-              "title": "Multi-stage Docker images for Spring Boot; Docker Compose"
+              "slug": "8.2-docker-multistage-compose",
+              "title": "Multi-stage Docker images for Spring Boot; Docker Compose",
+              "week": 21,
+              "covers": "Multi-stage Dockerfiles, layered jars, buildpacks, non-root images, Docker Compose"
             },
             {
               "id": "8.3",
-              "title": "CI/CD with GitHub Actions (build, test, scan, publish image), plus GitLab CI"
+              "slug": "8.3-ci-cd-github-actions-gitlab",
+              "title": "CI/CD with GitHub Actions (build, test, scan, publish image), plus GitLab CI",
+              "week": 22,
+              "covers": "GitHub Actions workflows, caching, matrix builds, image publishing, security scans, GitLab CI"
             },
             {
               "id": "8.4",
-              "title": "Overview of Jenkins and Azure DevOps pipelines used in enterprises"
+              "slug": "8.4-jenkins-azure-devops",
+              "title": "Overview of Jenkins and Azure DevOps pipelines used in enterprises",
+              "week": 22,
+              "covers": "Declarative Jenkins pipelines and Azure Pipelines YAML in enterprise settings"
             },
             {
               "id": "8.5",
-              "title": "Deploying a container to a cloud host"
+              "slug": "8.5-deploying-containers-cloud",
+              "title": "Deploying a container to a cloud host",
+              "week": 22,
+              "covers": "Deploying containers to a VPS, AWS, Azure and GCP; rollbacks and zero-downtime deploys"
             }
           ],
           "projects": [
@@ -429,23 +489,38 @@
           "topics": [
             {
               "id": "9.1",
-              "title": "Daily workflows with AI coding assistants (GitHub Copilot, Claude Code, Cursor and similar)"
+              "slug": "9.1-ai-coding-assistants",
+              "title": "Daily workflows with AI coding assistants (GitHub Copilot, Claude Code, Cursor and similar)",
+              "week": 23,
+              "covers": "Working effectively with GitHub Copilot, Claude Code, Cursor and similar tools"
             },
             {
               "id": "9.2",
-              "title": "Reviewing AI-generated code for bugs, security issues and licence risk"
+              "slug": "9.2-reviewing-ai-generated-code",
+              "title": "Reviewing AI-generated code for bugs, security issues and licence risk",
+              "week": 23,
+              "covers": "Reviewing AI output for correctness, security, licensing and maintainability"
             },
             {
               "id": "9.3",
-              "title": "Using AI to write tests, docs and refactors without losing understanding"
+              "slug": "9.3-ai-tests-docs-refactors",
+              "title": "Using AI to write tests, docs and refactors without losing understanding",
+              "week": 23,
+              "covers": "Using AI for tests, documentation and refactoring while keeping understanding"
             },
             {
               "id": "9.4",
-              "title": "CV, GitHub profile and LinkedIn optimisation for Java roles"
+              "slug": "9.4-cv-github-linkedin",
+              "title": "CV, GitHub profile and LinkedIn optimisation for Java roles",
+              "week": 24,
+              "covers": "CV, GitHub profile and LinkedIn for junior Java roles"
             },
             {
               "id": "9.5",
-              "title": "Junior interview prep: core Java, Spring, SQL and live coding"
+              "slug": "9.5-junior-interview-prep",
+              "title": "Junior interview prep: core Java, Spring, SQL and live coding",
+              "week": 24,
+              "covers": "Core Java, Spring and SQL interview questions and live-coding practice"
             }
           ],
           "projects": [

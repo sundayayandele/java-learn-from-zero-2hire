@@ -1,0 +1,332 @@
+<p><em>Week 17 · Module 6: Security Essentials</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Explain <strong>authentication</strong> versus
+<strong>authorisation</strong>, and where each happens in a Spring
+application.</li>
+<li>Describe how a request travels through Spring Security's
+<strong>filter chain</strong> to your controller.</li>
+<li>Configure a <strong><code>SecurityFilterChain</code></strong> bean
+for a stateless REST API: public and protected paths, sessions, CSRF,
+CORS and security headers.</li>
+<li>Return proper <strong>401</strong> and <strong>403</strong> Problem
+Details responses.</li>
+<li>Write tests that prove an endpoint is protected.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Every banking API is protected, and most security incidents in APIs
+are configuration mistakes, not broken cryptography: an endpoint
+accidentally left public, an admin path matched by the wrong pattern,
+CORS opened to every origin, CSRF disabled on a cookie-based web app.
+Spring Security is the default for Java in banks, and it is powerful but
+easy to misconfigure if you do not understand the filter chain.
+Interviewers ask you to explain it; auditors and penetration testers
+will find your mistakes if you cannot.</p>
+<h2 id="1-authentication-and-authorisation">1. Authentication and
+authorisation</h2>
+<ul>
+<li><strong>Authentication</strong>: <em>who are you?</em> Proving
+identity with a password, a token, a client certificate or an API key.
+Failure gives <strong>401 Unauthorized</strong> (the name is historical;
+it means "unauthenticated").</li>
+<li><strong>Authorisation</strong>: <em>what may you do?</em> Checking
+roles, scopes and ownership. Failure gives <strong>403
+Forbidden</strong>.</li>
+</ul>
+<p>Spring Security stores the result of authentication in the
+<strong><code>SecurityContext</code></strong> (per request, usually
+thread-bound): an <code>Authentication</code> object with the
+<strong>principal</strong> (the user or client),
+<strong>credentials</strong>, and <strong>granted authorities</strong>
+(roles and scopes).</p>
+<h2 id="2-the-filter-chain">2. The filter chain</h2>
+<p>Before a request reaches the <code>DispatcherServlet</code>, it
+passes through servlet <strong>filters</strong>. Spring Security adds
+one filter, <code>DelegatingFilterProxy</code>, which hands the request
+to a <code>FilterChainProxy</code>, which picks the first matching
+<strong><code>SecurityFilterChain</code></strong> and runs its security
+filters in order. Simplified:</p>
+<pre><code>HTTP request
+  → CorsFilter                    (pre-flight and CORS headers)
+  → CsrfFilter                    (state-changing requests in browser sessions)
+  → LogoutFilter
+  → BearerTokenAuthenticationFilter / UsernamePasswordAuthenticationFilter / BasicAuthenticationFilter
+  → RequestCacheAwareFilter, SecurityContextHolderAwareRequestFilter
+  → AnonymousAuthenticationFilter (no credentials? become &quot;anonymous&quot;)
+  → ExceptionTranslationFilter    (turns security exceptions into 401/403)
+  → AuthorizationFilter           (checks the rules for this URL)
+  → DispatcherServlet → your @RestController</code></pre>
+<p>Key ideas:</p>
+<ul>
+<li><strong>Authentication filters</strong> extract credentials and ask
+an <code>AuthenticationManager</code> (via
+<code>AuthenticationProvider</code>s) to verify them. On success, the
+<code>SecurityContext</code> is populated.</li>
+<li><strong><code>AuthorizationFilter</code></strong> applies the rules
+you configure for URLs. Method-level rules (<code>@PreAuthorize</code>)
+run later, around your beans (topic 6.3).</li>
+<li><strong><code>ExceptionTranslationFilter</code></strong> catches
+<code>AuthenticationException</code> (→ the
+<code>AuthenticationEntryPoint</code>, usually 401) and
+<code>AccessDeniedException</code> (→ the
+<code>AccessDeniedHandler</code>, 403).</li>
+</ul>
+<p>Turn on <code>logging.level.org.springframework.security=TRACE</code>
+once in development to watch a request go through every filter. It is
+the fastest way to understand what your configuration actually does.</p>
+<h2 id="3-a-stateless-api-configuration">3. A stateless API
+configuration</h2>
+<p>Add <code>spring-boot-starter-security</code>. With nothing else
+configured, Spring Boot protects everything with HTTP Basic and a
+generated password. Replace that with your own
+<code>SecurityFilterChain</code>:</p>
+<pre class="java"><code>@Configuration
+@EnableWebSecurity
+class SecurityConfig {
+
+    @Bean
+    SecurityFilterChain api(HttpSecurity http, ProblemDetailsAuthHandlers problems) throws Exception {
+        http
+            .securityMatcher(&quot;/api/**&quot;)
+            .authorizeHttpRequests(auth -&gt; auth
+                .requestMatchers(HttpMethod.GET, &quot;/api/v1/banks&quot;, &quot;/api/v1/fx-rates/**&quot;).permitAll()
+                .requestMatchers(&quot;/api/v1/admin/**&quot;).hasRole(&quot;ADMIN&quot;)
+                .requestMatchers(HttpMethod.POST, &quot;/api/v1/transfers&quot;).hasAuthority(&quot;SCOPE_transfers:write&quot;)
+                .anyRequest().authenticated())
+            .oauth2ResourceServer(oauth -&gt; oauth.jwt(Customizer.withDefaults()))   // topic 6.2
+            .sessionManagement(s -&gt; s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .csrf(csrf -&gt; csrf.disable())                 // safe ONLY because we use bearer tokens, not cookies
+            .cors(Customizer.withDefaults())
+            .exceptionHandling(e -&gt; e
+                .authenticationEntryPoint(problems)       // 401 as application/problem+json
+                .accessDeniedHandler(problems));          // 403 as application/problem+json
+        return http.build();
+    }
+
+    @Bean
+    SecurityFilterChain actuator(HttpSecurity http) throws Exception {
+        http
+            .securityMatcher(EndpointRequest.toAnyEndpoint())
+            .authorizeHttpRequests(auth -&gt; auth
+                .requestMatchers(EndpointRequest.to(&quot;health&quot;, &quot;info&quot;)).permitAll()
+                .anyRequest().hasRole(&quot;OPS&quot;))
+            .httpBasic(Customizer.withDefaults());
+        return http.build();
+    }
+}</code></pre>
+<p>Important details:</p>
+<ul>
+<li><strong>Rules are evaluated in order; the first match wins.</strong>
+Put specific rules before general ones and finish with
+<code>anyRequest()</code>. A <code>permitAll()</code> placed above
+<code>/api/v1/admin/**</code> with a broader pattern silently opens your
+admin API.</li>
+<li><strong>Deny by default.</strong> End with
+<code>.anyRequest().authenticated()</code> (or <code>denyAll()</code>),
+so a new endpoint is protected even if you forget it.</li>
+<li><code>hasRole("ADMIN")</code> checks for the authority
+<code>ROLE_ADMIN</code>;
+<code>hasAuthority("SCOPE_transfers:write")</code> checks the exact
+string. Topic 6.3 explains roles, authorities and scopes.</li>
+<li>Multiple <code>SecurityFilterChain</code> beans are matched by their
+<code>securityMatcher</code>, so the API and Actuator can use different
+mechanisms.</li>
+</ul>
+<h3 id="stateless-sessions">Stateless sessions</h3>
+<p>A REST API with bearer tokens should not create HTTP sessions: every
+request carries its own credentials.
+<code>SessionCreationPolicy.STATELESS</code> stops Spring Security from
+creating them, which also makes horizontal scaling simple.</p>
+<h3 id="csrf-when-it-is-safe-to-disable">CSRF: when it is safe to
+disable</h3>
+<p><strong>Cross-site request forgery</strong> tricks a logged-in user's
+browser into sending a request your server trusts <strong>because of
+cookies the browser attaches automatically</strong>. Defences: CSRF
+tokens, <code>SameSite</code> cookies.</p>
+<ul>
+<li>APIs authenticated with an <code>Authorization: Bearer ...</code>
+header are not vulnerable in this way, because browsers do not attach
+that header to cross-site requests on their own. Disabling CSRF for such
+APIs is standard.</li>
+<li>Web applications that log users in with a <strong>session
+cookie</strong> (Thymeleaf back-office apps, <code>oauth2Login</code>)
+<strong>must keep CSRF protection on</strong>.</li>
+</ul>
+<h3 id="cors">CORS</h3>
+<p>Browsers block JavaScript on <code>https://app.examplebank.ng</code>
+from reading responses from <code>https://api.examplebank.ng</code>
+unless the API allows it. Allow exactly the origins you need:</p>
+<pre class="java"><code>@Bean
+CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration cors = new CorsConfiguration();
+    cors.setAllowedOrigins(List.of(&quot;https://app.examplebank.ng&quot;, &quot;https://admin.examplebank.ng&quot;));
+    cors.setAllowedMethods(List.of(&quot;GET&quot;, &quot;POST&quot;, &quot;PATCH&quot;, &quot;DELETE&quot;));
+    cors.setAllowedHeaders(List.of(&quot;Authorization&quot;, &quot;Content-Type&quot;, &quot;Idempotency-Key&quot;, &quot;API-Version&quot;));
+    cors.setMaxAge(3600L);
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration(&quot;/api/**&quot;, cors);
+    return source;
+}</code></pre>
+<p>Never combine <code>allowedOrigins("*")</code> with credentials, and
+never reflect whatever <code>Origin</code> the request sends. CORS is a
+browser feature, not access control: it does not stop <code>curl</code>
+or a server from calling you.</p>
+<h3 id="security-headers">Security headers</h3>
+<p>Spring Security adds sensible headers by default:
+<code>X-Content-Type-Options: nosniff</code>,
+<code>X-Frame-Options: DENY</code>,
+<code>Cache-Control: no-cache, no-store</code> for authenticated
+responses, and <code>Strict-Transport-Security</code> over HTTPS. Keep
+them; add a <code>Content-Security-Policy</code> for any HTML you
+serve.</p>
+<h2 id="4-401-and-403-as-problem-details">4. 401 and 403 as Problem
+Details</h2>
+<p>The default 401 response is an empty body with
+<code>WWW-Authenticate</code>. Give clients the same error format as the
+rest of the API:</p>
+<pre class="java"><code>@Component
+class ProblemDetailsAuthHandlers implements AuthenticationEntryPoint, AccessDeniedHandler {
+
+    private final JsonMapper json;
+
+    ProblemDetailsAuthHandlers(JsonMapper json) { this.json = json; }
+
+    @Override
+    public void commence(HttpServletRequest req, HttpServletResponse res, AuthenticationException ex) throws IOException {
+        res.setHeader(HttpHeaders.WWW_AUTHENTICATE, &quot;Bearer&quot;);
+        write(res, HttpStatus.UNAUTHORIZED, &quot;unauthenticated&quot;, &quot;A valid access token is required.&quot;);
+    }
+
+    @Override
+    public void handle(HttpServletRequest req, HttpServletResponse res, AccessDeniedException ex) throws IOException {
+        write(res, HttpStatus.FORBIDDEN, &quot;forbidden&quot;, &quot;You do not have permission for this operation.&quot;);
+    }
+
+    private void write(HttpServletResponse res, HttpStatus status, String type, String detail) throws IOException {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(status, detail);
+        pd.setType(URI.create(&quot;https://api.examplebank.ng/problems/&quot; + type));
+        res.setStatus(status.value());
+        res.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
+        json.writeValue(res.getOutputStream(), pd);
+    }
+}</code></pre>
+<p>Do not say <em>why</em> authentication failed ("token expired" versus
+"user does not exist") in ways that help attackers; log the reason
+server-side instead.</p>
+<h2 id="5-accessing-the-current-user">5. Accessing the current user</h2>
+<p>In a controller:</p>
+<pre class="java"><code>@GetMapping(&quot;/api/v1/me&quot;)
+CustomerProfile me(@AuthenticationPrincipal Jwt jwt) {
+    return profiles.forCustomer(jwt.getSubject());
+}</code></pre>
+<p>In a service,
+<code>SecurityContextHolder.getContext().getAuthentication()</code>.
+Prefer passing the identity as a parameter from the controller so
+services stay easy to test. Remember that the context is thread-bound:
+work you hand to another thread (an executor, <code>@Async</code>) needs
+the context propagated, for example with
+<code>DelegatingSecurityContextExecutor</code>.</p>
+<h2 id="6-testing-security">6. Testing security</h2>
+<p>Add <code>spring-boot-starter-security-test</code>, then test that
+protection actually works:</p>
+<pre class="java"><code>@WebMvcTest(TransferController.class)
+@Import(SecurityConfig.class)
+class TransferSecurityTest {
+
+    @Autowired MockMvc mvc;
+    @MockitoBean TransferService transfers;
+
+    @Test
+    void anonymousIsRejected() throws Exception {
+        mvc.perform(post(&quot;/api/v1/transfers&quot;).contentType(APPLICATION_JSON).content(validBody()))
+           .andExpect(status().isUnauthorized())
+           .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON));
+    }
+
+    @Test
+    void tokenWithoutWriteScopeIsForbidden() throws Exception {
+        mvc.perform(post(&quot;/api/v1/transfers&quot;).with(jwt().authorities(new SimpleGrantedAuthority(&quot;SCOPE_transfers:read&quot;)))
+                .contentType(APPLICATION_JSON).content(validBody()))
+           .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void tokenWithWriteScopeIsAllowed() throws Exception {
+        mvc.perform(post(&quot;/api/v1/transfers&quot;).with(jwt().authorities(new SimpleGrantedAuthority(&quot;SCOPE_transfers:write&quot;)))
+                .contentType(APPLICATION_JSON).content(validBody()))
+           .andExpect(status().isCreated());
+    }
+}</code></pre>
+<p><code>jwt()</code> (from
+<code>SecurityMockMvcRequestPostProcessors</code>) creates an
+authenticated JWT principal without a real identity provider. For
+non-JWT tests, <code>@WithMockUser(roles = "ADMIN")</code> does the same
+for a username.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Relying on the order of rules without understanding "first match
+wins".</li>
+<li><code>.anyRequest().permitAll()</code> at the end "for now".</li>
+<li>Disabling CSRF on a cookie-session web application because a
+tutorial for APIs did it.</li>
+<li><code>allowedOrigins("*")</code> or reflecting the request's
+<code>Origin</code>.</li>
+<li>Creating sessions for a token-based API.</li>
+<li>Writing a custom authentication filter that parses tokens by hand
+instead of using the resource-server support.</li>
+<li>No tests for 401 and 403 cases.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Add Spring Security to a Phase 1 capstone and write a
+<code>SecurityFilterChain</code> with public reference data, an admin
+area, and everything else authenticated. Log at <code>TRACE</code> and
+read the filter list for one request.</li>
+<li>Add a second chain for Actuator with HTTP Basic for an
+<code>OPS</code> role, keeping <code>health</code> public.</li>
+<li>Implement Problem Details for 401 and 403 and test both.</li>
+<li>Configure CORS for one front-end origin; test with
+<code>curl -H "Origin: https://evil.example" -X OPTIONS ...</code> that
+a foreign origin gets no <code>Access-Control-Allow-Origin</code>.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Authentication, authorisation, principal, credentials,
+<code>Authentication</code>, <code>GrantedAuthority</code>,
+<code>SecurityContext</code>, <code>SecurityContextHolder</code>,
+<code>DelegatingFilterProxy</code>, <code>FilterChainProxy</code>,
+<code>SecurityFilterChain</code>, <code>securityMatcher</code>,
+<code>authorizeHttpRequests</code>, <code>AuthenticationManager</code>,
+<code>AuthenticationProvider</code>,
+<code>ExceptionTranslationFilter</code>,
+<code>AuthenticationEntryPoint</code>, <code>AccessDeniedHandler</code>,
+stateless session, CSRF, CORS, pre-flight request, security headers,
+<code>@WithMockUser</code>, <code>jwt()</code> request
+post-processor.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://docs.spring.io/spring-security/reference/servlet/architecture.html">Spring
+Security reference: Servlet architecture</a></li>
+<li><a
+href="https://docs.spring.io/spring-security/reference/servlet/authorization/authorize-http-requests.html">Spring
+Security reference: Authorize HTTP requests</a></li>
+<li><a
+href="https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html">Spring
+Security reference: CSRF</a></li>
+<li><a
+href="https://docs.spring.io/spring-security/reference/servlet/integrations/cors.html">Spring
+Security reference: CORS</a></li>
+<li><a
+href="https://docs.spring.io/spring-security/reference/servlet/test/index.html">Spring
+Security reference: Testing</a></li>
+<li><a
+href="https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html">OWASP
+Cheat Sheet: Cross-Site Request Forgery Prevention</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Spring Security Architecture Explained</h3><p>Amigoscode · 15 min. Spring Security architecture: filters, authentication manager and providers.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/h-9vhFeM3MY" title="Spring Security Architecture Explained" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Spring Security Filter Chain Explained in 3 Minutes</h3><p>Sergey Tech · 3 min. The security filter chain in three minutes.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/lRQTqKSSiFs" title="Spring Security Filter Chain Explained in 3 Minutes" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Advanced Spring Security - How to create multiple Spring Security Configurations</h3><p>Dan Vega · 24 min. Multiple SecurityFilterChain beans for API and admin paths.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/PczgM2L3w60" title="Advanced Spring Security - How to create multiple Spring Security Configurations" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/02-professional-backend/06-security-essentials/6.1-spring-security-filter-chain/README.md">6.1 Spring Security filter chain and configuration</a></p>

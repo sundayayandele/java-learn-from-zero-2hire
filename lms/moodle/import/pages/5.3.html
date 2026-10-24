@@ -1,0 +1,311 @@
+<p><em>Week 15 · Module 5: API Design &amp; Integration</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Design an <strong>error catalogue</strong> with RFC 9457 Problem
+Details: stable <code>type</code> URIs, titles, extension fields and
+correlation IDs.</li>
+<li>Implement <strong>offset</strong> and <strong>cursor
+(keyset)</strong> pagination, and explain when each is appropriate.</li>
+<li>Make <code>POST</code> operations safely retryable with an
+<strong><code>Idempotency-Key</code></strong>, including concurrent
+duplicates and payload mismatches.</li>
+<li>Add <strong>rate limiting</strong> responses (<code>429</code> with
+<code>Retry-After</code>) that clients can handle.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Errors, pages and retries are where integrations break in production.
+A partner's code can only handle errors it can recognise, so "Something
+went wrong" in a different shape from every endpoint becomes a support
+ticket. A statement endpoint that uses <code>OFFSET 900000</code> will
+time out for a corporate customer with a million transactions. And
+without idempotency, a mobile network blip during "Send" becomes a
+double debit and a regulatory complaint. Every major payment API
+(Stripe, Paystack, Adyen, open-banking standards) solves these three
+problems in similar ways; this lesson teaches you those ways.</p>
+<h2 id="1-problem-details-as-an-error-contract">1. Problem Details as an
+error contract</h2>
+<p>RFC 9457 defines <code>application/problem+json</code>:</p>
+<pre class="json"><code>{
+  &quot;type&quot;: &quot;https://api.examplebank.ng/problems/insufficient-funds&quot;,
+  &quot;title&quot;: &quot;Insufficient funds&quot;,
+  &quot;status&quot;: 422,
+  &quot;detail&quot;: &quot;Available balance 1,250.00 NGN is less than 2,500.00 NGN.&quot;,
+  &quot;instance&quot;: &quot;/api/v1/transfers&quot;,
+  &quot;code&quot;: &quot;TRF-001&quot;,
+  &quot;traceId&quot;: &quot;4bf92f3577b34da6a3ce929d0e0e4736&quot;,
+  &quot;availableBalance&quot;: &quot;1250.00&quot;,
+  &quot;currency&quot;: &quot;NGN&quot;
+}</code></pre>
+<ul>
+<li><strong><code>type</code></strong> is the stable, documented
+identifier clients branch on. Never change it; never make clients parse
+<code>detail</code>.</li>
+<li><strong><code>title</code></strong> is a short, constant summary for
+that type. <strong><code>detail</code></strong> is specific to this
+occurrence and safe to show users.</li>
+<li><strong>Extension members</strong> (<code>code</code>,
+<code>traceId</code>, <code>availableBalance</code>) carry
+machine-readable context.</li>
+<li>No stack traces, SQL, class names or internal hostnames, ever.</li>
+</ul>
+<p>Publish the catalogue in your API docs:</p>
+<table>
+<thead>
+<tr>
+<th><code>type</code> suffix</th>
+<th>Status</th>
+<th>When</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>validation-failed</code></td>
+<td>400</td>
+<td>Field errors (with an <code>errors</code> array)</td>
+</tr>
+<tr>
+<td><code>unauthenticated</code></td>
+<td>401</td>
+<td>Missing or invalid token</td>
+</tr>
+<tr>
+<td><code>forbidden</code></td>
+<td>403</td>
+<td>Not allowed</td>
+</tr>
+<tr>
+<td><code>not-found</code></td>
+<td>404</td>
+<td>Unknown or hidden resource</td>
+</tr>
+<tr>
+<td><code>duplicate-reference</code> /
+<code>idempotency-key-reused</code></td>
+<td>409 / 422</td>
+<td>Conflicts</td>
+</tr>
+<tr>
+<td><code>insufficient-funds</code>, <code>limit-exceeded</code>,
+<code>account-frozen</code></td>
+<td>422</td>
+<td>Business rules</td>
+</tr>
+<tr>
+<td><code>rate-limited</code></td>
+<td>429</td>
+<td>Too many requests</td>
+</tr>
+<tr>
+<td><code>upstream-unavailable</code></td>
+<td>503</td>
+<td>A dependency (switch, gateway) is down</td>
+</tr>
+</tbody>
+</table>
+<h3 id="implementing-it-in-spring">Implementing it in Spring</h3>
+<p>Spring Boot can render framework errors as Problem Details
+(<code>spring.mvc.problemdetails.enabled=true</code>). For your own
+exceptions, one advice class keeps the catalogue in one place:</p>
+<pre class="java"><code>@RestControllerAdvice
+class ApiExceptionHandler extends ResponseEntityExceptionHandler {
+
+    private static final URI BASE = URI.create(&quot;https://api.examplebank.ng/problems/&quot;);
+
+    @ExceptionHandler(InsufficientFundsException.class)
+    ProblemDetail insufficientFunds(InsufficientFundsException ex) {
+        ProblemDetail pd = problem(HttpStatus.UNPROCESSABLE_CONTENT, &quot;insufficient-funds&quot;, &quot;Insufficient funds&quot;,
+                &quot;Available balance is less than the transfer amount.&quot;);
+        pd.setProperty(&quot;code&quot;, &quot;TRF-001&quot;);
+        pd.setProperty(&quot;availableBalance&quot;, ex.available().toPlainString());
+        return pd;
+    }
+
+    @ExceptionHandler(UpstreamUnavailableException.class)
+    ResponseEntity&lt;ProblemDetail&gt; upstream(UpstreamUnavailableException ex) {
+        ProblemDetail pd = problem(HttpStatus.SERVICE_UNAVAILABLE, &quot;upstream-unavailable&quot;,
+                &quot;Payment provider unavailable&quot;, &quot;Please try again shortly.&quot;);
+        return ResponseEntity.status(503).header(HttpHeaders.RETRY_AFTER, &quot;30&quot;).body(pd);
+    }
+
+    private ProblemDetail problem(HttpStatus status, String type, String title, String detail) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(status, detail);
+        pd.setType(BASE.resolve(type));
+        pd.setTitle(title);
+        pd.setProperty(&quot;traceId&quot;, MDC.get(&quot;traceId&quot;));   // ties the response to your logs
+        return pd;
+    }
+}</code></pre>
+<p>The <code>traceId</code> lets support staff find the exact log lines
+when a customer quotes it. Phase 3 replaces the MDC value with an
+OpenTelemetry trace ID.</p>
+<h2 id="2-pagination">2. Pagination</h2>
+<h3 id="offset-pagination">Offset pagination</h3>
+<p><code>GET /api/v1/customers?page=3&amp;size=50</code> maps to
+<code>LIMIT 50 OFFSET 150</code>. Spring Data gives it to you with
+<code>Pageable</code>:</p>
+<pre class="java"><code>@GetMapping
+PageResponse&lt;CustomerSummary&gt; list(@PageableDefault(size = 50, sort = &quot;createdAt&quot;, direction = DESC) Pageable pageable) {
+    Page&lt;CustomerSummary&gt; page = customers.findAllBy(pageable);
+    return PageResponse.from(page);   // content, page, size, totalElements, totalPages
+}</code></pre>
+<p>Good for small or medium tables and admin screens that jump to "page
+7". Two problems at scale:</p>
+<ul>
+<li>The database still reads and discards every skipped row, so
+<code>OFFSET 900000</code> is slow.</li>
+<li>If rows are inserted while the user pages, items shift: some appear
+twice, some never.</li>
+</ul>
+<p>Always cap <code>size</code>
+(<code>spring.data.web.pageable.max-page-size=100</code>) and use an
+allow-list for sort properties.</p>
+<h3 id="cursor-keyset-pagination">Cursor (keyset) pagination</h3>
+<p>For transaction histories, feeds and anything large or constantly
+growing, page by <strong>position</strong>, not by count:</p>
+<pre class="sql"><code>SELECT id, value_date, amount, narration
+FROM   posting
+WHERE  account_id = :account
+  AND  (created_at, id) &lt; (:cursorCreatedAt, :cursorId)   -- strictly after the last item seen
+ORDER  BY created_at DESC, id DESC
+LIMIT  51;                                                -- one extra to know if there is a next page</code></pre>
+<p>With an index on <code>(account_id, created_at DESC, id DESC)</code>
+every page costs the same, however deep. Return an <strong>opaque
+cursor</strong> (Base64 of the last <code>createdAt</code> and
+<code>id</code>, ideally signed so clients cannot tamper with it):</p>
+<pre class="json"><code>{
+  &quot;data&quot;: [ ... 50 items ... ],
+  &quot;nextCursor&quot;: &quot;eyJ0IjoiMjAyNi0xMC0yNFQwOToxNTowMFoiLCJpZCI6OTg3NjV9&quot;,
+  &quot;hasMore&quot;: true
+}</code></pre>
+<p>The client sends <code>?cursor=...&amp;limit=50</code> for the next
+page. The trade-off: no "jump to page 7" and no cheap total count, which
+statement and feed screens rarely need.</p>
+<h2 id="3-idempotency-keys">3. Idempotency keys</h2>
+<p>The client generates a unique key (a UUID) per <strong>logical
+operation</strong> and sends it with the request:</p>
+<pre><code>POST /api/v1/transfers
+Idempotency-Key: 5f8c1d2e-6a8b-4c0e-9b3f-2d7e1a4c9b60</code></pre>
+<p>The server's contract:</p>
+<ol type="1">
+<li><strong>First request with a key</strong>: process it, store the key
+with a fingerprint of the request and the response, and return the
+response.</li>
+<li><strong>Same key, same payload</strong>: do not process again;
+return the <strong>stored</strong> response (same status and body).</li>
+<li><strong>Same key, different payload</strong>: reject with
+<code>422</code> (<code>idempotency-key-reused</code>); the client has a
+bug.</li>
+<li><strong>Same key while the first request is still running</strong>:
+return <code>409 Conflict</code> (or wait), never process twice.</li>
+<li>Keys expire after a retention window (for example 24 hours).</li>
+</ol>
+<p>A PostgreSQL implementation that is safe under concurrency:</p>
+<pre class="sql"><code>CREATE TABLE idempotency_key (
+    key             VARCHAR(64)  PRIMARY KEY,
+    request_hash    CHAR(64)     NOT NULL,           -- SHA-256 of method, path and body
+    status          VARCHAR(16)  NOT NULL,           -- IN_PROGRESS, COMPLETED
+    response_status INT,
+    response_body   JSONB,
+    created_at      TIMESTAMPTZ  NOT NULL DEFAULT now()
+);</code></pre>
+<pre class="java"><code>@Transactional
+public StoredResponse execute(String key, String requestHash, Supplier&lt;StoredResponse&gt; operation) {
+    int inserted = jdbc.sql(&quot;&quot;&quot;
+            INSERT INTO idempotency_key (key, request_hash, status) VALUES (:key, :hash, &#39;IN_PROGRESS&#39;)
+            ON CONFLICT (key) DO NOTHING&quot;&quot;&quot;)
+            .param(&quot;key&quot;, key).param(&quot;hash&quot;, requestHash).update();
+
+    if (inserted == 0) {                                   // someone has used this key before
+        IdempotencyRecord existing = find(key);
+        if (!existing.requestHash().equals(requestHash)) throw new IdempotencyKeyReusedException(key);
+        if (existing.inProgress()) throw new IdempotentRequestInProgressException(key);
+        return existing.response();                        // replay the original result
+    }
+    StoredResponse response = operation.get();             // the real work, in the same transaction
+    complete(key, response);
+    return response;
+}</code></pre>
+<p>The primary key turns a race between two identical requests into a
+clean "one wins, one sees the existing row". Doing the business work and
+recording the response <strong>in the same database transaction</strong>
+means a crash can never leave money moved but the key unrecorded (when
+the work spans systems, such as calling a gateway, record the outcome of
+each step; Phase 3 covers the outbox pattern).</p>
+<p>Idempotency also applies to what you <strong>receive</strong>:
+payment-gateway webhooks are delivered at least once, so de-duplicate
+them by event ID (topic 5.4).</p>
+<h2 id="4-rate-limiting">4. Rate limiting</h2>
+<p>Protect the API and its downstream systems with per-client limits
+(for example 100 requests per minute per API key, 5 login attempts per
+minute per user). When a client exceeds it:</p>
+<pre><code>HTTP/1.1 429 Too Many Requests
+Retry-After: 20
+RateLimit-Policy: 100;w=60
+Content-Type: application/problem+json</code></pre>
+<p>Implement it in an API gateway, or in the service with a token bucket
+(Bucket4j, or Resilience4j's <code>RateLimiter</code>), keyed by client
+ID and stored in Redis when you run several instances.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Every endpoint inventing its own error JSON.</li>
+<li>Clients forced to parse human-readable <code>detail</code>
+text.</li>
+<li>Leaking exception messages
+(<code>could not execute statement; SQL [n/a]; constraint [uk_journal_ref]</code>).</li>
+<li>Unbounded <code>size</code> parameters; <code>OFFSET</code>
+pagination on million-row histories.</li>
+<li>Idempotency keys stored in memory (lost on restart, not shared
+between instances) or checked with a <code>SELECT</code> before an
+<code>INSERT</code> (two concurrent requests both pass the check).</li>
+<li>Treating a key reused with a different payload as a replay.</li>
+<li><code>429</code> without <code>Retry-After</code>.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Write an error catalogue for your capstone (at least eight
+<code>type</code>s) and implement it in one
+<code>@RestControllerAdvice</code>, with tests that assert
+<code>type</code>, <code>status</code> and
+<code>Content-Type: application/problem+json</code>.</li>
+<li>Implement cursor pagination for a transaction history with a signed
+cursor; seed 1 million rows and compare page 1 and page 10,000 timings
+against offset pagination with <code>EXPLAIN ANALYZE</code>.</li>
+<li>Implement <code>Idempotency-Key</code> for
+<code>POST /transfers</code> and test: replay returns the same body; a
+different payload with the same key returns 422; two concurrent requests
+with the same key create one transfer.</li>
+<li>Add a 5-per-minute login rate limit returning <code>429</code> with
+<code>Retry-After</code>.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>RFC 9457, Problem Details, <code>application/problem+json</code>,
+problem <code>type</code>, extension member, error catalogue, trace ID,
+offset pagination, keyset (cursor) pagination, opaque cursor,
+<code>Pageable</code>, idempotency key, request fingerprint, replay,
+at-least-once delivery, rate limiting, token bucket,
+<code>429 Too Many Requests</code>, <code>Retry-After</code>.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a href="https://www.rfc-editor.org/rfc/rfc9457">RFC 9457: Problem
+Details for HTTP APIs</a></li>
+<li><a
+href="https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-ann-rest-exceptions.html">Spring
+Framework reference: Error Responses</a></li>
+<li><a
+href="https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/">IETF
+draft: The Idempotency-Key HTTP Header Field</a></li>
+<li><a href="https://docs.stripe.com/api/idempotent_requests">Stripe API
+reference: Idempotent requests</a></li>
+<li><a href="https://use-the-index-luke.com/no-offset">Use The Index,
+Luke!: Paging through results (keyset pagination)</a></li>
+<li><a
+href="https://docs.spring.io/spring-data/commons/reference/repositories/query-methods-details.html#repositories.special-parameters">Spring
+Data Commons reference: Paging and sorting</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Build a robust Payments service using Idempotency Keys</h3><p>Arpit Bhayani · 17 min. Idempotency keys for payment APIs: why retries must not charge twice.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/m6DtqSb1BDM" title="Build a robust Payments service using Idempotency Keys" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Pagination in MySQL - offset vs. cursor</h3><p>PlanetScale · 13 min. Offset versus cursor pagination and why deep offsets get slow.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/zwDIN04lIpc" title="Pagination in MySQL - offset vs. cursor" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Representing Problem Details in HTTP APIs: An Introduction to RFC 7807</h3><p>Erik Wilde · 22 min. RFC 9457 Problem Details explained by one of its authors.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/UNdUjBqsUqg" title="Representing Problem Details in HTTP APIs: An Introduction to RFC 7807" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/02-professional-backend/05-api-design-integration/5.3-errors-pagination-idempotency/README.md">5.3 Standard error responses (Problem Details), pagination, idempotency keys</a></p>

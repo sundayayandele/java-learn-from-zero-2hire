@@ -1,0 +1,99 @@
+{
+  "topic": "6.4",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A statement endpoint accepts ?sort=value_date and builds \"... ORDER BY \" + sort into a native query. A tester sends sort=(SELECT pg_sleep(10)) and the request takes ten seconds.",
+      "question": "What is the correct fix?",
+      "options": [
+        "Map allowed sort names to known column names with an allow-list and reject anything else",
+        "Catch the timeout and retry",
+        "Pass sort as a bind parameter in the ORDER BY clause",
+        "Escape single quotes in the sort value"
+      ],
+      "answer": 0,
+      "explanation": "Identifiers such as column names cannot be bind parameters, and escaping is not a reliable defence. An allow-list maps user choices to safe, fixed identifiers."
+    },
+    {
+      "type": "single",
+      "scenario": "A merchant portal lets merchants set a 'logo URL' that the server downloads and resizes. A tester sets it to http://169.254.169.254/latest/meta-data/iam/security-credentials/ and receives cloud credentials in the error message.",
+      "question": "What class of vulnerability is this?",
+      "options": [
+        "Clickjacking",
+        "Cross-site scripting",
+        "Cross-site request forgery",
+        "Server-side request forgery (SSRF)"
+      ],
+      "answer": 3,
+      "explanation": "The server was made to request an internal address on the attacker's behalf. Allow-lists, blocking private and link-local ranges after DNS resolution, and IMDSv2 are the defences."
+    },
+    {
+      "type": "single",
+      "scenario": "A production Spring Boot service exposes management.endpoints.web.exposure.include=* on its public port.",
+      "question": "Which endpoint is most dangerous to leave exposed?",
+      "options": [
+        "/actuator/prometheus",
+        "/actuator/info",
+        "/actuator/health",
+        "/actuator/heapdump, which can contain secrets, tokens and customer data from memory"
+      ],
+      "answer": 3,
+      "explanation": "A heap dump is a copy of the JVM's memory, including credentials and personal data. Expose only what you need, on a protected port."
+    },
+    {
+      "type": "single",
+      "scenario": "The OTP verification endpoint for transfers accepts unlimited attempts on a 6-digit code that is valid for 10 minutes.",
+      "question": "Which OWASP risk does this design flaw represent, and what control fixes it?",
+      "options": [
+        "Insecure design / authentication failure: limit attempts per OTP and per user, shorten validity and alert on spikes",
+        "Cryptographic failure: encrypt the OTP in transit",
+        "Injection: use parameterised queries",
+        "Security misconfiguration: hide the endpoint from Swagger UI"
+      ],
+      "answer": 0,
+      "explanation": "One million combinations can be tried quickly without limits. Attempt limits, short expiry and monitoring make brute force impractical."
+    },
+    {
+      "type": "multi",
+      "scenario": "You are reviewing what a payments service writes to its logs.",
+      "question": "Which items must never be logged in full? (Choose two.)",
+      "options": [
+        "The HTTP status code returned",
+        "The trace ID of the request",
+        "Access and refresh tokens",
+        "Card numbers (PAN) and CVV"
+      ],
+      "answer": [
+        2,
+        3
+      ],
+      "explanation": "Card data and tokens give attackers direct value if logs leak, and PCI DSS forbids storing CVV. Trace IDs and status codes are safe and useful."
+    },
+    {
+      "type": "single",
+      "scenario": "An integration parses ISO 20022 XML payment messages from a partner using DocumentBuilderFactory with default settings.",
+      "question": "What should be configured?",
+      "options": [
+        "Convert XML to JSON with string replacement first",
+        "Increase the parser's memory limit",
+        "Nothing: XML from partners is trusted",
+        "Disable DOCTYPE declarations and external entities to prevent XXE"
+      ],
+      "answer": 3,
+      "explanation": "Default Java XML parsers can resolve external entities, letting crafted documents read files or make internal requests. Disallowing DOCTYPEs closes XXE."
+    },
+    {
+      "type": "single",
+      "scenario": "A message-queue consumer reads payloads with ObjectInputStream.readObject() from a topic that partner systems can publish to.",
+      "question": "What is the risk and the better approach?",
+      "options": [
+        "The only risk is slower performance",
+        "There is no risk because the topic is internal",
+        "The risk is solved by compressing the payload",
+        "Insecure deserialisation can lead to remote code execution; use JSON mapped to explicit DTOs (or at minimum a strict serialisation filter)"
+      ],
+      "answer": 3,
+      "explanation": "Java native deserialisation of untrusted data can instantiate gadget chains that run code. Data-only formats with explicit types remove that capability."
+    }
+  ]
+}
