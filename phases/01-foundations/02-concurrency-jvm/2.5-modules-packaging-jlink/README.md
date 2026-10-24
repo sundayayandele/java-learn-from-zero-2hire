@@ -3,7 +3,7 @@
 
 # 2.5 Modules, packaging and runtime images (JPMS, jars, jlink)
 
-← [2.4 The JVM memory model, heap vs stack and garbage collection](../2.4-jvm-memory-gc/README.md) · [Module 2](../README.md) · [Phase 1](../../README.md) · [3.1 Relational design](../../03-databases-sql-nosql/3.1-relational-design-normalisation-joins/README.md) →
+← [2.4 The JVM memory model, heap vs stack and garbage collection](../2.4-jvm-memory-gc/README.md) · [Module 2](../README.md) · [Phase 1](../../README.md) · [2.6 Debugging and troubleshooting](../2.6-debugging-troubleshooting/README.md) →
 
 > **Week 6** · Module 2: Concurrency & the JVM · Website topic covered: *Added for the Oracle OCP Java SE 21/25 exam: packaging and deploying Java code*
 
@@ -300,4 +300,4 @@ What happens with `java Hello.java`?
 
 ---
 
-← [2.4 The JVM memory model, heap vs stack and garbage collection](../2.4-jvm-memory-gc/README.md) · [Module 2](../README.md) · [Phase 1](../../README.md) · [3.1 Relational design](../../03-databases-sql-nosql/3.1-relational-design-normalisation-joins/README.md) →
+← [2.4 The JVM memory model, heap vs stack and garbage collection](../2.4-jvm-memory-gc/README.md) · [Module 2](../README.md) · [Phase 1](../../README.md) · [2.6 Debugging and troubleshooting](../2.6-debugging-troubleshooting/README.md) →

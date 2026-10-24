@@ -14,6 +14,7 @@
 | [5.3 Standard error responses (Problem Details), pagination, idempotency keys](5.3-errors-pagination-idempotency/README.md) | 15 | RFC 9457 Problem Details catalogues, offset and cursor pagination, Idempotency-Key handling |
 | [5.4 Consuming third-party APIs: timeouts, retries, circuit breakers](5.4-consuming-apis-resilience/README.md) | 15 | RestClient and HTTP interfaces, timeouts, retries with backoff, circuit breakers, webhooks and signatures |
 | [5.5 Introduction to GraphQL and gRPC, and when to use each](5.5-graphql-grpc/README.md) | 16 | Spring for GraphQL, gRPC with Protocol Buffers, choosing REST vs GraphQL vs gRPC |
+| [5.6 System design basics for junior interviews](5.6-system-design-basics/README.md) | 16 | Added for interviews: requirements, capacity estimates, load balancers, caching, queues, replicas, consistency trade-offs, and talking through a design |
 
 ## What this module gives you
 
@@ -52,6 +53,10 @@ A merchant backend that takes card and bank-transfer payments through a payment 
 - A `AccountLookup` gRPC service (`GetAccount`, `ResolveAccountName`, server-streaming `ListAccountsByCustomer`) defined in a `.proto` file, implemented with Spring gRPC, backed by PostgreSQL.
 - A REST facade that calls it with a deadline, mapping gRPC status codes (`NOT_FOUND`, `DEADLINE_EXCEEDED`, `UNAVAILABLE`) to Problem Details.
 - **Acceptance:** an in-process gRPC test for each RPC, and a test proving the facade returns 504 when the deadline is exceeded.
+
+### Lab 5.E: Fix a fragile payment integration
+
+A broken-service lab: [Fix a fragile payment integration](../../../labs/05-payment-client-resilience/README.md), five failing tests against a WireMock provider: timeouts, blind retries, idempotency, webhook signatures and leaked errors. Do it alongside the module; it counts as practice, not as the module project, but mentors review it if you submit it with your project.
 
 ## How these projects are assessed
 

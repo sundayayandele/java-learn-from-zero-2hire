@@ -204,6 +204,38 @@ pipeline</h2>
 integration tests (Failsafe) → JaCoCo check → Sonar analysis and quality
 gate → dependency and secret scans → build image. Fast checks first, so
 feedback arrives quickly.</p>
+<h2 id="6-architecture-tests-with-archunit">6. Architecture tests with
+ArchUnit</h2>
+<p>Some rules can't be seen by coverage or by Sonar: "controllers must
+not call repositories directly", "the domain package must not depend on
+Spring", "the decision engine must never import the HMDA analytics
+package" (Phase 2 Capstone 9). <strong>ArchUnit</strong> checks such
+rules as ordinary unit tests:</p>
+<pre class="xml"><code>&lt;dependency&gt;
+    &lt;groupId&gt;com.tngtech.archunit&lt;/groupId&gt;
+    &lt;artifactId&gt;archunit-junit5&lt;/artifactId&gt;
+    &lt;version&gt;1.5.1&lt;/version&gt;
+    &lt;scope&gt;test&lt;/scope&gt;
+&lt;/dependency&gt;</code></pre>
+<pre class="java"><code>@AnalyzeClasses(packages = &quot;ng.itlearning.ledger&quot;)
+class ArchitectureTest {
+
+    @ArchTest
+    static final ArchRule controllersDontUseRepositories = noClasses()
+            .that().resideInAPackage(&quot;..web..&quot;)
+            .should().dependOnClassesThat().resideInAPackage(&quot;..repository..&quot;);
+
+    @ArchTest
+    static final ArchRule domainIsFrameworkFree = noClasses()
+            .that().resideInAPackage(&quot;..domain..&quot;)
+            .should().dependOnClassesThat().resideInAPackage(&quot;org.springframework..&quot;);
+
+    @ArchTest
+    static final ArchRule noFieldInjection = noFields()
+            .should().beAnnotatedWith(org.springframework.beans.factory.annotation.Autowired.class);
+}</code></pre>
+<p>The rules run in milliseconds in every build, so architecture
+decisions in your ADRs are enforced instead of just written down.</p>
 <h2 id="common-mistakes">Common mistakes</h2>
 <ul>
 <li>Chasing 100% coverage with assertion-free tests.</li>
@@ -225,6 +257,8 @@ Cloud), fix all bugs and vulnerabilities, review the hotspots, and
 configure a quality gate on new code.</li>
 <li>Add two ArchUnit rules that describe your intended
 architecture.</li>
+<li>Add ArchUnit to a capstone with three rules from your own ADRs, and
+break one rule deliberately to see the failure message.</li>
 </ol>
 <h2 id="key-terms">Key terms</h2>
 <p>Code coverage, line coverage, branch coverage, JaCoCo,
@@ -232,8 +266,8 @@ architecture.</li>
 new code, mutation testing, PIT, mutant, killed, survived, mutation
 score, static analysis, SonarQube, SonarQube Cloud, bug, vulnerability,
 security hotspot, code smell, technical debt, cognitive complexity,
-duplication, quality gate, Error Prone, Checkstyle, Spotless,
-ArchUnit.</p>
+duplication, quality gate, Error Prone, Checkstyle, Spotless, ArchUnit,
+ArchUnit, architecture rule.</p>
 <h2 id="further-reading">Further reading</h2>
 <ul>
 <li><a href="https://www.jacoco.org/jacoco/trunk/doc/maven.html">JaCoCo

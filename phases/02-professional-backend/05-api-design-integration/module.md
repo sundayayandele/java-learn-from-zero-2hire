@@ -36,6 +36,10 @@ A merchant backend that takes card and bank-transfer payments through a payment 
 - A REST facade that calls it with a deadline, mapping gRPC status codes (`NOT_FOUND`, `DEADLINE_EXCEEDED`, `UNAVAILABLE`) to Problem Details.
 - **Acceptance:** an in-process gRPC test for each RPC, and a test proving the facade returns 504 when the deadline is exceeded.
 
+### Lab 5.E: Fix a fragile payment integration
+
+A broken-service lab: [Fix a fragile payment integration](../../../labs/05-payment-client-resilience/README.md), five failing tests against a WireMock provider: timeouts, blind retries, idempotency, webhook signatures and leaked errors. Do it alongside the module; it counts as practice, not as the module project, but mentors review it if you submit it with your project.
+
 ## How these projects are assessed
 
 | Criterion | Not yet | Competent | Strong |

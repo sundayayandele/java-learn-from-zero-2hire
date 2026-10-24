@@ -151,6 +151,18 @@ class PaymentFlowTests {
     }
 
     @Test
+    void correlationIdIsReturnedAndPassedToTheProvider() throws Exception {
+        mvc.perform(post("/api/v1/payments").with(merchant("m-corr")).header("Idempotency-Key", "k-corr")
+                        .header("X-Correlation-Id", "corr-12345678").contentType(MediaType.APPLICATION_JSON).content(body(10_000, "NGN")))
+                .andExpect(status().isCreated())
+                .andExpect(header().string("X-Correlation-Id", "corr-12345678"));
+        providerA.verify(postRequestedFor(urlEqualTo("/transaction/initialize"))
+                .withHeader("X-Correlation-Id", com.github.tomakehurst.wiremock.client.WireMock.equalTo("corr-12345678")));
+        mvc.perform(get("/api/v1/payments?limit=1").with(merchant("m-corr")).header("X-Correlation-Id", "bad id!"))
+                .andExpect(header().string("X-Correlation-Id", org.hamcrest.Matchers.matchesPattern("[0-9a-f-]{36}")));
+    }
+
+    @Test
     void sameKeyAndPayloadReplaysWithoutCallingTheProviderAgain() throws Exception {
         String key = UUID.randomUUID().toString();
         JsonNode first = create("m1", key, body(70_000, "NGN"));

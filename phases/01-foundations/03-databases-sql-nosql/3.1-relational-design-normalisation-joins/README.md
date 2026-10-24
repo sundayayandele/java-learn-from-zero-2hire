@@ -3,7 +3,7 @@
 
 # 3.1 Relational design: normalisation and joins
 
-← [2.5 Modules, packaging and runtime images (JPMS, jars, jlink)](../../02-concurrency-jvm/2.5-modules-packaging-jlink/README.md) · [Module 3](../README.md) · [Phase 1](../../README.md) · [3.2 Transactions, isolation levels and locking](../3.2-transactions-isolation-locking/README.md) →
+← [2.6 Debugging and troubleshooting](../../02-concurrency-jvm/2.6-debugging-troubleshooting/README.md) · [Module 3](../README.md) · [Phase 1](../../README.md) · [3.2 Transactions, isolation levels and locking](../3.2-transactions-isolation-locking/README.md) →
 
 > **Week 7** · Module 3: Databases: SQL & NoSQL · Website topic covered: *Normalisation, joins*
 
@@ -393,4 +393,4 @@ What should you recommend?
 
 ---
 
-← [2.5 Modules, packaging and runtime images (JPMS, jars, jlink)](../../02-concurrency-jvm/2.5-modules-packaging-jlink/README.md) · [Module 3](../README.md) · [Phase 1](../../README.md) · [3.2 Transactions, isolation levels and locking](../3.2-transactions-isolation-locking/README.md) →
+← [2.6 Debugging and troubleshooting](../../02-concurrency-jvm/2.6-debugging-troubleshooting/README.md) · [Module 3](../README.md) · [Phase 1](../../README.md) · [3.2 Transactions, isolation levels and locking](../3.2-transactions-isolation-locking/README.md) →

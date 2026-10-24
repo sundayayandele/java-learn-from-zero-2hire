@@ -14,6 +14,7 @@
 | [8.3 CI/CD with GitHub Actions (build, test, scan, publish image), plus GitLab CI](8.3-ci-cd-github-actions-gitlab/README.md) | 22 | GitHub Actions workflows, caching, matrix builds, image publishing, security scans, GitLab CI |
 | [8.4 Overview of Jenkins and Azure DevOps pipelines used in enterprises](8.4-jenkins-azure-devops/README.md) | 22 | Declarative Jenkins pipelines and Azure Pipelines YAML in enterprise settings |
 | [8.5 Deploying a container to a cloud host](8.5-deploying-containers-cloud/README.md) | 22 | Deploying containers to a VPS, AWS, Azure and GCP; rollbacks and zero-downtime deploys |
+| [8.6 Working in an agile team: tickets, estimation, stand-ups and bug reports](8.6-agile-teamwork/README.md) | 22 | Added for the job: Scrum and Kanban, user stories and acceptance criteria, estimation, stand-ups, bug reports, definition of done |
 
 ## What this module gives you
 
@@ -30,6 +31,7 @@ This module extends the six-platform CI/CD material from Phase 1 with **quality 
 - Pair with another learner. Protect `main` (required reviews, required status checks, linear history, no force pushes) and add a `CODEOWNERS` file and a pull-request template.
 - Each of you delivers three features to the other's capstone through pull requests: conventional commits, a description with test evidence, at least one requested change addressed.
 - Resolve at least one real merge conflict with a rebase, and write up what happened in `CONTRIBUTING.md`.
+- Run it as a **two-week mini-sprint** (topic 8.6): a shared board (GitHub Projects, Jira or Trello) with at least six tickets written as user stories with acceptance criteria, estimates from planning poker, short async stand-up notes, branches and PRs named after ticket keys, a recorded demo and a one-page retrospective. Submit the board link and the retrospective with the project.
 
 ### Project 8.B: Dockerised Spring Boot and PostgreSQL stack
 
@@ -42,6 +44,10 @@ This module extends the six-platform CI/CD material from Phase 1 with **quality 
 - Jobs: build and unit tests; integration tests (Testcontainers); JaCoCo coverage gate; SonarQube or CodeQL analysis; OWASP Dependency-Check or `dependency-review-action`; Gitleaks secret scan; image build, Trivy scan and push to GHCR tagged by commit SHA; deploy to a staging VPS on `main` with a manual approval for production (GitHub Environments).
 - Mirror the pipeline in GitLab CI (`.gitlab-ci.yml`) with the same stages.
 - **Acceptance:** a pull request that introduces a failing test, a hard-coded secret or a vulnerable dependency is blocked; screenshots of each in the README.
+
+### Lab 8.D: Repair a container and a pipeline
+
+A broken-service lab: [Repair a container and a pipeline](../../../labs/08-broken-pipeline-and-container/README.md), a root-running image, an exposed database and a pipeline that leaks a secret, scored by a 22-rule checker. Do it alongside the module; it counts as practice, not as the module project, but mentors review it if you submit it with your project.
 
 ## How these projects are assessed
 

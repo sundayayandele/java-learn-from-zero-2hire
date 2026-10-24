@@ -1,0 +1,361 @@
+<p><em>Week 4 · Module 1: Modern Java &amp; OOP Foundations</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Recognise the design patterns interviewers ask about most (Strategy,
+Factory, Builder, Template Method, Proxy, Decorator, Observer, Adapter
+and Singleton) and implement each in modern Java.</li>
+<li>Explain where Spring itself uses each pattern, so you can answer
+"which patterns does Spring use?" with examples from your own code.</li>
+<li>Choose a pattern because it removes a real problem (a growing
+<code>if</code>/<code>switch</code>, duplicated algorithms, an awkward
+third-party API), not to decorate code.</li>
+<li>Spot pattern misuse: needless interfaces, singletons holding mutable
+state, inheritance where composition is simpler.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Financial code changes constantly for business reasons: the regulator
+adds a levy, a new payment provider is onboarded, fees change for a
+promotion. Patterns are the shared vocabulary for keeping such changes
+small. "Each fee rule is a <strong>Strategy</strong>", "providers sit
+behind an <strong>Adapter</strong>", "auditing is a
+<strong>Decorator</strong>", "<code>@Transactional</code> works through
+a <strong>Proxy</strong>" are sentences you will hear in design reviews
+and interviews. Interviewers also use patterns to test whether you
+understand object-oriented design (topic 1.3) beyond definitions: they
+will ask you to refactor a <code>switch</code> into a Strategy, or
+explain why a Singleton bean must not keep per-request state.</p>
+<h2 id="1-strategy-one-interface-interchangeable-algorithms">1.
+Strategy: one interface, interchangeable algorithms</h2>
+<p>Problem: a fee calculation grows a new <code>case</code> for every
+product.</p>
+<pre class="java"><code>// Before: every new product edits this method (violates the open/closed principle)
+BigDecimal fee(Transfer t) {
+    return switch (t.channel()) {
+        case NIP -&gt; t.amount().compareTo(new BigDecimal(&quot;5000&quot;)) &lt;= 0 ? new BigDecimal(&quot;10.75&quot;) : new BigDecimal(&quot;26.88&quot;);
+        case USSD -&gt; new BigDecimal(&quot;6.98&quot;);
+        case INTERNAL -&gt; BigDecimal.ZERO;
+    };
+}</code></pre>
+<pre class="java"><code>// After: each rule is a Strategy; adding a channel adds a class, not an edit
+public interface FeeRule {
+    Channel channel();
+    BigDecimal feeFor(Transfer t);
+}
+
+@Component
+class NipFeeRule implements FeeRule {
+    public Channel channel() { return Channel.NIP; }
+    public BigDecimal feeFor(Transfer t) {
+        return t.amount().compareTo(new BigDecimal(&quot;5000&quot;)) &lt;= 0 ? new BigDecimal(&quot;10.75&quot;) : new BigDecimal(&quot;26.88&quot;);
+    }
+}
+
+@Service
+class FeeCalculator {
+    private final Map&lt;Channel, FeeRule&gt; rules;
+
+    FeeCalculator(List&lt;FeeRule&gt; rules) {                       // Spring injects every FeeRule bean
+        this.rules = rules.stream().collect(Collectors.toMap(FeeRule::channel, r -&gt; r));
+    }
+
+    BigDecimal fee(Transfer t) {
+        FeeRule rule = rules.get(t.channel());
+        if (rule == null) throw new IllegalStateException(&quot;No fee rule for &quot; + t.channel());
+        return rule.feeFor(t);
+    }
+}</code></pre>
+<p>With lambdas, a Strategy can be a
+<code>Function&lt;Transfer, BigDecimal&gt;</code> or a functional
+interface, which is often enough. Sealed interfaces (topic 1.6) plus
+<code>switch</code> pattern matching are a legitimate alternative when
+the set of cases is closed and owned by one team: the compiler then
+forces you to handle every case. Choose Strategy when new cases arrive
+often or come from other modules.</p>
+<p><strong>In Spring:</strong> <code>PasswordEncoder</code>
+implementations, <code>HandlerMethodArgumentResolver</code>,
+<code>RetryPolicy</code>, Spring Security's
+<code>AuthenticationProvider</code> list.</p>
+<h2 id="2-factory-hide-which-class-gets-created">2. Factory: hide which
+class gets created</h2>
+<p>A <strong>static factory method</strong> is the most common form in
+modern Java: <code>List.of(...)</code>, <code>Optional.of(...)</code>,
+<code>Currency.getInstance("NGN")</code>,
+<code>Money.of("1500.00", "NGN")</code>. Advantages over constructors: a
+meaningful name, the ability to return a cached instance or a subtype,
+and validation in one place.</p>
+<pre class="java"><code>public record Money(BigDecimal amount, Currency currency) {
+    public static Money of(String amount, String currency) {
+        Currency c = Currency.getInstance(currency);
+        return new Money(new BigDecimal(amount).setScale(c.getDefaultFractionDigits(), RoundingMode.UNNECESSARY), c);
+    }
+}</code></pre>
+<p>A <strong>factory object</strong> chooses an implementation at run
+time, for example
+<code>PaymentProviderFactory.forCurrency("GHS")</code>. In Spring, the
+container <em>is</em> the factory: <code>@Bean</code> methods are
+factory methods, <code>FactoryBean</code> builds complex objects, and
+<code>ObjectProvider&lt;T&gt;</code> lets you ask for beans lazily.</p>
+<h2 id="3-builder-readable-construction-of-many-optional-parts">3.
+Builder: readable construction of many optional parts</h2>
+<p>Use a Builder when an object has many optional fields or must be
+assembled in steps. Records with more than about five components,
+especially several of the same type, are hard to call correctly:
+<code>new Transfer("0123", "0456", amount, null, null, true)</code>.</p>
+<pre class="java"><code>Transfer t = Transfer.builder()
+        .from(&quot;0123456789&quot;).to(&quot;0987654321&quot;)
+        .amount(Money.of(&quot;25000.00&quot;, &quot;NGN&quot;))
+        .narration(&quot;Rent October&quot;)
+        .build();                                             // validate everything here</code></pre>
+<p>You will meet Builders constantly in libraries:
+<code>HttpRequest.newBuilder()</code>,
+<code>RestClient.builder()</code>,
+<code>ResponseEntity.status(...).body(...)</code>,
+<code>MockMvcRequestBuilders</code>, test data builders (topic 7.1).
+Lombok's <code>@Builder</code> generates them (see the Lombok section in
+topic 1.6).</p>
+<h2 id="4-template-method-fixed-algorithm-variable-steps">4. Template
+Method: fixed algorithm, variable steps</h2>
+<p>A base class (or a method taking callbacks) fixes the order of steps
+and lets subclasses or lambdas fill in the variable ones. Every
+statement import in a bank follows the same skeleton: open the file,
+validate the header, parse lines, persist in batches, report. Only
+parsing differs per partner.</p>
+<pre class="java"><code>abstract class StatementImporter {
+    public final ImportReport importFile(Path file) {          // final: the algorithm can&#39;t be changed
+        try (var lines = Files.lines(file)) {
+            validateHeader(file);
+            List&lt;Entry&gt; entries = lines.skip(1).map(this::parseLine).toList();
+            return persist(entries);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+    protected abstract Entry parseLine(String line);          // the step each partner supplies
+    protected void validateHeader(Path file) { /* default rules */ }
+    private ImportReport persist(List&lt;Entry&gt; entries) { /* batch insert */ return new ImportReport(entries.size()); }
+}</code></pre>
+<p><strong>In Spring:</strong> <code>JdbcTemplate</code>,
+<code>TransactionTemplate</code>, <code>RestTemplate</code> (legacy) and
+<code>RetryTemplate</code> are the callback flavour: Spring runs the
+fixed steps (get a connection, handle exceptions, release resources) and
+calls your lambda for the variable part. Prefer callbacks over
+inheritance in new code.</p>
+<h2 id="5-proxy-the-pattern-behind-most-spring-magic">5. Proxy: the
+pattern behind most Spring "magic"</h2>
+<p>A Proxy stands in for an object and adds behaviour around calls:
+transactions, security checks, caching, retries, metrics. Spring creates
+proxies around beans annotated with <code>@Transactional</code>,
+<code>@PreAuthorize</code>, <code>@Cacheable</code>, <code>@Async</code>
+or <code>@Retryable</code>. Your controller calls the proxy; the proxy
+starts the transaction, calls your real method, then commits or rolls
+back.</p>
+<pre class="java"><code>// Roughly what Spring generates for a @Transactional service
+class TransferServiceProxy extends TransferService {
+    private final TransferService target;
+    private final PlatformTransactionManager tm;
+    @Override public Receipt transfer(TransferRequest r) {
+        TransactionStatus tx = tm.getTransaction(new DefaultTransactionDefinition());
+        try {
+            Receipt result = target.transfer(r);
+            tm.commit(tx);
+            return result;
+        } catch (RuntimeException e) {
+            tm.rollback(tx);
+            throw e;
+        }
+    }
+}</code></pre>
+<p>This explains the most common interview question about Spring:
+<strong>a <code>@Transactional</code> method called from another method
+in the same class runs without a transaction</strong>, because the call
+never goes through the proxy. Topic 4.8 covers proxies in depth.</p>
+<h2 id="6-decorator-add-behaviour-by-wrapping">6. Decorator: add
+behaviour by wrapping</h2>
+<p>A Decorator implements the same interface as the object it wraps and
+adds behaviour, like a Proxy, but you compose it explicitly. Java's I/O
+classes are the classic example:
+<code>new BufferedReader(new InputStreamReader(new FileInputStream(f), UTF_8))</code>.</p>
+<pre class="java"><code>class AuditingProvider implements PaymentProvider {
+    private final PaymentProvider delegate;
+    private final AuditLog audit;
+    AuditingProvider(PaymentProvider delegate, AuditLog audit) { this.delegate = delegate; this.audit = audit; }
+
+    @Override public InitResult initialise(InitRequest r) {
+        audit.record(&quot;initialise&quot;, r.reference());
+        return delegate.initialise(r);
+    }
+    // ...other methods delegate the same way
+}</code></pre>
+<p>Decorators stack (auditing, then metrics, then retries) without
+touching the provider code. <strong>In Spring:</strong>
+<code>ClientHttpRequestInterceptor</code> chains, servlet filters,
+<code>BeanPostProcessor</code>s that wrap beans.</p>
+<h2 id="7-observer-publish-events-instead-of-calling-everyone">7.
+Observer: publish events instead of calling everyone</h2>
+<p>When a transfer completes, several things must happen: send an SMS,
+update the fraud model, notify the ledger. Calling each service directly
+couples the transfer code to all of them. The Observer pattern lets the
+transfer service <strong>publish an event</strong> and lets listeners
+react.</p>
+<pre class="java"><code>public record TransferCompleted(String reference, Money amount, String customerId) { }
+
+@Service
+class TransferService {
+    private final ApplicationEventPublisher events;
+    TransferService(ApplicationEventPublisher events) { this.events = events; }
+
+    @Transactional
+    public Receipt transfer(TransferRequest r) {
+        Receipt receipt = post(r);
+        events.publishEvent(new TransferCompleted(receipt.reference(), r.amount(), r.customerId()));
+        return receipt;
+    }
+}
+
+@Component
+class SmsNotifier {
+    @TransactionalEventListener                        // runs only after the transaction commits
+    void on(TransferCompleted e) { /* send SMS */ }
+}</code></pre>
+<p><code>@TransactionalEventListener</code> matters: a plain
+<code>@EventListener</code> runs immediately inside the transaction, so
+an SMS could be sent for a transfer that then rolls back. In distributed
+systems the same idea becomes messaging with Kafka and the transactional
+outbox (Phase 3).</p>
+<h2 id="8-adapter-make-an-incompatible-api-fit-your-interface">8.
+Adapter: make an incompatible API fit your interface</h2>
+<p>Every payment provider, KYC vendor and core-banking system has its
+own API. An Adapter translates between your domain interface and theirs,
+so the rest of your code never sees their types.</p>
+<pre class="java"><code>class PaystackAdapter implements PaymentProvider {           // your interface
+    private final PaystackClient client;                     // their SDK or HTTP client
+    @Override public InitResult initialise(InitRequest r) {
+        var res = client.initializeTransaction(r.email(), r.amountMinor(), r.reference());
+        return new InitResult(res.data().authorizationUrl(), res.data().accessCode());
+    }
+}</code></pre>
+<p>Capstone 1 of Phase 2 is built entirely on this idea. <strong>In
+Spring:</strong> <code>HandlerAdapter</code> lets the
+<code>DispatcherServlet</code> call controllers of different kinds
+through one interface.</p>
+<h2 id="9-singleton-one-instance-and-why-stateless-matters">9.
+Singleton: one instance, and why "stateless" matters</h2>
+<p>The classic Singleton (a private constructor and a static
+<code>getInstance()</code>) is rarely written by hand in modern Java: it
+hides dependencies and is hard to test. If you need one, an
+<code>enum</code> with a single constant is the safest form
+(serialisation- and reflection-safe).</p>
+<p>In Spring, <strong>beans are singletons by default</strong> (one
+instance per container). This is efficient, but it means a bean is
+shared by every request thread. A singleton bean must therefore be
+<strong>stateless</strong> or hold only thread-safe, effectively
+immutable state:</p>
+<pre class="java"><code>@Service
+class QuoteService {
+    private BigDecimal lastRate;          // BUG: shared by all requests; one user&#39;s rate leaks into another&#39;s quote
+}</code></pre>
+<p>Keep per-request data in local variables, method parameters or
+request-scoped beans (topic 4.8).</p>
+<h2 id="10-choosing-and-not-choosing-a-pattern">10. Choosing (and not
+choosing) a pattern</h2>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Pattern that helps</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A <code>switch</code> that grows with every product or provider</td>
+<td>Strategy (or sealed types if the set is closed)</td>
+</tr>
+<tr>
+<td>Constructors with many optional or same-typed arguments</td>
+<td>Builder (or a static factory)</td>
+</tr>
+<tr>
+<td>The same algorithm copied with small differences</td>
+<td>Template Method or callbacks</td>
+</tr>
+<tr>
+<td>Cross-cutting behaviour: audit, retry, metrics, security</td>
+<td>Decorator, or a Spring proxy via an annotation</td>
+</tr>
+<tr>
+<td>One action must trigger several independent reactions</td>
+<td>Observer (application events)</td>
+</tr>
+<tr>
+<td>A third-party API leaks into your domain code</td>
+<td>Adapter</td>
+</tr>
+</tbody>
+</table>
+<p>Patterns cost indirection. One implementation behind an interface
+"for the future" is usually speculative: introduce the abstraction when
+the second case arrives, and say so in code review.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Naming everything <code>*Manager</code>, <code>*Helper</code> or
+<code>*Factory</code> without a real factory responsibility.</li>
+<li>Singleton beans that store per-request or per-user data in
+fields.</li>
+<li>Calling a <code>@Transactional</code> or <code>@Cacheable</code>
+method from inside the same class and expecting the annotation to
+work.</li>
+<li>Using <code>@EventListener</code> for side effects that must happen
+only after a commit.</li>
+<li>Deep inheritance hierarchies for Template Method when a lambda
+callback would do.</li>
+<li>An interface with exactly one implementation and no test double,
+added "just in case".</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Refactor a fee <code>switch</code> with five channels into Strategy
+beans, keeping the same unit tests green (red-green-refactor).</li>
+<li>Write an <code>AuditingProvider</code> decorator and a
+<code>MetricsProvider</code> decorator, and compose them around a fake
+provider in a test.</li>
+<li>Publish a <code>TransferCompleted</code> event and prove with a test
+that an <code>@TransactionalEventListener</code> does not run when the
+transaction rolls back.</li>
+<li>In your Phase 1 Capstone 1, find three places where Spring applies a
+pattern (Proxy, Template Method, Factory) and explain each in your
+README's "Design decisions" section.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Design pattern, Gang of Four (GoF), Strategy, open/closed principle,
+static factory method, factory object, <code>FactoryBean</code>,
+Builder, Template Method, callback, Proxy, AOP, self-invocation,
+Decorator, Observer, application event,
+<code>@TransactionalEventListener</code>, Adapter, Singleton, singleton
+scope, stateless bean, composition over inheritance.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://refactoring.guru/design-patterns/catalog">Refactoring.Guru:
+design patterns catalogue (with Java examples)</a></li>
+<li><a
+href="https://docs.spring.io/spring-framework/reference/core/aop/proxying.html">Spring
+Framework reference: Understanding AOP proxies</a></li>
+<li><a
+href="https://docs.spring.io/spring-framework/reference/core/beans/context-introduction.html#context-functionality-events">Spring
+Framework reference: Standard and custom events</a></li>
+<li><a
+href="https://docs.spring.io/spring-framework/reference/data-access/transaction/event.html">Spring
+Framework reference: Transaction-bound events</a></li>
+<li><a href="https://dev.java/learn/records/">dev.java: Records</a>
+(immutable value objects and static factories)</li>
+<li><a
+href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/function/package-summary.html">Oracle
+Java SE 21 API: java.util.function</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>The Strategy Pattern Explained and Implemented in Java | Behavioral Design Patterns | Geekific</h3><p>Geekific · 7 min. The Strategy pattern implemented in Java, step by step.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/Nrwj3gZiuJU" title="The Strategy Pattern Explained and Implemented in Java | Behavioral Design Patterns | Geekific" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>The Proxy Pattern Explained and Implemented in Java | Structural Design Patterns | Geekific</h3><p>Geekific · 6 min. The Proxy pattern in Java: the idea behind Spring&#x27;s annotations.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/TS5i-uPXLs8" title="The Proxy Pattern Explained and Implemented in Java | Structural Design Patterns | Geekific" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>7 Design Patterns EVERY Developer Should Know</h3><p>ForrestKnight · 22 min. Seven design patterns every developer should recognise, with examples.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/BJatgOiiht4" title="7 Design Patterns EVERY Developer Should Know" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/01-modern-java-oop/1.12-design-patterns/README.md">1.12 Design patterns in Java and in Spring</a></p>

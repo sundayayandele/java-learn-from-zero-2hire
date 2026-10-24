@@ -95,6 +95,19 @@
         3
       ],
       "explanation": "Request DTOs, value objects and events are immutable data carriers, exactly what records model. JPA entities need mutability and proxies."
+    },
+    {
+      "type": "single",
+      "scenario": "A JPA entity uses Lombok's `@Data`. Adding entities to a `HashSet` and then saving them makes the set behave strangely, and logs show a customer's BVN.",
+      "question": "What is the problem?",
+      "options": [
+        "Lombok doesn't support HashSet",
+        "@Data generates equals/hashCode over all fields (including the generated id) and a toString that prints every field, including sensitive ones",
+        "The BVN field must be static",
+        "JPA entities can't have getters"
+      ],
+      "answer": 1,
+      "explanation": "Use explicit equals/hashCode for entities and exclude sensitive fields from toString, or avoid @Data on entities."
     }
   ]
 }

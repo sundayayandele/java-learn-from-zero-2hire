@@ -1,0 +1,99 @@
+{
+  "topic": "8.6",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "You pick up a ticket titled 'Improve reversals' with no description, and the sprint started today.",
+      "question": "What should you do first?",
+      "options": [
+        "Start coding what you think it means",
+        "Move it to Done to keep velocity up",
+        "Ask the product owner and team to clarify the goal and agree acceptance criteria before starting",
+        "Split it by layer into database and API tickets"
+      ],
+      "answer": 2,
+      "explanation": "A ticket isn't ready without shared understanding and acceptance criteria."
+    },
+    {
+      "type": "single",
+      "scenario": "You have been stuck for most of a day on a failing Testcontainers setup, after trying the usual fixes.",
+      "question": "What is the most professional action?",
+      "options": [
+        "Keep quiet and work late until it's solved",
+        "Raise it as a blocker at stand-up or in the team chat, saying what you've tried, and ask for a pairing session",
+        "Re-estimate the ticket to 13 points silently",
+        "Delete the integration tests"
+      ],
+      "answer": 1,
+      "explanation": "Raising blockers early, with evidence of what you tried, protects the sprint."
+    },
+    {
+      "type": "single",
+      "scenario": "A large story 'Customers can manage beneficiaries' is estimated at 21 points.",
+      "question": "Which split is best?",
+      "options": [
+        "Vertical slices such as 'add a beneficiary with name enquiry', 'list beneficiaries', 'delete a beneficiary', each testable end to end",
+        "Database tables, then services, then controllers, then UI",
+        "One ticket per developer regardless of behaviour",
+        "Keep it as one story but work faster"
+      ],
+      "answer": 0,
+      "explanation": "Vertical slices deliver testable behaviour in each piece."
+    },
+    {
+      "type": "single",
+      "scenario": "Your feature works on your laptop, but the PR isn't reviewed and the integration tests haven't run in CI.",
+      "question": "According to a typical definition of done, is the ticket done?",
+      "options": [
+        "No: it needs review, merge, green CI and quality gates, updated docs, and deployment to the test environment",
+        "Yes, if the product owner liked the screenshot",
+        "Yes, if you add a TODO comment",
+        "Yes, it works locally"
+      ],
+      "answer": 0,
+      "explanation": "Done means meeting the team's written definition of done, not just working locally."
+    },
+    {
+      "type": "multi",
+      "scenario": "Which details make a bug report actionable? (Choose two.)",
+      "question": "Select two.",
+      "options": [
+        "A sentence saying 'it is broken again'",
+        "Exact steps to reproduce with environment and build version",
+        "The customer's full card number and BVN",
+        "Expected versus actual result with evidence such as a correlation id"
+      ],
+      "answer": [
+        1,
+        3
+      ],
+      "explanation": "Reproducible steps and evidence get bugs fixed; personal data must never be included."
+    },
+    {
+      "type": "single",
+      "scenario": "During planning poker, you estimate 8 points and a senior engineer estimates 2.",
+      "question": "What should happen next?",
+      "options": [
+        "Remove the ticket from the sprint",
+        "Take the average, 5, and move on",
+        "Both explain their reasoning; the difference often reveals a misunderstanding or a missing task",
+        "Defer to the senior engineer without discussion"
+      ],
+      "answer": 2,
+      "explanation": "Divergent estimates are a prompt to discuss assumptions."
+    },
+    {
+      "type": "single",
+      "scenario": "A bank requires a change approval (CAB) before production releases.",
+      "question": "What helps your change get approved quickly?",
+      "options": [
+        "Combining many unrelated changes into one release",
+        "Traceability: ticket with acceptance criteria, linked PR with review, green pipeline and test evidence, and a rollback plan",
+        "Releasing late at night to avoid questions",
+        "Skipping the ticket and merging directly"
+      ],
+      "answer": 1,
+      "explanation": "Auditors and approvers rely on linked, reviewed and tested evidence."
+    }
+  ]
+}

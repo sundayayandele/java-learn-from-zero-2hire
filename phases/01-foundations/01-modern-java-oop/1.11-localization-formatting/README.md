@@ -3,7 +3,7 @@
 
 # 1.11 Localization: locales, number, currency and date formatting, resource bundles
 
-← [1.10 Java I/O, NIO.2 files and serialization](../1.10-io-nio-serialization/README.md) · [Module 1](../README.md) · [Phase 1](../../README.md) · [2.1 Threads, ExecutorService and CompletableFuture](../../02-concurrency-jvm/2.1-threads-executors-completablefuture/README.md) →
+← [1.10 Java I/O, NIO.2 files and serialization](../1.10-io-nio-serialization/README.md) · [Module 1](../README.md) · [Phase 1](../../README.md) · [1.12 Design patterns in Java and in Spring](../1.12-design-patterns/README.md) →
 
 > **Week 4** · Module 1: Modern Java & OOP Foundations · Website topic covered: *Added for the Oracle OCP Java SE 21/25 exam: localization*
 
@@ -263,4 +263,4 @@ What's wrong?
 
 ---
 
-← [1.10 Java I/O, NIO.2 files and serialization](../1.10-io-nio-serialization/README.md) · [Module 1](../README.md) · [Phase 1](../../README.md) · [2.1 Threads, ExecutorService and CompletableFuture](../../02-concurrency-jvm/2.1-threads-executors-completablefuture/README.md) →
+← [1.10 Java I/O, NIO.2 files and serialization](../1.10-io-nio-serialization/README.md) · [Module 1](../README.md) · [Phase 1](../../README.md) · [1.12 Design patterns in Java and in Spring](../1.12-design-patterns/README.md) →

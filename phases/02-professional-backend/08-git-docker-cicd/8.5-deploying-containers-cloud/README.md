@@ -3,7 +3,7 @@
 
 # 8.5 Deploying a container to a cloud host
 
-← [8.4 Overview of Jenkins and Azure DevOps pipelines used in enterprises](../8.4-jenkins-azure-devops/README.md) · [Module 8](../README.md) · [Phase 2](../../README.md) · [9.1 Daily workflows with AI coding assistants (GitHub Copilot, Claude Code, Cursor and similar)](../../09-ai-assisted-engineering-portfolio/9.1-ai-coding-assistants/README.md) →
+← [8.4 Overview of Jenkins and Azure DevOps pipelines used in enterprises](../8.4-jenkins-azure-devops/README.md) · [Module 8](../README.md) · [Phase 2](../../README.md) · [8.6 Working in an agile team](../8.6-agile-teamwork/README.md) →
 
 > **Week 22** · Module 8: Git, Docker & CI/CD · Website topic covered: *Deploying containers to a VPS, AWS, Azure and GCP; rollbacks and zero-downtime deploys*
 
@@ -278,4 +278,4 @@ Which ECS feature limits the damage automatically?
 
 ---
 
-← [8.4 Overview of Jenkins and Azure DevOps pipelines used in enterprises](../8.4-jenkins-azure-devops/README.md) · [Module 8](../README.md) · [Phase 2](../../README.md) · [9.1 Daily workflows with AI coding assistants (GitHub Copilot, Claude Code, Cursor and similar)](../../09-ai-assisted-engineering-portfolio/9.1-ai-coding-assistants/README.md) →
+← [8.4 Overview of Jenkins and Azure DevOps pipelines used in enterprises](../8.4-jenkins-azure-devops/README.md) · [Module 8](../README.md) · [Phase 2](../../README.md) · [8.6 Working in an agile team](../8.6-agile-teamwork/README.md) →

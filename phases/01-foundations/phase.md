@@ -10,7 +10,7 @@ Plan for **10–15 hours per week** for 13 weeks. Each topic page has three part
 2. **Watch** the curated videos (all checked: real, embeddable, English with captions). They reinforce the reading from a second voice; they don't replace it.
 3. **Check your understanding** with the scenario CBT at the end of the topic. On Moodle it is graded (pass mark 70%, unlimited attempts); on GitHub the answers are folded under each question.
 
-Then do the topic's **practice** tasks and, each module, at least one **module project**. From week 5, start your **capstones**.
+Then do the topic's **practice** tasks and, each module, at least one **module project**. From week 5, start your **capstones**. From week 2, spend about 3 hours a week on the [coding-interview practice track](../../practice/README.md): auto-graded Java and SQL problems in the format of the online assessments most employers use as their first filter. Expect Phase 1 to take **about 200–240 hours** in total, so plan for 15–18 hours a week, or stretch the 13 weeks to 16–18 if you can give 12 hours.
 
 ## Weekly plan
 
@@ -19,16 +19,16 @@ Then do the topic's **practice** tasks and, each module, at least one **module p
 | 1 | 1 Modern Java & OOP | 1.1 Toolkit, 1.2 Syntax and types | JDK, IntelliJ, Git and GitHub set up; first Maven build |
 | 2 | 1 | 1.3 OOP and SOLID, 1.4 Collections and generics | |
 | 3 | 1 | 1.5 Lambdas and streams, 1.6 Records, sealed types, pattern matching | |
-| 4 | 1 | 1.7 Exceptions and clean code, 1.8 Legacy Java migration, 1.9 Kotlin, 1.10 I/O and NIO.2, 1.11 Localization | Module 1 project pushed with green CI |
+| 4 | 1 | 1.7 Exceptions and clean code, 1.8 Legacy Java migration, 1.9 Kotlin, 1.10 I/O and NIO.2, 1.11 Localization, 1.12 Design patterns | Module 1 project pushed with green CI |
 | 5 | 2 Concurrency & JVM | 2.1 Threads and executors, 2.2 Races and locks | Start Capstone 1 design |
-| 6 | 2 | 2.3 Virtual threads, 2.4 JVM memory and GC, 2.5 Modules and jlink | Module 2 find-and-fix lab |
+| 6 | 2 | 2.3 Virtual threads, 2.4 JVM memory and GC, 2.5 Modules and jlink, 2.6 Debugging and troubleshooting | Module 2 find-and-fix lab |
 | 7 | 3 Databases | 3.1 Relational design and joins, 3.2 Transactions and locking | Ledger schema (project 3.B) |
 | 8 | 3 | 3.3 Indexing and plans, 3.4 Migrations, 3.5 JDBC | Query-tuning lab (project 3.D) |
 | 9 | 3 | 3.6 Redis and MongoDB | Capstone 1 core logic complete |
 | 10 | 4 Spring Boot 4 | 4.1 DI and auto-configuration, 4.2 MVC, validation, errors | |
 | 11 | 4 | 4.3 Spring Data JPA and Hibernate | Capstone 2 started |
 | 12 | 4 | 4.4 Configuration and secrets, 4.5 Actuator | Capstones deployed to a VPS or cloud |
-| 13 | 4 | 4.6 Boot 3 → 4 upgrade, 4.7 Spring Boot with Kotlin | **End-of-phase exam**, **Getting Hired** session, portfolio checkpoint |
+| 13 | 4 | 4.6 Boot 3 → 4 upgrade, 4.7 Spring Boot with Kotlin, 4.8 Spring under the hood | **End-of-phase exam**, **capstone defence**, **live-coding assessment**, **Getting Hired** session, portfolio checkpoint |
 
 ## Modules
 
@@ -55,9 +55,12 @@ Every capstone ships with the same pipeline on six platforms: GitHub Actions (pr
 
 Phase 1 Modules 1–2 cover every objective of the **Oracle Certified Professional: Java SE 21 (1Z0-830)** and **Java SE 25 (1Z0-831)** exams. See the [objective-by-objective mapping](../../docs/certifications.md) and take the OCP after week 13.
 
-## End-of-phase exam
+## End-of-phase assessments
 
-A 2-hour, 60-question scenario-based CBT covering every Phase 1 topic, taken on Moodle in week 13. Pass mark 70%.
+- **Exam:** a 2-hour, 60-question scenario-based CBT covering every Phase 1 topic, taken on Moodle in week 13 (questions drawn at random from a larger bank). Pass mark 70%.
+- **Capstone defence:** a 20-minute recorded viva on your capstones, including a live change ([format and rubric](../../docs/assessments/capstone-defence.md)).
+- **Live-coding assessment:** 90 minutes, one algorithm problem and one change to an unfamiliar Spring Boot service ([format and rubric](../../docs/assessments/live-coding.md)).
+- **Coding practice checkpoint:** at least 70% of the Phase 1 weeks' [practice track](../../practice/README.md) problems passing.
 
 → [Exam information and blueprint](exam/README.md)
 
@@ -69,8 +72,9 @@ What a Phase 1 graduate can credibly apply for, how to present your capstones, a
 
 ## Phase 1 exit criteria
 
-- [ ] All 29 topic CBTs passed (70%+)
+- [ ] All 32 topic CBTs passed (70%+)
 - [ ] One project per module, each on GitHub with README, tests and green CI
 - [ ] Three capstones (including Capstone 1), at least one deployed with a public health endpoint
+- [ ] Capstone defence, live-coding assessment and coding practice checkpoint passed
 - [ ] End-of-phase exam passed (70%+)
 - [ ] Getting Hired checklist complete: CV draft, GitHub profile README, LinkedIn updated

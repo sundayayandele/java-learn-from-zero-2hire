@@ -1,0 +1,329 @@
+<p><em>Week 6 · Module 2: Concurrency &amp; the JVM</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Read a Java stack trace, including <code>Caused by</code> and
+<code>Suppressed</code> sections, and find the line that matters.</li>
+<li>Use the IntelliJ IDEA debugger well: breakpoints, conditional and
+exception breakpoints, stepping, watches, evaluating expressions, and
+dropping frames.</li>
+<li>Write logs that make production problems solvable: levels,
+parameters, structured fields and a <strong>correlation id</strong>
+carried through every log line of a request.</li>
+<li>Take and read a <strong>thread dump</strong> to diagnose a hung
+service, and a <strong>heap dump</strong> to find a memory leak.</li>
+<li>Attach a debugger to an application running in Docker, and follow a
+repeatable troubleshooting method instead of guessing.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Most of a junior engineer's first year is spent reading code and
+fixing defects, not writing new features. When a customer says "my
+transfer is stuck", someone has to find out in minutes whether the
+problem is a bug, a slow database, a hung thread pool or a provider
+outage. Engineers who can read a stack trace calmly, search logs by a
+correlation id and take a thread dump are trusted with production
+support quickly. Interviewers test this directly: "here is a stack
+trace, what happened?" and "the service stops responding every
+afternoon; how would you investigate?" are common questions, and some
+companies run a live "fix this failing service" round.</p>
+<h2 id="1-a-method-before-tools">1. A method before tools</h2>
+<p>Follow the same loop every time:</p>
+<ol type="1">
+<li><strong>Reproduce</strong> the problem, ideally as a failing test.
+If you can't reproduce it, collect evidence first (logs, metrics,
+request ids, timestamps).</li>
+<li><strong>Observe</strong> facts: the exact error, when it started,
+what changed (deploy, data, traffic, a provider).</li>
+<li><strong>Form one hypothesis</strong> and a cheap way to prove it
+wrong.</li>
+<li><strong>Experiment</strong>: debugger, an extra log line, a query, a
+thread dump.</li>
+<li><strong>Fix and protect</strong>: fix the cause, not the symptom,
+and keep the failing test so it can't come back.</li>
+</ol>
+<p>Write down what you tried. "I don't know yet, here is what I've ruled
+out" is a strong answer in an incident and in an interview.</p>
+<h2 id="2-reading-stack-traces">2. Reading stack traces</h2>
+<pre class="text"><code>org.springframework.dao.DataIntegrityViolationException: could not execute statement [ERROR: duplicate key value violates unique constraint &quot;journal_reference_key&quot;]
+    at org.springframework.orm.jpa.vendor.HibernateJpaDialect.convertHibernateAccessException(HibernateJpaDialect.java:290)
+    ...
+    at ng.itlearning.ledger.journal.LedgerService.transfer(LedgerService.java:87)
+    at ng.itlearning.ledger.web.PaymentController.transfer(PaymentController.java:41)
+    ...
+Caused by: org.hibernate.exception.ConstraintViolationException: could not execute statement
+    ...
+Caused by: org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint &quot;journal_reference_key&quot;
+  Detail: Key (reference)=(TRF-2026-0001) already exists.</code></pre>
+<p>How to read it:</p>
+<ul>
+<li>The <strong>first line</strong> is the exception type and message at
+the top of the chain. The <strong>last <code>Caused by</code></strong>
+is usually the root cause (here PostgreSQL's unique constraint and the
+exact key).</li>
+<li>In each block, the <strong>first frame from your own
+package</strong> (<code>ng.itlearning…</code>) is where your code was
+involved: <code>LedgerService.java:87</code>. Framework frames above it
+show how the error travelled.</li>
+<li><code>... 42 more</code> means "the remaining frames are the same as
+in the block above".</li>
+<li><code>Suppressed:</code> entries appear when a
+<code>try</code>-with-resources <code>close()</code> also failed; they
+explain secondary failures.</li>
+</ul>
+<p>Common exceptions and their usual causes:
+<code>NullPointerException</code> (Java 14+ "helpful" messages name the
+null variable), <code>ClassCastException</code>,
+<code>ConcurrentModificationException</code> (modifying a collection
+while iterating), <code>LazyInitializationException</code> (accessing a
+lazy JPA association after the session closed, topic 4.3),
+<code>BeanCreationException</code>/<code>UnsatisfiedDependencyException</code>
+at start-up (read down to the root cause: usually a missing property or
+bean), <code>SocketTimeoutException</code> (a dependency is slow).</p>
+<p>Never swallow exceptions (<code>catch (Exception e) {}</code>) and
+never log and rethrow the same exception at every layer: you get the
+same stack trace five times. Log once, where you handle it.</p>
+<h2 id="3-the-intellij-idea-debugger">3. The IntelliJ IDEA debugger</h2>
+<p>Start the application or a test with <strong>Debug</strong> instead
+of Run.</p>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Use it when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Line breakpoint</td>
+<td>Stop at a line and inspect variables</td>
+</tr>
+<tr>
+<td><strong>Conditional</strong> breakpoint (right-click the
+breakpoint)</td>
+<td>Stop only when <code>reference.equals("TRF-2026-0001")</code> or
+<code>amount.signum() &lt; 0</code>, so you don't step through 10,000
+loop iterations</td>
+</tr>
+<tr>
+<td><strong>Exception</strong> breakpoint (Run → View Breakpoints →
++)</td>
+<td>Stop where an exception is <em>thrown</em>, even if it's caught and
+hidden somewhere</td>
+</tr>
+<tr>
+<td>Logpoint (breakpoint with "Suspend" off and "Evaluate and log")</td>
+<td>Print a value without editing code or stopping</td>
+</tr>
+<tr>
+<td>Step Over / Into / Out (F8 / F7 / Shift+F8)</td>
+<td>Move through code one line or one call at a time</td>
+</tr>
+<tr>
+<td>Evaluate Expression (Alt+F8)</td>
+<td>Call methods or compute values in the paused context</td>
+</tr>
+<tr>
+<td>Watches</td>
+<td>Keep an expression visible while stepping</td>
+</tr>
+<tr>
+<td>Drop Frame (Reset Frame)</td>
+<td>Re-run the current method from the top after changing a
+variable</td>
+</tr>
+<tr>
+<td>Threads view and "Suspend: Thread"</td>
+<td>Debug concurrency without freezing every thread</td>
+</tr>
+</tbody>
+</table>
+<p>Debugging tests is often faster than debugging the running app: write
+a failing test that reproduces the bug, put a breakpoint in it, and
+debug only that test.</p>
+<h2 id="4-logging-that-solves-problems">4. Logging that solves
+problems</h2>
+<p>Use SLF4J with parameters (never string concatenation) and the right
+level:</p>
+<pre class="java"><code>private static final Logger log = LoggerFactory.getLogger(TransferService.class);
+
+log.info(&quot;Transfer posted reference={} amount={} currency={}&quot;, ref, amount, currency);   // business event
+log.warn(&quot;Provider slow provider={} elapsedMs={}&quot;, provider, elapsed);                   // unexpected but handled
+log.error(&quot;Transfer failed reference={}&quot;, ref, e);                                         // needs attention; exception last
+log.debug(&quot;Fee rule chosen rule={}&quot;, rule);                                                // detail, off in production</code></pre>
+<p><strong>Correlation ids</strong> connect every log line of one
+request, across services. Put an id in the SLF4J <strong>MDC</strong>
+(mapped diagnostic context) at the start of each request, return it to
+the client, and pass it to downstream calls:</p>
+<pre class="java"><code>@Component
+class CorrelationIdFilter extends OncePerRequestFilter {
+    @Override
+    protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
+            throws ServletException, IOException {
+        String id = Optional.ofNullable(req.getHeader(&quot;X-Correlation-Id&quot;))
+                .filter(v -&gt; v.matches(&quot;[A-Za-z0-9-]{8,64}&quot;))          // never trust input blindly
+                .orElse(UUID.randomUUID().toString());
+        MDC.put(&quot;correlationId&quot;, id);
+        res.setHeader(&quot;X-Correlation-Id&quot;, id);
+        try {
+            chain.doFilter(req, res);
+        } finally {
+            MDC.remove(&quot;correlationId&quot;);                              // threads are reused
+        }
+    }
+}</code></pre>
+<p>Spring Boot 4 can write <strong>structured JSON logs</strong> with
+one property, so MDC values become searchable fields in Loki, Elastic or
+CloudWatch:</p>
+<pre class="yaml"><code>logging:
+  structured:
+    format:
+      console: ecs        # Elastic Common Schema; logstash and gelf also supported</code></pre>
+<p>Rules: never log secrets, tokens, full card numbers or BVNs; log
+identifiers, not whole payloads; and make every <code>ERROR</code>
+actionable.</p>
+<h2 id="5-thread-dumps-the-service-is-hung">5. Thread dumps: "the
+service is hung"</h2>
+<p>When requests time out but CPU is low, threads are usually
+<strong>waiting</strong>: for a database connection, a lock, a slow HTTP
+call or each other (deadlock, topic 2.2). A thread dump shows every
+thread's state and stack at one moment.</p>
+<pre class="bash"><code>jcmd                                   # list Java processes and their PIDs
+jcmd &lt;pid&gt; Thread.print &gt; threads.txt  # or: jstack &lt;pid&gt;
+# In Docker:
+docker compose exec app jcmd 1 Thread.print &gt; threads.txt
+# Via Actuator (if exposed to operators only): GET /actuator/threaddump</code></pre>
+<p>What to look for:</p>
+<pre class="text"><code>&quot;http-nio-8080-exec-17&quot; #63 daemon prio=5 os_prio=0 tid=0x... nid=0x5a waiting on condition
+   java.lang.Thread.State: TIMED_WAITING (parking)
+        at jdk.internal.misc.Unsafe.park(Native Method)
+        at com.zaxxer.hikari.pool.HikariPool.getConnection(HikariPool.java:181)
+        at ng.itlearning.ledger.journal.LedgerService.transfer(LedgerService.java:64)</code></pre>
+<ul>
+<li>Many request threads parked in
+<code>HikariPool.getConnection</code>: the connection pool is exhausted
+(long transactions, leaked connections, or a slow query holding
+connections).</li>
+<li>Many threads <code>BLOCKED</code> on the same monitor: lock
+contention.</li>
+<li><code>Found one Java-level deadlock:</code> at the end: the JVM
+detected a deadlock and lists the cycle.</li>
+<li>Threads in <code>SocketInputStream.read</code> inside an HTTP
+client: a dependency without a timeout.</li>
+</ul>
+<p>Take <strong>three dumps about ten seconds apart</strong>: threads
+stuck in the same place across all three are the problem. Virtual
+threads (topic 2.3) appear with
+<code>jcmd &lt;pid&gt; Thread.dump_to_file -format=json threads.json</code>.</p>
+<h2 id="6-heap-dumps-memory-keeps-growing">6. Heap dumps: "memory keeps
+growing"</h2>
+<p>If heap use climbs after every garbage collection until
+<code>OutOfMemoryError: Java heap space</code>, something keeps
+references it no longer needs: a static <code>Map</code> used as a cache
+without eviction, listeners never removed, an unbounded queue, or
+loading a whole table into memory.</p>
+<pre class="bash"><code>jcmd &lt;pid&gt; GC.heap_info                       # quick view of heap use
+jcmd &lt;pid&gt; GC.heap_dump /tmp/heap.hprof       # full dump (pauses the app; can be large)
+# Capture automatically on the next crash:
+JAVA_TOOL_OPTIONS=&quot;-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp&quot;</code></pre>
+<p>Open the <code>.hprof</code> in <strong>Eclipse Memory Analyzer
+(MAT)</strong> or IntelliJ IDEA Ultimate and start with the <strong>Leak
+Suspects</strong> report and the <strong>dominator tree</strong>: the
+objects retaining the most memory, and the chain of references keeping
+them alive. Heap dumps contain customer data: treat them as sensitive,
+never attach them to tickets or chats, and delete them when done. (The
+starter disables the Actuator <code>heapdump</code> endpoint for this
+reason.)</p>
+<p>For CPU problems, <strong>Java Flight Recorder</strong> is built into
+the JDK:
+<code>jcmd &lt;pid&gt; JFR.start duration=60s filename=rec.jfr</code>,
+then open it in JDK Mission Control. Phase 3 covers profiling in
+depth.</p>
+<h2 id="7-debugging-an-application-in-docker">7. Debugging an
+application in Docker</h2>
+<p>Add the JDWP agent through an environment variable for a local
+container only:</p>
+<pre class="yaml"><code>services:
+  app:
+    environment:
+      JAVA_TOOL_OPTIONS: &quot;-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005&quot;
+    ports:
+      - &quot;127.0.0.1:5005:5005&quot;        # bind to localhost only</code></pre>
+<p>In IntelliJ IDEA create a <strong>Remote JVM Debug</strong>
+configuration for <code>localhost:5005</code> and set breakpoints as
+usual. Never enable remote debugging on a shared or production server:
+anyone who can reach the port can run arbitrary code in the JVM.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Reading only the first line of a stack trace and missing the root
+<code>Caused by</code>.</li>
+<li><code>catch (Exception e) { log.error(e.getMessage()); }</code>
+loses the stack trace; pass the exception as the last argument.</li>
+<li>Fixing a symptom (adding a retry, increasing a timeout, raising pool
+size) without finding why the resource was exhausted.</li>
+<li>Debugging by adding <code>System.out.println</code> everywhere and
+committing it.</li>
+<li>Taking one thread dump and drawing conclusions; take several.</li>
+<li>Leaving <code>MDC</code> values set on pooled threads, so the next
+request logs the wrong correlation id.</li>
+<li>Sharing heap dumps or logs that contain personal data.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Take the stack trace from a failing test in your capstone, find the
+root cause and the first frame in your code, and explain it to a peer in
+two sentences.</li>
+<li>Use a conditional breakpoint to stop on the 5,000th transfer of a
+load test, and an exception breakpoint to find where a swallowed
+exception is thrown.</li>
+<li>Add the <code>CorrelationIdFilter</code> and structured logging to
+your capstone, then trace one request's log lines by its id.</li>
+<li>Reproduce connection-pool exhaustion: set
+<code>spring.datasource.hikari.maximum-pool-size=2</code>, make an
+endpoint hold a transaction for 5 seconds, send 20 concurrent requests,
+take three thread dumps and identify the waiting threads.</li>
+<li>Create a leak with a static <code>List</code> that grows on every
+request, capture a heap dump on <code>OutOfMemoryError</code>, and find
+the leak with MAT's dominator tree.</li>
+<li>Revisit the <a
+href="https://github.com/sundayayandele/java-zero-hire/blob/main/labs/02-concurrency-find-and-fix/README.md">concurrency
+find-and-fix lab</a> and diagnose its deadlock with a thread dump before
+reading the code.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Reproduce, hypothesis, root cause, stack trace,
+<code>Caused by</code>, <code>Suppressed</code>, frame, breakpoint,
+conditional breakpoint, exception breakpoint, logpoint, step
+over/into/out, evaluate expression, drop frame, SLF4J, log level, MDC,
+correlation id, structured logging, thread dump, <code>jcmd</code>,
+<code>jstack</code>, thread state (<code>RUNNABLE</code>,
+<code>BLOCKED</code>, <code>WAITING</code>, <code>TIMED_WAITING</code>),
+connection-pool exhaustion, heap dump, <code>.hprof</code>, dominator
+tree, Eclipse MAT, Java Flight Recorder, JDWP, remote debugging.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://www.jetbrains.com/help/idea/debugging-code.html">IntelliJ
+IDEA documentation: Debug code</a></li>
+<li><a
+href="https://www.jetbrains.com/help/idea/using-breakpoints.html">IntelliJ
+IDEA documentation: Breakpoints</a></li>
+<li><a
+href="https://docs.oracle.com/en/java/javase/21/troubleshoot/">Oracle
+Java SE 21 Troubleshooting Guide</a></li>
+<li><a
+href="https://docs.oracle.com/en/java/javase/21/docs/specs/man/jcmd.html">Oracle:
+The jcmd utility</a></li>
+<li><a
+href="https://docs.spring.io/spring-boot/reference/features/logging.html">Spring
+Boot reference: Logging (including structured logging)</a></li>
+<li><a href="https://www.slf4j.org/manual.html#mdc">SLF4J manual: Mapped
+Diagnostic Context</a></li>
+<li><a href="https://eclipse.dev/mat/">Eclipse Memory Analyzer
+(MAT)</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Debugging Java code in IntelliJ IDEA</h3><p>IntelliJ IDEA, a JetBrains IDE · 7 min. JetBrains&#x27; own guide to debugging Java in IntelliJ IDEA.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/V5iQ1FyRtBo" title="Debugging Java code in IntelliJ IDEA" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Thread Dump Analysis Fundamentals - Part 1</h3><p>Pierre-Hugues Charbonneau · 13 min. Thread dump analysis fundamentals: states, locks and what to look for.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/1qzHSEjU8Hc" title="Thread Dump Analysis Fundamentals - Part 1" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Heap Dump Analysis Using Eclipse MAT</h3><p>Informatica Support · 16 min. Heap dump analysis with Eclipse MAT: leak suspects and the dominator tree.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/qx64dxxFpSc" title="Heap Dump Analysis Using Eclipse MAT" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/02-concurrency-jvm/2.6-debugging-troubleshooting/README.md">2.6 Debugging and troubleshooting: debugger, stack traces, logs, thread and heap dumps</a></p>

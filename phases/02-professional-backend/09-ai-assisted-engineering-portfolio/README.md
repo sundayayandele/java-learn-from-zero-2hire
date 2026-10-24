@@ -41,6 +41,10 @@ Employers increasingly expect engineers to use AI tools well. They also test, in
 - A one-page CV for junior Java backend roles with quantified project bullets (for example "reconciled 1M records per side in 3 minutes").
 - A shortlist of 15 real roles (banks, fintechs, consultancies, remote) with a job-ad-to-evidence map for each, and a four-week application plan with weekly targets.
 
+### Lab 9.D: Review an AI-generated pull request
+
+A broken-service lab: [Review an AI-generated pull request](../../../labs/09-ai-pull-request-review/README.md), an AI-written fee service whose own tests pass while the product specification tests fail. Do it alongside the module; it counts as practice, not as the module project, but mentors review it if you submit it with your project.
+
 ## How these projects are assessed
 
 | Criterion | Not yet | Competent | Strong |

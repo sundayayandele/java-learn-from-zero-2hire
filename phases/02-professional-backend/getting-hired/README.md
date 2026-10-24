@@ -25,7 +25,7 @@ Still don't claim Kafka, Kubernetes in production, microservices or cloud certif
 Pin **four or five** repositories and order them for the jobs you want:
 
 1. **Capstone 1 (payment gateway hub)**: your headline project for payments and fintech roles.
-2. **Two more Phase 2 capstones** chosen for your target employers: open banking or KYC for banks, tokenisation or merchant platform for payment companies, GraphQL or gRPC for product engineering teams.
+2. **Your second Phase 2 capstone** (and a third if you built one), chosen for your target employers: open banking or KYC for banks, tokenisation or merchant platform for payment companies, GraphQL or gRPC for product engineering teams.
 3. **Phase 1 Capstone 1 (ledger)** or your best Phase 1 capstone: it shows SQL and concurrency depth.
 4. Optional: an open-source contribution or the Module 9 portfolio project.
 
@@ -52,6 +52,8 @@ Each README leads with a one-line result, for example "Payment hub: provider fai
 | Behavioural | Ownership, collaboration, review, learning, mistakes | Seven STAR stories (below) |
 
 ### Questions you should be able to answer cold
+
+Revise with the [Java fundamentals revision sheet](../../../docs/interview/java-fundamentals.md) and keep up the timed [coding-interview practice track](../../../practice/README.md).
 
 1. What happens to a request in Spring Security before it reaches your controller?
 2. How does a resource server validate a JWT, and which claims must it check?
@@ -82,7 +84,7 @@ The five from Phase 1, plus:
 
 ## Phase 2 Getting Hired checklist
 
-- [ ] Four or five pinned repositories, each passing the three-minute README test, three of them deployed
+- [ ] Four or five pinned repositories, each passing the three-minute README test, at least two of them deployed
 - [ ] Junior Java Backend Engineer CV reviewed by a mentor or peer
 - [ ] LinkedIn headline and projects updated (topic 9.4)
 - [ ] One technical post about an integration or security problem you solved

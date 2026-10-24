@@ -181,6 +181,16 @@ For a junior engineer the practical steps are: keep the OpenAPI file authoritati
 - Generate test tokens in one helper (`testTokens.customer(...)`, `testTokens.admin()`).
 - Name tests after the behaviour and the expected status (`returns422WhenFundsAreInsufficient`).
 
+## 6. A contract test between two of your capstones
+
+Your capstones talk to each other in their stretch goals (the ledger consuming FX rates, the bill-payments aggregator calling the ledger). Make that dependency safe with a **consumer-driven contract**:
+
+1. In the **consumer** (for example Phase 1 Capstone 1 calling Capstone 2's `GET /api/v1/rates`), write a WireMock-based test of your client, and save the stubbed interaction (request and response) as a JSON file in a `contracts/` folder.
+2. In the **provider** (Capstone 2), add a test that replays every contract file against the real application (with `RestTestClient` or MockMvc) and asserts the response contains at least the fields, types and status the consumer relies on.
+3. Run both in CI. When the provider changes a field the consumer uses, the provider's build fails before the change reaches production.
+
+Tools such as **Pact** and **Spring Cloud Contract** automate the sharing and verification of these files; the hand-made version above teaches the idea with no extra infrastructure.
+
 ## Common mistakes
 
 - Only happy-path API tests; validation, errors and security untested.
@@ -196,10 +206,11 @@ For a junior engineer the practical steps are: keep the OpenAPI file authoritati
 2. Rewrite two of those tests with `MockMvcTester` and compare readability.
 3. Add one `RestTestClient` round-trip test and one REST Assured test against the running application with Testcontainers.
 4. Validate your API responses against your committed OpenAPI document in a test, and break a field name to see it fail.
+5. Write a consumer-driven contract between two of your capstones as described in section 6, and show the provider build failing when you rename a field the consumer uses.
 
 ## Key terms
 
-Web slice test, `@WebMvcTest`, `MockMvc`, `MockMvcTester`, `@MockitoBean`, `jsonPath`, `@AutoConfigureMockMvc`, `RANDOM_PORT`, `@LocalServerPort`, `RestTestClient`, `@AutoConfigureRestTestClient`, REST Assured, given–when–then, black-box test, smoke test, contract test, consumer-driven contract, Pact, Spring Cloud Contract, stub, OpenAPI validation.
+Web slice test, `@WebMvcTest`, `MockMvc`, `MockMvcTester`, `@MockitoBean`, `jsonPath`, `@AutoConfigureMockMvc`, `RANDOM_PORT`, `@LocalServerPort`, `RestTestClient`, `@AutoConfigureRestTestClient`, REST Assured, given–when–then, black-box test, smoke test, contract test, consumer-driven contract, Pact, Spring Cloud Contract, stub, OpenAPI validation, consumer-driven contract, provider verification.
 
 ## Further reading
 

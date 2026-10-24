@@ -157,6 +157,41 @@ class ArchitectureTest {
 
 A typical order in CI (topic 8.3): compile with lints → unit tests → integration tests (Failsafe) → JaCoCo check → Sonar analysis and quality gate → dependency and secret scans → build image. Fast checks first, so feedback arrives quickly.
 
+## 6. Architecture tests with ArchUnit
+
+Some rules can't be seen by coverage or by Sonar: "controllers must not call repositories directly", "the domain package must not depend on Spring", "the decision engine must never import the HMDA analytics package" (Phase 2 Capstone 9). **ArchUnit** checks such rules as ordinary unit tests:
+
+```xml
+<dependency>
+    <groupId>com.tngtech.archunit</groupId>
+    <artifactId>archunit-junit5</artifactId>
+    <version>1.5.1</version>
+    <scope>test</scope>
+</dependency>
+```
+
+```java
+@AnalyzeClasses(packages = "ng.itlearning.ledger")
+class ArchitectureTest {
+
+    @ArchTest
+    static final ArchRule controllersDontUseRepositories = noClasses()
+            .that().resideInAPackage("..web..")
+            .should().dependOnClassesThat().resideInAPackage("..repository..");
+
+    @ArchTest
+    static final ArchRule domainIsFrameworkFree = noClasses()
+            .that().resideInAPackage("..domain..")
+            .should().dependOnClassesThat().resideInAPackage("org.springframework..");
+
+    @ArchTest
+    static final ArchRule noFieldInjection = noFields()
+            .should().beAnnotatedWith(org.springframework.beans.factory.annotation.Autowired.class);
+}
+```
+
+The rules run in milliseconds in every build, so architecture decisions in your ADRs are enforced instead of just written down.
+
 ## Common mistakes
 
 - Chasing 100% coverage with assertion-free tests.
@@ -172,10 +207,11 @@ A typical order in CI (topic 8.3): compile with lints → unit tests → integra
 2. Run PIT on your domain package; kill at least five surviving mutants with new boundary tests and record the before/after mutation score.
 3. Analyse the capstone with SonarQube (local Docker or SonarQube Cloud), fix all bugs and vulnerabilities, review the hotspots, and configure a quality gate on new code.
 4. Add two ArchUnit rules that describe your intended architecture.
+5. Add ArchUnit to a capstone with three rules from your own ADRs, and break one rule deliberately to see the failure message.
 
 ## Key terms
 
-Code coverage, line coverage, branch coverage, JaCoCo, `prepare-agent`, `check` goal, coverage threshold, new code, mutation testing, PIT, mutant, killed, survived, mutation score, static analysis, SonarQube, SonarQube Cloud, bug, vulnerability, security hotspot, code smell, technical debt, cognitive complexity, duplication, quality gate, Error Prone, Checkstyle, Spotless, ArchUnit.
+Code coverage, line coverage, branch coverage, JaCoCo, `prepare-agent`, `check` goal, coverage threshold, new code, mutation testing, PIT, mutant, killed, survived, mutation score, static analysis, SonarQube, SonarQube Cloud, bug, vulnerability, security hotspot, code smell, technical debt, cognitive complexity, duplication, quality gate, Error Prone, Checkstyle, Spotless, ArchUnit, ArchUnit, architecture rule.
 
 ## Further reading
 
@@ -196,7 +232,7 @@ All videos are in English with English captions and were checked on 2026-10-24. 
 
 ## Check your understanding
 
-7 scenario questions. Answer each one before opening the explanation. On Moodle this is the graded topic quiz (pass mark 70%, unlimited attempts).
+8 scenario questions. Answer each one before opening the explanation. On Moodle this is the graded topic quiz (pass mark 70%, unlimited attempts).
 
 **Q1.** A service reports 95% line coverage. Code review finds that many tests call methods without any assertions.
 
@@ -300,6 +336,21 @@ Why is this flagged, and what is the fix?
 <details><summary>Answer</summary>
 
 **C.** A balance of 0.00 would not equal BigDecimal.ZERO with equals, so the check silently fails. compareTo or signum compares numeric value only.
+
+</details>
+
+**Q8.** An ADR says controllers must never call repositories directly, but new code keeps doing it and reviewers miss it.
+
+How can the build enforce the rule?
+
+- A. Raise the JaCoCo threshold
+- B. Add an ArchUnit test that fails when classes in the web package depend on the repository package
+- C. Run SonarQube once a month
+- D. Add a comment to every controller
+
+<details><summary>Answer</summary>
+
+**B.** ArchUnit turns architecture decisions into fast, automated tests.
 
 </details>
 

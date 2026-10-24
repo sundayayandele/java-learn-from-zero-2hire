@@ -80,3 +80,8 @@ gateway:
     GHS: 10000000
     KES: 100000000
     USD: 1000000
+
+# Every log line carries the request's correlation id (CorrelationIdFilter).
+logging:
+  pattern:
+    level: "%5p [%X{correlationId:-}]"

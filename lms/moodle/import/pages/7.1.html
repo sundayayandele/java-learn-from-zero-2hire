@@ -252,6 +252,55 @@ separate phase (<code>mvn verify</code> with the Failsafe plugin), topic
 </ul>
 <p>Test data builders keep tests readable as models grow:</p>
 <pre class="java"><code>Account account = anAccount().withNumber(&quot;0123456789&quot;).withBalance(&quot;10000.00&quot;).frozen().build();</code></pre>
+<h2 id="6-test-data-builders">6. Test data builders</h2>
+<p>Tests become unreadable when every one of them builds a nine-field
+<code>Transfer</code> by hand, and fragile when a new required field
+breaks 200 constructors. A <strong>test data builder</strong> gives
+sensible defaults and lets each test state only what matters to it:</p>
+<pre class="java"><code>class TransferBuilder {
+    private String from = &quot;0123456789&quot;;
+    private String to = &quot;0987654321&quot;;
+    private Money amount = Money.of(&quot;10000.00&quot;, &quot;NGN&quot;);
+    private Channel channel = Channel.NIP;
+    private Instant at = Instant.parse(&quot;2026-10-01T09:00:00Z&quot;);
+
+    static TransferBuilder aTransfer() { return new TransferBuilder(); }
+    TransferBuilder amount(String value) { this.amount = Money.of(value, &quot;NGN&quot;); return this; }
+    TransferBuilder channel(Channel c) { this.channel = c; return this; }
+    TransferBuilder at(String instant) { this.at = Instant.parse(instant); return this; }
+    Transfer build() { return new Transfer(from, to, amount, channel, at); }
+}
+
+@Test
+void ussdTransfersPayTheFlatFee() {
+    var t = aTransfer().channel(Channel.USSD).build();     // only what this test cares about
+    assertThat(fees.feeFor(t)).isEqualByComparingTo(&quot;6.98&quot;);
+}</code></pre>
+<p>Keep builders next to the tests (<code>src/test/java</code>), give
+every default a valid business value, and add one method per field a
+test needs to vary. An <strong>Object Mother</strong>
+(<code>Transfers.largeNipTransfer()</code>) is a lighter alternative for
+a few named, common cases.</p>
+<h2 id="7-testing-asynchronous-code-with-awaitility">7. Testing
+asynchronous code with Awaitility</h2>
+<p>Code that finishes later (an <code>@Async</code> method, an event
+listener after commit, a scheduled job, a consumer) tempts people into
+<code>Thread.sleep(2000)</code>: slow when the work is fast, and flaky
+when the machine is slow. <strong>Awaitility</strong> (managed by Spring
+Boot, so no version is needed) polls until a condition holds or a
+timeout expires:</p>
+<pre class="java"><code>import static org.awaitility.Awaitility.await;
+
+@Test
+void smsIsSentAfterTheTransferCommits() {
+    transferService.transfer(request);
+    await().atMost(Duration.ofSeconds(5))
+           .untilAsserted(() -&gt; assertThat(fakeSms.sentTo()).contains(&quot;+2348012345678&quot;));
+}</code></pre>
+<p>Prefer making code synchronous in unit tests (inject an
+<code>Executor</code> and pass a direct executor
+<code>Runnable::run</code> in tests) and keep Awaitility for integration
+tests where real threads are involved.</p>
 <h2 id="common-mistakes">Common mistakes</h2>
 <ul>
 <li>Tests with no assertions, or that only check "no exception".</li>
@@ -278,6 +327,11 @@ after each red, green and refactor step.</li>
 <li>Introduce a deliberate flaky test (using
 <code>LocalDateTime.now()</code>), observe it, and fix it with an
 injected <code>Clock</code>.</li>
+<li>Write a <code>TransferBuilder</code> and convert five existing tests
+to use it; count how many lines each test lost.</li>
+<li>Replace every <code>Thread.sleep</code> in your test suite with
+Awaitility or a synchronous executor, and measure the suite's run time
+before and after.</li>
 </ol>
 <h2 id="key-terms">Key terms</h2>
 <p>Unit test, JUnit Jupiter, <code>@Test</code>,
@@ -288,7 +342,8 @@ double, dummy, stub, fake, mock, spy, Mockito, <code>@Mock</code>,
 <code>when/thenReturn</code>, <code>verify</code>,
 <code>ArgumentCaptor</code>, strict stubs, state-based vs
 interaction-based testing, <code>Clock</code>, test-driven development,
-red–green–refactor, flaky test, brittle test, test data builder.</p>
+red–green–refactor, flaky test, brittle test, test data builder, test
+data builder, Object Mother, Awaitility, polling assertion.</p>
 <h2 id="further-reading">Further reading</h2>
 <ul>
 <li><a href="https://docs.junit.org/current/user-guide/">JUnit 5 User

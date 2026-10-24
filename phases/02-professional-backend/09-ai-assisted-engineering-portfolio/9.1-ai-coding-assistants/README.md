@@ -3,7 +3,7 @@
 
 # 9.1 Daily workflows with AI coding assistants (GitHub Copilot, Claude Code, Cursor and similar)
 
-← [8.5 Deploying a container to a cloud host](../../08-git-docker-cicd/8.5-deploying-containers-cloud/README.md) · [Module 9](../README.md) · [Phase 2](../../README.md) · [9.2 Reviewing AI-generated code for bugs, security issues and licence risk](../9.2-reviewing-ai-generated-code/README.md) →
+← [8.6 Working in an agile team](../../08-git-docker-cicd/8.6-agile-teamwork/README.md) · [Module 9](../README.md) · [Phase 2](../../README.md) · [9.2 Reviewing AI-generated code for bugs, security issues and licence risk](../9.2-reviewing-ai-generated-code/README.md) →
 
 > **Week 23** · Module 9: AI-Assisted Engineering & Junior Portfolio · Website topic covered: *Working effectively with GitHub Copilot, Claude Code, Cursor and similar tools*
 
@@ -262,4 +262,4 @@ What does professional practice require?
 
 ---
 
-← [8.5 Deploying a container to a cloud host](../../08-git-docker-cicd/8.5-deploying-containers-cloud/README.md) · [Module 9](../README.md) · [Phase 2](../../README.md) · [9.2 Reviewing AI-generated code for bugs, security issues and licence risk](../9.2-reviewing-ai-generated-code/README.md) →
+← [8.6 Working in an agile team](../../08-git-docker-cicd/8.6-agile-teamwork/README.md) · [Module 9](../README.md) · [Phase 2](../../README.md) · [9.2 Reviewing AI-generated code for bugs, security issues and licence risk](../9.2-reviewing-ai-generated-code/README.md) →

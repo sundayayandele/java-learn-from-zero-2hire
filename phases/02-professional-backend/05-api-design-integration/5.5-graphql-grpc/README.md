@@ -3,7 +3,7 @@
 
 # 5.5 Introduction to GraphQL and gRPC, and when to use each
 
-← [5.4 Consuming third-party APIs](../5.4-consuming-apis-resilience/README.md) · [Module 5](../README.md) · [Phase 2](../../README.md) · [6.1 Spring Security filter chain and configuration](../../06-security-essentials/6.1-spring-security-filter-chain/README.md) →
+← [5.4 Consuming third-party APIs](../5.4-consuming-apis-resilience/README.md) · [Module 5](../README.md) · [Phase 2](../../README.md) · [5.6 System design basics for junior interviews](../5.6-system-design-basics/README.md) →
 
 > **Week 16** · Module 5: API Design & Integration · Website topic covered: *Spring for GraphQL, gRPC with Protocol Buffers, choosing REST vs GraphQL vs gRPC*
 
@@ -355,4 +355,4 @@ Which style is usually the best default?
 
 ---
 
-← [5.4 Consuming third-party APIs](../5.4-consuming-apis-resilience/README.md) · [Module 5](../README.md) · [Phase 2](../../README.md) · [6.1 Spring Security filter chain and configuration](../../06-security-essentials/6.1-spring-security-filter-chain/README.md) →
+← [5.4 Consuming third-party APIs](../5.4-consuming-apis-resilience/README.md) · [Module 5](../README.md) · [Phase 2](../../README.md) · [5.6 System design basics for junior interviews](../5.6-system-design-basics/README.md) →

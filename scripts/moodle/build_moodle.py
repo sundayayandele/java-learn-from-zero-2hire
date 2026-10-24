@@ -87,6 +87,21 @@ def bank_xml(category: str, prefix: str, questions: list[dict]) -> str:
     return "\n".join(body) + "\n"
 
 
+def exam_xml(phase: int, questions: list[dict]) -> str:
+    """The exam bank with one sub-category per module, so the quiz can draw a fixed number of random questions
+    from each module (the blueprint weights) for every attempt."""
+    body = ['<?xml version="1.0" encoding="UTF-8"?>', "<quiz>"]
+    modules = sorted({q["topic"].split(".")[0] for q in questions}, key=int)
+    for m in modules:
+        category = f"{COURSE_CATEGORY}/Phase {phase}/End-of-phase exam/Module {m}"
+        body += ['  <question type="category">', f"    <category><text>$course$/top/{html.escape(category)}</text></category>",
+                 "  </question>"]
+        group = [q for q in questions if q["topic"].split(".")[0] == m]
+        body += [question_xml(f"P{phase}-EXAM-M{m}-Q{i:02d}", q) for i, q in enumerate(group, 1)]
+    body.append("</quiz>")
+    return "\n".join(body) + "\n"
+
+
 def lesson_html(md: str) -> str:
     result = subprocess.run(["pandoc", "--from", "gfm", "--to", "html5", "--no-highlight"],
                             input=md, capture_output=True, text=True, check=True)
@@ -148,15 +163,18 @@ def combine_topic_banks(phase_number: int, topic_ids: list[str]) -> None:
 
 
 # Per phase: number of topic quizzes, week capstones start, capstone rubric total and pass mark.
-PHASE_FACTS = {1: (29, 5, 20, 14), 2: (25, 15, 24, 17)}
+PHASE_FACTS = {1: (32, 5, 20, 14), 2: (27, 15, 24, 17)}
+# Per phase: how many capstones besides Capstone 1 are required.
+OTHER_CAPSTONES = {1: "two others", 2: "one other"}
 
 START_HERE = """<h2>How this course works on ITLearning</h2>
 <ol>
 <li><strong>Work through the modules in order.</strong> Each topic has a <em>Lesson</em> page (read it and type the code yourself, then watch the embedded videos) followed by a <em>Check your understanding</em> quiz.</li>
 <li><strong>Pass every topic quiz at 70%.</strong> Attempts are unlimited and you see feedback straight away, so use the explanations to learn. A topic counts as complete when you've viewed the lesson and passed its quiz.</li>
 <li><strong>Do the practice tasks and module projects</strong> listed at the end of each lesson and module.</li>
-<li><strong>Build at least three capstones from week {week}</strong>: Capstone 1 plus two others. Each capstone page has the brief, the architecture diagrams and a step-by-step build guide. Submit each one in its <em>Submission</em> assignment; it is marked out of {total} with the rubric, and {passmark} is a pass.</li>
-<li><strong>Sit the end-of-phase exam</strong> once you've passed all {quizzes} topic quizzes: 60 questions, 2 hours, pass mark 70%, two attempts at least 48 hours apart.</li>
+<li><strong>Build your capstones from week {week}</strong>: Capstone 1 plus {others}, then defend them in a 20-minute <em>capstone defence</em> (demo, code questions and a live change). Each capstone page has the brief, the architecture diagrams and a step-by-step build guide. Submit each one in its <em>Submission</em> assignment; it is marked out of {total} with the rubric, and {passmark} is a pass.</li>
+<li><strong>Keep up the coding practice track</strong> (about 3 hours a week): auto-graded Java and SQL interview problems. Submit your progress at the <em>coding practice checkpoint</em>.</li>
+<li><strong>Sit the end-of-phase assessments</strong>: the exam once you've passed all {quizzes} topic quizzes (60 questions drawn at random, 2 hours, pass mark 70%, two attempts at least 48 hours apart) and the 90-minute <em>live-coding assessment</em>.</li>
 <li><strong>Get hired</strong>: work through the Getting hired section and submit your checklist.</li>
 </ol>
 <p>Stuck? Ask in the <em>Questions and help</em> forum in this section. Say which topic or capstone, what you tried, and paste the error message.</p>
@@ -240,7 +258,8 @@ def main() -> int:
             body = absolutise(lesson_html(md), src.parent if name != "start-here" else pdir)
             body = re.sub(r"<p>←.*?</p>", "", body, count=1, flags=re.S)
             if name == "start-here":
-                body = START_HERE.format(week=cap_week, total=cap_total, passmark=cap_pass, quizzes=quizzes) \
+                body = START_HERE.format(week=cap_week, total=cap_total, passmark=cap_pass, quizzes=quizzes,
+                                         others=OTHER_CAPSTONES[n]) \
                     + re.sub(r"<!--.*?-->", "", body, flags=re.S)
             (OUT / "guides" / f"{sub}{name}.html").write_text(body + "\n" + videos_html(videos.get(video_key, []) if video_key else []),
                                                         encoding="utf-8")
@@ -264,8 +283,7 @@ def main() -> int:
         if exam_src.exists():
             exam = load(exam_src)
             (OUT / "questions" / f"phase-{phase['number']}-exam.xml").write_text(
-                bank_xml(f"{COURSE_CATEGORY}/Phase {phase['number']}/End-of-phase exam", f"P{phase['number']}-EXAM",
-                         exam["questions"]), encoding="utf-8")
+                exam_xml(phase["number"], exam["questions"]), encoding="utf-8")
             exam_acts.append({"type": "quiz", "name": f"Phase {phase['number']} end-of-phase exam",
                               "questions": f"questions/phase-{phase['number']}-exam.xml",
                               "count": len(exam["questions"]),

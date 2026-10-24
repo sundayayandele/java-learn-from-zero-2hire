@@ -14,6 +14,7 @@
 | [2.3 Virtual threads (Project Loom) and structured concurrency](2.3-virtual-threads-structured-concurrency/README.md) | 6 | Virtual threads (Project Loom) and structured concurrency concepts |
 | [2.4 The JVM memory model, heap vs stack and garbage collection](2.4-jvm-memory-gc/README.md) | 6 | JVM memory model, heap vs stack, garbage collection basics |
 | [2.5 Modules, packaging and runtime images (JPMS, jars, jlink)](2.5-modules-packaging-jlink/README.md) | 6 | Added for the Oracle OCP Java SE 21/25 exam: packaging and deploying Java code |
+| [2.6 Debugging and troubleshooting: debugger, stack traces, logs, thread and heap dumps](2.6-debugging-troubleshooting/README.md) | 6 | Added for the job: IDE debugging, reading stack traces, structured logs with correlation ids, thread dumps, heap dumps, remote debugging a container |
 
 ## What this module gives you
 

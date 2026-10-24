@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: payment-client-resilience-lab
+provider:
+  base-url: http://localhost:9091
+  secret: sk_test_lab_secret

@@ -11,13 +11,29 @@ From "I can build a Spring Boot service" to "I can be trusted with a production 
 
 ## How to study this phase
 
-Plan for **10–15 hours per week** for 11 weeks. Each topic page has the same three parts as Phase 1, in this order:
+Each topic page has the same three parts as Phase 1, in this order:
 
 1. **Read** the lesson and type out the code yourself.
 2. **Watch** the curated videos (checked: real, embeddable, English with captions).
 3. **Check your understanding** with the scenario CBT. On Moodle it is graded (pass mark 70%, unlimited attempts).
 
-Then do the topic's **practice** tasks and, each module, at least one **module project**. From week 15, start your **Phase 2 capstones**; every capstone is a team-ready service with security, a full test pyramid and a CI/CD pipeline with quality gates.
+Then do the topic's **practice** tasks and, each module, at least one **module project** and its **broken-service lab**. From week 15, start your **Phase 2 capstones**; every capstone is a team-ready service with security, a full test pyramid and a CI/CD pipeline with quality gates. Keep up the weekly [coding-interview practice track](../../practice/README.md) (about 3 hours a week).
+
+### How much time this phase takes
+
+Be realistic: Phase 2 is the most demanding phase, because it turns you into someone a team can hand real tickets to. Estimated effort for a learner who finished Phase 1:
+
+| Work | Hours |
+| --- | --- |
+| 27 topics (reading, videos, CBT, practice tasks) | 70–80 |
+| 5 module projects | 35–45 |
+| 5 broken-service labs | 15–20 |
+| 2 capstones (Capstone 1 plus one other) | 80–100 |
+| Practice track (DSA and SQL, 3 h/week) | 30–35 |
+| Getting hired, mock interviews, defence and live coding | 15–20 |
+| **Total** | **about 245–300** |
+
+That is **22–27 hours a week over the 11 scheduled weeks**. If you can give 12–15 hours a week, plan for **18–20 weeks** instead and tell your mentor; the order of the work stays the same, and nothing in the certificate depends on finishing in 11 weeks. To keep the load manageable, a module project may extend one of your capstones (for example Project 6.C's admin/customer roles inside Capstone 1), and the second capstone can be your strongest stretch, not a third. A third capstone is welcome but optional.
 
 ## Weekly plan
 
@@ -25,15 +41,15 @@ Then do the topic's **practice** tasks and, each module, at least one **module p
 | --- | --- | --- | --- |
 | 14 | 5 API Design & Integration | 5.1 Resource design and HTTP, 5.2 OpenAPI and versioning | OpenAPI contract for your first capstone |
 | 15 | 5 | 5.3 Problem Details, pagination, idempotency, 5.4 Consuming APIs and resilience | Start Capstone 1 (payment gateway hub) |
-| 16 | 5 | 5.5 GraphQL and gRPC | Module 5 project |
+| 16 | 5 | 5.5 GraphQL and gRPC, 5.6 System design basics | Module 5 project, Lab 5.E |
 | 17 | 6 Security Essentials | 6.1 Spring Security filter chain, 6.2 JWT, OAuth2 and OIDC | Keycloak running locally |
-| 18 | 6 | 6.3 RBAC and method security, 6.4 OWASP Top 10, 6.5 Passwords, secrets, dependency scanning | Secured capstone API; Module 6 project |
+| 18 | 6 | 6.3 RBAC and method security, 6.4 OWASP Top 10, 6.5 Passwords, secrets, dependency scanning | Secured capstone API; Module 6 project, Lab 6.D |
 | 19 | 7 Testing & Code Quality | 7.1 JUnit, Mockito and TDD, 7.2 Testcontainers | |
-| 20 | 7 | 7.3 API tests, 7.4 JaCoCo and SonarQube, 7.5 Code review | Quality gate green on every capstone |
+| 20 | 7 | 7.3 API tests, 7.4 JaCoCo and SonarQube, 7.5 Code review | Quality gate green on every capstone; Lab 7.D |
 | 21 | 8 Git, Docker & CI/CD | 8.1 Git workflow, 8.2 Docker images and Compose | Team PR workflow with a peer |
-| 22 | 8 | 8.3 GitHub Actions and GitLab CI, 8.4 Jenkins and Azure DevOps, 8.5 Deploying containers | Capstones deployed from CI |
-| 23 | 9 AI-Assisted Engineering | 9.1 AI coding assistants, 9.2 Reviewing AI code, 9.3 AI for tests, docs and refactors | |
-| 24 | 9 Junior Portfolio | 9.4 CV, GitHub and LinkedIn, 9.5 Junior interview prep | **End-of-phase exam**, **Getting Hired**, junior portfolio review |
+| 22 | 8 | 8.3 GitHub Actions and GitLab CI, 8.4 Jenkins and Azure DevOps, 8.5 Deploying containers, 8.6 Working in an agile team | Capstones deployed from CI; Module 8 mini-sprint; Lab 8.D |
+| 23 | 9 AI-Assisted Engineering | 9.1 AI coding assistants, 9.2 Reviewing AI code, 9.3 AI for tests, docs and refactors | Lab 9.D |
+| 24 | 9 Junior Portfolio | 9.4 CV, GitHub and LinkedIn, 9.5 Junior interview prep | **End-of-phase exam**, **capstone defence**, **live-coding assessment**, **Getting Hired**, junior portfolio review |
 
 ## Modules
 
@@ -47,7 +63,7 @@ Then do the topic's **practice** tasks and, each module, at least one **module p
 
 ## Capstones
 
-Ten integration- and security-heavy fintech capstones, each built on public data or official sandboxes that are free for commercial and non-commercial use, with recorded licences. **Complete at least three** by the end of the phase: Capstone 1 (the payment gateway hub) plus any two others. Capstones 1 and 2 come with complete, tested reference solutions.
+Ten integration- and security-heavy fintech capstones, each built on public data or official sandboxes that are free for commercial and non-commercial use, with recorded licences. **Complete at least two** by the end of the phase: Capstone 1 (the payment gateway hub) plus any one other, and defend them in a 20-minute [capstone defence](../../docs/assessments/capstone-defence.md). Capstones 1 and 2 come with complete, tested reference solutions.
 
 → [Phase 2 capstones](capstones/README.md)
 
@@ -61,9 +77,12 @@ Phase 2 capstones use the same six-platform pipeline as Phase 1 (GitHub Actions,
 
 Oracle's Java SE exams are fully covered by Phase 1. Phase 2 prepares the ground for cloud and security credentials: Module 8 starts the AWS material used by **AWS Certified Developer – Associate**, and Module 6 covers the OWASP and OAuth2 knowledge assumed by vendor security courses. See the [certification mapping](../../docs/certifications.md).
 
-## End-of-phase exam
+## End-of-phase assessments
 
-A 2-hour, 60-question scenario-based CBT covering every Phase 2 topic, taken on Moodle in week 24. Pass mark 70%.
+- **Exam:** a 2-hour, 60-question scenario-based CBT covering every Phase 2 topic, taken on Moodle in week 24 (questions drawn at random from a larger bank). Pass mark 70%.
+- **Capstone defence:** a 20-minute recorded viva on your capstones, including a live change ([format and rubric](../../docs/assessments/capstone-defence.md)).
+- **Live-coding assessment:** 90 minutes, one algorithm problem and one secured or integration change to an unfamiliar service ([format and rubric](../../docs/assessments/live-coding.md)).
+- **Coding practice checkpoint:** at least 70% of the [practice track](../../practice/README.md) Java and SQL problems passing.
 
 → [Exam blueprint](exam/README.md)
 
@@ -75,8 +94,9 @@ Week 24 is your junior-role launch: a portfolio of four to five deployed project
 
 ## Phase 2 exit criteria
 
-- All 25 topic CBTs passed (70%+).
+- All 27 topic CBTs passed (70%+).
 - At least one project per module.
-- Capstone 1 plus two others passed against the rubric, each with a green pipeline that enforces quality gates, deployed and secured.
+- Capstone 1 plus one other passed against the rubric, each with a green pipeline that enforces quality gates, deployed and secured, and both defended in the capstone defence.
+- Live-coding assessment and coding practice checkpoint passed.
 - End-of-phase exam passed (70%+).
 - Getting Hired checklist complete.

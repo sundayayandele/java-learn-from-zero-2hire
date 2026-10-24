@@ -15,15 +15,15 @@ It implements the [ITLearning Java Backend Engineer Training Program](https://it
 
 | Phase | Weeks | Status |
 | --- | --- | --- |
-| [Phase 1: Foundations](phases/01-foundations/README.md) | 1–13 | **Built (pilot)**: 29 topics, 10 capstones, exam, Getting Hired |
-| [Phase 2: Professional Backend](phases/02-professional-backend/README.md) | 14–24 | **Built**: 25 topics, 10 capstones, exam, Getting Hired |
+| [Phase 1: Foundations](phases/01-foundations/README.md) | 1–13 | **Built**: 32 topics, 10 capstones, exam, defence, live coding, Getting Hired |
+| [Phase 2: Professional Backend](phases/02-professional-backend/README.md) | 14–24 | **Built**: 27 topics, 10 capstones, 5 labs, exam, defence, live coding, Getting Hired |
 | [Phase 3: Enterprise & Cloud-Native](phases/03-enterprise-cloud-native/README.md) | 25–36 | Mapped, to be built after the Phase 1 review |
 
 The [full curriculum](CURRICULUM.md) lists every phase, module and topic.
 
 ## What's in Phase 1
 
-- **29 topics** (the website's topics, plus Kotlin and three topics that complete the Oracle OCP Java SE 21/25 objectives), each with authored reading content, curated and verified YouTube videos (English, captioned, embeddable), practice tasks and a **scenario-based CBT** (6–8 questions, 211 in total).
+- **32 topics** (the website's topics, plus Kotlin, three topics that complete the Oracle OCP Java SE 21/25 objectives, and three interview essentials: design patterns, debugging and troubleshooting, and Spring under the hood), each with authored reading content, curated and verified YouTube videos (English, captioned, embeddable), practice tasks and a **scenario-based CBT** (6–10 questions, 236 in total).
 - **Module projects** from the ITLearning programme (wallet simulator, payroll, parallel transaction processor, ledger schema, query-tuning lab, task API, Spring Boot 3 → 4 upgrade and more), plus three hands-on [labs](labs/).
 - **10 capstones** on financial-institution use cases using public data free for commercial and non-commercial use, each licence recorded in [docs/data-sources.md](docs/data-sources.md). Every capstone has a generated, tested Spring Boot 4 **starter**; Capstones 1 (core banking ledger) and 2 (FX rates) have complete, tested **reference solutions**.
 - **Deployment and CI/CD guide** with infrastructure sizing and step-by-step setup for a VPS, AWS, Azure and GCP.
@@ -34,9 +34,16 @@ The [full curriculum](CURRICULUM.md) lists every phase, module and topic.
 
 ## What's in Phase 2
 
-- **25 topics** across API design and integration, security, testing and code quality, Git/Docker/CI/CD, and AI-assisted engineering with the junior portfolio, each with a full lesson, verified videos and a **scenario-based CBT** (175 questions in total).
+- **27 topics** across API design and integration (including system design basics), security, testing and code quality, Git/Docker/CI/CD (including working in an agile team), and AI-assisted engineering with the junior portfolio, each with a full lesson, verified videos and a **scenario-based CBT** (192 questions in total).
+- **Five broken-service labs** (resilience, security, flaky tests, containers and pipelines, reviewing an AI-generated pull request), each with failing tests or an automatic checker.
 - **10 integration- and security-heavy capstones** (payment gateway hub, open banking, card vault, KYC orchestration, merchant API keys, SEC financials GraphQL, interbank gRPC, bill payments, mortgage decisions, fraud case management) on public data or simulators. Every starter is generated from the new [secure service starter](templates/spring-boot-secure-service-starter/README.md) (Keycloak, OAuth2 resource server, OpenAPI, JaCoCo gate, SBOM, Trivy scans); Capstones 1 and 2 have complete, tested reference solutions.
 - **Deployment guide with an identity provider**, a **CI/CD quality-gates guide** for all six platforms, a **60-question exam** ([blueprint](phases/02-professional-backend/exam/README.md)) and a junior-launch **Getting Hired** guide.
+
+## Across both phases
+
+- **[Coding-interview practice track](practice/README.md)**: 127 problems over weeks 2–24: 46 auto-graded Java problems, 24 auto-graded PostgreSQL drills (Testcontainers) and 57 mapped classic problems, so learners pass the online assessments that open most hiring loops.
+- **Assessments that test production, not just recognition**: a [capstone defence](docs/assessments/capstone-defence.md) (viva with a live change) and a [timed live-coding assessment](docs/assessments/live-coding.md) each phase, and exams drawn at random from 120-question banks.
+- **[Java fundamentals revision sheet](docs/interview/java-fundamentals.md)** for interview week.
 
 ## How to study
 
@@ -48,9 +55,11 @@ Start at [Phase 1](phases/01-foundations/README.md). For each topic: read and co
 curriculum.json                 phases, modules and topics (source of truth for structure)
 phases/01-foundations/          Phase 1: modules, topics (lesson.md + cbt.json), capstones, deploy, exam, getting-hired
 phases/02-professional-backend/ Phase 2: same structure, plus cicd/ (quality gates)
+practice/                       coding-interview practice track: dsa/ (Java + JUnit) and sql/ (PostgreSQL drills)
+docs/assessments/, docs/interview/  capstone defence, live coding, fundamentals revision sheet
 phases/03-...                   planned phase (topic list)
 templates/                      Spring Boot 4 service starter, secure service starter (Phase 2) and Java CLI starter
-labs/                           hands-on labs referenced by module projects
+labs/                           hands-on labs (Phase 1 projects, Phase 2 broken-service labs)
 lms/videos.json                 every video, verified by lms/check_videos.py
 lms/moodle/BLUEPRINT.md         how the Moodle course is set up
 scripts/build.py                generates the README pages from the sources
@@ -65,6 +74,7 @@ docs/data-sources.md            datasets and licences
 ```bash
 python scripts/build.py              # regenerate READMEs after editing lesson.md, cbt.json, guide.md or videos.json
 python scripts/new_starter.py        # regenerate capstone starters after changing the template
+python scripts/practice_stubs.py     # regenerate practice stubs after editing practice/*/solutions
 python scripts/check_repo.py         # everything consistent? (CI runs this)
 python lms/check_videos.py --quick   # are all videos still online and embeddable?
 python scripts/moodle/build_moodle.py   # Moodle import files (needs pandoc)

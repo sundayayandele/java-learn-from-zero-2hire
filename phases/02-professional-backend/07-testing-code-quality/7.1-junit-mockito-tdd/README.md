@@ -212,6 +212,51 @@ Test data builders keep tests readable as models grow:
 Account account = anAccount().withNumber("0123456789").withBalance("10000.00").frozen().build();
 ```
 
+## 6. Test data builders
+
+Tests become unreadable when every one of them builds a nine-field `Transfer` by hand, and fragile when a new required field breaks 200 constructors. A **test data builder** gives sensible defaults and lets each test state only what matters to it:
+
+```java
+class TransferBuilder {
+    private String from = "0123456789";
+    private String to = "0987654321";
+    private Money amount = Money.of("10000.00", "NGN");
+    private Channel channel = Channel.NIP;
+    private Instant at = Instant.parse("2026-10-01T09:00:00Z");
+
+    static TransferBuilder aTransfer() { return new TransferBuilder(); }
+    TransferBuilder amount(String value) { this.amount = Money.of(value, "NGN"); return this; }
+    TransferBuilder channel(Channel c) { this.channel = c; return this; }
+    TransferBuilder at(String instant) { this.at = Instant.parse(instant); return this; }
+    Transfer build() { return new Transfer(from, to, amount, channel, at); }
+}
+
+@Test
+void ussdTransfersPayTheFlatFee() {
+    var t = aTransfer().channel(Channel.USSD).build();     // only what this test cares about
+    assertThat(fees.feeFor(t)).isEqualByComparingTo("6.98");
+}
+```
+
+Keep builders next to the tests (`src/test/java`), give every default a valid business value, and add one method per field a test needs to vary. An **Object Mother** (`Transfers.largeNipTransfer()`) is a lighter alternative for a few named, common cases.
+
+## 7. Testing asynchronous code with Awaitility
+
+Code that finishes later (an `@Async` method, an event listener after commit, a scheduled job, a consumer) tempts people into `Thread.sleep(2000)`: slow when the work is fast, and flaky when the machine is slow. **Awaitility** (managed by Spring Boot, so no version is needed) polls until a condition holds or a timeout expires:
+
+```java
+import static org.awaitility.Awaitility.await;
+
+@Test
+void smsIsSentAfterTheTransferCommits() {
+    transferService.transfer(request);
+    await().atMost(Duration.ofSeconds(5))
+           .untilAsserted(() -> assertThat(fakeSms.sentTo()).contains("+2348012345678"));
+}
+```
+
+Prefer making code synchronous in unit tests (inject an `Executor` and pass a direct executor `Runnable::run` in tests) and keep Awaitility for integration tests where real threads are involved.
+
 ## Common mistakes
 
 - Tests with no assertions, or that only check "no exception".
@@ -228,10 +273,12 @@ Account account = anAccount().withNumber("0123456789").withBalance("10000.00").f
 2. Refactor one over-mocked test in your capstone into a state-based test with a fake repository.
 3. Do project 7.B (fee and tax engine kata) test-first, committing after each red, green and refactor step.
 4. Introduce a deliberate flaky test (using `LocalDateTime.now()`), observe it, and fix it with an injected `Clock`.
+5. Write a `TransferBuilder` and convert five existing tests to use it; count how many lines each test lost.
+6. Replace every `Thread.sleep` in your test suite with Awaitility or a synchronous executor, and measure the suite's run time before and after.
 
 ## Key terms
 
-Unit test, JUnit Jupiter, `@Test`, `@ParameterizedTest`, `@CsvSource`, `@Nested`, `@BeforeEach`, AssertJ, `isEqualByComparingTo`, arrange–act–assert, FIRST, test double, dummy, stub, fake, mock, spy, Mockito, `@Mock`, `when/thenReturn`, `verify`, `ArgumentCaptor`, strict stubs, state-based vs interaction-based testing, `Clock`, test-driven development, red–green–refactor, flaky test, brittle test, test data builder.
+Unit test, JUnit Jupiter, `@Test`, `@ParameterizedTest`, `@CsvSource`, `@Nested`, `@BeforeEach`, AssertJ, `isEqualByComparingTo`, arrange–act–assert, FIRST, test double, dummy, stub, fake, mock, spy, Mockito, `@Mock`, `when/thenReturn`, `verify`, `ArgumentCaptor`, strict stubs, state-based vs interaction-based testing, `Clock`, test-driven development, red–green–refactor, flaky test, brittle test, test data builder, test data builder, Object Mother, Awaitility, polling assertion.
 
 ## Further reading
 
@@ -252,7 +299,7 @@ All videos are in English with English captions and were checked on 2026-10-24. 
 
 ## Check your understanding
 
-7 scenario questions. Answer each one before opening the explanation. On Moodle this is the graded topic quiz (pass mark 70%, unlimited attempts).
+8 scenario questions. Answer each one before opening the explanation. On Moodle this is the graded topic quiz (pass mark 70%, unlimited attempts).
 
 **Q1.** A test asserts assertEquals(new BigDecimal("1250.00"), account.balance()) and fails with 'expected 1250.00 but was 1250.0', although the amounts are the same.
 
@@ -356,6 +403,21 @@ Which set of test amounts gives the best boundary coverage?
 <details><summary>Answer</summary>
 
 **B.** Bugs cluster at boundaries (< versus <=). Testing exactly on and just past each boundary, plus the smallest valid amount, catches them.
+
+</details>
+
+**Q8.** An integration test calls an `@Async` notification and then `Thread.sleep(3000)` before asserting. It is slow and still fails occasionally on the CI runner.
+
+What is the better approach?
+
+- A. Run the test three times and accept any pass
+- B. Increase the sleep to 10 seconds
+- C. Use Awaitility to poll for the expected result with a timeout, or make the work synchronous in the test with a direct executor
+- D. Mark the test @Disabled on CI
+
+<details><summary>Answer</summary>
+
+**C.** Awaitility waits only as long as needed; synchronous executors remove the timing problem in unit tests.
 
 </details>
 

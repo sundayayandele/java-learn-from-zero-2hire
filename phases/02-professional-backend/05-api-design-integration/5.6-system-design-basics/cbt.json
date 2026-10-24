@@ -1,0 +1,99 @@
+{
+  "topic": "5.6",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "An interviewer says: 'Design a transfer API for a digital bank.' and waits.",
+      "question": "What is the best first move?",
+      "options": [
+        "Draw Kafka, Kubernetes and ten microservices",
+        "Start writing Java code",
+        "Ask which cloud provider the bank uses and stop there",
+        "Clarify functional and non-functional requirements (scale, consistency, availability, compliance) and state assumptions"
+      ],
+      "answer": 3,
+      "explanation": "Requirements and assumptions frame every later choice; interviewers assess this structure."
+    },
+    {
+      "type": "single",
+      "scenario": "A bank expects 4 million transfers per day.",
+      "question": "Roughly what average request rate is that, and what should you plan for?",
+      "options": [
+        "About 46,000 per second",
+        "About 4 per second; peaks don't matter",
+        "About 4,000 per second on average",
+        "About 46 per second on average; plan for peaks several times higher"
+      ],
+      "answer": 3,
+      "explanation": "4,000,000 / 86,400 ≈ 46/s; peaks are commonly 5–10× the average."
+    },
+    {
+      "type": "single",
+      "scenario": "A team proposes caching account balances in Redis for 60 seconds to speed up transfer authorisation.",
+      "question": "What is the main problem?",
+      "options": [
+        "Redis can't store decimals",
+        "60 seconds is too short for any cache",
+        "Stale balances could authorise debits that overdraw accounts; balances used for decisions must come from the source of truth under a lock",
+        "Caches always slow systems down"
+      ],
+      "answer": 2,
+      "explanation": "Cache read-mostly data that tolerates staleness, not data used to authorise money movement."
+    },
+    {
+      "type": "single",
+      "scenario": "Statement queries overload the primary database. The team adds an asynchronous read replica for statements.",
+      "question": "What trade-off must they handle?",
+      "options": [
+        "Replication lag: a customer may not immediately see a transfer they just made, so recent activity may need to come from the primary",
+        "Replicas can't run SELECT queries",
+        "Replicas remove the need for backups",
+        "Replicas double write throughput"
+      ],
+      "answer": 0,
+      "explanation": "Async replicas can be behind; design for read-your-own-writes where it matters."
+    },
+    {
+      "type": "single",
+      "scenario": "After a transfer, the API calls SMS, email and fraud services synchronously, and an SMS outage makes transfers time out.",
+      "question": "What design change helps most?",
+      "options": [
+        "Retry the whole transfer when SMS fails",
+        "Add a longer timeout to the SMS call",
+        "Remove fraud scoring",
+        "Commit the transfer, publish an event (via an outbox) to a queue, and let consumers process notifications independently with retries"
+      ],
+      "answer": 3,
+      "explanation": "Queues decouple slow or failing follow-up work from the critical path."
+    },
+    {
+      "type": "multi",
+      "scenario": "Which statements about horizontal scaling of a Spring Boot API are true? (Choose two.)",
+      "question": "Select two.",
+      "options": [
+        "In-memory locks and rate limits stop working correctly across instances",
+        "It automatically scales the database",
+        "It removes the need for health checks",
+        "Instances should be stateless so any instance can serve any request"
+      ],
+      "answer": [
+        0,
+        3
+      ],
+      "explanation": "Stateless instances behind a load balancer scale out; shared state and locks must move to shared infrastructure."
+    },
+    {
+      "type": "single",
+      "scenario": "An interviewer asks how your payment hub behaves when a provider times out after possibly charging the customer.",
+      "question": "What is the strongest answer?",
+      "options": [
+        "Retry the charge until it succeeds",
+        "Record the payment as pending, resolve the outcome with status queries or webhooks, and never retry the charge blindly",
+        "Ask the customer to try again",
+        "Treat every timeout as a failure and refund"
+      ],
+      "answer": 1,
+      "explanation": "Unknown outcomes need resolution, not guesses; idempotency and status checks prevent double charges."
+    }
+  ]
+}

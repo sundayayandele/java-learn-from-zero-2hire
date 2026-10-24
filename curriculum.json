@@ -102,6 +102,13 @@
               "title": "Localization: locales, number, currency and date formatting, resource bundles",
               "week": 4,
               "covers": "Added for the Oracle OCP Java SE 21/25 exam: localization"
+            },
+            {
+              "id": "1.12",
+              "slug": "1.12-design-patterns",
+              "title": "Design patterns in Java and in Spring",
+              "week": 4,
+              "covers": "Added for interviews: Strategy, Factory, Builder, Template Method, Proxy, Decorator, Observer, Adapter and Singleton, and where Spring uses them"
             }
           ],
           "projects": [
@@ -151,6 +158,13 @@
               "title": "Modules, packaging and runtime images (JPMS, jars, jlink)",
               "week": 6,
               "covers": "Added for the Oracle OCP Java SE 21/25 exam: packaging and deploying Java code"
+            },
+            {
+              "id": "2.6",
+              "slug": "2.6-debugging-troubleshooting",
+              "title": "Debugging and troubleshooting: debugger, stack traces, logs, thread and heap dumps",
+              "week": 6,
+              "covers": "Added for the job: IDE debugging, reading stack traces, structured logs with correlation ids, thread dumps, heap dumps, remote debugging a container"
             }
           ],
           "projects": [
@@ -269,6 +283,13 @@
               "title": "Spring Boot with Kotlin",
               "week": 13,
               "covers": "Kotlin with Spring Boot (added to this programme)"
+            },
+            {
+              "id": "4.8",
+              "slug": "4.8-spring-under-the-hood",
+              "title": "Spring under the hood: proxies, transactions, bean scopes, lifecycle, events and scheduling",
+              "week": 13,
+              "covers": "Added for interviews: AOP proxies, @Transactional propagation and rollback rules, self-invocation, bean scopes and lifecycle, application events, @Scheduled and @Async pitfalls"
             }
           ],
           "projects": [
@@ -328,6 +349,13 @@
               "title": "Introduction to GraphQL and gRPC, and when to use each",
               "week": 16,
               "covers": "Spring for GraphQL, gRPC with Protocol Buffers, choosing REST vs GraphQL vs gRPC"
+            },
+            {
+              "id": "5.6",
+              "slug": "5.6-system-design-basics",
+              "title": "System design basics for junior interviews",
+              "week": 16,
+              "covers": "Added for interviews: requirements, capacity estimates, load balancers, caching, queues, replicas, consistency trade-offs, and talking through a design"
             }
           ],
           "projects": [
@@ -473,6 +501,13 @@
               "title": "Deploying a container to a cloud host",
               "week": 22,
               "covers": "Deploying containers to a VPS, AWS, Azure and GCP; rollbacks and zero-downtime deploys"
+            },
+            {
+              "id": "8.6",
+              "slug": "8.6-agile-teamwork",
+              "title": "Working in an agile team: tickets, estimation, stand-ups and bug reports",
+              "week": 22,
+              "covers": "Added for the job: Scrum and Kanban, user stories and acceptance criteria, estimation, stand-ups, bug reports, definition of done"
             }
           ],
           "projects": [

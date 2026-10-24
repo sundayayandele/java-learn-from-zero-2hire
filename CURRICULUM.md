@@ -34,6 +34,7 @@ Modern Java, concurrency and the JVM, SQL and NoSQL databases, and your first Sp
 - [1.9 Kotlin for Java developers](phases/01-foundations/01-modern-java-oop/1.9-kotlin-for-java-developers/README.md)
 - [1.10 Java I/O, NIO.2 files and serialization](phases/01-foundations/01-modern-java-oop/1.10-io-nio-serialization/README.md)
 - [1.11 Localization: locales, number, currency and date formatting, resource bundles](phases/01-foundations/01-modern-java-oop/1.11-localization-formatting/README.md)
+- [1.12 Design patterns in Java and in Spring](phases/01-foundations/01-modern-java-oop/1.12-design-patterns/README.md)
 
 Projects: Wallet & transfers simulator (accounts, transfers, statements); Library management CLI (loans, fines, reports); Payroll calculator with PAYE-style tax rules; Retail inventory manager with reorder alerts.
 
@@ -44,6 +45,7 @@ Projects: Wallet & transfers simulator (accounts, transfers, statements); Librar
 - [2.3 Virtual threads (Project Loom) and structured concurrency](phases/01-foundations/02-concurrency-jvm/2.3-virtual-threads-structured-concurrency/README.md)
 - [2.4 The JVM memory model, heap vs stack and garbage collection](phases/01-foundations/02-concurrency-jvm/2.4-jvm-memory-gc/README.md)
 - [2.5 Modules, packaging and runtime images (JPMS, jars, jlink)](phases/01-foundations/02-concurrency-jvm/2.5-modules-packaging-jlink/README.md)
+- [2.6 Debugging and troubleshooting: debugger, stack traces, logs, thread and heap dumps](phases/01-foundations/02-concurrency-jvm/2.6-debugging-troubleshooting/README.md)
 
 Projects: Parallel transaction-file processor; Rate-limited API caller using virtual threads; Find-and-fix lab: deadlocks and race conditions.
 
@@ -67,6 +69,7 @@ Projects: E-commerce relational schema with sample dataset; Double-entry ledger 
 - [4.5 Spring Boot Actuator: health checks and metrics](phases/01-foundations/04-spring-boot-fundamentals/4.5-actuator-health-metrics/README.md)
 - [4.6 What changed from Spring Boot 3 to 4, and how to upgrade](phases/01-foundations/04-spring-boot-fundamentals/4.6-spring-boot-3-to-4-upgrade/README.md)
 - [4.7 Spring Boot with Kotlin](phases/01-foundations/04-spring-boot-fundamentals/4.7-spring-boot-with-kotlin/README.md)
+- [4.8 Spring under the hood: proxies, transactions, bean scopes, lifecycle, events and scheduling](phases/01-foundations/04-spring-boot-fundamentals/4.8-spring-under-the-hood/README.md)
 
 Projects: Task manager REST API (CRUD, validation); Blog API with pagination and sorting; Product catalogue API with search and filters; Spring Boot 3 to 4 upgrade exercise.
 
@@ -81,6 +84,7 @@ API design, security, testing, Git, Docker, CI/CD and AI-assisted engineering. E
 - [5.3 Standard error responses (Problem Details), pagination, idempotency keys](phases/02-professional-backend/05-api-design-integration/5.3-errors-pagination-idempotency/README.md)
 - [5.4 Consuming third-party APIs: timeouts, retries, circuit breakers](phases/02-professional-backend/05-api-design-integration/5.4-consuming-apis-resilience/README.md)
 - [5.5 Introduction to GraphQL and gRPC, and when to use each](phases/02-professional-backend/05-api-design-integration/5.5-graphql-grpc/README.md)
+- [5.6 System design basics for junior interviews](phases/02-professional-backend/05-api-design-integration/5.6-system-design-basics/README.md)
 
 Projects: Payment gateway integration (sandbox) with webhooks; Weather or FX-rate service consuming external APIs; News aggregator from multiple sources; gRPC service for internal account lookups.
 
@@ -111,6 +115,7 @@ Projects: Full test suite for the wallet application; TDD kata: tax and fee engi
 - [8.3 CI/CD with GitHub Actions (build, test, scan, publish image), plus GitLab CI](phases/02-professional-backend/08-git-docker-cicd/8.3-ci-cd-github-actions-gitlab/README.md)
 - [8.4 Overview of Jenkins and Azure DevOps pipelines used in enterprises](phases/02-professional-backend/08-git-docker-cicd/8.4-jenkins-azure-devops/README.md)
 - [8.5 Deploying a container to a cloud host](phases/02-professional-backend/08-git-docker-cicd/8.5-deploying-containers-cloud/README.md)
+- [8.6 Working in an agile team: tickets, estimation, stand-ups and bug reports](phases/02-professional-backend/08-git-docker-cicd/8.6-agile-teamwork/README.md)
 
 Projects: Team workflow with peer PR reviews; Dockerised Spring Boot + Postgres stack; GitHub Actions pipeline with quality gates.
 
@@ -193,4 +198,4 @@ Projects: Customer-support assistant grounded in your API docs; Transaction-quer
 
 Projects: Digital wallet & payments platform; Loan origination system; Marketplace backend; Ride-hailing / logistics backend.
 
-_84 topics in total._
+_89 topics in total._

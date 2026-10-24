@@ -120,6 +120,31 @@ Why not return the JPA entity directly?
 - Serialise `BigDecimal` as a JSON **number** with its scale (`1500.00`) or, for maximum safety with JavaScript clients, as a **string** (`"1500.00"`). Decide once, document it.
 - Dates as ISO-8601 strings (`2026-10-21`, `2026-10-21T09:15:00Z`), which is the Boot default.
 
+### Mapping between entities and DTOs: by hand or with MapStruct
+
+Small services map by hand with a static method or a constructor on the DTO record: explicit, easy to debug and fine for a handful of types.
+
+```java
+public record AccountResponse(String number, String holder, BigDecimal balance, String currency) {
+    static AccountResponse from(Account a) {
+        return new AccountResponse(a.getNumber(), a.getHolderName(), a.getBalance(), a.getCurrency().getCurrencyCode());
+    }
+}
+```
+
+Larger codebases often use **MapStruct**, an annotation processor that generates the mapping code at compile time (no reflection at run time):
+
+```java
+@Mapper(componentModel = "spring")
+public interface AccountMapper {
+    @Mapping(target = "holder", source = "holderName")
+    @Mapping(target = "currency", expression = "java(account.getCurrency().getCurrencyCode())")
+    AccountResponse toResponse(Account account);
+}
+```
+
+Add `org.mapstruct:mapstruct` (1.6.3) and configure `mapstruct-processor` as an annotation processor (alongside Lombok's if you use both). Set `unmappedTargetPolicy = ReportingPolicy.ERROR` so a new DTO field that nobody maps fails the build instead of silently being `null`. Whichever approach you use, test the mapping of money and dates explicitly.
+
 ## 4. Validation
 
 Add `spring-boot-starter-validation` (Hibernate Validator, the Jakarta Bean Validation reference implementation). Annotate DTO fields, then put `@Valid` on the parameter:
@@ -330,10 +355,11 @@ The controller does three things: validate (annotations), delegate (one service 
 2. Write a custom `@ValidNuban` constraint and a class-level `@DifferentAccounts` constraint, with unit tests for the validators.
 3. Write `@WebMvcTest` tests for: a valid transfer (201 with `Location`), a validation failure (400 with field errors), insufficient funds (422), unknown account (404) and malformed JSON (400).
 4. Call your API with `curl -i` and check every response's status, headers and `Content-Type`.
+5. Write the same entity-to-DTO mapping by hand and with MapStruct, open the generated `AccountMapperImpl` in `target/generated-sources`, and decide which you would use for your capstone.
 
 ## Key terms
 
-`DispatcherServlet`, `@RestController`, `@RequestMapping`, `@PathVariable`, `@RequestParam`, `@RequestBody`, `ResponseEntity`, status code, DTO, mass assignment, Jakarta Bean Validation, `@Valid`, constraint, custom validator, method validation, Problem Details (RFC 9457), `ProblemDetail`, `@RestControllerAdvice`, `@ExceptionHandler`, `ResponseEntityExceptionHandler`, `@WebMvcTest`, MockMvc, `@MockitoBean`.
+`DispatcherServlet`, `@RestController`, `@RequestMapping`, `@PathVariable`, `@RequestParam`, `@RequestBody`, `ResponseEntity`, status code, DTO, mass assignment, Jakarta Bean Validation, `@Valid`, constraint, custom validator, method validation, Problem Details (RFC 9457), `ProblemDetail`, `@RestControllerAdvice`, `@ExceptionHandler`, `ResponseEntityExceptionHandler`, `@WebMvcTest`, MockMvc, `@MockitoBean`, DTO mapping, MapStruct, `@Mapper`, unmapped target policy.
 
 ## Further reading
 

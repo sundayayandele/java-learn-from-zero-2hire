@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: security-break-and-fix-lab
+  datasource:
+    url: jdbc:h2:mem:lab-${random.uuid};DB_CLOSE_DELAY=-1
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8081/realms/itl

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Lab 7.D. The suite passes with  ./mvnw test  and fails with  ./mvnw test -Phostile , which simulates a
+         CI runner in another time zone and locale, on a slow machine, running tests in a different order and in
+         parallel. Goal: both commands green, by fixing the code and the tests, without deleting tests. -->
+    <groupId>ng.itlearning.labs</groupId>
+    <artifactId>flaky-test-suite-lab</artifactId>
+    <version>1.0.0</version>
+
+    <properties>
+        <maven.compiler.release>21</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <junit.version>6.1.3</junit.version>
+        <assertj.version>3.27.6</assertj.version>
+        <lab.argLine>-Duser.timezone=Africa/Lagos -Duser.language=en -Duser.country=GB</lab.argLine>
+        <lab.slowness.ms>0</lab.slowness.ms>
+        <lab.junit.config>junit.jupiter.testmethod.order.default=org.junit.jupiter.api.MethodOrderer$MethodName</lab.junit.config>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>${assertj.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <profiles>
+        <profile>
+            <id>hostile</id>
+            <properties>
+                <lab.argLine>-Duser.timezone=Pacific/Kiritimati -Duser.language=de -Duser.country=DE</lab.argLine>
+                <lab.slowness.ms>400</lab.slowness.ms>
+                <lab.junit.config>
+                    junit.jupiter.testmethod.order.default=ng.itlearning.lab.harness.ReverseMethodOrder
+                    junit.jupiter.execution.parallel.enabled=true
+                    junit.jupiter.execution.parallel.mode.default=same_thread
+                    junit.jupiter.execution.parallel.mode.classes.default=concurrent
+                </lab.junit.config>
+            </properties>
+        </profile>
+    </profiles>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.4</version>
+                <configuration>
+                    <argLine>${lab.argLine}</argLine>
+                    <systemPropertyVariables>
+                        <lab.slowness.ms>${lab.slowness.ms}</lab.slowness.ms>
+                    </systemPropertyVariables>
+                    <properties>
+                        <configurationParameters>${lab.junit.config}</configurationParameters>
+                    </properties>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

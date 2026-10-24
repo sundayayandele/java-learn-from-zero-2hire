@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Coding-interview practice: implement the stubs in src/main/java until the tests pass.
+         ./mvnw test -Dtest=TwoSumTransfersTest   one problem
+         ./mvnw test                              all problems (a summary shows how many you have solved)
+         ./mvnw test -Psolutions                  runs the tests against the reference solutions (used by CI) -->
+    <groupId>ng.itlearning</groupId>
+    <artifactId>dsa-practice</artifactId>
+    <version>1.0.0</version>
+
+    <properties>
+        <maven.compiler.release>21</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <junit.version>6.1.3</junit.version>
+        <assertj.version>3.27.6</assertj.version>
+        <practice.sources>src/main/java</practice.sources>
+        <practice.ignoreFailures>false</practice.ignoreFailures>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>${assertj.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <profiles>
+        <profile>
+            <id>solutions</id>
+            <properties>
+                <practice.sources>solutions</practice.sources>
+            </properties>
+        </profile>
+    </profiles>
+
+    <build>
+        <sourceDirectory>${practice.sources}</sourceDirectory>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.4</version>
+                <configuration>
+                    <!-- Each unsolved problem fails with "Not implemented yet"; keep going so the summary shows your progress. -->
+                    <testFailureIgnore>${practice.ignoreFailures}</testFailureIgnore>
+                    <trimStackTrace>true</trimStackTrace>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

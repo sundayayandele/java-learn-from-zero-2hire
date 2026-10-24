@@ -1,0 +1,397 @@
+<p><em>Week 13 · Module 4: Spring Boot 4 Fundamentals</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Explain how Spring adds behaviour through <strong>proxies</strong>,
+and predict when an annotation such as <code>@Transactional</code>,
+<code>@Cacheable</code> or <code>@Async</code> will silently not
+apply.</li>
+<li>Use <code>@Transactional</code> correctly: propagation, rollback
+rules for checked and unchecked exceptions, <code>readOnly</code>,
+timeouts and isolation.</li>
+<li>Choose bean <strong>scopes</strong> and understand the bean
+<strong>lifecycle</strong>, including <code>@PostConstruct</code>,
+<code>@PreDestroy</code> and <code>BeanPostProcessor</code>s.</li>
+<li>Decouple code with <strong>application events</strong>, and run
+background work safely with <code>@Async</code> and
+<code>@Scheduled</code>, including on several instances.</li>
+<li>Explain how auto-configuration decides what to create, and debug it
+with the conditions report.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>The bugs that reach production in Spring applications are rarely
+syntax errors. They are a transfer that half-commits because a checked
+exception didn't roll back, a "separate transaction" for an audit log
+that wasn't separate, a nightly interest job that ran twice because two
+pods were deployed, or an exception in an <code>@Async</code> method
+that vanished. These all come from how Spring works underneath. They are
+also the standard Spring interview questions for junior and mid-level
+roles: if you can explain proxies, propagation and rollback rules with
+an example from your own code, you will stand out.</p>
+<h2 id="1-proxies-how-annotations-get-their-behaviour">1. Proxies: how
+annotations get their behaviour</h2>
+<p>When a bean has methods annotated with <code>@Transactional</code>,
+<code>@Cacheable</code>, <code>@PreAuthorize</code>,
+<code>@Async</code>, <code>@Retryable</code> or similar, Spring doesn't
+change your class. At start-up, a <code>BeanPostProcessor</code>
+replaces the bean with a <strong>proxy</strong> that wraps calls to it
+(topic 1.12). Other beans receive the proxy. Spring Boot uses
+<strong>class-based (CGLIB) proxies</strong> by default: a generated
+subclass of your class.</p>
+<pre class="text"><code>Controller ──calls──&gt; [Proxy: start tx] ──&gt; TransferService.transfer() ──&gt; [Proxy: commit/rollback]</code></pre>
+<p>Consequences you must know:</p>
+<ol type="1">
+<li><strong>Self-invocation bypasses the proxy.</strong>
+<code>this.audit()</code> inside the same bean calls the real method
+directly, so <code>@Transactional(propagation = REQUIRES_NEW)</code> on
+<code>audit()</code> does nothing.</li>
+<li><strong>Private methods are never proxied</strong>, and
+<code>final</code> methods or classes can't be overridden by a CGLIB
+proxy. Put annotations on public (or, for class-based proxies,
+non-private) methods of Spring beans.</li>
+<li><strong>Only beans managed by Spring get proxies.</strong> An object
+created with <code>new</code> has no transactions, security or
+caching.</li>
+<li><strong>Proxies are created after the constructor.</strong> Calling
+a <code>@Transactional</code> method from a constructor or
+<code>@PostConstruct</code> runs it without the proxy.</li>
+</ol>
+<p>Fixes for self-invocation: move the method to another bean
+(clearest), use <code>TransactionTemplate</code> for programmatic
+transactions, or inject the bean's own proxy
+(<code>ObjectProvider&lt;Self&gt;</code>), which is a last resort.</p>
+<pre class="java"><code>@Service
+class TransferService {
+    private final AuditService audit;             // separate bean, so calls go through its proxy
+    TransferService(AuditService audit) { this.audit = audit; }
+
+    @Transactional
+    public Receipt transfer(TransferRequest r) {
+        audit.recordAttempt(r);                   // REQUIRES_NEW really starts a new transaction
+        return post(r);
+    }
+}
+
+@Service
+class AuditService {
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void recordAttempt(TransferRequest r) { /* insert audit row; commits even if transfer fails */ }
+}</code></pre>
+<h2 id="2-transactional-in-depth">2. <code>@Transactional</code> in
+depth</h2>
+<h3 id="rollback-rules">Rollback rules</h3>
+<p>By default Spring rolls back on <strong>unchecked exceptions</strong>
+(<code>RuntimeException</code> and <code>Error</code>) and
+<strong>commits on checked exceptions</strong>. This surprises
+people:</p>
+<pre class="java"><code>@Transactional
+public void importStatement(Path file) throws IOException {
+    repository.save(header);
+    Files.readAllLines(file);       // IOException is checked: by default the header save COMMITS
+}</code></pre>
+<p>Make the rule explicit when a checked exception must undo work:
+<code>@Transactional(rollbackFor = Exception.class)</code>. Catching an
+exception inside the transactional method and not rethrowing it means
+the transaction commits, unless you call
+<code>TransactionAspectSupport.currentTransactionStatus().setRollbackOnly()</code>.</p>
+<p>If an inner <code>@Transactional</code> method (with the default
+<code>REQUIRED</code> propagation) throws and the outer method catches
+it, the shared transaction is already marked rollback-only, and the
+outer commit fails with <code>UnexpectedRollbackException</code>.
+Catching an exception does not undo the inner method's vote to roll
+back.</p>
+<h3 id="propagation">Propagation</h3>
+<table>
+<thead>
+<tr>
+<th>Propagation</th>
+<th>Behaviour</th>
+<th>Typical use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>REQUIRED</code> (default)</td>
+<td>Join the current transaction or start one</td>
+<td>Almost everything</td>
+</tr>
+<tr>
+<td><code>REQUIRES_NEW</code></td>
+<td>Suspend the current one and start an independent transaction</td>
+<td>Audit or failure logs that must survive a rollback</td>
+</tr>
+<tr>
+<td><code>MANDATORY</code></td>
+<td>Fail if there is no current transaction</td>
+<td>Repository-like methods that must be called inside one</td>
+</tr>
+<tr>
+<td><code>SUPPORTS</code></td>
+<td>Join if one exists, otherwise run without</td>
+<td>Rare; read helpers</td>
+</tr>
+<tr>
+<td><code>NOT_SUPPORTED</code></td>
+<td>Suspend the current transaction</td>
+<td>Calling a slow external system without holding a connection</td>
+</tr>
+<tr>
+<td><code>NEVER</code></td>
+<td>Fail if a transaction exists</td>
+<td>Guard rails</td>
+</tr>
+<tr>
+<td><code>NESTED</code></td>
+<td>Savepoint inside the current transaction (JDBC)</td>
+<td>Partial rollback of a step</td>
+</tr>
+</tbody>
+</table>
+<p><code>REQUIRES_NEW</code> takes a <strong>second database
+connection</strong> while the first is suspended. Under load this can
+exhaust the pool (topic 2.6), so use it sparingly.</p>
+<h3 id="other-attributes">Other attributes</h3>
+<ul>
+<li><code>readOnly = true</code>: a hint that lets Hibernate skip dirty
+checking and flushing, and lets drivers route to replicas. It does not
+stop you writing in all databases, so don't rely on it for
+security.</li>
+<li><code>timeout</code>: seconds before the transaction is rolled back;
+useful for jobs.</li>
+<li><code>isolation</code>: overrides the database default (topic 3.2)
+for one method, for example <code>SERIALIZABLE</code> for a rare
+invariant.</li>
+</ul>
+<h3 id="keep-transactions-short">Keep transactions short</h3>
+<p>Never call a slow external API (a payment provider, an email server)
+inside a database transaction: it holds a connection and row locks for
+the whole call. Commit first, then call, or use events after commit
+(section 4).</p>
+<h2 id="3-bean-scopes-and-lifecycle">3. Bean scopes and lifecycle</h2>
+<table>
+<thead>
+<tr>
+<th>Scope</th>
+<th>One instance per</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>singleton</code> (default)</td>
+<td>Application context</td>
+<td>Must be stateless or thread-safe (topic 1.12)</td>
+</tr>
+<tr>
+<td><code>prototype</code></td>
+<td>Each injection or <code>getBean</code> call</td>
+<td>Spring doesn't call destroy callbacks</td>
+</tr>
+<tr>
+<td><code>request</code></td>
+<td>HTTP request</td>
+<td>Web only; injected through a scoped proxy</td>
+</tr>
+<tr>
+<td><code>session</code></td>
+<td>HTTP session</td>
+<td>Avoid in stateless APIs</td>
+</tr>
+<tr>
+<td><code>application</code></td>
+<td><code>ServletContext</code></td>
+<td>Rare</td>
+</tr>
+</tbody>
+</table>
+<p>A <strong>prototype bean injected into a singleton is created
+once</strong>, at injection time, so it behaves like a singleton. Ask
+for a fresh one each time with
+<code>ObjectProvider&lt;T&gt;.getObject()</code>.</p>
+<p>The lifecycle of a singleton bean:</p>
+<ol type="1">
+<li>Constructor runs (constructor injection: all dependencies are ready
+and fields can be <code>final</code>).</li>
+<li>Remaining injection (setter or field injection,
+<code>@Value</code>).</li>
+<li><code>BeanPostProcessor.postProcessBeforeInitialization</code>.</li>
+<li><code>@PostConstruct</code> method (then
+<code>InitializingBean.afterPropertiesSet</code> and any
+<code>initMethod</code>).</li>
+<li><code>BeanPostProcessor.postProcessAfterInitialization</code>:
+<strong>proxies are created here</strong>.</li>
+<li>The bean is used.</li>
+<li>On shutdown: <code>@PreDestroy</code> (and
+<code>DisposableBean.destroy</code>), for example to close a
+client.</li>
+</ol>
+<p>Prefer <strong>constructor injection</strong>: dependencies are
+explicit, objects are immutable and easy to test without Spring, and
+circular dependencies fail fast (Spring Boot forbids them by default).
+Field injection (<code>@Autowired</code> on a field) hides dependencies
+and needs reflection in tests.</p>
+<h2 id="4-application-events">4. Application events</h2>
+<p><code>ApplicationEventPublisher.publishEvent(...)</code> sends any
+object to listeners in the same application (the Observer pattern, topic
+1.12).</p>
+<pre class="java"><code>@Component
+class FraudScoring {
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    void on(TransferCompleted e) { /* score the transfer */ }
+}</code></pre>
+<ul>
+<li><code>@EventListener</code> runs <strong>synchronously, inside the
+publisher's transaction</strong>: an exception in a listener rolls back
+the transfer.</li>
+<li><code>@TransactionalEventListener</code> runs at a transaction phase
+(default <code>AFTER_COMMIT</code>); if the transaction rolls back, the
+listener never runs.</li>
+<li>Add <code>@Async</code> to a listener to run it on another thread.
+Events are in-memory: if the application crashes after commit and before
+the listener runs, the event is lost. When delivery must be guaranteed,
+store an outbox row in the same transaction (Phase 3).</li>
+</ul>
+<h2 id="5-async-and-scheduled">5. <code>@Async</code> and
+<code>@Scheduled</code></h2>
+<p>Both need enabling (<code>@EnableAsync</code>,
+<code>@EnableScheduling</code>) and both are proxy-based.</p>
+<p><strong><code>@Async</code> pitfalls:</strong></p>
+<ul>
+<li>Self-invocation runs the method synchronously (no proxy).</li>
+<li>Exceptions from <code>void</code> methods are not seen by the
+caller. Return <code>CompletableFuture&lt;T&gt;</code> or configure an
+<code>AsyncUncaughtExceptionHandler</code>.</li>
+<li>Security context, MDC values (topic 2.6) and transactions don't
+automatically follow the work to another thread.</li>
+<li>With <code>spring.threads.virtual.enabled=true</code>, Spring Boot
+runs <code>@Async</code> work on virtual threads; otherwise it uses a
+bounded <code>ThreadPoolTaskExecutor</code>
+(<code>spring.task.execution.pool.*</code>).</li>
+</ul>
+<p><strong><code>@Scheduled</code> pitfalls:</strong></p>
+<pre class="java"><code>@Scheduled(cron = &quot;0 0 1 * * *&quot;, zone = &quot;Africa/Lagos&quot;)    // 01:00 Lagos time every day
+public void accrueInterest() { ... }</code></pre>
+<ul>
+<li>The default scheduler has <strong>one thread</strong> (unless
+virtual threads are enabled), so a slow job delays all others.</li>
+<li><code>fixedRate</code> starts runs at fixed intervals even if the
+previous run is still going; <code>fixedDelay</code> waits for the
+previous run to finish.</li>
+<li><strong>Every instance runs every job.</strong> With two pods,
+interest is accrued twice. Use a distributed lock (ShedLock, a
+PostgreSQL advisory lock as in Phase 1 Capstone 2) or move the job to a
+platform scheduler (Kubernetes CronJob, EventBridge Scheduler).</li>
+<li>Make jobs idempotent and resumable: record what was processed so a
+rerun after a crash doesn't double-post.</li>
+</ul>
+<p>Spring Framework 7 also adds core resilience annotations,
+<code>@Retryable</code> and <code>@ConcurrencyLimit</code>, enabled with
+<code>@EnableResilientMethods</code>; topic 5.4 shows them. They are
+proxy-based too.</p>
+<h2 id="6-how-auto-configuration-decides">6. How auto-configuration
+decides</h2>
+<p>Auto-configuration classes are ordinary <code>@Configuration</code>
+classes guarded by <strong>conditions</strong>:</p>
+<ul>
+<li><code>@ConditionalOnClass(DataSource.class)</code>: only if a
+library is on the classpath.</li>
+<li><code>@ConditionalOnMissingBean</code>: only if you haven't defined
+your own bean, which is how you override defaults.</li>
+<li><code>@ConditionalOnProperty("app.feature.enabled")</code>: only if
+a property is set.</li>
+</ul>
+<p>To see what was applied and why, start the application with
+<code>--debug</code> (or <code>debug=true</code>) to print the
+<strong>conditions evaluation report</strong>, or call the Actuator
+<code>conditions</code> endpoint (restricted to operators). Spring Boot
+4 splits auto-configuration into many modules, so a missing starter
+means the condition never matches (topic 4.6).</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li><code>@Transactional</code> on a private method, or a method called
+through <code>this</code>.</li>
+<li>Expecting checked exceptions to roll back.</li>
+<li>Catching an exception from an inner transactional call and
+continuing, then getting <code>UnexpectedRollbackException</code>.</li>
+<li>Calling external APIs inside long transactions.</li>
+<li>Mutable fields in singleton beans; prototype beans injected into
+singletons.</li>
+<li><code>@EventListener</code> sending emails before the transaction
+commits.</li>
+<li>Scheduled jobs that run on every instance and aren't
+idempotent.</li>
+<li>Fire-and-forget <code>@Async</code> methods whose failures are never
+noticed.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Write a test that proves a self-invoked <code>REQUIRES_NEW</code>
+method does <strong>not</strong> commit independently, then fix it by
+moving the method to another bean and make the test pass.</li>
+<li>Write tests for rollback rules: a <code>RuntimeException</code>
+rolls back, an <code>IOException</code> commits by default, and
+<code>rollbackFor = Exception.class</code> rolls it back.</li>
+<li>Reproduce <code>UnexpectedRollbackException</code> by catching an
+inner failure, and explain it in your own words.</li>
+<li>Publish a <code>TransferCompleted</code> event and show with tests
+that <code>@EventListener</code> runs inside the transaction while
+<code>@TransactionalEventListener</code> runs only after commit.</li>
+<li>Run two instances of an app with a <code>@Scheduled</code> job
+against one database and observe double execution; then add a PostgreSQL
+advisory lock (<code>pg_try_advisory_lock</code>) or ShedLock and show
+it runs once.</li>
+<li>Start your capstone with <code>--debug</code> and find the
+conditions that created (and didn't create) the <code>DataSource</code>
+and Flyway beans.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Proxy, CGLIB, JDK dynamic proxy, <code>BeanPostProcessor</code>,
+self-invocation, <code>@Transactional</code>, propagation
+(<code>REQUIRED</code>, <code>REQUIRES_NEW</code>,
+<code>MANDATORY</code>, <code>NESTED</code>), rollback rules,
+<code>rollbackFor</code>, rollback-only,
+<code>UnexpectedRollbackException</code>, <code>readOnly</code>,
+<code>TransactionTemplate</code>, bean scope, singleton, prototype,
+request scope, scoped proxy, <code>ObjectProvider</code>, bean
+lifecycle, <code>@PostConstruct</code>, <code>@PreDestroy</code>,
+constructor injection, application event, <code>@EventListener</code>,
+<code>@TransactionalEventListener</code>, <code>@Async</code>,
+<code>@Scheduled</code>, <code>fixedRate</code>,
+<code>fixedDelay</code>, cron, distributed lock, ShedLock, conditions
+evaluation report.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/tx-decl-explained.html">Spring
+Framework reference: Understanding the Spring Framework's declarative
+transaction implementation</a></li>
+<li><a
+href="https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/annotations.html">Spring
+Framework reference: Using @Transactional (including rollback
+rules)</a></li>
+<li><a
+href="https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/tx-propagation.html">Spring
+Framework reference: Transaction propagation</a></li>
+<li><a
+href="https://docs.spring.io/spring-framework/reference/core/beans/factory-scopes.html">Spring
+Framework reference: Bean scopes</a></li>
+<li><a
+href="https://docs.spring.io/spring-framework/reference/core/beans/factory-nature.html">Spring
+Framework reference: Customizing the nature of a bean (lifecycle
+callbacks)</a></li>
+<li><a
+href="https://docs.spring.io/spring-framework/reference/integration/scheduling.html">Spring
+Framework reference: Task execution and scheduling</a></li>
+<li><a
+href="https://docs.spring.io/spring-boot/reference/features/developing-auto-configuration.html">Spring
+Boot reference: Creating your own auto-configuration
+(conditions)</a></li>
+<li><a href="https://github.com/lukas-krecan/ShedLock">ShedLock on
+GitHub</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>[QUESTION] Why doesn&#x27;t @Transactional work when called within the same class?</h3><p>Laur Spilca · 16 min. Why @Transactional doesn&#x27;t work when called within the same class.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/gDpmbUoEpPQ" title="[QUESTION] Why doesn&#x27;t @Transactional work when called within the same class?" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Spring Transaction Propagation Explained | Spring Boot Transactions Part 3</h3><p>CodeSnippet by Chetan · 28 min. Spring transaction propagation explained with runnable examples.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/LCltftLZ_W0" title="Spring Transaction Propagation Explained | Spring Boot Transactions Part 3" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Customizing Bean Nature in Spring | Bean Lifecycle, @PostConstruct &amp; @PreDestroy Explained</h3><p>CodeSnippet by Chetan · 19 min. The bean lifecycle: @PostConstruct, @PreDestroy and customising bean nature.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/KxWh70Xr35c" title="Customizing Bean Nature in Spring | Bean Lifecycle, @PostConstruct &amp; @PreDestroy Explained" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/04-spring-boot-fundamentals/4.8-spring-under-the-hood/README.md">4.8 Spring under the hood: proxies, transactions, bean scopes, lifecycle, events and scheduling</a></p>

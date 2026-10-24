@@ -4,7 +4,7 @@
 
 > **Build your own version first.** This is one good solution, not the only one. Compare it with yours after you've finished, and be ready to explain where you chose differently and why.
 
-Tested with Java 21, Spring Boot 4.1.2, Spring Security 7.1, Resilience4j 2.4, WireMock 3.13 and PostgreSQL 17: **64 tests, 93.6% line coverage** (the build enforces at least 80%).
+Tested with Java 21, Spring Boot 4.1.2, Spring Security 7.1, Resilience4j 2.4, WireMock 3.13 and PostgreSQL 17: **65 tests, over 90% line coverage** (the build enforces at least 80%).
 
 ## Run it
 
@@ -47,6 +47,7 @@ curl -i -X POST http://localhost:8080/webhooks/provider-a -H "x-provider-signatu
 - **Webhooks:** signature first (over the raw bytes, constant-time comparison), then the `(provider, event id)` primary key makes duplicates a no-op, then the result is applied under `SELECT ... FOR UPDATE`. Amount or currency mismatches and successes for abandoned payments are recorded and counted (`payments.flagged`) for operations, never applied silently.
 - **Failover is only for initialisation.** If Provider A times out after creating a transaction on its side, the customer never sees that authorisation URL, so nobody can pay it; we return Provider B's. Verify is retried (it is idempotent); initialise and refund are not.
 - **Payment history is append-only**, enforced by a trigger, so support staff and auditors can trust it.
+- **Correlation ids:** `CorrelationIdFilter` puts an `X-Correlation-Id` (incoming if well formed, otherwise generated) in the MDC and the response, and the provider client forwards it, so one id traces a payment across our logs and the provider's support tickets.
 - Merchants get 404 for other merchants' references, so references can't be probed. `ROLE_OPS` can read every payment.
 
 ## What I'd do next

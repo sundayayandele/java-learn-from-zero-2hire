@@ -1,0 +1,230 @@
+<p><em>Week 22 · Module 8: Git, Docker &amp; CI/CD</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Work in Scrum and Kanban teams: sprints, backlog refinement,
+stand-ups, reviews, retrospectives and WIP limits.</li>
+<li>Turn a request into a well-formed ticket: a user story with
+acceptance criteria, a definition of ready and a definition of
+done.</li>
+<li>Estimate with story points or t-shirt sizes, split large stories,
+and raise blockers early.</li>
+<li>Write bug reports that get fixed fast, and give a clear stand-up
+update.</li>
+<li>Explain how your own capstone work maps to tickets, pull requests
+and releases.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Nigerian fintechs mostly run Scrum or Kanban with Jira, Linear or
+Azure Boards; banks often run "Scrum inside a change-management process"
+with release windows, approvals and audit trails. As a junior you will
+be judged as much on how you work in the team as on your code: Do you
+understand a ticket before starting? Do you say early when you're stuck?
+Are your bug reports reproducible? Interviewers ask "Tell me how you
+would pick up a ticket", "How do you estimate?", "What do you do when
+you're blocked?" and "Describe a bug report you wrote". This lesson
+gives you the vocabulary and habits, and Module 8's team project lets
+you practise them.</p>
+<h2 id="1-scrum-and-kanban-in-one-page">1. Scrum and Kanban in one
+page</h2>
+<p><strong>Scrum</strong> works in fixed <strong>sprints</strong>
+(usually two weeks):</p>
+<table>
+<thead>
+<tr>
+<th>Event</th>
+<th>Purpose</th>
+<th>Your part as a junior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sprint planning</td>
+<td>Choose sprint backlog items and a sprint goal</td>
+<td>Ask questions until you understand the tickets you'll take</td>
+</tr>
+<tr>
+<td>Daily stand-up (15 min)</td>
+<td>Coordinate and surface blockers</td>
+<td>Short update, blockers first</td>
+</tr>
+<tr>
+<td>Backlog refinement</td>
+<td>Clarify and estimate upcoming items</td>
+<td>Ask about edge cases and acceptance criteria</td>
+</tr>
+<tr>
+<td>Sprint review</td>
+<td>Demo what's done to stakeholders</td>
+<td>Demo your feature with real data</td>
+</tr>
+<tr>
+<td>Retrospective</td>
+<td>Improve how the team works</td>
+<td>Bring one concrete observation and one suggestion</td>
+</tr>
+</tbody>
+</table>
+<p>Roles: the <strong>product owner</strong> decides what is most
+valuable; the <strong>Scrum master</strong> helps the team remove
+obstacles; the <strong>developers</strong> (you) decide how to build it
+and own quality.</p>
+<p><strong>Kanban</strong> has no sprints: work flows through columns
+(To do → In progress → Review → Test → Done) with <strong>WIP
+limits</strong> (for example at most three items in Review), so the team
+finishes work before starting more. Operations and platform teams often
+use Kanban; product teams often use Scrum. Many teams mix them.</p>
+<h2 id="2-a-good-ticket">2. A good ticket</h2>
+<pre class="text"><code>Title: Customer can reverse a transfer within 24 hours
+
+As a retail customer
+I want to reverse a transfer I sent by mistake within 24 hours
+So that I can recover money sent to the wrong account
+
+Acceptance criteria (Given / When / Then):
+1. Given a transfer of ₦20,000 posted 2 hours ago and the beneficiary still holds ₦20,000,
+   When I request a reversal, Then both balances are restored and a reversal journal references the original.
+2. Given a transfer posted 25 hours ago, When I request a reversal, Then I get 422 &quot;reversal-window-expired&quot;.
+3. Given a transfer already reversed, When I request a reversal, Then I get 409 &quot;already-reversed&quot;.
+4. Every reversal is recorded in the audit log with the customer and the reason.
+
+Out of scope: partial reversals; reversals of inter-bank (NIP) transfers.
+Notes: API contract PR #142; fee is refunded (confirmed by product, 21 Oct).</code></pre>
+<p>Acceptance criteria become your tests (topic 7.1): write them as
+automated tests first and the ticket is done when they pass.</p>
+<ul>
+<li><strong>Definition of ready</strong>: the team understands the
+ticket, it has acceptance criteria and no unresolved dependencies, and
+it's small enough for one sprint.</li>
+<li><strong>Definition of done</strong>: code reviewed and merged, tests
+(including the acceptance criteria) green in CI, quality gates passing,
+documentation and API contract updated, deployed to the test
+environment, product owner accepted. Your team's version is written
+down; follow it.</li>
+</ul>
+<h2 id="3-estimation-and-splitting">3. Estimation and splitting</h2>
+<p>Teams estimate relative size, not hours: <strong>story
+points</strong> (1, 2, 3, 5, 8, 13) or <strong>t-shirt sizes</strong>
+(S, M, L). In <strong>planning poker</strong> everyone reveals an
+estimate at once; big differences are useful because they reveal a
+misunderstanding ("I assumed the provider supports refunds", "I forgot
+the migration").</p>
+<p>As a junior:</p>
+<ul>
+<li>Estimate honestly, including tests, review and documentation, not
+just "writing the code".</li>
+<li>Split anything above about 5 points or two days. Split by behaviour,
+not by layer: "reversal within window" and "reject expired reversal" are
+better slices than "database part" and "API part", because each slice
+delivers something testable.</li>
+<li>Re-estimate when you learn something big, and say so at
+stand-up.</li>
+</ul>
+<h2 id="4-stand-ups-and-blockers">4. Stand-ups and blockers</h2>
+<p>A good update takes 30 seconds:</p>
+<pre class="text"><code>Yesterday: finished the reversal service and its unit tests.
+Today: the API endpoint and the Testcontainers test for the 25-hour case.
+Blocker: I need the fee-refund rule confirmed by product; I asked Ada at 10:00 and will follow up at 14:00.</code></pre>
+<p>Raise a blocker when you have been stuck for about half a day on the
+same problem after trying the obvious things (topic 2.6's method). Say
+what you've tried. Asking early is a strength; silently losing three
+days is the most common junior failure.</p>
+<h2 id="5-bug-reports-that-get-fixed">5. Bug reports that get fixed</h2>
+<pre class="text"><code>Title: Statement closing balance wrong when a reversal is in the period
+
+Environment: staging, build 2026.10.24-3 (commit a1b2c3d)
+Steps to reproduce:
+1. POST /api/v1/transfers (₦20,000 from 0123456789 to 0987654321), reference TRF-TEST-1
+2. POST /api/v1/transfers/TRF-TEST-1/reversal
+3. GET /api/v1/accounts/0123456789/statement?from=2026-10-24&amp;to=2026-10-24
+Expected: closing balance = opening balance (transfer and reversal cancel out)
+Actual: closing balance is ₦20,026.88 lower (fee not refunded in the statement)
+Evidence: response body attached; correlation id 9f2c...; log lines attached
+Severity: high (customer-visible balance); Frequency: every time</code></pre>
+<p>Include: environment and version, exact steps, expected versus
+actual, evidence (correlation id, logs, screenshots, no personal data),
+severity and frequency. A failing test that reproduces the bug is the
+best attachment of all.</p>
+<h2 id="6-tickets-branches-pull-requests-and-releases">6. Tickets,
+branches, pull requests and releases</h2>
+<p>Connect your work so anyone can trace it (topic 8.1):</p>
+<ul>
+<li>Branch name with the ticket key:
+<code>feature/ITL-142-transfer-reversal</code>.</li>
+<li>Commit messages and PR titles reference the key:
+<code>ITL-142: reject reversals after 24 hours</code>.</li>
+<li>The PR description links the ticket and lists how each acceptance
+criterion is tested.</li>
+<li>The ticket moves to Review when the PR opens, and to Done only when
+the definition of done is met.</li>
+<li>In banks, a <strong>change request</strong> (CAB approval) may be
+needed before a production release; your traceable tickets and PRs are
+the evidence auditors look at.</li>
+</ul>
+<h2 id="7-practising-this-in-the-programme">7. Practising this in the
+programme</h2>
+<p>Module 8's <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/02-professional-backend/08-git-docker-cicd/README.md#module-projects">team project</a>
+runs as a <strong>two-week mini-sprint</strong> with a peer or small
+group: a board with at least six tickets written in the format above,
+estimates from planning poker, short daily async stand-up notes in the
+repository's discussion or chat, PRs linked to tickets, a demo, and a
+one-page retrospective. Submit the board link and the retrospective with
+your Module 8 project.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Starting to code before understanding the acceptance criteria.</li>
+<li>"It's done" when it works on your laptop but isn't reviewed, merged,
+tested in CI or deployed.</li>
+<li>Estimating only the coding time.</li>
+<li>Splitting stories by layer, so nothing is testable until the last
+piece lands.</li>
+<li>Waiting days before mentioning a blocker.</li>
+<li>Bug reports that say "it doesn't work" with no steps, version or
+evidence.</li>
+<li>Stand-up updates that are long status reports instead of
+coordination.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Rewrite three features from your capstone brief as user stories with
+Given/When/Then acceptance criteria.</li>
+<li>Split one large story ("customers can manage beneficiaries") into at
+least four independently testable stories.</li>
+<li>Write a bug report in the format above for a real defect you found
+in your capstone or in the Phase 2 labs.</li>
+<li>Run the Module 8 mini-sprint: board, estimates, stand-up notes, demo
+and retrospective.</li>
+<li>Prepare a 60-second answer to "Walk me through how you take a ticket
+from the backlog to production."</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Agile, Scrum, sprint, sprint goal, product owner, Scrum master,
+backlog, refinement, stand-up, sprint review, retrospective, Kanban, WIP
+limit, user story, acceptance criteria, Given/When/Then, definition of
+ready, definition of done, story points, planning poker, t-shirt sizing,
+vertical slicing, blocker, bug report, severity, change request, CAB,
+traceability.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a href="https://scrumguides.org/scrum-guide.html">The Scrum Guide
+(2020)</a></li>
+<li><a href="https://www.atlassian.com/agile/kanban">Atlassian:
+Kanban</a></li>
+<li><a
+href="https://www.atlassian.com/agile/project-management/user-stories">Atlassian:
+User stories with examples and a template</a></li>
+<li><a
+href="https://www.mountaingoatsoftware.com/agile/planning-poker">Mountain
+Goat Software: Planning poker</a></li>
+<li><a href="https://martinfowler.com/bliki/GivenWhenThen.html">Martin
+Fowler: Given When Then</a></li>
+<li><a
+href="https://bugzilla.mozilla.org/page.cgi?id=bug-writing.html">Mozilla:
+Bug writing guidelines</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Scrum Essentials in Under 10 Minutes</h3><p>Scrum Alliance · 10 min. Scrum essentials in under ten minutes, from the Scrum Alliance.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/RtQ3tpq-RuE" title="Scrum Essentials in Under 10 Minutes" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>How to write good User Stories in Agile</h3><p>The Agile Shop · 4 min. How to write good user stories.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/7hoGqhb6qAs" title="How to write good User Stories in Agile" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>What are Agile Epics, User Stories, and Story Points?</h3><p>Online PM Courses - Mike Clayton · 7 min. Epics, user stories and story points explained.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/ogV2r9579WI" title="What are Agile Epics, User Stories, and Story Points?" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/02-professional-backend/08-git-docker-cicd/8.6-agile-teamwork/README.md">8.6 Working in an agile team: tickets, estimation, stand-ups and bug reports</a></p>

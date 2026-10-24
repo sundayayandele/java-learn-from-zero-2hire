@@ -1,0 +1,112 @@
+{
+  "topic": "4.8",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A `@Transactional` method saves a statement header and then calls `Files.readAllLines(file)`, which throws `IOException`. The header row stays in the database.",
+      "question": "Why, and what is the fix?",
+      "options": [
+        "The method must be private",
+        "By default Spring rolls back only on unchecked exceptions; add rollbackFor = Exception.class (or IOException.class)",
+        "readOnly must be set to true",
+        "PostgreSQL ignores rollbacks for headers"
+      ],
+      "answer": 1,
+      "explanation": "Checked exceptions commit by default; declare rollback rules explicitly when they must undo work."
+    },
+    {
+      "type": "single",
+      "scenario": "An audit insert is marked `@Transactional(propagation = REQUIRES_NEW)` and called from `transfer()` in the same class. When the transfer fails, the audit row disappears too.",
+      "question": "Why?",
+      "options": [
+        "REQUIRES_NEW only works with MongoDB",
+        "The call goes through `this`, bypassing the proxy, so the audit runs in the transfer's transaction; move it to a separate bean",
+        "Audit tables can't commit independently",
+        "The audit method needs @Async"
+      ],
+      "answer": 1,
+      "explanation": "Self-invocation never reaches the proxy that would start the new transaction."
+    },
+    {
+      "type": "single",
+      "scenario": "An outer `@Transactional` method calls `feeService.apply()` (also `@Transactional`, default propagation), catches its RuntimeException and continues. On commit Spring throws `UnexpectedRollbackException`.",
+      "question": "What happened?",
+      "options": [
+        "Spring can't catch RuntimeException",
+        "The database lost its connection",
+        "The inner method joined the same transaction and marked it rollback-only when it threw; catching the exception didn't undo that",
+        "Propagation REQUIRED always throws on commit"
+      ],
+      "answer": 2,
+      "explanation": "With REQUIRED both methods share one transaction; an inner failure marks it rollback-only."
+    },
+    {
+      "type": "single",
+      "scenario": "A singleton service has a prototype-scoped `ReportBuilder` injected through its constructor, expecting a fresh builder per request. Reports start mixing data.",
+      "question": "What is wrong?",
+      "options": [
+        "Constructor injection is not allowed for prototypes",
+        "The prototype was injected once when the singleton was created; use ObjectProvider<ReportBuilder>.getObject() each time",
+        "Prototype beans are always thread-safe",
+        "Singletons are recreated per request"
+      ],
+      "answer": 1,
+      "explanation": "Injection happens once; ask the container for a new prototype instance when you need one."
+    },
+    {
+      "type": "single",
+      "scenario": "A nightly `@Scheduled` interest job is deployed on two pods behind a load balancer. Customers receive interest twice.",
+      "question": "What is the best fix?",
+      "options": [
+        "Add @Async to the job",
+        "Ensure only one instance runs it (ShedLock or a database advisory lock, or a platform scheduler) and make the job idempotent",
+        "Increase the scheduler thread pool",
+        "Change cron to fixedRate"
+      ],
+      "answer": 1,
+      "explanation": "Every instance runs every @Scheduled method; distributed locking plus idempotency prevents double posting."
+    },
+    {
+      "type": "single",
+      "scenario": "A transfer service sends a confirmation SMS from an `@EventListener`. Some customers get SMSs for transfers that later rolled back.",
+      "question": "What should change?",
+      "options": [
+        "Send the SMS before saving",
+        "Use @TransactionalEventListener (AFTER_COMMIT) so the listener runs only after a successful commit",
+        "Use a prototype-scoped listener",
+        "Make the listener private"
+      ],
+      "answer": 1,
+      "explanation": "Plain @EventListener runs synchronously inside the publisher's transaction."
+    },
+    {
+      "type": "multi",
+      "scenario": "Which statements about Spring proxies are true? (Choose two.)",
+      "question": "Select two.",
+      "options": [
+        "Self-invocation always goes through the proxy",
+        "Proxies are created before the constructor runs",
+        "Annotations like @Transactional and @Cacheable don't apply to private methods",
+        "Objects created with `new` don't get Spring's proxy-based behaviour"
+      ],
+      "answer": [
+        2,
+        3
+      ],
+      "explanation": "Proxies wrap Spring-managed beans after initialisation and only intercept external calls to proxyable methods."
+    },
+    {
+      "type": "single",
+      "scenario": "A service is missing a `DataSource` at start-up after an upgrade, and the team can't tell why auto-configuration skipped it.",
+      "question": "What is the quickest way to find out?",
+      "options": [
+        "Start with --debug (or the Actuator conditions endpoint) and read the conditions evaluation report",
+        "Switch to field injection",
+        "Delete the target folder",
+        "Add @ComponentScan everywhere"
+      ],
+      "answer": 0,
+      "explanation": "The report lists which auto-configurations matched or didn't, and the condition responsible."
+    }
+  ]
+}

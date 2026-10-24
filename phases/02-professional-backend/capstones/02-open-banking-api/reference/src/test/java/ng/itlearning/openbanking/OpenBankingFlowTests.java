@@ -242,6 +242,14 @@ class OpenBankingFlowTests {
     }
 
     @Test
+    void everyResponseCarriesACorrelationIdEvenWhenRejected() throws Exception {
+        mvc.perform(get("/open-banking/v1/accounts")).andExpect(status().isUnauthorized())
+                .andExpect(header().exists("X-Correlation-Id"));
+        mvc.perform(get("/customer/v1/consents").with(customer(ada)).header("X-Correlation-Id", "trace-0000-1111"))
+                .andExpect(header().string("X-Correlation-Id", "trace-0000-1111"));
+    }
+
+    @Test
     void everyEndpointNeedsTheRightCaller() throws Exception {
         mvc.perform(get("/open-banking/v1/accounts")).andExpect(status().isUnauthorized());
         mvc.perform(get("/customer/v1/consents")).andExpect(status().isUnauthorized());

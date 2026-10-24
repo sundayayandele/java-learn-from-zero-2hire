@@ -189,6 +189,80 @@ in <code>~/.testcontainers.properties</code>) for local runs only.</li>
 <li>Do not mix many different <code>@MockitoBean</code> combinations
 across tests; each combination creates a new context.</li>
 </ul>
+<h2 id="7-test-slices-and-the-context-cache">7. Test slices and the
+context cache</h2>
+<p>A full <code>@SpringBootTest</code> starts everything: web layer,
+security, every repository, every client. <strong>Test slices</strong>
+start only the part you are testing, so they are faster and fail for one
+reason:</p>
+<table>
+<thead>
+<tr>
+<th>Annotation</th>
+<th>Starts</th>
+<th>Use for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>@WebMvcTest(TransferController.class)</code></td>
+<td>MVC infrastructure, the controller, <code>@ControllerAdvice</code>,
+security filters, Jackson</td>
+<td>Validation, status codes, Problem Details, authorisation rules
+(topic 7.3)</td>
+</tr>
+<tr>
+<td><code>@DataJpaTest</code></td>
+<td>JPA, repositories, Flyway, a transaction rolled back after each
+test</td>
+<td>Repository queries, mappings, constraints</td>
+</tr>
+<tr>
+<td><code>@JdbcTest</code></td>
+<td><code>JdbcClient</code>, <code>DataSource</code>, Flyway</td>
+<td>SQL written with <code>JdbcClient</code></td>
+</tr>
+<tr>
+<td><code>@JsonTest</code></td>
+<td>Jackson with your customisations</td>
+<td>Money serialisation, date formats, unknown fields</td>
+</tr>
+<tr>
+<td><code>@RestClientTest(ProviderClient.class)</code></td>
+<td><code>RestClient.Builder</code> with a mock server</td>
+<td>Outbound client mapping (or use WireMock)</td>
+</tr>
+</tbody>
+</table>
+<p><code>@DataJpaTest</code> and <code>@JdbcTest</code> replace your
+<code>DataSource</code> with an embedded database by default. Keep them
+on real PostgreSQL by importing your Testcontainers configuration and
+turning replacement off:</p>
+<pre class="java"><code>@DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@Import(TestcontainersConfiguration.class)
+class JournalRepositoryTest { ... }</code></pre>
+<p>Spring caches each application context and reuses it for every test
+class with <strong>exactly the same configuration</strong>. Each
+different combination of <code>@MockitoBean</code> fields,
+<code>@TestPropertySource</code> values, profiles or imported
+configuration creates a <strong>new context</strong> (and starts new
+containers if they are context beans). To keep suites fast:</p>
+<ul>
+<li>Put shared <code>@MockitoBean</code>s and properties on a common
+base class or a composed annotation, rather than slightly different sets
+in every class.</li>
+<li>Avoid <code>@DirtiesContext</code>; it throws the cached context
+away. Clean data instead (truncate tables, unique keys per test).</li>
+<li>Use <code>@MockitoBean</code> (from
+<code>org.springframework.test.context.bean.override.mockito</code>, the
+replacement for Boot's removed <code>@MockBean</code>) only for
+collaborators you genuinely can't run, such as an external provider;
+prefer WireMock for HTTP dependencies so the real client code is tested
+too.</li>
+<li>Watch the log line <code>Starting ... using Java</code> during a
+test run: if it appears many times, you have many contexts.</li>
+</ul>
 <h2 id="common-mistakes">Common mistakes</h2>
 <ul>
 <li>H2 in tests, PostgreSQL in production.</li>
@@ -213,6 +287,14 @@ eviction.</li>
 <li>Split tests into <code>*Test</code> (Surefire) and <code>*IT</code>
 (Failsafe) and measure <code>mvn test</code> versus
 <code>mvn verify</code> times.</li>
+<li>Convert three <code>@SpringBootTest</code> classes that only test a
+repository or a controller into
+<code>@DataJpaTest</code>/<code>@JdbcTest</code> and
+<code>@WebMvcTest</code> slices on real PostgreSQL, and compare run
+times.</li>
+<li>Count how many application contexts your suite starts, then reduce
+the number by unifying <code>@MockitoBean</code> sets and
+properties.</li>
 </ol>
 <h2 id="key-terms">Key terms</h2>
 <p>Integration test, Testcontainers, <code>PostgreSQLContainer</code>,
@@ -220,7 +302,10 @@ eviction.</li>
 <code>@ServiceConnection</code>, <code>@TestConfiguration</code>,
 context caching, <code>@Import</code>, test isolation,
 <code>@Transactional</code> rollback, Awaitility, Surefire, Failsafe,
-<code>*IT</code>, reusable containers, Docker image tag pinning.</p>
+<code>*IT</code>, reusable containers, Docker image tag pinning, test
+slice, <code>@DataJpaTest</code>, <code>@JdbcTest</code>,
+<code>@JsonTest</code>, <code>@AutoConfigureTestDatabase</code>, context
+cache, <code>@MockitoBean</code>, <code>@DirtiesContext</code>.</p>
 <h2 id="further-reading">Further reading</h2>
 <ul>
 <li><a href="https://java.testcontainers.org/">Testcontainers for Java

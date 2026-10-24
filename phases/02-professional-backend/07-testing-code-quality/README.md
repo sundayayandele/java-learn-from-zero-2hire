@@ -47,6 +47,10 @@ Build a fee and tax engine **test-first**, committing after every red, green and
 - Integration tests with PostgreSQL and Redis (stock reservation cache) in Testcontainers, plus a Kafka container for `OrderPlaced` events (consumed by a test listener).
 - One contract test for the payments client (Spring Cloud Contract or a WireMock-recorded contract) and a SonarQube (or SonarQube Cloud) analysis with the quality gate passing.
 
+### Lab 7.D: Make a flaky test suite trustworthy
+
+A broken-service lab: [Make a flaky test suite trustworthy](../../../labs/07-flaky-test-suite/README.md), a suite that passes locally and fails on a simulated hostile CI runner (time zone, locale, order, parallelism, slowness). Do it alongside the module; it counts as practice, not as the module project, but mentors review it if you submit it with your project.
+
 ## How these projects are assessed
 
 | Criterion | Not yet | Competent | Strong |

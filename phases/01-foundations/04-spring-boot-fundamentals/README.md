@@ -16,6 +16,7 @@
 | [4.5 Spring Boot Actuator: health checks and metrics](4.5-actuator-health-metrics/README.md) | 12 | Spring Boot Actuator health checks and metrics |
 | [4.6 What changed from Spring Boot 3 to 4, and how to upgrade](4.6-spring-boot-3-to-4-upgrade/README.md) | 13 | What changed from Spring Boot 3 to 4, and how to upgrade |
 | [4.7 Spring Boot with Kotlin](4.7-spring-boot-with-kotlin/README.md) | 13 | Kotlin with Spring Boot (added to this programme) |
+| [4.8 Spring under the hood: proxies, transactions, bean scopes, lifecycle, events and scheduling](4.8-spring-under-the-hood/README.md) | 13 | Added for interviews: AOP proxies, @Transactional propagation and rollback rules, self-invocation, bean scopes and lifecycle, application events, @Scheduled and @Async pitfalls |
 
 ## What this module gives you
 

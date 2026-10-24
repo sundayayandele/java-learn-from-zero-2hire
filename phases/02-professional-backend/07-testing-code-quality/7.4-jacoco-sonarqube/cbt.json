@@ -94,6 +94,19 @@
       ],
       "answer": 2,
       "explanation": "A balance of 0.00 would not equal BigDecimal.ZERO with equals, so the check silently fails. compareTo or signum compares numeric value only."
+    },
+    {
+      "type": "single",
+      "scenario": "An ADR says controllers must never call repositories directly, but new code keeps doing it and reviewers miss it.",
+      "question": "How can the build enforce the rule?",
+      "options": [
+        "Raise the JaCoCo threshold",
+        "Add an ArchUnit test that fails when classes in the web package depend on the repository package",
+        "Run SonarQube once a month",
+        "Add a comment to every controller"
+      ],
+      "answer": 1,
+      "explanation": "ArchUnit turns architecture decisions into fast, automated tests."
     }
   ]
 }

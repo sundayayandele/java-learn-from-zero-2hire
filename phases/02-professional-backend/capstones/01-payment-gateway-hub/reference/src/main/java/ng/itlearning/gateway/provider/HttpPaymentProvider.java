@@ -2,6 +2,8 @@ package ng.itlearning.gateway.provider;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import ng.itlearning.gateway.config.GatewayProperties;
+import ng.itlearning.gateway.web.CorrelationIdFilter;
+import org.slf4j.MDC;
 import org.springframework.boot.http.client.ClientHttpRequestFactoryBuilder;
 import org.springframework.boot.http.client.HttpClientSettings;
 import org.springframework.http.HttpStatusCode;
@@ -32,6 +34,14 @@ public class HttpPaymentProvider implements PaymentProvider {
                         .withHttpClientCustomizer(b -> b.version(HttpClient.Version.HTTP_1_1))
                         .build(HttpClientSettings.defaults().withTimeouts(connectTimeout, readTimeout)))
                 .defaultHeader("Authorization", "Bearer " + config.secret())
+                // Pass our correlation id on, so the provider's support team can trace our calls (topic 2.6).
+                .requestInterceptor((request, body, execution) -> {
+                    String id = MDC.get(CorrelationIdFilter.MDC_KEY);
+                    if (id != null) {
+                        request.getHeaders().set(CorrelationIdFilter.HEADER, id);
+                    }
+                    return execution.execute(request, body);
+                })
                 .defaultStatusHandler(HttpStatusCode::is5xxServerError, (req, res) -> {
                     throw new ProviderUnavailableException(config.name(), "HTTP " + res.getStatusCode().value());
                 })

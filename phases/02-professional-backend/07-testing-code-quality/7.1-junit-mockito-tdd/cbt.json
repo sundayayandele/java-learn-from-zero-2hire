@@ -94,6 +94,19 @@
       ],
       "answer": 1,
       "explanation": "Bugs cluster at boundaries (< versus <=). Testing exactly on and just past each boundary, plus the smallest valid amount, catches them."
+    },
+    {
+      "type": "single",
+      "scenario": "An integration test calls an `@Async` notification and then `Thread.sleep(3000)` before asserting. It is slow and still fails occasionally on the CI runner.",
+      "question": "What is the better approach?",
+      "options": [
+        "Run the test three times and accept any pass",
+        "Increase the sleep to 10 seconds",
+        "Use Awaitility to poll for the expected result with a timeout, or make the work synchronous in the test with a direct executor",
+        "Mark the test @Disabled on CI"
+      ],
+      "answer": 2,
+      "explanation": "Awaitility waits only as long as needed; synchronous executors remove the timing problem in unit tests."
     }
   ]
 }

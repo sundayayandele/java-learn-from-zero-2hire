@@ -3,7 +3,7 @@
 
 # 4.7 Spring Boot with Kotlin
 
-← [4.6 What changed from Spring Boot 3 to 4, and how to upgrade](../4.6-spring-boot-3-to-4-upgrade/README.md) · [Module 4](../README.md) · [Phase 1](../../README.md)
+← [4.6 What changed from Spring Boot 3 to 4, and how to upgrade](../4.6-spring-boot-3-to-4-upgrade/README.md) · [Module 4](../README.md) · [Phase 1](../../README.md) · [4.8 Spring under the hood](../4.8-spring-under-the-hood/README.md) →
 
 > **Week 13** · Module 4: Spring Boot 4 Fundamentals · Website topic covered: *Kotlin with Spring Boot (added to this programme)*
 
@@ -413,4 +413,4 @@ What is most likely missing?
 
 ---
 
-← [4.6 What changed from Spring Boot 3 to 4, and how to upgrade](../4.6-spring-boot-3-to-4-upgrade/README.md) · [Module 4](../README.md) · [Phase 1](../../README.md)
+← [4.6 What changed from Spring Boot 3 to 4, and how to upgrade](../4.6-spring-boot-3-to-4-upgrade/README.md) · [Module 4](../README.md) · [Phase 1](../../README.md) · [4.8 Spring under the hood](../4.8-spring-under-the-hood/README.md) →

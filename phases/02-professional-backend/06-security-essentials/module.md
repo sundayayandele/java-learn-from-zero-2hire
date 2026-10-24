@@ -27,6 +27,10 @@ Security mistakes in fintech are expensive and public. Every project in this mod
 - Enforce object-level authorisation (`@PreAuthorize` with a bean that checks ownership) so changing an ID in the URL never exposes another customer's data (OWASP API1: Broken Object Level Authorization).
 - **Acceptance:** a parameterised test matrix of role × endpoint × resource owner proving every allowed and denied combination.
 
+### Lab 6.D: Break it, then fix it
+
+A broken-service lab: [Break it, then fix it](../../../labs/06-security-break-and-fix/README.md), an OAuth2-secured banking API with IDOR, SQL injection, mass assignment, mis-ordered authorisation rules and MD5 passwords, each caught by a failing attack test. Do it alongside the module; it counts as practice, not as the module project, but mentors review it if you submit it with your project.
+
 ## How these projects are assessed
 
 | Criterion | Not yet | Competent | Strong |

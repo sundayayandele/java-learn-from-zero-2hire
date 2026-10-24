@@ -4,7 +4,7 @@
 
 > **Build your own version first.** Compare after you've finished, and be ready to explain your different choices.
 
-Tested with Java 21, Spring Boot 4.1.2, Spring Security 7.1 and PostgreSQL 17: **26 tests, 90.2% line coverage** (the build enforces at least 80%).
+Tested with Java 21, Spring Boot 4.1.2, Spring Security 7.1 and PostgreSQL 17: **27 tests, about 90% line coverage** (the build enforces at least 80%).
 
 ## Run it
 
@@ -53,6 +53,7 @@ curl -s http://localhost:8080/open-banking/v1/accounts -H "Authorization: Bearer
 
 - **Two kinds of callers, two identities.** TPPs are OAuth clients (`azp`), customers are users. A TPP token can never reach customer endpoints (`ROLE_CUSTOMER`) and vice versa (`SCOPE_accounts`).
 - **Another TPP's consent returns 404, not 403**, so consent ids can't be probed. Accounts outside the consent return 403 `account-not-in-consent` without revealing whether they exist.
+- **Every response, including 401s, carries an `X-Correlation-Id`** (the filter runs before security), and every log line includes it.
 - **Expiry is computed, not stored**, so there's no job that might fail to expire a consent in time.
 - **Customers are matched by `preferred_username`** to keep local setup simple (the realm doesn't allow editing usernames). A production bank would map the token's `sub` to its customer record during onboarding.
 - The unattended limit counts per consent, account, endpoint and Lagos calendar day with one `INSERT ... ON CONFLICT ... RETURNING`, so it is correct under concurrency without locks. Calls with `x-fapi-customer-ip-address` (customer present) aren't counted.

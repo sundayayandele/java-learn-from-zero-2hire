@@ -208,6 +208,31 @@ Rules:
 - **Virtual threads** (Java 21): Module 2.
 - In **Java 25**: unnamed variables and patterns are long final, module import declarations (`import module java.base;`), flexible constructor bodies (statements before `super(...)`), compact source files with instance `main` methods for small programs, and primitive types in patterns still in preview. None are required for this programme, but you should recognise them in newer codebases.
 
+## 6. Reading Lombok code
+
+Many codebases you will join were written before records existed, and use **Lombok**, an annotation processor that generates code at compile time. You need to read it fluently even if you write records in new code:
+
+| Lombok | Generates | Modern alternative |
+| --- | --- | --- |
+| `@Getter`, `@Setter` | Accessors for fields | Records (immutable) or explicit methods |
+| `@RequiredArgsConstructor` | A constructor for `final` fields (often used for Spring constructor injection) | A hand-written constructor |
+| `@Value` | Immutable class: private final fields, getters, `equals`/`hashCode`/`toString` | `record` |
+| `@Data` | Getters, setters, `equals`/`hashCode`, `toString`, required-args constructor | Rarely appropriate; see below |
+| `@Builder` | A builder (topic 1.12) | Hand-written builder or static factories |
+| `@Slf4j` | `private static final Logger log = LoggerFactory.getLogger(...)` | Declare the logger yourself |
+
+```java
+@Service
+@RequiredArgsConstructor          // constructor injection of the final fields below
+@Slf4j
+class TransferService {
+    private final AccountRepository accounts;
+    private final FeeCalculator fees;
+}
+```
+
+Know the traps: `@Data` on a JPA entity generates `equals`/`hashCode` over all fields (including lazy collections and the generated id), which breaks `HashSet`s and can trigger lazy loading; `@ToString` can print sensitive fields such as BVNs or tokens into logs (exclude them with `@ToString.Exclude`); and Lombok must be configured as an annotation processor in Maven and enabled in IntelliJ IDEA. Spring Boot manages the Lombok version (1.18.48 in Boot 4.1.2), so you add the dependency with `<optional>true</optional>` and no version.
+
 ## Worked example: a fee engine with no `if` chains
 
 ```java
@@ -254,10 +279,11 @@ The transfer bands mirror the familiar Nigerian NIP-style fee tiers; treat the n
 2. Model `sealed interface LoanDecision permits Approved, Rejected, ManualReview` with sensible components, and write an exhaustive switch that produces the customer SMS text.
 3. Add a fourth `Txn` type, `BillPaymentTxn`, to the worked example. Note every compile error, fix them, and explain why this is better than a runtime failure.
 4. Rewrite a 15-line JSON string built with `+` and `\n` as a text block with `formatted`.
+5. Take a Lombok `@Data` class from an open-source Spring project, rewrite it as a record or a hand-written class, and list every method Lombok was generating.
 
 ## Key terms
 
-Record, component, compact constructor, canonical constructor, value equality, sealed, `permits`, `non-sealed`, pattern matching, type pattern, record pattern, guard (`when`), exhaustiveness, dominance, data-oriented programming, text block.
+Record, component, compact constructor, canonical constructor, value equality, sealed, `permits`, `non-sealed`, pattern matching, type pattern, record pattern, guard (`when`), exhaustiveness, dominance, data-oriented programming, text block, Lombok, annotation processor, `@Data`, `@Value`, `@RequiredArgsConstructor`, `@Builder`.
 
 ## Further reading
 
@@ -281,7 +307,7 @@ All videos are in English with English captions and were checked on 2026-10-24. 
 
 ## Check your understanding
 
-7 scenario questions. Answer each one before opening the explanation. On Moodle this is the graded topic quiz (pass mark 70%, unlimited attempts).
+8 scenario questions. Answer each one before opening the explanation. On Moodle this is the graded topic quiz (pass mark 70%, unlimited attempts).
 
 **Q1.** The product team adds a new payment method, `Ussd`, to the sealed interface `PaymentMethod`. You want the build to fail everywhere fees, limits and receipts don't yet handle it.
 
@@ -385,6 +411,21 @@ Which are good fits for records? *(choose all that apply)*
 <details><summary>Answer</summary>
 
 **A, C, D.** Request DTOs, value objects and events are immutable data carriers, exactly what records model. JPA entities need mutability and proxies.
+
+</details>
+
+**Q8.** A JPA entity uses Lombok's `@Data`. Adding entities to a `HashSet` and then saving them makes the set behave strangely, and logs show a customer's BVN.
+
+What is the problem?
+
+- A. Lombok doesn't support HashSet
+- B. @Data generates equals/hashCode over all fields (including the generated id) and a toString that prints every field, including sensitive ones
+- C. The BVN field must be static
+- D. JPA entities can't have getters
+
+<details><summary>Answer</summary>
+
+**B.** Use explicit equals/hashCode for entities and exclude sensitive fields from toString, or avoid @Data on entities.
 
 </details>
 

@@ -236,6 +236,72 @@ instance <code>main</code> methods for small programs, and primitive
 types in patterns still in preview. None are required for this
 programme, but you should recognise them in newer codebases.</li>
 </ul>
+<h2 id="6-reading-lombok-code">6. Reading Lombok code</h2>
+<p>Many codebases you will join were written before records existed, and
+use <strong>Lombok</strong>, an annotation processor that generates code
+at compile time. You need to read it fluently even if you write records
+in new code:</p>
+<table>
+<thead>
+<tr>
+<th>Lombok</th>
+<th>Generates</th>
+<th>Modern alternative</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>@Getter</code>, <code>@Setter</code></td>
+<td>Accessors for fields</td>
+<td>Records (immutable) or explicit methods</td>
+</tr>
+<tr>
+<td><code>@RequiredArgsConstructor</code></td>
+<td>A constructor for <code>final</code> fields (often used for Spring
+constructor injection)</td>
+<td>A hand-written constructor</td>
+</tr>
+<tr>
+<td><code>@Value</code></td>
+<td>Immutable class: private final fields, getters,
+<code>equals</code>/<code>hashCode</code>/<code>toString</code></td>
+<td><code>record</code></td>
+</tr>
+<tr>
+<td><code>@Data</code></td>
+<td>Getters, setters, <code>equals</code>/<code>hashCode</code>,
+<code>toString</code>, required-args constructor</td>
+<td>Rarely appropriate; see below</td>
+</tr>
+<tr>
+<td><code>@Builder</code></td>
+<td>A builder (topic 1.12)</td>
+<td>Hand-written builder or static factories</td>
+</tr>
+<tr>
+<td><code>@Slf4j</code></td>
+<td><code>private static final Logger log = LoggerFactory.getLogger(...)</code></td>
+<td>Declare the logger yourself</td>
+</tr>
+</tbody>
+</table>
+<pre class="java"><code>@Service
+@RequiredArgsConstructor          // constructor injection of the final fields below
+@Slf4j
+class TransferService {
+    private final AccountRepository accounts;
+    private final FeeCalculator fees;
+}</code></pre>
+<p>Know the traps: <code>@Data</code> on a JPA entity generates
+<code>equals</code>/<code>hashCode</code> over all fields (including
+lazy collections and the generated id), which breaks
+<code>HashSet</code>s and can trigger lazy loading;
+<code>@ToString</code> can print sensitive fields such as BVNs or tokens
+into logs (exclude them with <code>@ToString.Exclude</code>); and Lombok
+must be configured as an annotation processor in Maven and enabled in
+IntelliJ IDEA. Spring Boot manages the Lombok version (1.18.48 in Boot
+4.1.2), so you add the dependency with
+<code>&lt;optional&gt;true&lt;/optional&gt;</code> and no version.</p>
 <h2 id="worked-example-a-fee-engine-with-no-if-chains">Worked example: a
 fee engine with no <code>if</code> chains</h2>
 <pre class="java"><code>public sealed interface Txn permits CardTxn, TransferTxn, AirtimeTxn { Money amount(); }
@@ -294,12 +360,17 @@ the worked example. Note every compile error, fix them, and explain why
 this is better than a runtime failure.</li>
 <li>Rewrite a 15-line JSON string built with <code>+</code> and
 <code>\n</code> as a text block with <code>formatted</code>.</li>
+<li>Take a Lombok <code>@Data</code> class from an open-source Spring
+project, rewrite it as a record or a hand-written class, and list every
+method Lombok was generating.</li>
 </ol>
 <h2 id="key-terms">Key terms</h2>
 <p>Record, component, compact constructor, canonical constructor, value
 equality, sealed, <code>permits</code>, <code>non-sealed</code>, pattern
 matching, type pattern, record pattern, guard (<code>when</code>),
-exhaustiveness, dominance, data-oriented programming, text block.</p>
+exhaustiveness, dominance, data-oriented programming, text block,
+Lombok, annotation processor, <code>@Data</code>, <code>@Value</code>,
+<code>@RequiredArgsConstructor</code>, <code>@Builder</code>.</p>
 <h2 id="further-reading">Further reading</h2>
 <ul>
 <li><a href="https://openjdk.org/jeps/395">JEP 395: Records</a></li>

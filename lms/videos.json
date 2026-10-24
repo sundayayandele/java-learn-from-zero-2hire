@@ -1758,6 +1758,136 @@
         "published": "2022-10-20",
         "why": "Scanning container images with Trivy, from Aqua Security."
       }
+    ],
+    "1.12": [
+      {
+        "id": "Nrwj3gZiuJU",
+        "title": "The Strategy Pattern Explained and Implemented in Java | Behavioral Design Patterns | Geekific",
+        "channel": "Geekific",
+        "minutes": 7.4,
+        "published": "2021-09-25",
+        "why": "The Strategy pattern implemented in Java, step by step."
+      },
+      {
+        "id": "TS5i-uPXLs8",
+        "title": "The Proxy Pattern Explained and Implemented in Java | Structural Design Patterns | Geekific",
+        "channel": "Geekific",
+        "minutes": 5.8,
+        "published": "2022-02-05",
+        "why": "The Proxy pattern in Java: the idea behind Spring's annotations."
+      },
+      {
+        "id": "BJatgOiiht4",
+        "title": "7 Design Patterns EVERY Developer Should Know",
+        "channel": "ForrestKnight",
+        "minutes": 22.0,
+        "published": "2024-12-06",
+        "why": "Seven design patterns every developer should recognise, with examples."
+      }
+    ],
+    "2.6": [
+      {
+        "id": "V5iQ1FyRtBo",
+        "title": "Debugging Java code in IntelliJ IDEA",
+        "channel": "IntelliJ IDEA, a JetBrains IDE",
+        "minutes": 7.4,
+        "published": "2025-03-20",
+        "why": "JetBrains' own guide to debugging Java in IntelliJ IDEA."
+      },
+      {
+        "id": "1qzHSEjU8Hc",
+        "title": "Thread Dump Analysis Fundamentals - Part 1",
+        "channel": "Pierre-Hugues Charbonneau",
+        "minutes": 13.1,
+        "published": "2015-08-02",
+        "why": "Thread dump analysis fundamentals: states, locks and what to look for."
+      },
+      {
+        "id": "qx64dxxFpSc",
+        "title": "Heap Dump Analysis Using Eclipse MAT",
+        "channel": "Informatica Support",
+        "minutes": 15.5,
+        "published": "2024-10-30",
+        "why": "Heap dump analysis with Eclipse MAT: leak suspects and the dominator tree."
+      }
+    ],
+    "4.8": [
+      {
+        "id": "gDpmbUoEpPQ",
+        "title": "[QUESTION] Why doesn't @Transactional work when called within the same class?",
+        "channel": "Laur Spilca",
+        "minutes": 15.6,
+        "published": "2020-02-06",
+        "why": "Why @Transactional doesn't work when called within the same class."
+      },
+      {
+        "id": "LCltftLZ_W0",
+        "title": "Spring Transaction Propagation Explained | Spring Boot Transactions Part 3",
+        "channel": "CodeSnippet by Chetan",
+        "minutes": 28.0,
+        "published": "2024-08-24",
+        "why": "Spring transaction propagation explained with runnable examples."
+      },
+      {
+        "id": "KxWh70Xr35c",
+        "title": "Customizing Bean Nature in Spring | Bean Lifecycle, @PostConstruct & @PreDestroy Explained",
+        "channel": "CodeSnippet by Chetan",
+        "minutes": 18.7,
+        "published": "2024-09-13",
+        "why": "The bean lifecycle: @PostConstruct, @PreDestroy and customising bean nature."
+      }
+    ],
+    "5.6": [
+      {
+        "id": "i7twT3x5yv8",
+        "title": "System Design Interview: A Step-By-Step Guide",
+        "channel": "ByteByteGo",
+        "minutes": 9.9,
+        "published": "2023-02-09",
+        "why": "A step-by-step framework for system design interviews, from ByteByteGo."
+      },
+      {
+        "id": "dGAgxozNWFE",
+        "title": "Cache Systems Every Developer Should Know",
+        "channel": "ByteByteGo",
+        "minutes": 5.8,
+        "published": "2023-04-04",
+        "why": "Cache systems every developer should know: where caches sit and why."
+      },
+      {
+        "id": "i53Gi_K3o7I",
+        "title": "20 System Design Concepts Explained in 10 Minutes",
+        "channel": "NeetCode",
+        "minutes": 11.7,
+        "published": "2023-03-11",
+        "why": "Twenty system design concepts in ten minutes: a fast vocabulary refresher."
+      }
+    ],
+    "8.6": [
+      {
+        "id": "RtQ3tpq-RuE",
+        "title": "Scrum Essentials in Under 10 Minutes",
+        "channel": "Scrum Alliance",
+        "minutes": 10.3,
+        "published": "2023-01-31",
+        "why": "Scrum essentials in under ten minutes, from the Scrum Alliance."
+      },
+      {
+        "id": "7hoGqhb6qAs",
+        "title": "How to write good User Stories in Agile",
+        "channel": "The Agile Shop",
+        "minutes": 3.8,
+        "published": "2022-01-17",
+        "why": "How to write good user stories."
+      },
+      {
+        "id": "ogV2r9579WI",
+        "title": "What are Agile Epics, User Stories, and Story Points?",
+        "channel": "Online PM Courses - Mike Clayton",
+        "minutes": 6.8,
+        "published": "2021-07-21",
+        "why": "Epics, user stories and story points explained."
+      }
     ]
   }
 }

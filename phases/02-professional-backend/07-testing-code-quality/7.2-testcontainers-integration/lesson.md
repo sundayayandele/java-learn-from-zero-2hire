@@ -173,6 +173,34 @@ Rename integration tests to `TransferIT`, `RateCacheIT`. CI runs `./mvnw verify`
 - Reusable containers (`testcontainers.reuse.enable=true` in `~/.testcontainers.properties`) for local runs only.
 - Do not mix many different `@MockitoBean` combinations across tests; each combination creates a new context.
 
+## 7. Test slices and the context cache
+
+A full `@SpringBootTest` starts everything: web layer, security, every repository, every client. **Test slices** start only the part you are testing, so they are faster and fail for one reason:
+
+| Annotation | Starts | Use for |
+| --- | --- | --- |
+| `@WebMvcTest(TransferController.class)` | MVC infrastructure, the controller, `@ControllerAdvice`, security filters, Jackson | Validation, status codes, Problem Details, authorisation rules (topic 7.3) |
+| `@DataJpaTest` | JPA, repositories, Flyway, a transaction rolled back after each test | Repository queries, mappings, constraints |
+| `@JdbcTest` | `JdbcClient`, `DataSource`, Flyway | SQL written with `JdbcClient` |
+| `@JsonTest` | Jackson with your customisations | Money serialisation, date formats, unknown fields |
+| `@RestClientTest(ProviderClient.class)` | `RestClient.Builder` with a mock server | Outbound client mapping (or use WireMock) |
+
+`@DataJpaTest` and `@JdbcTest` replace your `DataSource` with an embedded database by default. Keep them on real PostgreSQL by importing your Testcontainers configuration and turning replacement off:
+
+```java
+@DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@Import(TestcontainersConfiguration.class)
+class JournalRepositoryTest { ... }
+```
+
+Spring caches each application context and reuses it for every test class with **exactly the same configuration**. Each different combination of `@MockitoBean` fields, `@TestPropertySource` values, profiles or imported configuration creates a **new context** (and starts new containers if they are context beans). To keep suites fast:
+
+- Put shared `@MockitoBean`s and properties on a common base class or a composed annotation, rather than slightly different sets in every class.
+- Avoid `@DirtiesContext`; it throws the cached context away. Clean data instead (truncate tables, unique keys per test).
+- Use `@MockitoBean` (from `org.springframework.test.context.bean.override.mockito`, the replacement for Boot's removed `@MockBean`) only for collaborators you genuinely can't run, such as an external provider; prefer WireMock for HTTP dependencies so the real client code is tested too.
+- Watch the log line `Starting ... using Java` during a test run: if it appears many times, you have many contexts.
+
 ## Common mistakes
 
 - H2 in tests, PostgreSQL in production.
@@ -189,10 +217,12 @@ Rename integration tests to `TransferIT`, `RateCacheIT`. CI runs `./mvnw verify`
 2. Write the 50-concurrent-transfers test; break the lock ordering deliberately and watch it detect the deadlock or lost update.
 3. Add Redis to the test configuration and test cache hits, misses and eviction.
 4. Split tests into `*Test` (Surefire) and `*IT` (Failsafe) and measure `mvn test` versus `mvn verify` times.
+5. Convert three `@SpringBootTest` classes that only test a repository or a controller into `@DataJpaTest`/`@JdbcTest` and `@WebMvcTest` slices on real PostgreSQL, and compare run times.
+6. Count how many application contexts your suite starts, then reduce the number by unifying `@MockitoBean` sets and properties.
 
 ## Key terms
 
-Integration test, Testcontainers, `PostgreSQLContainer`, `GenericContainer`, `KafkaContainer`, `@ServiceConnection`, `@TestConfiguration`, context caching, `@Import`, test isolation, `@Transactional` rollback, Awaitility, Surefire, Failsafe, `*IT`, reusable containers, Docker image tag pinning.
+Integration test, Testcontainers, `PostgreSQLContainer`, `GenericContainer`, `KafkaContainer`, `@ServiceConnection`, `@TestConfiguration`, context caching, `@Import`, test isolation, `@Transactional` rollback, Awaitility, Surefire, Failsafe, `*IT`, reusable containers, Docker image tag pinning, test slice, `@DataJpaTest`, `@JdbcTest`, `@JsonTest`, `@AutoConfigureTestDatabase`, context cache, `@MockitoBean`, `@DirtiesContext`.
 
 ## Further reading
 

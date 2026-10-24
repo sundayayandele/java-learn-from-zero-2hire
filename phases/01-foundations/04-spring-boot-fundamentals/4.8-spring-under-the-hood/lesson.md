@@ -1,0 +1,200 @@
+## What you will be able to do
+
+- Explain how Spring adds behaviour through **proxies**, and predict when an annotation such as `@Transactional`, `@Cacheable` or `@Async` will silently not apply.
+- Use `@Transactional` correctly: propagation, rollback rules for checked and unchecked exceptions, `readOnly`, timeouts and isolation.
+- Choose bean **scopes** and understand the bean **lifecycle**, including `@PostConstruct`, `@PreDestroy` and `BeanPostProcessor`s.
+- Decouple code with **application events**, and run background work safely with `@Async` and `@Scheduled`, including on several instances.
+- Explain how auto-configuration decides what to create, and debug it with the conditions report.
+
+## Why this matters in a bank or fintech
+
+The bugs that reach production in Spring applications are rarely syntax errors. They are a transfer that half-commits because a checked exception didn't roll back, a "separate transaction" for an audit log that wasn't separate, a nightly interest job that ran twice because two pods were deployed, or an exception in an `@Async` method that vanished. These all come from how Spring works underneath. They are also the standard Spring interview questions for junior and mid-level roles: if you can explain proxies, propagation and rollback rules with an example from your own code, you will stand out.
+
+## 1. Proxies: how annotations get their behaviour
+
+When a bean has methods annotated with `@Transactional`, `@Cacheable`, `@PreAuthorize`, `@Async`, `@Retryable` or similar, Spring doesn't change your class. At start-up, a `BeanPostProcessor` replaces the bean with a **proxy** that wraps calls to it (topic 1.12). Other beans receive the proxy. Spring Boot uses **class-based (CGLIB) proxies** by default: a generated subclass of your class.
+
+```text
+Controller ──calls──> [Proxy: start tx] ──> TransferService.transfer() ──> [Proxy: commit/rollback]
+```
+
+Consequences you must know:
+
+1. **Self-invocation bypasses the proxy.** `this.audit()` inside the same bean calls the real method directly, so `@Transactional(propagation = REQUIRES_NEW)` on `audit()` does nothing.
+2. **Private methods are never proxied**, and `final` methods or classes can't be overridden by a CGLIB proxy. Put annotations on public (or, for class-based proxies, non-private) methods of Spring beans.
+3. **Only beans managed by Spring get proxies.** An object created with `new` has no transactions, security or caching.
+4. **Proxies are created after the constructor.** Calling a `@Transactional` method from a constructor or `@PostConstruct` runs it without the proxy.
+
+Fixes for self-invocation: move the method to another bean (clearest), use `TransactionTemplate` for programmatic transactions, or inject the bean's own proxy (`ObjectProvider<Self>`), which is a last resort.
+
+```java
+@Service
+class TransferService {
+    private final AuditService audit;             // separate bean, so calls go through its proxy
+    TransferService(AuditService audit) { this.audit = audit; }
+
+    @Transactional
+    public Receipt transfer(TransferRequest r) {
+        audit.recordAttempt(r);                   // REQUIRES_NEW really starts a new transaction
+        return post(r);
+    }
+}
+
+@Service
+class AuditService {
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void recordAttempt(TransferRequest r) { /* insert audit row; commits even if transfer fails */ }
+}
+```
+
+## 2. `@Transactional` in depth
+
+### Rollback rules
+
+By default Spring rolls back on **unchecked exceptions** (`RuntimeException` and `Error`) and **commits on checked exceptions**. This surprises people:
+
+```java
+@Transactional
+public void importStatement(Path file) throws IOException {
+    repository.save(header);
+    Files.readAllLines(file);       // IOException is checked: by default the header save COMMITS
+}
+```
+
+Make the rule explicit when a checked exception must undo work: `@Transactional(rollbackFor = Exception.class)`. Catching an exception inside the transactional method and not rethrowing it means the transaction commits, unless you call `TransactionAspectSupport.currentTransactionStatus().setRollbackOnly()`.
+
+If an inner `@Transactional` method (with the default `REQUIRED` propagation) throws and the outer method catches it, the shared transaction is already marked rollback-only, and the outer commit fails with `UnexpectedRollbackException`. Catching an exception does not undo the inner method's vote to roll back.
+
+### Propagation
+
+| Propagation | Behaviour | Typical use |
+| --- | --- | --- |
+| `REQUIRED` (default) | Join the current transaction or start one | Almost everything |
+| `REQUIRES_NEW` | Suspend the current one and start an independent transaction | Audit or failure logs that must survive a rollback |
+| `MANDATORY` | Fail if there is no current transaction | Repository-like methods that must be called inside one |
+| `SUPPORTS` | Join if one exists, otherwise run without | Rare; read helpers |
+| `NOT_SUPPORTED` | Suspend the current transaction | Calling a slow external system without holding a connection |
+| `NEVER` | Fail if a transaction exists | Guard rails |
+| `NESTED` | Savepoint inside the current transaction (JDBC) | Partial rollback of a step |
+
+`REQUIRES_NEW` takes a **second database connection** while the first is suspended. Under load this can exhaust the pool (topic 2.6), so use it sparingly.
+
+### Other attributes
+
+- `readOnly = true`: a hint that lets Hibernate skip dirty checking and flushing, and lets drivers route to replicas. It does not stop you writing in all databases, so don't rely on it for security.
+- `timeout`: seconds before the transaction is rolled back; useful for jobs.
+- `isolation`: overrides the database default (topic 3.2) for one method, for example `SERIALIZABLE` for a rare invariant.
+
+### Keep transactions short
+
+Never call a slow external API (a payment provider, an email server) inside a database transaction: it holds a connection and row locks for the whole call. Commit first, then call, or use events after commit (section 4).
+
+## 3. Bean scopes and lifecycle
+
+| Scope | One instance per | Notes |
+| --- | --- | --- |
+| `singleton` (default) | Application context | Must be stateless or thread-safe (topic 1.12) |
+| `prototype` | Each injection or `getBean` call | Spring doesn't call destroy callbacks |
+| `request` | HTTP request | Web only; injected through a scoped proxy |
+| `session` | HTTP session | Avoid in stateless APIs |
+| `application` | `ServletContext` | Rare |
+
+A **prototype bean injected into a singleton is created once**, at injection time, so it behaves like a singleton. Ask for a fresh one each time with `ObjectProvider<T>.getObject()`.
+
+The lifecycle of a singleton bean:
+
+1. Constructor runs (constructor injection: all dependencies are ready and fields can be `final`).
+2. Remaining injection (setter or field injection, `@Value`).
+3. `BeanPostProcessor.postProcessBeforeInitialization`.
+4. `@PostConstruct` method (then `InitializingBean.afterPropertiesSet` and any `initMethod`).
+5. `BeanPostProcessor.postProcessAfterInitialization`: **proxies are created here**.
+6. The bean is used.
+7. On shutdown: `@PreDestroy` (and `DisposableBean.destroy`), for example to close a client.
+
+Prefer **constructor injection**: dependencies are explicit, objects are immutable and easy to test without Spring, and circular dependencies fail fast (Spring Boot forbids them by default). Field injection (`@Autowired` on a field) hides dependencies and needs reflection in tests.
+
+## 4. Application events
+
+`ApplicationEventPublisher.publishEvent(...)` sends any object to listeners in the same application (the Observer pattern, topic 1.12).
+
+```java
+@Component
+class FraudScoring {
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    void on(TransferCompleted e) { /* score the transfer */ }
+}
+```
+
+- `@EventListener` runs **synchronously, inside the publisher's transaction**: an exception in a listener rolls back the transfer.
+- `@TransactionalEventListener` runs at a transaction phase (default `AFTER_COMMIT`); if the transaction rolls back, the listener never runs.
+- Add `@Async` to a listener to run it on another thread. Events are in-memory: if the application crashes after commit and before the listener runs, the event is lost. When delivery must be guaranteed, store an outbox row in the same transaction (Phase 3).
+
+## 5. `@Async` and `@Scheduled`
+
+Both need enabling (`@EnableAsync`, `@EnableScheduling`) and both are proxy-based.
+
+**`@Async` pitfalls:**
+
+- Self-invocation runs the method synchronously (no proxy).
+- Exceptions from `void` methods are not seen by the caller. Return `CompletableFuture<T>` or configure an `AsyncUncaughtExceptionHandler`.
+- Security context, MDC values (topic 2.6) and transactions don't automatically follow the work to another thread.
+- With `spring.threads.virtual.enabled=true`, Spring Boot runs `@Async` work on virtual threads; otherwise it uses a bounded `ThreadPoolTaskExecutor` (`spring.task.execution.pool.*`).
+
+**`@Scheduled` pitfalls:**
+
+```java
+@Scheduled(cron = "0 0 1 * * *", zone = "Africa/Lagos")    // 01:00 Lagos time every day
+public void accrueInterest() { ... }
+```
+
+- The default scheduler has **one thread** (unless virtual threads are enabled), so a slow job delays all others.
+- `fixedRate` starts runs at fixed intervals even if the previous run is still going; `fixedDelay` waits for the previous run to finish.
+- **Every instance runs every job.** With two pods, interest is accrued twice. Use a distributed lock (ShedLock, a PostgreSQL advisory lock as in Phase 1 Capstone 2) or move the job to a platform scheduler (Kubernetes CronJob, EventBridge Scheduler).
+- Make jobs idempotent and resumable: record what was processed so a rerun after a crash doesn't double-post.
+
+Spring Framework 7 also adds core resilience annotations, `@Retryable` and `@ConcurrencyLimit`, enabled with `@EnableResilientMethods`; topic 5.4 shows them. They are proxy-based too.
+
+## 6. How auto-configuration decides
+
+Auto-configuration classes are ordinary `@Configuration` classes guarded by **conditions**:
+
+- `@ConditionalOnClass(DataSource.class)`: only if a library is on the classpath.
+- `@ConditionalOnMissingBean`: only if you haven't defined your own bean, which is how you override defaults.
+- `@ConditionalOnProperty("app.feature.enabled")`: only if a property is set.
+
+To see what was applied and why, start the application with `--debug` (or `debug=true`) to print the **conditions evaluation report**, or call the Actuator `conditions` endpoint (restricted to operators). Spring Boot 4 splits auto-configuration into many modules, so a missing starter means the condition never matches (topic 4.6).
+
+## Common mistakes
+
+- `@Transactional` on a private method, or a method called through `this`.
+- Expecting checked exceptions to roll back.
+- Catching an exception from an inner transactional call and continuing, then getting `UnexpectedRollbackException`.
+- Calling external APIs inside long transactions.
+- Mutable fields in singleton beans; prototype beans injected into singletons.
+- `@EventListener` sending emails before the transaction commits.
+- Scheduled jobs that run on every instance and aren't idempotent.
+- Fire-and-forget `@Async` methods whose failures are never noticed.
+
+## Practice
+
+1. Write a test that proves a self-invoked `REQUIRES_NEW` method does **not** commit independently, then fix it by moving the method to another bean and make the test pass.
+2. Write tests for rollback rules: a `RuntimeException` rolls back, an `IOException` commits by default, and `rollbackFor = Exception.class` rolls it back.
+3. Reproduce `UnexpectedRollbackException` by catching an inner failure, and explain it in your own words.
+4. Publish a `TransferCompleted` event and show with tests that `@EventListener` runs inside the transaction while `@TransactionalEventListener` runs only after commit.
+5. Run two instances of an app with a `@Scheduled` job against one database and observe double execution; then add a PostgreSQL advisory lock (`pg_try_advisory_lock`) or ShedLock and show it runs once.
+6. Start your capstone with `--debug` and find the conditions that created (and didn't create) the `DataSource` and Flyway beans.
+
+## Key terms
+
+Proxy, CGLIB, JDK dynamic proxy, `BeanPostProcessor`, self-invocation, `@Transactional`, propagation (`REQUIRED`, `REQUIRES_NEW`, `MANDATORY`, `NESTED`), rollback rules, `rollbackFor`, rollback-only, `UnexpectedRollbackException`, `readOnly`, `TransactionTemplate`, bean scope, singleton, prototype, request scope, scoped proxy, `ObjectProvider`, bean lifecycle, `@PostConstruct`, `@PreDestroy`, constructor injection, application event, `@EventListener`, `@TransactionalEventListener`, `@Async`, `@Scheduled`, `fixedRate`, `fixedDelay`, cron, distributed lock, ShedLock, conditions evaluation report.
+
+## Further reading
+
+- [Spring Framework reference: Understanding the Spring Framework's declarative transaction implementation](https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/tx-decl-explained.html)
+- [Spring Framework reference: Using @Transactional (including rollback rules)](https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/annotations.html)
+- [Spring Framework reference: Transaction propagation](https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/tx-propagation.html)
+- [Spring Framework reference: Bean scopes](https://docs.spring.io/spring-framework/reference/core/beans/factory-scopes.html)
+- [Spring Framework reference: Customizing the nature of a bean (lifecycle callbacks)](https://docs.spring.io/spring-framework/reference/core/beans/factory-nature.html)
+- [Spring Framework reference: Task execution and scheduling](https://docs.spring.io/spring-framework/reference/integration/scheduling.html)
+- [Spring Boot reference: Creating your own auto-configuration (conditions)](https://docs.spring.io/spring-boot/reference/features/developing-auto-configuration.html)
+- [ShedLock on GitHub](https://github.com/lukas-krecan/ShedLock)

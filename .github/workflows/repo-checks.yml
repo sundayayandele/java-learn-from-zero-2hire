@@ -28,11 +28,22 @@ jobs:
       matrix:
         project:
           - templates/spring-boot-service-starter
+          - templates/spring-boot-secure-service-starter
           - templates/java-cli-starter
           - phases/01-foundations/capstones/01-core-banking-ledger/reference
           - phases/01-foundations/capstones/02-fx-rates-service/reference
           - phases/01-foundations/capstones/06-sanctions-screening-service/starter
+          - phases/02-professional-backend/capstones/01-payment-gateway-hub/reference
+          - phases/02-professional-backend/capstones/02-open-banking-api/reference
+          - phases/02-professional-backend/capstones/03-card-tokenisation-vault/starter
           - labs/04-boot3-to-4-upgrade
+          - labs/08-broken-pipeline-and-container/app
+        include:
+          # The practice tracks are graded against their reference solutions; learners' stubs fail by design.
+          - project: practice/dsa
+            args: -Psolutions
+          - project: practice/sql
+            args: -Psolutions
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-java@v5
@@ -43,4 +54,4 @@ jobs:
           cache-dependency-path: ${{ matrix.project }}/pom.xml
       - name: Build and test ${{ matrix.project }}
         working-directory: ${{ matrix.project }}
-        run: ./mvnw -B verify
+        run: ./mvnw -B verify ${{ matrix.args }}

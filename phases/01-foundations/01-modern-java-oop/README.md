@@ -20,6 +20,7 @@
 | [1.9 Kotlin for Java developers](1.9-kotlin-for-java-developers/README.md) | 4 | Kotlin (added to this programme; not listed on the website) |
 | [1.10 Java I/O, NIO.2 files and serialization](1.10-io-nio-serialization/README.md) | 4 | Added for the Oracle OCP Java SE 21/25 exam: I/O streams, NIO.2, serialization |
 | [1.11 Localization: locales, number, currency and date formatting, resource bundles](1.11-localization-formatting/README.md) | 4 | Added for the Oracle OCP Java SE 21/25 exam: localization |
+| [1.12 Design patterns in Java and in Spring](1.12-design-patterns/README.md) | 4 | Added for interviews: Strategy, Factory, Builder, Template Method, Proxy, Decorator, Observer, Adapter and Singleton, and where Spring uses them |
 
 ## What this module gives you
 

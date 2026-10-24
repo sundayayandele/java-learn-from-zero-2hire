@@ -94,6 +94,19 @@
       ],
       "answer": 0,
       "explanation": "Tests should mirror production. A floating tag can change behaviour, defaults or extensions without any change in your code."
+    },
+    {
+      "type": "single",
+      "scenario": "A suite of 40 test classes starts 25 Spring application contexts. Each class declares a slightly different set of `@MockitoBean` fields and properties.",
+      "question": "Why is the suite slow, and what helps?",
+      "options": [
+        "Each distinct configuration creates a new cached context; unify mocks and properties in a shared base or composed annotation",
+        "@MockitoBean must be replaced with @DirtiesContext",
+        "The JVM needs more heap",
+        "Testcontainers is always slow; remove it"
+      ],
+      "answer": 0,
+      "explanation": "Spring reuses a context only for identical configurations; @DirtiesContext makes it worse by discarding contexts."
     }
   ]
 }

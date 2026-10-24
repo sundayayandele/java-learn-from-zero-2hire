@@ -1,0 +1,99 @@
+{
+  "topic": "2.6",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A transfer fails with `DataIntegrityViolationException`; further down the trace is `Caused by: PSQLException: duplicate key value violates unique constraint \"journal_reference_key\"`.",
+      "question": "What is the most useful reading of this trace?",
+      "options": [
+        "The top line is always the root cause, so the problem is in Spring",
+        "Spring has a bug in its exception translation",
+        "The database is down",
+        "The root cause is a repeated journal reference hitting a unique constraint; find the first frame in your own package to see which call inserted it"
+      ],
+      "answer": 3,
+      "explanation": "The last Caused by is usually the root cause; your own first frame shows where your code was involved."
+    },
+    {
+      "type": "single",
+      "scenario": "A loop processes 20,000 transfers and fails only for reference TRF-2026-0193.",
+      "question": "How do you stop the debugger exactly there?",
+      "options": [
+        "A conditional breakpoint with `t.reference().equals(\"TRF-2026-0193\")`",
+        "Step over 20,000 times",
+        "Add Thread.sleep before the loop",
+        "Restart the IDE in safe mode"
+      ],
+      "answer": 0,
+      "explanation": "Conditional breakpoints suspend only when the expression is true."
+    },
+    {
+      "type": "single",
+      "scenario": "A service catches an exception somewhere deep in a library and returns null, so the error never reaches your logs.",
+      "question": "Which debugger feature finds where it is thrown?",
+      "options": [
+        "Evaluate Expression",
+        "A watch on a local variable",
+        "Drop Frame",
+        "An exception breakpoint on that exception type"
+      ],
+      "answer": 3,
+      "explanation": "Exception breakpoints stop where the exception is thrown, even if it is later caught."
+    },
+    {
+      "type": "single",
+      "scenario": "Requests time out every afternoon. CPU is low. Three thread dumps taken ten seconds apart show most `http-nio` threads parked in `HikariPool.getConnection`.",
+      "question": "What does this indicate?",
+      "options": [
+        "Garbage collection is too frequent",
+        "The JVM has run out of heap",
+        "The database connection pool is exhausted; find what holds connections for long (slow queries, long transactions, leaks) rather than only enlarging the pool",
+        "A deadlock between two HTTP threads"
+      ],
+      "answer": 2,
+      "explanation": "Threads waiting in getConnection mean connections aren't being returned fast enough."
+    },
+    {
+      "type": "single",
+      "scenario": "Heap use grows after every full GC until the service fails with `OutOfMemoryError: Java heap space`.",
+      "question": "What is the best next step?",
+      "options": [
+        "Capture a heap dump (or enable HeapDumpOnOutOfMemoryError) and inspect the dominator tree for what retains the memory",
+        "Switch to a different garbage collector",
+        "Double the heap and close the ticket",
+        "Restart the service every night"
+      ],
+      "answer": 0,
+      "explanation": "Growing post-GC heap suggests a leak; the dominator tree shows which references keep objects alive."
+    },
+    {
+      "type": "multi",
+      "scenario": "Which logging practices make production problems easier to solve? (Choose two.)",
+      "question": "Select two.",
+      "options": [
+        "Putting a correlation id in the MDC for each request and returning it to the client",
+        "Logging full request bodies including card numbers",
+        "Logging with parameters and passing the exception as the last argument",
+        "Catching exceptions and logging only e.getMessage()"
+      ],
+      "answer": [
+        0,
+        2
+      ],
+      "explanation": "Correlation ids link a request's lines; parameterised logs with the exception keep the stack trace. Sensitive data must never be logged."
+    },
+    {
+      "type": "single",
+      "scenario": "A teammate wants to enable JDWP remote debugging on the production server to investigate a bug quickly.",
+      "question": "What is the right response?",
+      "options": [
+        "Allow it and disable the firewall temporarily",
+        "Allow it during business hours only",
+        "Allow it if the port is changed from 5005",
+        "Refuse: an open debug port allows arbitrary code execution; reproduce locally, or use logs, metrics and dumps"
+      ],
+      "answer": 3,
+      "explanation": "Remote debugging is for local or isolated environments; production needs safe diagnostics."
+    }
+  ]
+}

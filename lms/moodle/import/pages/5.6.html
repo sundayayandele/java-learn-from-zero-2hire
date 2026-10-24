@@ -1,0 +1,257 @@
+<p><em>Week 16 · Module 5: API Design &amp; Integration</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Run a 30–45 minute junior system design conversation: clarify
+requirements, estimate load, sketch components, design the API and data
+model, and discuss failures and trade-offs.</li>
+<li>Explain the building blocks every backend uses: load balancers,
+stateless services, caches, queues, read replicas, object storage and
+CDNs.</li>
+<li>Make back-of-the-envelope estimates (requests per second, storage
+per year) and use them to justify a design.</li>
+<li>Discuss consistency, availability and idempotency in money-moving
+systems, and present your own capstone's architecture views
+confidently.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Junior interviews increasingly include a light design round: "design
+a transfer API", "design a URL shortener", "design a notification
+service", "how would your capstone handle ten times the traffic?".
+Nobody expects a junior to design a global payment network. Interviewers
+want to see that you ask questions before drawing boxes, that your
+numbers are roughly right, that you know what a cache or a queue is for,
+and that you think about failure and money correctness. Your capstones
+already have solution, logical, technical, infrastructure and cloud
+views; this lesson teaches you to talk through them, which is exactly
+what a design round is. Phase 3 goes deeper into distributed
+systems.</p>
+<h2 id="1-a-repeatable-structure-for-the-conversation">1. A repeatable
+structure for the conversation</h2>
+<table>
+<thead>
+<tr>
+<th>Step (time)</th>
+<th>What you do</th>
+<th>Example for "design a bank transfer API"</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. Requirements (5 min)</td>
+<td>Functional: what it must do. Non-functional: scale, latency,
+availability, consistency, security, compliance</td>
+<td>Intra-bank and inter-bank transfers, statements; 99.9% availability;
+never lose or duplicate money; audit trail</td>
+</tr>
+<tr>
+<td>2. Estimates (5 min)</td>
+<td>Users, requests per second, data size, growth</td>
+<td>2M active customers × 3 transfers/day ≈ 6M/day ≈ 70/s average, ~10×
+at peak ≈ 700/s</td>
+</tr>
+<tr>
+<td>3. API (5 min)</td>
+<td>Main endpoints and their contracts</td>
+<td><code>POST /transfers</code> with <code>Idempotency-Key</code>,
+<code>GET /accounts/{id}/statement?cursor=</code></td>
+</tr>
+<tr>
+<td>4. Data model (5 min)</td>
+<td>Tables and keys, what must be unique and consistent</td>
+<td>Double-entry <code>journal</code>/<code>posting</code> (Phase 1
+Capstone 1), unique reference</td>
+</tr>
+<tr>
+<td>5. High-level design (10 min)</td>
+<td>Boxes and arrows for the happy path</td>
+<td>Load balancer → stateless API instances → PostgreSQL primary; NIP
+adapter; notifications via a queue</td>
+</tr>
+<tr>
+<td>6. Deep dive and failures (10 min)</td>
+<td>Bottlenecks, failure modes, trade-offs</td>
+<td>Row locks on hot accounts, provider timeouts (pending + status
+query), replica lag on statements</td>
+</tr>
+<tr>
+<td>7. Wrap-up (2 min)</td>
+<td>Summarise, list what you'd do next</td>
+<td>Monitoring, rate limits, partitioning postings by month</td>
+</tr>
+</tbody>
+</table>
+<p>Say your assumptions out loud ("I'll assume 2 million active
+customers; tell me if that's wrong"). Interviewers reward structure and
+reasoning more than the "right" architecture.</p>
+<h2 id="2-back-of-the-envelope-estimates">2. Back-of-the-envelope
+estimates</h2>
+<p>Useful numbers:</p>
+<ul>
+<li>1 day ≈ 86,400 s ≈ 10⁵ s. So <strong>1 million requests per day ≈ 12
+per second</strong> on average; assume peaks of 5–10× the average.</li>
+<li>One PostgreSQL row of a transaction with indexes ≈ 200–500 bytes. 6M
+transfers/day × 2 postings × 300 B ≈ 3.6 GB/day ≈ 1.3 TB/year: plan
+partitioning and archiving.</li>
+<li>A well-tuned Spring Boot instance serves hundreds to a few thousand
+simple requests per second; the database is usually the first
+bottleneck.</li>
+<li>Rough latencies: memory ~100 ns; SSD read ~100 µs; same-datacentre
+network round trip ~0.5 ms; a cross-region round trip ~50–150 ms; a
+payment provider call often 200 ms–2 s.</li>
+</ul>
+<p>Estimates decide the design: 70 requests per second fits comfortably
+on two application instances and one database; 50,000 per second needs
+sharding and a very different conversation.</p>
+<h2 id="3-building-blocks">3. Building blocks</h2>
+<p><strong>Load balancer.</strong> Spreads requests across instances,
+removes unhealthy ones using health checks (your Actuator readiness
+probe) and terminates TLS. Requires <strong>stateless</strong>
+application instances: no in-memory sessions or caches that must be
+consistent; state lives in the database, Redis or the token.</p>
+<p><strong>Horizontal scaling.</strong> Add instances behind the load
+balancer. Works for stateless services; it doesn't scale the database,
+and it breaks in-memory assumptions (local locks, in-memory rate limits,
+<code>@Scheduled</code> jobs on every instance, topic 4.8).</p>
+<p><strong>Cache.</strong> Keeps hot, read-mostly data close (Redis,
+topic 3.6; or an in-process cache such as Caffeine). Common patterns:
+<strong>cache-aside</strong> (read cache, on miss load from the database
+and populate) and write-through. Every cache needs an <strong>expiry
+(TTL)</strong> and an invalidation story. Never cache balances used for
+authorising debits; cache FX reference rates, product catalogues, bank
+lists and name-enquiry results for minutes.</p>
+<p><strong>Message queue or log (RabbitMQ, Kafka).</strong> Decouples a
+fast request from slow follow-up work: the API commits the transfer and
+publishes <code>TransferCompleted</code>; SMS, email, fraud scoring and
+analytics consume it at their own pace and retry independently. Gives
+buffering for spikes. Costs: eventual consistency, duplicate deliveries
+(consumers must be idempotent), and more operations (Phase 3).</p>
+<p><strong>Read replicas.</strong> Copies of the database that serve
+reads (statements, reports) to take load off the primary. Replication is
+usually <strong>asynchronous</strong>, so a replica can be seconds
+behind: never read a balance from a replica to authorise a payment, and
+be careful with "read your own writes" (a customer who just transferred
+expects to see it).</p>
+<p><strong>Partitioning and sharding.</strong> Partitioning splits a big
+table inside one database (for example postings by month) for faster
+queries and archiving. Sharding splits data across databases by a key
+(customer id); powerful but complex. Mention it as a later step, with
+the reason.</p>
+<p><strong>Object storage and CDN.</strong> Statements as PDFs, KYC
+documents and exports go to S3/Blob/GCS, not database rows; a CDN serves
+static assets near users.</p>
+<p><strong>Rate limiting and API gateway.</strong> Protect services from
+abuse and noisy partners (topic 5.3); gateways centralise
+authentication, rate limits and routing.</p>
+<h2 id="4-consistency-availability-and-money">4. Consistency,
+availability and money</h2>
+<ul>
+<li><strong>Strong consistency</strong> for money: a debit and its
+credit commit together or not at all (one database transaction, or a
+saga with compensations across services in Phase 3).</li>
+<li><strong>CAP</strong> in one sentence: when the network between parts
+of a system fails, you must choose between refusing some requests
+(consistency) and possibly serving stale or conflicting data
+(availability). Payment authorisation chooses consistency; a product
+catalogue can choose availability.</li>
+<li><strong>Idempotency everywhere</strong> (topic 5.3): clients retry,
+queues redeliver, providers resend webhooks.</li>
+<li><strong>Unknown outcomes</strong>: a timeout from a provider is not
+a failure; record <code>PENDING</code> and resolve with status queries
+(Phase 2 Capstones 7 and 8).</li>
+<li><strong>Auditability</strong>: append-only journals and event logs
+make it possible to explain every balance.</li>
+</ul>
+<h2 id="5-worked-example-a-notification-service">5. Worked example: a
+notification service</h2>
+<p>Requirements: send SMS and email for transfers and logins; 5M
+notifications/day (≈ 60/s average, ~600/s peak); must not delay
+transfers; tolerate provider outages; no duplicate OTPs.</p>
+<p>Design: the transfer service writes <code>TransferCompleted</code> to
+an outbox table in its transaction; a relay publishes it to a queue; a
+notification service consumes, renders the template, looks up
+preferences (cached), and calls an SMS provider through an adapter with
+timeouts, retries with backoff and a circuit breaker; failed messages go
+to a dead-letter queue for retry or inspection; a
+<code>notification</code> table with a unique
+<code>(event_id, channel)</code> prevents duplicates. Trade-offs to
+mention: SMS can arrive seconds later (acceptable); OTPs need a separate
+fast path with short expiry; the provider is the bottleneck, so throttle
+to its rate limit.</p>
+<h2 id="6-talking-through-your-capstone">6. Talking through your
+capstone</h2>
+<p>Use your capstone's architecture pack as a script:</p>
+<ol type="1">
+<li><strong>Solution view</strong>: who uses it and what it integrates
+with (30 seconds).</li>
+<li><strong>Logical view</strong>: the capabilities and data, and the
+invariant you protect (for example "postings always balance").</li>
+<li><strong>Technical view</strong>: how a request flows through
+controller, service and repository, and where transactions and security
+apply.</li>
+<li><strong>Infrastructure and cloud views</strong>: how it runs, scales
+and recovers.</li>
+<li><strong>What breaks first at 10× load, and what you'd
+change</strong>: for example, the fee-income row becomes a hot lock;
+statements move to a replica; postings get partitioned by month.</li>
+</ol>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Drawing boxes before asking a single question.</li>
+<li>Adding Kafka, Kubernetes and microservices to a problem that fits on
+two instances and one database.</li>
+<li>Caching data that must be exactly current (balances, limits).</li>
+<li>Ignoring failure: what happens when the provider times out, the
+queue redelivers, or the replica lags?</li>
+<li>Never stating numbers, or stating impossible ones.</li>
+<li>Forgetting security and audit in a banking design.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Do the seven-step structure for "design a bill payments API" in 35
+minutes, out loud, with a timer; record yourself and review.</li>
+<li>Estimate requests per second and storage per year for your capstone
+at 1 million customers.</li>
+<li>Add a "What breaks first at 10× load" section to your capstone
+README with three bottlenecks and the fix for each.</li>
+<li>Redraw the notification-service example as a Mermaid diagram and add
+the failure paths.</li>
+<li>Pair with a peer: one interviews, one designs "a URL shortener for
+payment links"; swap roles.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Functional and non-functional requirements, back-of-the-envelope
+estimate, requests per second (RPS), peak factor, latency, throughput,
+load balancer, health check, stateless service, horizontal scaling,
+cache-aside, TTL, cache invalidation, message queue, consumer,
+dead-letter queue, eventual consistency, read replica, replication lag,
+partitioning, sharding, object storage, CDN, API gateway, CAP theorem,
+strong consistency, idempotency, outbox, saga, bottleneck.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/welcome.html">AWS
+Well-Architected Framework: Reliability pillar</a></li>
+<li><a
+href="https://learn.microsoft.com/en-us/azure/architecture/patterns/">Azure
+Architecture Center: Cloud design patterns</a></li>
+<li><a
+href="https://martinfowler.com/articles/patterns-of-distributed-systems/">Martin
+Fowler: Patterns of Distributed Systems (overview)</a></li>
+<li><a
+href="https://www.postgresql.org/docs/17/ddl-partitioning.html">PostgreSQL
+documentation: Table partitioning</a></li>
+<li><a
+href="https://www.postgresql.org/docs/17/high-availability.html">PostgreSQL
+documentation: High availability, load balancing and
+replication</a></li>
+<li><a
+href="https://redis.io/docs/latest/develop/clients/client-side-caching/">Redis
+documentation: Client-side caching and patterns</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>System Design Interview: A Step-By-Step Guide</h3><p>ByteByteGo · 10 min. A step-by-step framework for system design interviews, from ByteByteGo.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/i7twT3x5yv8" title="System Design Interview: A Step-By-Step Guide" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Cache Systems Every Developer Should Know</h3><p>ByteByteGo · 6 min. Cache systems every developer should know: where caches sit and why.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/dGAgxozNWFE" title="Cache Systems Every Developer Should Know" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>20 System Design Concepts Explained in 10 Minutes</h3><p>NeetCode · 12 min. Twenty system design concepts in ten minutes: a fast vocabulary refresher.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/i53Gi_K3o7I" title="20 System Design Concepts Explained in 10 Minutes" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/02-professional-backend/05-api-design-integration/5.6-system-design-basics/README.md">5.6 System design basics for junior interviews</a></p>

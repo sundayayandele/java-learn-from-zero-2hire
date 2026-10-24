@@ -50,3 +50,8 @@ open-banking:
   max-consent-lifetime: 90d
   max-history-months: 12
   zone: Africa/Lagos
+
+# Every log line carries the request's correlation id (CorrelationIdFilter).
+logging:
+  pattern:
+    level: "%5p [%X{correlationId:-}]"

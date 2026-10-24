@@ -49,6 +49,8 @@ Junior Java interviews in Lagos fintechs, banks and international remote teams u
 
 ### Questions you should be able to answer cold
 
+Revise with the [Java fundamentals revision sheet](../../../docs/interview/java-fundamentals.md) and keep up the timed [coding-interview practice track](../../../practice/README.md).
+
 1. Why shouldn't you use `double` for money, and what do you use instead?
 2. What happens if you override `equals` but not `hashCode`?
 3. `ArrayList` vs `LinkedList` vs `HashSet`: when and why?

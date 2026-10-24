@@ -91,6 +91,19 @@
       ],
       "answer": 3,
       "explanation": "@Digits limits integer and fraction digits for numeric types. @Size applies to strings and collections; @Pattern applies to strings."
+    },
+    {
+      "type": "single",
+      "scenario": "A team uses MapStruct. A new field `riskScore` is added to the response DTO, but responses always show it as null and nothing failed.",
+      "question": "What configuration would have caught this?",
+      "options": [
+        "componentModel = \"default\"",
+        "unmappedTargetPolicy = ReportingPolicy.ERROR, so unmapped target properties fail the build",
+        "Removing the mapper interface",
+        "Making the DTO a class instead of a record"
+      ],
+      "answer": 1,
+      "explanation": "MapStruct reports unmapped targets as warnings by default; making them errors catches missing mappings at compile time."
     }
   ]
 }

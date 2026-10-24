@@ -3,7 +3,7 @@
 
 # 6.1 Spring Security filter chain and configuration
 
-← [5.5 Introduction to GraphQL and gRPC, and when to use each](../../05-api-design-integration/5.5-graphql-grpc/README.md) · [Module 6](../README.md) · [Phase 2](../../README.md) · [6.2 JWT access and refresh tokens, OAuth2 / OpenID Connect login](../6.2-jwt-oauth2-oidc/README.md) →
+← [5.6 System design basics for junior interviews](../../05-api-design-integration/5.6-system-design-basics/README.md) · [Module 6](../README.md) · [Phase 2](../../README.md) · [6.2 JWT access and refresh tokens, OAuth2 / OpenID Connect login](../6.2-jwt-oauth2-oidc/README.md) →
 
 > **Week 17** · Module 6: Security Essentials · Website topic covered: *SecurityFilterChain, authentication vs authorisation, stateless APIs, CORS and CSRF*
 
@@ -368,4 +368,4 @@ How do you configure this cleanly?
 
 ---
 
-← [5.5 Introduction to GraphQL and gRPC, and when to use each](../../05-api-design-integration/5.5-graphql-grpc/README.md) · [Module 6](../README.md) · [Phase 2](../../README.md) · [6.2 JWT access and refresh tokens, OAuth2 / OpenID Connect login](../6.2-jwt-oauth2-oidc/README.md) →
+← [5.6 System design basics for junior interviews](../../05-api-design-integration/5.6-system-design-basics/README.md) · [Module 6](../README.md) · [Phase 2](../../README.md) · [6.2 JWT access and refresh tokens, OAuth2 / OpenID Connect login](../6.2-jwt-oauth2-oidc/README.md) →

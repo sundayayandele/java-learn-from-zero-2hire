@@ -232,6 +232,30 @@ for shape).</li>
 <li>Name tests after the behaviour and the expected status
 (<code>returns422WhenFundsAreInsufficient</code>).</li>
 </ul>
+<h2 id="6-a-contract-test-between-two-of-your-capstones">6. A contract
+test between two of your capstones</h2>
+<p>Your capstones talk to each other in their stretch goals (the ledger
+consuming FX rates, the bill-payments aggregator calling the ledger).
+Make that dependency safe with a <strong>consumer-driven
+contract</strong>:</p>
+<ol type="1">
+<li>In the <strong>consumer</strong> (for example Phase 1 Capstone 1
+calling Capstone 2's <code>GET /api/v1/rates</code>), write a
+WireMock-based test of your client, and save the stubbed interaction
+(request and response) as a JSON file in a <code>contracts/</code>
+folder.</li>
+<li>In the <strong>provider</strong> (Capstone 2), add a test that
+replays every contract file against the real application (with
+<code>RestTestClient</code> or MockMvc) and asserts the response
+contains at least the fields, types and status the consumer relies
+on.</li>
+<li>Run both in CI. When the provider changes a field the consumer uses,
+the provider's build fails before the change reaches production.</li>
+</ol>
+<p>Tools such as <strong>Pact</strong> and <strong>Spring Cloud
+Contract</strong> automate the sharing and verification of these files;
+the hand-made version above teaches the idea with no extra
+infrastructure.</p>
 <h2 id="common-mistakes">Common mistakes</h2>
 <ul>
 <li>Only happy-path API tests; validation, errors and security
@@ -255,6 +279,9 @@ compare readability.</li>
 Assured test against the running application with Testcontainers.</li>
 <li>Validate your API responses against your committed OpenAPI document
 in a test, and break a field name to see it fail.</li>
+<li>Write a consumer-driven contract between two of your capstones as
+described in section 6, and show the provider build failing when you
+rename a field the consumer uses.</li>
 </ol>
 <h2 id="key-terms">Key terms</h2>
 <p>Web slice test, <code>@WebMvcTest</code>, <code>MockMvc</code>,
@@ -264,7 +291,7 @@ in a test, and break a field name to see it fail.</li>
 <code>RestTestClient</code>, <code>@AutoConfigureRestTestClient</code>,
 REST Assured, given–when–then, black-box test, smoke test, contract
 test, consumer-driven contract, Pact, Spring Cloud Contract, stub,
-OpenAPI validation.</p>
+OpenAPI validation, consumer-driven contract, provider verification.</p>
 <h2 id="further-reading">Further reading</h2>
 <ul>
 <li><a
