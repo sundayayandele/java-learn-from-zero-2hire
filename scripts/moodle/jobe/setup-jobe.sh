@@ -4,7 +4,7 @@
 #
 #   DOMAIN=jobe.itlearning.tech sh setup-jobe.sh
 #
-# Result: Jobe (JobeInABox, Java 21) listens on 127.0.0.1:4000 only. Caddy serves it at
+# Result: Jobe (JobeInABox, Java 21) listens on 127.0.0.1:4000 only (and node-exporter on 127.0.0.1:9100). Caddy serves it at
 # https://$DOMAIN with a Let's Encrypt certificate and answers only the Moodle server
 # ($MOODLE_IP); ufw allows SSH, port 80 (certificate challenges) and port 443 from the
 # Moodle server only. Re-running the script rebuilds and restarts Jobe.
@@ -88,12 +88,25 @@ docker exec jobe grep -q "javac_extraflags = '-J-XX:ActiveProcessorCount=1 -J-XX
 docker exec jobe grep -q "'cputime' *=> *20," /var/www/html/jobe/app/Libraries/LanguageTask.php
 docker restart jobe >/dev/null
 
+echo "== node-exporter for the monitoring on the Moodle server (127.0.0.1:9100 only)"
+docker rm -f node-exporter >/dev/null 2>&1 || true
+docker run -d --name node-exporter --restart unless-stopped --network host --pid host \
+    --memory 64m -v /:/host:ro,rslave prom/node-exporter:v1.12.1 \
+    --path.rootfs=/host --web.listen-address=127.0.0.1:9100 >/dev/null
+
 echo "== Caddy: https://$DOMAIN, Moodle server only"
+# route keeps this order: refuse everyone but the Moodle server first, then host metrics for
+# its Prometheus under /node-metrics/, then Jobe.
 cat > /etc/caddy/Caddyfile <<EOF
 $DOMAIN {
-	@notmoodle not remote_ip $MOODLE_IP
-	respond @notmoodle 403
-	reverse_proxy 127.0.0.1:4000
+	route {
+		@notmoodle not remote_ip $MOODLE_IP
+		respond @notmoodle 403
+		handle_path /node-metrics/* {
+			reverse_proxy 127.0.0.1:9100
+		}
+		reverse_proxy 127.0.0.1:4000
+	}
 }
 EOF
 systemctl enable -q caddy

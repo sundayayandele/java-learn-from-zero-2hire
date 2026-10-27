@@ -1,0 +1,160 @@
+# Grafana-managed alerts for itlearning.tech. Each rule runs an instant Prometheus query (A) and a
+# threshold (C); a separate alert fires for each series (each server, site or mail port).
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: ITLearning admin email
+    receivers:
+      - uid: itl-admin-email
+        type: email
+        settings:
+          addresses: admin@itlearning.tech
+          singleEmail: false
+
+policies:
+  - orgId: 1
+    receiver: ITLearning admin email
+    group_by: [grafana_folder, alertname]
+    group_wait: 30s
+    group_interval: 5m
+    repeat_interval: 4h
+
+groups:
+  - orgId: 1
+    name: itlearning
+    folder: ITLearning
+    interval: 1m
+    rules:
+      - uid: itl-target-down
+        title: Monitoring target down
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: critical}
+        annotations:
+          summary: "Prometheus can't scrape {{ $labels.job }} on {{ $labels.instance }}."
+          description: "The server or its exporter is down or unreachable (for the Jobe VPS: Caddy, node-exporter or the network)."
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange: {from: 300, to: 0}
+            model: {refId: A, expr: up, instant: true}
+          - refId: C
+            datasourceUid: __expr__
+            model: {refId: C, type: threshold, expression: A, conditions: [{evaluator: {type: lt, params: [1]}}]}
+
+      - uid: itl-site-down
+        title: Website down
+        condition: C
+        for: 3m
+        noDataState: Alerting
+        execErrState: Error
+        labels: {severity: critical}
+        annotations:
+          summary: "{{ $labels.instance }} is not answering with HTTP 200."
+          description: "Checked from the Moodle server every 30 s. For the Jobe URL, learners can't check code answers until it's back."
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange: {from: 300, to: 0}
+            model: {refId: A, expr: 'probe_success{job="blackbox-http"}', instant: true}
+          - refId: C
+            datasourceUid: __expr__
+            model: {refId: C, type: threshold, expression: A, conditions: [{evaluator: {type: lt, params: [1]}}]}
+
+      - uid: itl-mail-port-down
+        title: Mail port down
+        condition: C
+        for: 5m
+        noDataState: Alerting
+        execErrState: Error
+        labels: {severity: warning}
+        annotations:
+          summary: "Can't connect to {{ $labels.instance }}."
+          description: "Moodle notifications and MFA email codes depend on the mail server."
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange: {from: 300, to: 0}
+            model: {refId: A, expr: 'probe_success{job="blackbox-tcp"}', instant: true}
+          - refId: C
+            datasourceUid: __expr__
+            model: {refId: C, type: threshold, expression: A, conditions: [{evaluator: {type: lt, params: [1]}}]}
+
+      - uid: itl-cert-expiry
+        title: TLS certificate expires soon
+        condition: C
+        for: 1h
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: warning}
+        annotations:
+          summary: "The certificate for {{ $labels.instance }} expires in {{ humanize $values.A.Value }} days."
+          description: "Renewal should happen automatically about 30 days before expiry; check Nginx Proxy Manager (itlearning.tech) or Caddy (jobe.itlearning.tech)."
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange: {from: 300, to: 0}
+            model: {refId: A, expr: '(probe_ssl_earliest_cert_expiry{job="blackbox-http"} - time()) / 86400', instant: true}
+          - refId: C
+            datasourceUid: __expr__
+            model: {refId: C, type: threshold, expression: A, conditions: [{evaluator: {type: lt, params: [14]}}]}
+
+      - uid: itl-disk-full
+        title: Disk almost full
+        condition: C
+        for: 15m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: warning}
+        annotations:
+          summary: "{{ $labels.instance }}: the root disk is {{ humanize $values.A.Value }}% full."
+          description: "Check Docker images (docker system df), backups in /root/backups and Prometheus data."
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange: {from: 300, to: 0}
+            model: {refId: A, expr: '100 * (1 - node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})', instant: true}
+          - refId: C
+            datasourceUid: __expr__
+            model: {refId: C, type: threshold, expression: A, conditions: [{evaluator: {type: gt, params: [85]}}]}
+
+      - uid: itl-memory-high
+        title: Memory almost exhausted
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: warning}
+        annotations:
+          summary: "{{ $labels.instance }}: {{ humanize $values.A.Value }}% of memory in use."
+          description: "On the Moodle server, a loaded Ollama model is the usual cause; see the container panels."
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange: {from: 300, to: 0}
+            model: {refId: A, expr: '100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)', instant: true}
+          - refId: C
+            datasourceUid: __expr__
+            model: {refId: C, type: threshold, expression: A, conditions: [{evaluator: {type: gt, params: [90]}}]}
+
+      - uid: itl-cpu-high
+        title: CPU busy for a long time
+        condition: C
+        for: 15m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: warning}
+        annotations:
+          summary: "{{ $labels.instance }}: CPU {{ humanize $values.A.Value }}% busy for 15 minutes."
+          description: "On the Jobe VPS this can mean heavy quiz use or abusive submissions."
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange: {from: 600, to: 0}
+            model: {refId: A, expr: '100 * (1 - avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])))', instant: true}
+          - refId: C
+            datasourceUid: __expr__
+            model: {refId: C, type: threshold, expression: A, conditions: [{evaluator: {type: gt, params: [90]}}]}

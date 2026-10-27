@@ -70,6 +70,13 @@ Each Java run took about 1.1–1.2 s.
 - **Container limits:** 10 of 12 CPUs, 60% of the RAM (about 28 GB) and 8,192 processes. A flood of submissions can't starve SSH or Caddy. Jobe still limits each job's CPU time and runs at most 16 jobs at once.
 - **Re-tested after the change:** all 30 questions scored correctly, and 16 at once through Moodle gave 32/32 correct.
 
+**If Jobe is down.** The monitoring stack ([ops/monitoring](../../ops/monitoring/README.md)) emails admin@itlearning.tech when `https://jobe.itlearning.tech` stops answering for 3 minutes. While it's down:
+
+- **Learners:** each coding quiz says what to do if *Check* isn't working. Every question is a `practice/dsa` problem with the same tests, so they can carry on locally with `./mvnw test -Dtest=ClassNameTest` and check here later. Their quiz attempts stay open.
+- **Emergency fallback (short outages only):** point CodeRunner at the University of Canterbury's public test Jobe. Run `docker exec -u www-data moodle php admin/cli/cfg.php --component=qtype_coderunner --name=jobe_host --set=jobe2.cosc.canterbury.ac.nz` on the Moodle server, and set it back to `https://jobe.itlearning.tech` afterwards. That server is shared and rate-limited, and learners' code goes to a third party, so don't leave it on.
+- **Why not list both servers:** CodeRunner does accept several hosts separated by `;`, but it picks one at random for each run, so that spreads load rather than failing over.
+- **Why not another playground:** CodeRunner can only use a Jobe server (or the retired Ideone service), so playgrounds such as Judge0 or Piston can't stand in.
+
 **Capacity.** This server suits practice quizzes and moderate class sizes. For a timed coding exam with many learners submitting at once, use a VPS with faster cores (or add a second Jobe server: CodeRunner accepts several hosts separated by `;`) and load-test first.
 
 ## What we know about itlearning.tech today

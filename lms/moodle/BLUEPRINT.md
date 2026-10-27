@@ -134,7 +134,20 @@ Done (24 October 2026), built with the same settings as Phase 1 (each activity's
 | 8 End-of-phase assessments | Exam information page; exam quiz: **60 random questions per attempt from the 120-question bank** (15/13/12/11/9 by module), shuffled, 5 per page, 120 minutes, 2 attempts 48 hours apart, pass 70%, available only after all 27 topic quizzes are passed. The bank was uploaded directly from the private assessments repository; **Timed live-coding assessment** assignment (15-point rubric, pass 10) |
 | 9 Getting hired | Getting hired page with videos; URLs: certification map, Java fundamentals revision sheet; Getting Hired checklist assignment; **Phase 2 certificate** (`mod_customcert`, same A4 landscape design as Phase 1; available when all 27 topic quizzes, the exam, the five module projects, Capstone 1 and **any one** other capstone (an OR of nine), the defence, the live-coding assessment and the practice checkpoint are passed) |
 
-**Course completion**: all of 39 activities: the 27 topic quizzes, the exam, the five module projects, Capstone 1, the defence, the live-coding assessment, the practice checkpoint, the Getting Hired checklist and the certificate. Pages load from `lms/moodle/import/pages/` and `lms/moodle/import/{capstones,guides}/phase-2/`. Both Phase 1 (id 4) and Phase 2 (id 5) were made visible on 24 October 2026. The site requires login. Self enrolment as Student is enabled on both courses (no enrolment key, no enrolment period or end date, unlimited learners, welcome message from the course contact); manual enrolment stays available and guest access is off.
+**Course completion**: all of 39 activities: the 27 topic quizzes, the exam, the five module projects, Capstone 1, the defence, the live-coding assessment, the practice checkpoint, the Getting Hired checklist and the certificate. Pages load from `lms/moodle/import/pages/` and `lms/moodle/import/{capstones,guides}/phase-2/`. Both Phase 1 (id 4) and Phase 2 (id 5) were made visible on 24 October 2026. The site requires login. Enrolment is **gated** (since 28 October 2026). Learners join in one of two ways:
+
+- **Enrolment key.** Self enrolment now needs the course's enrolment key: a random key per course, shown in *Participants → Enrolment methods → Enrolment key*. The key is the instant route.
+- **Approval.** Learners without a key ask through *Contact site support* (which emails admin@itlearning.tech). You approve them by adding them to the cohort **Approved learners: Phase 1** or **Phase 2** (*Site administration → Users → Cohorts*). A cohort-sync enrolment method enrols cohort members as students automatically.
+
+Each course summary, which is shown on the enrolment page, explains both routes. The approval plugin `enrol_apply` was not used: it supports Moodle only up to 4.1. Email sign-up has reCAPTCHA, manual enrolment stays available and guest access is off.
+
+**Monitoring and alerting:** Prometheus and Grafana on the Moodle server watch both servers, the websites and the mail ports, and email alerts to admin@itlearning.tech; see [ops/monitoring](../../ops/monitoring/README.md).
+
+**Multi-factor authentication** (Moodle's built-in `tool_mfa`, on since 28 October 2026):
+
+- **Who needs it:** administrators and the manager, course creator, teacher and non-editing teacher roles. They need an authenticator app (TOTP) or an email code. Students pass on the *Roles* factor and are never asked.
+- **Grace period:** staff had 7 days to set up an authenticator app (*Preferences → Multi-factor authentication preferences*), after which Moodle takes them to that page.
+- **If an administrator is locked out:** on the server, run `docker exec -u www-data moodle php admin/cli/cfg.php --component=tool_mfa --name=enabled --set=0`, log in, fix the factor, then set it back to 1.
 
 ## 6. Updating content
 

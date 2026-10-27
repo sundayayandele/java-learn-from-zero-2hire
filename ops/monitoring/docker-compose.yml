@@ -1,0 +1,104 @@
+# Monitoring for itlearning.tech: Prometheus, Grafana (with alerting) and exporters.
+# Runs on the Moodle server. Every service uses the host network and listens on 127.0.0.1 only,
+# so nothing is exposed and ufw needs no changes. Open Grafana through an SSH tunnel:
+#   ssh -L 3000:127.0.0.1:3000 itlearning   then browse http://localhost:3000
+name: monitoring
+
+services:
+  prometheus:
+    image: prom/prometheus:v3.15.1
+    container_name: prometheus
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=30d
+      - --storage.tsdb.retention.size=5GB
+      - --web.listen-address=127.0.0.1:9090
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    mem_limit: 512m
+
+  grafana:
+    image: grafana/grafana-oss:12.4.3
+    container_name: grafana
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      GF_SERVER_HTTP_ADDR: 127.0.0.1
+      GF_SERVER_HTTP_PORT: "3000"
+      GF_SERVER_ROOT_URL: http://localhost:3000/
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?set in .env}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      # Alert emails go to the local mailbox on this server's own mail server (port 25, no login).
+      GF_SMTP_ENABLED: "true"
+      GF_SMTP_HOST: mail.itlearning.tech:25
+      GF_SMTP_FROM_ADDRESS: grafana@itlearning.tech
+      GF_SMTP_FROM_NAME: ITLearning monitoring
+      GF_SMTP_STARTTLS_POLICY: OpportunisticStartTLS
+      # Postfix rejects the bare server name (srv1821879) as a greeting: it needs a full domain.
+      GF_SMTP_EHLO_IDENTITY: itlearning.tech
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    mem_limit: 384m
+
+  node-exporter:
+    image: prom/node-exporter:v1.12.1
+    container_name: node-exporter
+    restart: unless-stopped
+    network_mode: host
+    pid: host
+    command:
+      - --path.rootfs=/host
+      - --web.listen-address=127.0.0.1:9100
+    volumes:
+      - /:/host:ro,rslave
+    mem_limit: 64m
+
+  cadvisor:
+    image: ghcr.io/google/cadvisor:v0.60.6
+    container_name: cadvisor
+    restart: unless-stopped
+    network_mode: host
+    privileged: true
+    devices:
+      - /dev/kmsg
+    command:
+      - --listen_ip=127.0.0.1
+      - --port=8088
+      # Kept light for a 2-CPU server: only what the dashboards use, refreshed every minute.
+      # (With the defaults and 30 s housekeeping it spiked to 80% of a CPU on every pass.)
+      - --docker_only=true
+      - --housekeeping_interval=60s
+      - --global_housekeeping_interval=5m
+      - --store_container_labels=false
+      - --enable_metrics=cpu,memory,network
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    mem_limit: 320m
+
+  blackbox:
+    image: prom/blackbox-exporter:v0.29.1
+    container_name: blackbox
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - --config.file=/etc/blackbox/blackbox.yml
+      - --web.listen-address=127.0.0.1:9115
+    volumes:
+      - ./blackbox/blackbox.yml:/etc/blackbox/blackbox.yml:ro
+    mem_limit: 64m
+
+volumes:
+  prometheus_data:
+  grafana_data:

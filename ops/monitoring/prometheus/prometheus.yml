@@ -1,0 +1,50 @@
+global:
+  scrape_interval: 30s
+  evaluation_interval: 30s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["127.0.0.1:9090"]
+        labels: {instance: moodle-vps}
+
+  # Host metrics: this server, and the Jobe VPS through its Caddy site (HTTPS, Moodle server's IP only).
+  - job_name: node
+    static_configs:
+      - targets: ["127.0.0.1:9100"]
+        labels: {instance: moodle-vps}
+  - job_name: node-jobe
+    scheme: https
+    metrics_path: /node-metrics/metrics
+    static_configs:
+      - targets: ["jobe.itlearning.tech"]
+        labels: {instance: jobe-vps}
+
+  # Per-container CPU, memory and restarts on this server.
+  - job_name: cadvisor
+    static_configs:
+      - targets: ["127.0.0.1:8088"]
+        labels: {instance: moodle-vps}
+
+  # Is each service up from the outside? Response time, status code and certificate expiry.
+  - job_name: blackbox-http
+    metrics_path: /probe
+    params: {module: [http_2xx]}
+    static_configs:
+      - targets:
+          - https://itlearning.tech/login/index.php
+          - https://jobe.itlearning.tech/jobe/index.php/restapi/languages
+    relabel_configs: &probe
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 127.0.0.1:9115
+
+  - job_name: blackbox-tcp
+    metrics_path: /probe
+    params: {module: [tcp_connect]}
+    static_configs:
+      - targets: ["mail.itlearning.tech:25", "mail.itlearning.tech:587", "mail.itlearning.tech:993"]
+    relabel_configs: *probe
