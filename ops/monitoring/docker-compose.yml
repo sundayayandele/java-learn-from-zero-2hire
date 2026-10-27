@@ -85,6 +85,12 @@ services:
       - /var/run:/var/run:ro
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
+    # The image's own health check probes port 8080.
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8088/healthz"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
     mem_limit: 320m
 
   blackbox:
