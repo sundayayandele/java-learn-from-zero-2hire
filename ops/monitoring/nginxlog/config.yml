@@ -1,0 +1,17 @@
+# prometheus-nginxlog-exporter: turns Nginx Proxy Manager's itlearning.tech timing log into
+# response-time histograms (moodle_http_response_time_seconds, labelled by method, status and kind).
+listen:
+  address: 127.0.0.1
+  port: 4040
+  metrics_endpoint: /metrics
+
+namespaces:
+  - name: moodle
+    format: "$time_iso8601 $status $request_method $itl_kind $request_time $upstream_response_time"
+    source:
+      files:
+        - /npm-data/logs/itl-timing_access.log
+    relabel_configs:
+      - target_label: kind
+        from: itl_kind
+    histogram_buckets: [0.05, 0.1, 0.25, 0.5, 1, 1.5, 2, 3, 5, 8, 10, 15, 30, 60]

@@ -22,9 +22,64 @@ if [ ! -s .env ]; then
 fi
 chmod 600 .env
 
+echo "== Alert contact points (from .env)"
+# admin@itlearning.tech always; ALERT_EMAILS adds more addresses (comma-separated); TELEGRAM_BOT_TOKEN
+# and TELEGRAM_CHAT_ID add Telegram. Written as JSON, which is valid YAML, readable by Grafana only.
+python3 - <<'PY'
+import json, pathlib, re, sys
+env = {}
+for line in pathlib.Path(".env").read_text().splitlines():
+    if "=" in line and not line.lstrip().startswith("#"):
+        key, value = line.split("=", 1)
+        env[key.strip()] = value.strip().strip('"').strip("'")
+emails = ["admin@itlearning.tech"] + [e.strip() for e in env.get("ALERT_EMAILS", "").split(",") if e.strip()]
+bad = [e for e in emails if not re.fullmatch(r"[^@\s,;]+@[^@\s,;]+\.[A-Za-z]{2,}", e)]
+if bad:
+    sys.exit("ALERT_EMAILS has invalid addresses: " + ", ".join(bad))
+receivers = [{"uid": "itl-admin-email", "type": "email",
+              "settings": {"addresses": ";".join(emails), "singleEmail": False}}]
+token, chat = env.get("TELEGRAM_BOT_TOKEN", ""), env.get("TELEGRAM_CHAT_ID", "")
+if token and chat:
+    receivers.append({"uid": "itl-telegram", "type": "telegram",
+                      "settings": {"bottoken": token, "chatid": chat, "parse_mode": "HTML"}})
+elif token or chat:
+    sys.exit("Set both TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in .env, or neither")
+config = {"apiVersion": 1,
+          "contactPoints": [{"orgId": 1, "name": "ITLearning admin email", "receivers": receivers}],
+          "policies": [{"orgId": 1, "receiver": "ITLearning admin email",
+                        "group_by": ["grafana_folder", "alertname"], "group_wait": "30s",
+                        "group_interval": "5m", "repeat_interval": "4h"}]}
+out = pathlib.Path("grafana/provisioning/alerting/contactpoints.yml")
+out.write_text(json.dumps(config, indent=2) + "\n")
+print("  email: " + ", ".join(emails) + ("; Telegram: on" if token and chat else "; Telegram: off"))
+PY
+chown 472 grafana/provisioning/alerting/contactpoints.yml   # Grafana's user in its container
+chmod 600 grafana/provisioning/alerting/contactpoints.yml
+
+echo "== Nginx Proxy Manager: timing log for itlearning.tech (npm-custom/)"
+# NPM's supported hooks: http_top.conf (http block) and server_proxy.conf (every proxy host).
+# Install, test, and reload only if nginx accepts them; otherwise remove them again.
+docker exec npm mkdir -p /data/nginx/custom
+for f in http_top.conf server_proxy.conf; do
+    docker cp "npm-custom/$f" "npm:/data/nginx/custom/$f"
+done
+if docker exec npm nginx -t >/dev/null 2>&1; then
+    docker exec npm nginx -s reload
+else
+    docker exec npm nginx -t || true
+    docker exec npm rm -f /data/nginx/custom/http_top.conf /data/nginx/custom/server_proxy.conf
+    echo "ERROR: nginx rejected npm-custom/; removed it again" >&2
+    exit 1
+fi
+sleep 2
+curl -fs -o /dev/null https://itlearning.tech/login/index.php   # creates the timing log
+docker exec npm sh -c 'test -s /data/logs/itl-timing_access.log && tail -1 /data/logs/itl-timing_access.log'
+
 echo "== Start"
 docker compose pull -q
 docker compose up -d --remove-orphans
+# Both read their configuration (Prometheus scrape jobs, Grafana alert provisioning) only at start-up.
+docker compose restart prometheus grafana
 docker compose ps --format '{{.Name}} {{.Status}}'
 
 echo "== Checks"

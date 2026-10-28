@@ -105,6 +105,22 @@ services:
       - ./blackbox/blackbox.yml:/etc/blackbox/blackbox.yml:ro
     mem_limit: 64m
 
+  # Response times of real itlearning.tech requests, from the timing log that npm-custom/ adds to
+  # Nginx Proxy Manager (read-only access to its data volume).
+  nginxlog:
+    image: quay.io/martinhelmich/prometheus-nginxlog-exporter:v1.11.0
+    container_name: nginxlog
+    restart: unless-stopped
+    network_mode: host
+    command: ["-config-file", "/etc/nginxlog/config.yml"]
+    volumes:
+      - ./nginxlog/config.yml:/etc/nginxlog/config.yml:ro
+      - npm_data:/npm-data:ro
+    mem_limit: 64m
+
 volumes:
   prometheus_data:
   grafana_data:
+  npm_data:
+    external: true
+    name: itlearning-tech_npm_data

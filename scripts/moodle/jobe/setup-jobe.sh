@@ -95,9 +95,16 @@ docker run -d --name node-exporter --restart unless-stopped --network host --pid
     --path.rootfs=/host --web.listen-address=127.0.0.1:9100 >/dev/null
 
 echo "== Caddy: https://$DOMAIN, Moodle server only"
-# route keeps this order: refuse everyone but the Moodle server first, then host metrics for
-# its Prometheus under /node-metrics/, then Jobe.
+# route keeps this order: refuse everyone but the Moodle server first, then metrics for its
+# Prometheus (host metrics under /node-metrics/, Caddy's own request timings at /caddy-metrics,
+# which give the code-check time), then Jobe. Caddy's admin API stays on localhost.
 cat > /etc/caddy/Caddyfile <<EOF
+{
+	servers {
+		metrics
+	}
+}
+
 $DOMAIN {
 	route {
 		@notmoodle not remote_ip $MOODLE_IP
@@ -105,10 +112,14 @@ $DOMAIN {
 		handle_path /node-metrics/* {
 			reverse_proxy 127.0.0.1:9100
 		}
+		handle /caddy-metrics {
+			metrics
+		}
 		reverse_proxy 127.0.0.1:4000
 	}
 }
 EOF
+caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null
 systemctl enable -q caddy
 systemctl restart caddy
 

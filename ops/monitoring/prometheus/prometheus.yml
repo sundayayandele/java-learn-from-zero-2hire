@@ -20,6 +20,19 @@ scrape_configs:
       - targets: ["jobe.itlearning.tech"]
         labels: {instance: jobe-vps}
 
+  # Response times: real itlearning.tech requests (Nginx Proxy Manager's timing log), and Jobe's
+  # request timings from its Caddy (POST requests are code checks).
+  - job_name: moodle-requests
+    static_configs:
+      - targets: ["127.0.0.1:4040"]
+        labels: {instance: moodle-vps}
+  - job_name: caddy-jobe
+    scheme: https
+    metrics_path: /caddy-metrics
+    static_configs:
+      - targets: ["jobe.itlearning.tech"]
+        labels: {instance: jobe-vps}
+
   # Per-container CPU, memory and restarts on this server.
   - job_name: cadvisor
     static_configs:
