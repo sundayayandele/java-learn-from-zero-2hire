@@ -104,6 +104,31 @@ panel("timeseries", "CPU and memory, p90 over 1 h", 0, 56, 24, 8,
        ("quantile_over_time(0.9, (100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes))[1h:1m])", "memory {{instance}}")],
       unit="percent", minv=0, maxv=100)
 
+# Service health: errors, Moodle cron and tasks, mail queue, backups and the database.
+panel("stat", "itlearning.tech 5xx errors (last 10 min)", 0, 64, 6, 5,
+      [('100 * sum(rate(moodle_http_response_count_total{status=~"5.."}[10m])) / sum(rate(moodle_http_response_count_total[10m]))', "")],
+      unit="percent", thresholds=[{"color": "green", "value": None}, {"color": "orange", "value": 1}, {"color": "red", "value": 2}],
+      extra={"options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": False}, "colorMode": "background", "graphMode": "none", "textMode": "value"}})
+panel("stat", "Moodle cron: last task ran", 6, 64, 6, 5,
+      [("time() - itl_moodle_cron_last_task_start_timestamp_seconds", "")], unit="s",
+      thresholds=[{"color": "green", "value": None}, {"color": "orange", "value": 300}, {"color": "red", "value": 900}],
+      extra={"options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": False}, "colorMode": "background", "graphMode": "none", "textMode": "value"}})
+panel("stat", "Newest backup age", 12, 64, 6, 5,
+      [("(time() - itl_backup_last_success_timestamp_seconds) / 3600", "")], unit="h",
+      thresholds=[{"color": "green", "value": None}, {"color": "orange", "value": 25}, {"color": "red", "value": 26}],
+      extra={"options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": False}, "colorMode": "background", "graphMode": "none", "textMode": "value"}})
+panel("stat", "Mail queue", 18, 64, 6, 5,
+      [("itl_mail_queue_messages", "")], unit="short",
+      thresholds=[{"color": "green", "value": None}, {"color": "orange", "value": 5}, {"color": "red", "value": 20}],
+      extra={"options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": False}, "colorMode": "background", "graphMode": "none", "textMode": "value"}})
+panel("timeseries", "Moodle tasks: failing scheduled tasks and queued ad hoc tasks", 0, 69, 12, 8,
+      [("itl_moodle_scheduled_tasks_failing", "failing scheduled tasks"), ("itl_moodle_adhoc_tasks_queued", "queued ad hoc tasks")],
+      unit="short")
+panel("timeseries", "Database: connections and queries per second", 12, 69, 12, 8,
+      [("mysql_global_status_threads_connected", "connections"), ("mysql_global_variables_max_connections", "connection limit"),
+       ("rate(mysql_global_status_queries[5m])", "queries/s"), ("rate(mysql_global_status_slow_queries[15m]) * 60", "slow queries/min")],
+      unit="short")
+
 dashboard = {"uid": "itl-status", "title": "ITLearning status", "tags": ["itlearning"], "timezone": "browser",
              "schemaVersion": 39, "version": 1, "refresh": "1m", "time": {"from": "now-6h", "to": "now"},
              "panels": panels, "templating": {"list": []}, "annotations": {"list": []}}

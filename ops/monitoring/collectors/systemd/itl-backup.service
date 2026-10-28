@@ -1,0 +1,9 @@
+[Unit]
+Description=ITLearning nightly backup (database, moodledata, configuration)
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/monitoring/collectors/itl-backup.sh
+Nice=10
+IOSchedulingClass=idle

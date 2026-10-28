@@ -1,0 +1,8 @@
+[Unit]
+Description=ITLearning monitoring: Moodle cron, tasks and mail queue metrics
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/monitoring/collectors/itl-collect.sh
+Nice=10

@@ -141,7 +141,13 @@ Done (24 October 2026), built with the same settings as Phase 1 (each activity's
 
 Each course summary, which is shown on the enrolment page, explains both routes. The approval plugin `enrol_apply` was not used: it supports Moodle only up to 4.1. Email sign-up has reCAPTCHA, manual enrolment stays available and guest access is off.
 
-**Monitoring and alerting:** Prometheus and Grafana on the Moodle server watch both servers, the websites and the mail ports, and email alerts to admin@itlearning.tech; see [ops/monitoring](../../ops/monitoring/README.md).
+**Monitoring, alerting and backups:**
+
+- Prometheus and Grafana on the Moodle server watch both servers, the websites, mail, the database, Moodle cron and the mail queue.
+- 27 alert rules, including p90 latency rules, email admin@itlearning.tech and saamsoftsystems@gmail.com.
+- A verified backup of the database, moodledata and configuration runs every night at 01:30 UTC; the newest 7 are kept.
+
+See [ops/monitoring](../../ops/monitoring/README.md).
 
 **Multi-factor authentication** (Moodle's built-in `tool_mfa`, on since 28 October 2026):
 

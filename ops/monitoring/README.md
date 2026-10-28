@@ -2,7 +2,7 @@
 
 ← [Home](../../README.md) · [Moodle blueprint](../../lms/moodle/BLUEPRINT.md) · [CodeRunner and Jobe](../../lms/moodle/CODERUNNER.md)
 
-Prometheus, Grafana and five exporters run on the Moodle server (the "Moodle VPS") and watch both servers. Everything listens on `127.0.0.1` only, so the stack opens no ports and the firewall is unchanged.
+Prometheus, Grafana, six exporters and two collector scripts run on the Moodle server (the "Moodle VPS") and watch both servers. Everything listens on `127.0.0.1` only, so the stack opens no ports and the firewall is unchanged.
 
 | Component | What it measures |
 | --- | --- |
@@ -12,6 +12,9 @@ Prometheus, Grafana and five exporters run on the Moodle server (the "Moodle VPS
 | cAdvisor v0.60 | CPU and memory of each container on the Moodle VPS (Moodle, the database, mail, Ollama, …). Uses `ghcr.io/google/cadvisor`, limited to CPU, memory and network every 60 s: the defaults spiked to 80% of a CPU on this 2-CPU server. |
 | blackbox-exporter v0.29 | From outside: `https://itlearning.tech`, the Jobe API, mail ports 25, 587 and 993, and certificate expiry |
 | prometheus-nginxlog-exporter v1.11 | **Real itlearning.tech response times**, from a timing log added to Nginx Proxy Manager ([`npm-custom/`](npm-custom/)). Each request gets a `kind`: `page` (PHP pages), `quizsubmit` (quiz submissions, including CodeRunner checks), `ajax` or `asset`. |
+| mysqld-exporter v0.21 | MariaDB health: connections, queries, slow queries, buffer use. It has its own database user (`itl_exporter`) that can only read server status, from Docker's internal networks, with at most 3 connections; the password is generated into `/opt/monitoring/mysqld-exporter.cnf`. |
+| `collectors/itl-collect.sh` (systemd timer, every minute) | Moodle cron (when a scheduled task last ran), failing scheduled tasks, queued ad hoc tasks, and the mail queue (size and oldest message), published through node-exporter's textfile collector. |
+| `collectors/itl-backup.sh` (systemd timer, 01:30 UTC = 02:30 Lagos) | The nightly backup (below) and its result. |
 | Caddy on the Jobe VPS | **Code-check time**: request timings at `https://jobe.itlearning.tech/caddy-metrics` (Moodle server only; Caddy's admin API stays local). POST requests are code checks. |
 
 Together they used about 0.2 GB of RAM after start-up (each container has a memory limit).
@@ -69,12 +72,34 @@ For p99 or p50, change the `0.9`. Caddy's largest timing bucket is 10 s, so a co
 | Moodle page loads slow (p90) | p90 of real page loads over 15 min above 2 s, for 5 min, with at least 20 page requests | warning |
 | Code checks slow (p90) | p90 of Jobe code checks over 15 min at least 10 s, for 5 min, with at least 5 checks | warning |
 | Website checks slow (p90 over 30 min) | p90 of the outside check above 3 s, for 5 min | warning |
+| Moodle error rate high | Over 2% of itlearning.tech requests return 5xx in 10 min (at least 50 requests) | critical |
+| Jobe errors or overload | Jobe returns any 5xx in 5 min, for 5 min (503: all workers busy) | warning |
+| Disk will fill within 7 days | The root disk's trend over 6 h reaches full within 7 days, for 1 h | warning |
+| Container restarted | A container other than the monitoring ones started in the last 15 min | warning |
+| Container ran out of memory | A container was OOM-killed in the last 15 min | critical |
+| Monitoring collector not running | `itl-collect` hasn't written metrics for 5 min | warning |
+| Moodle cron stalled | No scheduled task has run for 15 min | critical |
+| Moodle scheduled tasks failing | Any enabled task has a fail delay, for 30 min | warning |
+| Mail queue backlog | More than 20 emails queued, for 5 min | warning |
+| Mail stuck in the queue | The oldest queued email is over 15 min old, for 5 min | warning |
+| Backup missing or old | The newest successful backup is over 26 h old (or none recorded) | critical |
+| Backup failed | The last backup run exited with an error | critical |
+| Database down | mysqld-exporter can't reach MariaDB for 2 min | critical |
+| Database connections near the limit | Over 80% of the connection limit (50), for 10 min | warning |
+| Database slow queries | More than 5 slow queries in 15 min, for 10 min | warning |
+| Database connection errors | More than 10 aborted connections in 15 min, for 10 min | warning |
 
-The latency rules need a minimum of traffic, so a single slow request at night can't fire them. The rules are in [`grafana/provisioning/alerting/alerting.yml`](grafana/provisioning/alerting/alerting.yml); change them there and re-run the installer, so the server and the repository stay in step.
+The latency rules need a minimum of traffic, so a single slow request at night can't fire them. The rules are in [`grafana/provisioning/alerting/alerting.yml`](grafana/provisioning/alerting/alerting.yml). The later ones are generated from compact definitions in [`grafana/add_rules.py`](grafana/add_rules.py). Change them there and re-run the installer, so the server and the repository stay in step. After all 27 were installed, none was firing on the healthy system (63 alert instances checked).
 
 ### Where alerts go
 
-Alerts always go to **admin@itlearning.tech**. Grafana sends them through this server's own mail server: port 25, no login, local delivery. It greets the mail server as `itlearning.tech`, because Postfix rejects the bare server name. A test alert was delivered on 28 October 2026. Alerts are grouped by alert and repeat every 4 hours while firing.
+Alerts go to **admin@itlearning.tech** and **saamsoftsystems@gmail.com**. Grafana sends them through this server's own mail server, on `127.0.0.1:25` without a login:
+
+- The mail server sees Docker's internal gateway, which it trusts to relay to outside addresses.
+- The certificate can't match `127.0.0.1`, so it isn't verified on that local hop.
+- Grafana greets the mail server as `itlearning.tech`, because Postfix rejects the bare server name.
+
+A test alert reached both addresses on 28 October 2026; Gmail accepted it. Alerts are grouped by alert and repeat every 4 hours while firing.
 
 More destinations come from `/opt/monitoring/.env` (see [`env.example`](env.example)). The installer turns them into `contactpoints.yml` on the server, readable only by Grafana, so addresses and tokens never enter the repository:
 
@@ -87,6 +112,33 @@ More destinations come from `/opt/monitoring/.env` (see [`env.example`](env.exam
 
 Monitoring runs on the Moodle VPS, so if that whole server goes down, nothing on it can send an alert. A free external uptime checker on `https://itlearning.tech` (for example UptimeRobot) covers that case.
 
+## Nightly backups
+
+`itl-backup.timer` runs `collectors/itl-backup.sh` every night at 01:30 UTC (02:30 in Lagos). It writes to `/root/backups/nightly/<UTC date-time>/`, which is readable by root only:
+
+- `moodle.sql.gz`: a consistent database dump, checked for the "Dump completed" line.
+- `moodledata.tar.gz`: uploaded files, question files and certificates.
+- `config.tar.gz`: `/opt/itlearning-tech` (Moodle build files, compose file, `.env`, `config.php`) and `/opt/monitoring`.
+- `SHA256SUMS`.
+
+Every archive is verified after it's written. The newest 7 are kept; the first one was 47 MB and took 16 s. Run one now with `systemctl start itl-backup`, and see the log with `journalctl -u itl-backup`.
+
+These backups are on the same server they protect. For real disaster recovery, also copy them to another machine (for example the Jobe VPS, through a restricted backup user) or to object storage.
+
+To restore the database, run this from the backup folder:
+
+```bash
+zcat moodle.sql.gz | docker exec -i moodle-db sh -c 'exec mariadb -uroot -p"$MARIADB_ROOT_PASSWORD" moodle'
+```
+
+To restore moodledata:
+
+```bash
+docker run --rm -v itlearning-tech_moodledata:/data -v "$PWD":/in alpine:3.22 sh -c 'cd /data && tar xzf /in/moodledata.tar.gz'
+```
+
+Put Moodle into maintenance mode first, and purge caches afterwards.
+
 ## Install or update
 
 ```bash
@@ -96,9 +148,10 @@ scp -r ops/monitoring itlearning:/tmp/ && ssh itlearning sh /tmp/monitoring/setu
 The script:
 
 1. copies the files to `/opt/monitoring`, keeping the existing `.env`;
-2. writes the contact points;
+2. writes the contact points, and creates the database user for mysqld-exporter (once);
 3. installs the Nginx Proxy Manager timing log (tested with `nginx -t`, and removed again if nginx rejects it);
 4. starts the containers and restarts Prometheus and Grafana so they reread their configuration;
-5. checks that every scrape target is up and the alert rules and dashboards are loaded.
+5. installs the collector and backup timers, and runs a first backup if none is recorded;
+6. checks that every scrape target is up and the alert rules and dashboards are loaded.
 
 The Jobe side (node-exporter, Caddy metrics and their routes) is part of [`scripts/moodle/jobe/setup-jobe.sh`](../../scripts/moodle/jobe/setup-jobe.sh).

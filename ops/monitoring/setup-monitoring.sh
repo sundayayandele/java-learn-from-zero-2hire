@@ -12,8 +12,8 @@ DEST=/opt/monitoring
 SRC=$(cd "$(dirname "$0")" && pwd)
 if [ "$SRC" != "$DEST" ]; then
     mkdir -p "$DEST"
-    # Keep .env (the Grafana password) and replace everything else.
-    find "$DEST" -mindepth 1 -maxdepth 1 ! -name .env -exec rm -rf {} +
+    # Keep .env (Grafana password, alert routes) and mysqld-exporter.cnf; replace everything else.
+    find "$DEST" -mindepth 1 -maxdepth 1 ! -name .env ! -name mysqld-exporter.cnf -exec rm -rf {} +
     cp -R "$SRC"/. "$DEST"/
 fi
 cd "$DEST"
@@ -75,12 +75,44 @@ sleep 2
 curl -fs -o /dev/null https://itlearning.tech/login/index.php   # creates the timing log
 docker exec npm sh -c 'test -s /data/logs/itl-timing_access.log && tail -1 /data/logs/itl-timing_access.log'
 
+echo "== Database user for mysqld-exporter"
+# Status only (PROCESS, REPLICATION CLIENT, performance_schema), at most 3 connections, and only from
+# Docker's internal networks. Created once; the password lives only in mysqld-exporter.cnf.
+if [ ! -s mysqld-exporter.cnf ]; then
+    PW=$(openssl rand -base64 33 | tr -dc 'A-Za-z0-9' | cut -c1-28)
+    docker exec -i moodle-db sh -c 'exec mariadb -uroot -p"$MARIADB_ROOT_PASSWORD"' <<SQL
+CREATE USER IF NOT EXISTS 'itl_exporter'@'172.16.%' IDENTIFIED BY '$PW' WITH MAX_USER_CONNECTIONS 3;
+ALTER USER 'itl_exporter'@'172.16.%' IDENTIFIED BY '$PW' WITH MAX_USER_CONNECTIONS 3;
+GRANT PROCESS, REPLICATION CLIENT ON *.* TO 'itl_exporter'@'172.16.%';
+GRANT SELECT ON performance_schema.* TO 'itl_exporter'@'172.16.%';
+SQL
+    ( umask 077; printf '[client]\nuser=itl_exporter\npassword=%s\nhost=moodle-db\nport=3306\n' "$PW" > mysqld-exporter.cnf )
+    unset PW
+fi
+chown 65534 mysqld-exporter.cnf   # the exporter runs as nobody
+chmod 400 mysqld-exporter.cnf
+
 echo "== Start"
 docker compose pull -q
 docker compose up -d --remove-orphans
 # Both read their configuration (Prometheus scrape jobs, Grafana alert provisioning) only at start-up.
 docker compose restart prometheus grafana
 docker compose ps --format '{{.Name}} {{.Status}}'
+
+echo "== Collectors (systemd timers): cron, tasks and mail queue every minute; backup at 01:30 UTC"
+mkdir -p /var/lib/node_exporter/textfile
+chmod 755 collectors/*.sh
+cp collectors/systemd/itl-collect.service collectors/systemd/itl-collect.timer \
+    collectors/systemd/itl-backup.service collectors/systemd/itl-backup.timer /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable -q --now itl-collect.timer itl-backup.timer
+systemctl start itl-collect.service
+sed -n 's/^\(itl_[a-z_]*\) /  \1 = /p' /var/lib/node_exporter/textfile/itl.prom
+if ! grep -q '^itl_backup_last_success_timestamp_seconds [1-9]' /var/lib/node_exporter/textfile/itl_backup.prom 2>/dev/null; then
+    echo "  no successful backup recorded yet: running one now"
+    systemctl start itl-backup.service || true
+    journalctl -u itl-backup -n 1 --no-pager -o cat | sed 's/^/  /'
+fi
 
 echo "== Checks"
 for _ in $(seq 30); do

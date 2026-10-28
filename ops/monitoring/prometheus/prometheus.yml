@@ -33,6 +33,12 @@ scrape_configs:
       - targets: ["jobe.itlearning.tech"]
         labels: {instance: jobe-vps}
 
+  # MariaDB (moodle-db): connections, slow queries, buffer use.
+  - job_name: mysqld
+    static_configs:
+      - targets: ["127.0.0.1:9104"]
+        labels: {instance: moodle-vps}
+
   # Per-container CPU, memory and restarts on this server.
   - job_name: cadvisor
     static_configs:
