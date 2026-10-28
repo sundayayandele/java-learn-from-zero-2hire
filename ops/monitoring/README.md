@@ -57,6 +57,19 @@ Dashboards are in the **ITLearning** folder:
 
 For p99 or p50, change the `0.9`. Caddy's largest timing bucket is 10 s, so a code-check percentile of 10 means "10 s or more".
 
+## Server admin tools (SSH tunnels only)
+
+Since 29 October 2026, the server admin tools aren't reachable from the internet. Their public addresses answer 403, and their ports listen on the Moodle server's `127.0.0.1` only. Open one tunnel per tool, or several in one command, then browse locally:
+
+| Tool | Tunnel | Then open |
+| --- | --- | --- |
+| Nginx Proxy Manager admin | `ssh -N -L 8181:127.0.0.1:81 itlearning` | <http://localhost:8181> |
+| Portainer | `ssh -N -L 9443:127.0.0.1:9443 itlearning` | <https://localhost:9443> (self-signed certificate) |
+| Mail server GUI | `ssh -N -L 8082:127.0.0.1:8082 itlearning` | <http://localhost:8082> |
+| Grafana and Prometheus | `ssh -N -L 3000:127.0.0.1:3000 -L 9090:127.0.0.1:9090 itlearning` | <http://localhost:3000>, <http://localhost:9090> |
+
+The 403 for `portainer.itlearning.tech` and `mailgui.itlearning.tech` comes from [`npm-custom/server_proxy.conf`](npm-custom/server_proxy.conf), which the installer puts into Nginx Proxy Manager.
+
 ## Alerts
 
 | Alert | Fires when | Severity |
