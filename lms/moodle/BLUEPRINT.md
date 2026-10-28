@@ -141,6 +141,14 @@ Done (24 October 2026), built with the same settings as Phase 1 (each activity's
 
 Each course summary, which is shown on the enrolment page, explains both routes. The approval plugin `enrol_apply` was not used: it supports Moodle only up to 4.1. Email sign-up has reCAPTCHA, manual enrolment stays available and guest access is off.
 
+**Privacy and policies** (since 29 October 2026):
+
+- **Policies:** a privacy notice and terms of use (texts in [policies/](policies/)) are compulsory in Moodle's policies tool. New learners accept them at sign-up and existing users at their next sign-in. Anyone can read them at `/admin/tool/policy/viewall.php`. The operator is ITLearning, a subsidiary of SaamSoft Systems Nig Ltd, Lagos; privacy requests go to info@itlearning.ng.
+- **Age:** learners must be 16 or over. Digital age of consent is checked at 18, so under-18s can't self-register: they're told to contact support, and staff create the account after confirming they're 16 or over and have a parent's or guardian's consent.
+- **Privacy officer:** the contact form is on; with no data protection officer role assigned, messages go to the site admin.
+- **Retention:** activity logs are kept for 365 days. The data registry keeps learner records for 3 years after the end of their context (for a user, their last sign-in), then flags them for deletion with privacy officer approval.
+- **Review needed:** the texts were drafted from the platform's actual data flows, but have not been reviewed by a lawyer. Have them reviewed, and update them whenever data flows change (a new plugin, provider or server).
+
 **Monitoring, alerting and backups:**
 
 - Prometheus and Grafana on the Moodle server watch both servers, the websites, mail, the database, Moodle cron and the mail queue.
