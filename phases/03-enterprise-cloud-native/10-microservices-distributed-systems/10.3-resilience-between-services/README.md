@@ -94,18 +94,21 @@ management.health.circuitbreakers.enabled=true
 
 `ignore-exceptions` matters: **a 4xx is the other service doing its job.** "Insufficient funds" must reach the customer, and a burst of declined transfers must never open the breaker and block everyone else. Spring Cloud's Resilience4j integration also wraps each call in a **time limiter** (1 second by default, set to 3 seconds above) that runs the call on another thread; keep it a little longer than the HTTP read timeout.
 
-Here is what that configuration did in a real run, with the accounts service stopped:
+Here is what that configuration did in a real run of the ITL Pay starter, with the accounts container paused (`docker compose pause accounts`) so it accepts connections but never answers:
 
 ```
-call 1  503 in 0.54 s   (connect timeout, counted as a failure)
-call 2  503 in 0.52 s
-call 3  503 in 0.53 s   → 3 failures in 5 calls = 60% ≥ 50%: breaker OPENS
-call 4  503 in 0.02 s   (rejected immediately, accounts not called)
-call 5  503 in 0.02 s
-call 6  503 in 0.02 s
+call 1  503 in 2.6 s    (read timeout, counted as a failure)
+call 2  503 in 2.0 s
+call 3  503 in 2.0 s
+call 4  503 in 2.0 s
+call 5  503 in 2.0 s    → 5 failures in 5 calls = 100% ≥ 50%: breaker OPENS
+call 6  503 in 0.02 s   (rejected immediately, accounts not called)
+call 7  503 in 0.02 s
 ```
 
-and `/actuator/circuitbreakers` reported `"state":"OPEN","failureRate":"60.0%","notPermittedCalls":3`. After 10 seconds the breaker allows trial calls; if accounts is back, it closes. Watch these states on a dashboard and alert when a breaker stays open (Module 13).
+and `/actuator/circuitbreakers` reported `"state":"OPEN","failureRate":"100.0%","notPermittedCalls":2`. After 10 seconds the breaker allows trial calls (10 by default, the half-open state); if accounts is back, it closes. Run `docker compose unpause accounts` to bring it back.
+
+**Pause, don't stop, to see the timeouts.** If you `docker compose stop accounts` instead, Compose removes its DNS name, so every call fails in about 20 ms with an unknown-host error, even before the breaker opens. The breaker still opens, but you never see the slow calls it protects you from. A paused container is the realistic failure: a service that is up but hanging. Watch these states on a dashboard and alert when a breaker stays open (Module 13).
 
 ## 4. Retries: only when safe, never in a storm
 
@@ -164,7 +167,7 @@ No money moved incorrectly, no customer was charged twice, and the outage stayed
 
 ## Practice
 
-1. Add the timeout, breaker and properties above to your transfers service, stop accounts, and reproduce the open-breaker timings.
+1. Add the timeout, breaker and properties above to your transfers service, pause accounts (`docker compose pause accounts`), and reproduce the open-breaker timings. Then stop it instead and explain why the timings change.
 2. Add a `delayMs` parameter to an accounts endpoint and find the delay at which calls start timing out. Check the time limiter fires a little after the read timeout.
 3. Make holds idempotent by reference, add a retry (two attempts, backoff with jitter) and prove a retried call can't reserve twice.
 4. Add a semaphore bulkhead of 10 for a slow "fraud check" call and load-test it with 50 concurrent requests: balances must stay fast.
