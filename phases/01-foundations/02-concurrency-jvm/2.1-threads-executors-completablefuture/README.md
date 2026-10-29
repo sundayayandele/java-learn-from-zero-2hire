@@ -231,7 +231,7 @@ All videos are in English with English captions and were checked on 2026-10-24. 
 
 ## Check your understanding
 
-7 scenario questions. Answer each one before opening the explanation. On Moodle this is the graded topic quiz (pass mark 70%, unlimited attempts).
+7 scenario questions. Answer each one before opening the explanation. On Moodle this is the topic quiz: unlimited attempts, and aim for 70% or more.
 
 **Q1.** A balance-enquiry endpoint calls the core banking system (400 ms), a fraud score service (300 ms) and a loyalty service (250 ms) one after another. Product wants it under 500 ms.
 

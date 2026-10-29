@@ -137,4 +137,4 @@ Done when: a hiring manager can read the README in three minutes and know what y
 - [ ] Score yourself with the [rubric](../README.md#rubric): at least 17/24 and nothing below 2.
 - [ ] Submit your repository URL, health URL and demo link in the Moodle capstone assignment.
 
-When you're stuck, go back to the topic in the brief's skills table, and check the reference solution only after you've built your own version (Capstones 1 and 2).
+When you're stuck, go back to the topic in the brief's skills table, or ask in the course forum. For Capstones 1 and 2, your mentor shares the reference solution once your submission has passed, so you can compare approaches.

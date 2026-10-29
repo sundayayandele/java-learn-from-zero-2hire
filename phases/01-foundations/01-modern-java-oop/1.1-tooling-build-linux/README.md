@@ -312,7 +312,7 @@ All videos are in English with English captions and were checked on 2026-10-24. 
 
 ## Check your understanding
 
-8 scenario questions. Answer each one before opening the explanation. On Moodle this is the graded topic quiz (pass mark 70%, unlimited attempts).
+8 scenario questions. Answer each one before opening the explanation. On Moodle this is the topic quiz: unlimited attempts, and aim for 70% or more.
 
 **Q1.** A new teammate cloned the payments service. `java -version` prints 21, but `./mvnw -v` reports "Java version: 17" and the build fails on a Java 21 feature.
 

@@ -312,7 +312,7 @@ All videos are in English with English captions and were checked on 2026-10-24. 
 
 ## Check your understanding
 
-7 scenario questions. Answer each one before opening the explanation. On Moodle this is the graded topic quiz (pass mark 70%, unlimited attempts).
+7 scenario questions. Answer each one before opening the explanation. On Moodle this is the topic quiz: unlimited attempts, and aim for 70% or more.
 
 **Q1.** A nightly job checks each of 2 million transactions against a list of 300,000 blocked account numbers using `blockedList.contains(acc)`. It takes six hours.
 

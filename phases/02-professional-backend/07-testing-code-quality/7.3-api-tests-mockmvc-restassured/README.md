@@ -234,7 +234,7 @@ All videos are in English with English captions and were checked on 2026-10-24. 
 
 ## Check your understanding
 
-7 scenario questions. Answer each one before opening the explanation. On Moodle this is the graded topic quiz (pass mark 70%, unlimited attempts).
+7 scenario questions. Answer each one before opening the explanation. On Moodle this is the topic quiz: unlimited attempts, and aim for 70% or more.
 
 **Q1.** You want to check that POST /api/v1/transfers returns 400 with a field error when the account number is invalid, and that the service is never called. The suite must stay fast.
 

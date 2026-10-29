@@ -172,11 +172,11 @@ OTHER_CAPSTONES = {1: "two others", 2: "one other"}
 START_HERE = """<h2>How this course works on ITLearning</h2>
 <ol>
 <li><strong>Work through the modules in order.</strong> Each topic has a <em>Lesson</em> page (read it and type the code yourself, then watch the embedded videos) followed by a <em>Check your understanding</em> quiz.</li>
-<li><strong>Pass every topic quiz at 70%.</strong> Attempts are unlimited and you see feedback straight away, so use the explanations to learn. A topic counts as complete when you've viewed the lesson and passed its quiz.</li>
+<li><strong>Take every topic quiz and aim for 70% or more.</strong> The quizzes are there to help you learn and keep pace, not to grade you: attempts are unlimited and you see feedback straight away. A topic counts as complete when you've viewed the lesson and attempted its quiz. If you score under 70%, reread the explanations and try again; the exam draws on the same topics.</li>
 <li><strong>Do the practice tasks and module projects</strong> listed at the end of each lesson and module.</li>
 <li><strong>Build your capstones from week {week}</strong>: Capstone 1 plus {others}, then defend them in a 20-minute <em>capstone defence</em> (demo, code questions and a live change). Each capstone page has the brief, the architecture diagrams and a step-by-step build guide. Submit each one in its <em>Submission</em> assignment; it is marked out of {total} with the rubric, and {passmark} is a pass.</li>
 <li><strong>Keep up the coding practice track</strong> (about 3 hours a week): auto-graded Java and SQL interview problems. Submit your progress at the <em>coding practice checkpoint</em>.</li>
-<li><strong>Sit the end-of-phase assessments</strong>: the exam once you've passed all {quizzes} topic quizzes (60 questions drawn at random, 2 hours, pass mark 70%, two attempts at least 48 hours apart) and the 90-minute <em>live-coding assessment</em>.</li>
+<li><strong>Sit the end-of-phase assessments</strong>: the exam once you've attempted all {quizzes} topic quizzes (60 questions drawn at random, 2 hours, pass mark 70%, two attempts at least 48 hours apart) and the 90-minute <em>live-coding assessment</em>.</li>
 <li><strong>Get hired</strong>: work through the Getting hired section and submit your checklist.</li>
 </ol>
 <p>Stuck? Ask in the <em>Questions and help</em> forum in this section. Say which topic or capstone, what you tried, and paste the error message.</p>

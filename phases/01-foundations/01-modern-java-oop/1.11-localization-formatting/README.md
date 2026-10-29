@@ -169,7 +169,7 @@ All videos are in English with English captions and were checked on 2026-10-24. 
 
 ## Check your understanding
 
-6 scenario questions. Answer each one before opening the explanation. On Moodle this is the graded topic quiz (pass mark 70%, unlimited attempts).
+6 scenario questions. Answer each one before opening the explanation. On Moodle this is the topic quiz: unlimited attempts, and aim for 70% or more.
 
 **Q1.** A CSV export for a partner works in development, but in production the amounts appear as `1 250 000,50`, and the partner's parser rejects the file. The production JVM's default locale is French.
 

@@ -203,7 +203,7 @@ if ($cmd === 'walk') {
     $examcmid = 201;
     echo "== Before any work\n";
     $exam = get_fast_modinfo(COURSE, $u->id)->get_cm($examcmid);
-    say(!$exam->available, 'the exam is locked until the topic quizzes are passed');
+    say(!$exam->available, 'the exam is locked until every topic quiz is attempted');
     $cert = get_fast_modinfo(COURSE, $u->id)->get_cm(264);
     say(!$cert->available, 'the certificate is locked');
 
@@ -224,7 +224,8 @@ if ($cmd === 'walk') {
             [$n, $grade, $max] = attempt_quiz($cm, $u);
             \core\cron::setup_user();
             $state = cm_state($cm, $u->id);
-            if ($state == COMPLETION_COMPLETE_PASS) {
+            // Topic quizzes complete after one finished attempt (COMPLETE); the coding quiz needs a pass.
+            if ($grade == $max && in_array($state, [COMPLETION_COMPLETE, COMPLETION_COMPLETE_PASS])) {
                 $counts['quiz']++;
             } else {
                 $quizfail[] = "{$cm->name}: grade $grade/$max over $n questions, completion state $state";
@@ -251,7 +252,7 @@ if ($cmd === 'walk') {
 
     echo "== The exam\n";
     $exam = get_fast_modinfo(COURSE, $u->id)->get_cm($examcmid);
-    say($exam->available, 'with every topic quiz passed, the exam unlocks');
+    say($exam->available, 'with every topic quiz attempted, the exam unlocks');
     if ($exam->available) {
         $t = microtime(true);
         [$n, $grade, $max] = attempt_quiz($exam, $u);

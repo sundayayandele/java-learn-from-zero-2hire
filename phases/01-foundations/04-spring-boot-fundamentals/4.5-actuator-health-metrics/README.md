@@ -307,7 +307,7 @@ All videos are in English with English captions and were checked on 2026-10-24. 
 
 ## Check your understanding
 
-7 scenario questions. Answer each one before opening the explanation. On Moodle this is the graded topic quiz (pass mark 70%, unlimited attempts).
+7 scenario questions. Answer each one before opening the explanation. On Moodle this is the topic quiz: unlimited attempts, and aim for 70% or more.
 
 **Q1.** During a 10-minute PostgreSQL outage, Kubernetes restarted every instance of the payments API repeatedly, and recovery took longer than the outage. The `db` health indicator was in the liveness group.
 

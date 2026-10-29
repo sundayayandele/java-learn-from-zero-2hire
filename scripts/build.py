@@ -56,7 +56,7 @@ def cbt_section(cbt: dict) -> str:
     qs = cbt["questions"]
     lines = ["## Check your understanding", "",
              f"{len(qs)} scenario questions. Answer each one before opening the explanation. "
-             "On Moodle this is the graded topic quiz (pass mark 70%, unlimited attempts).", ""]
+             "On Moodle this is the topic quiz: unlimited attempts, and aim for 70% or more.", ""]
     for i, q in enumerate(qs, 1):
         kind = " *(choose all that apply)*" if q["type"] == "multi" else ""
         lines.append(f"**Q{i}.** {q['scenario']}")

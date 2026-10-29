@@ -153,7 +153,7 @@ All videos are in English with English captions and were checked on 2026-10-24. 
 
 ## Check your understanding
 
-7 scenario questions. Answer each one before opening the explanation. On Moodle this is the graded topic quiz (pass mark 70%, unlimited attempts).
+7 scenario questions. Answer each one before opening the explanation. On Moodle this is the topic quiz: unlimited attempts, and aim for 70% or more.
 
 **Q1.** An assistant generated a Spring Boot 4 test that uses @MockBean and imports org.springframework.boot.test.mock.mockito.MockBean. The build fails.
 

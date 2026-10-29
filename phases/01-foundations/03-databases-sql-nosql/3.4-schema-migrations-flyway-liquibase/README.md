@@ -256,7 +256,7 @@ All videos are in English with English captions and were checked on 2026-10-24. 
 
 ## Check your understanding
 
-7 scenario questions. Answer each one before opening the explanation. On Moodle this is the graded topic quiz (pass mark 70%, unlimited attempts).
+7 scenario questions. Answer each one before opening the explanation. On Moodle this is the topic quiz: unlimited attempts, and aim for 70% or more.
 
 **Q1.** A developer fixes a typo in `V3__add_account_daily_limit.sql`, which already ran in UAT and production. The next deployment fails with a Flyway checksum mismatch.
 

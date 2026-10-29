@@ -4,7 +4,7 @@
 
 | | |
 | --- | --- |
-| When | Week 13, after all 32 topic CBTs are passed |
+| When | Week 13, after all 32 topic CBTs are attempted |
 | Where | Moodle (itlearning.tech), "Phase 1 end-of-phase exam" quiz |
 | Format | **60 scenario-based multiple-choice questions**, each a short workplace situation with one best answer, drawn at random for every attempt from a bank of 120 (the module weights below are fixed) |
 | Time | **2 hours** (120 minutes), one sitting; the timer keeps running if you close the browser |

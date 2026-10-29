@@ -56,7 +56,7 @@ That is **22–27 hours a week over the 11 scheduled weeks**. If you can give 12
 
 ## Capstones
 
-Ten integration- and security-heavy fintech capstones, each built on public data or official sandboxes that are free for commercial and non-commercial use, with recorded licences. **Complete at least two** by the end of the phase: Capstone 1 (the payment gateway hub) plus any one other, and defend them in a 20-minute [capstone defence](../../docs/assessments/capstone-defence.md). Capstones 1 and 2 come with complete, tested reference solutions.
+Ten integration- and security-heavy fintech capstones, each built on public data or official sandboxes that are free for commercial and non-commercial use, with recorded licences. **Complete at least two** by the end of the phase: Capstone 1 (the payment gateway hub) plus any one other, and defend them in a 20-minute [capstone defence](../../docs/assessments/capstone-defence.md). Capstones 1 and 2 have complete, tested reference solutions, which your mentor shares once your submission has passed.
 
 → [Phase 2 capstones](capstones/README.md)
 
@@ -87,7 +87,7 @@ Week 24 is your junior-role launch: a portfolio of four to five deployed project
 
 ## Phase 2 exit criteria
 
-- All 27 topic CBTs passed (70%+).
+- All 27 topic CBTs attempted (aim for 70%+).
 - At least one project per module.
 - Capstone 1 plus one other passed against the rubric, each with a green pipeline that enforces quality gates, deployed and secured, and both defended in the capstone defence.
 - Live-coding assessment and coding practice checkpoint passed.

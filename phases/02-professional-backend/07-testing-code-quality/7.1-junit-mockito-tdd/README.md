@@ -299,7 +299,7 @@ All videos are in English with English captions and were checked on 2026-10-24. 
 
 ## Check your understanding
 
-8 scenario questions. Answer each one before opening the explanation. On Moodle this is the graded topic quiz (pass mark 70%, unlimited attempts).
+8 scenario questions. Answer each one before opening the explanation. On Moodle this is the topic quiz: unlimited attempts, and aim for 70% or more.
 
 **Q1.** A test asserts assertEquals(new BigDecimal("1250.00"), account.balance()) and fails with 'expected 1250.00 but was 1250.0', although the amounts are the same.
 

@@ -228,7 +228,7 @@ All videos are in English with English captions and were checked on 2026-10-24. 
 
 ## Check your understanding
 
-7 scenario questions. Answer each one before opening the explanation. On Moodle this is the graded topic quiz (pass mark 70%, unlimited attempts).
+7 scenario questions. Answer each one before opening the explanation. On Moodle this is the topic quiz: unlimited attempts, and aim for 70% or more.
 
 **Q1.** Your wallet API accepts any token signed by the bank's Keycloak realm. A tester takes a valid token issued for the bank's internal HR API and calls your transfer endpoint with it, and it works.
 

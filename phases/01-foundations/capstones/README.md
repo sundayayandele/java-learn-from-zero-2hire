@@ -8,12 +8,12 @@ Ten capstones built on the problems Nigerian and international financial institu
 
 **Every capstone has a step-by-step build guide** (`GUIDE.md`, linked at the top of each brief): setup from the starter, data download commands, build steps that each end with a "done when" check, then CI, deployment, architecture pack, README and submission.
 
-**Complete at least three by the end of week 13: Capstone 1 plus any two others**, then defend them in a 20-minute [capstone defence](../../../docs/assessments/capstone-defence.md) (demo, code questions and a live change). Pick the two that best match the jobs you will apply for (see "Good for" below). Capstones 1 and 2 come with complete reference solutions; look at them only after you have built your own version.
+**Complete at least three by the end of week 13: Capstone 1 plus any two others**, then defend them in a 20-minute [capstone defence](../../../docs/assessments/capstone-defence.md) (demo, code questions and a live change). Pick the two that best match the jobs you will apply for (see "Good for" below). Capstones 1 and 2 have complete reference solutions; your mentor shares each one once your submission has passed.
 
 | # | Capstone | Core skills | Data (licence) | Good for | Reference solution |
 | --- | --- | --- | --- | --- | --- |
-| 1 | [Core banking ledger](01-core-banking-ledger/README.md) | Double-entry, transactions, locking, idempotency, Spring Boot API | Synthetic (CC0) | Core banking, payments, wallets | [Yes](01-core-banking-ledger/reference/README.md) |
-| 2 | [FX reference rates service](02-fx-rates-service/README.md) | Data import, JDBC batching, caching, scheduled jobs, BigDecimal maths | ECB (ESCB reuse policy), US Treasury (open data) | Treasury, remittances, cards | [Yes](02-fx-rates-service/reference/README.md) |
+| 1 | [Core banking ledger](01-core-banking-ledger/README.md) | Double-entry, transactions, locking, idempotency, Spring Boot API | Synthetic (CC0) | Core banking, payments, wallets | After you pass |
+| 2 | [FX reference rates service](02-fx-rates-service/README.md) | Data import, JDBC batching, caching, scheduled jobs, BigDecimal maths | ECB (ESCB reuse policy), US Treasury (open data) | Treasury, remittances, cards | After you pass |
 | 3 | [Loan amortisation and repayment service](03-loan-amortisation-service/README.md) | BigDecimal schedules, sealed product types, JPA, validation | World Bank WDI (CC BY 4.0), UCI German Credit (CC BY 4.0) | Lending, microfinance, BNPL | — |
 | 4 | [Credit-card default risk scorecard API](04-credit-risk-scorecard-api/README.md) | Rule engine, batch scoring with virtual threads, explainability | UCI Default of Credit Card Clients (CC BY 4.0) | Credit risk, cards | — |
 | 5 | [Consumer complaints triage and SLA service](05-complaints-triage-service/README.md) | Bulk load, full-text search, SLA rules, MongoDB documents | CFPB Consumer Complaint Database (US public domain) | Customer operations, regtech | — |

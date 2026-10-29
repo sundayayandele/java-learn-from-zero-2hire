@@ -117,7 +117,7 @@ Track your own outcomes rather than impressions: time to a reviewed, merged pull
 ## Practice
 
 1. Add a `CLAUDE.md` or `copilot-instructions.md` (or `AGENTS.md`) to your capstone with your conventions.
-2. Use an assistant to explain an unfamiliar part of a Phase 1 reference solution, then verify each claim against the code and documentation; note what it got wrong.
+2. Use an assistant to explain an unfamiliar part of a Phase 1 capstone (yours, or the reference solution your mentor shared), then verify each claim against the code and documentation; note what it got wrong.
 3. Implement one small capstone feature with an agentic assistant using the plan → small steps → tests loop; record time spent and every correction you made.
 4. Write a one-page personal policy: tools you use, what you never paste, how you review output.
 

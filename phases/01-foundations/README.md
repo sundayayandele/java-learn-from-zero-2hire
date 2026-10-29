@@ -48,7 +48,7 @@ Then do the topic's **practice** tasks and, each module, at least one **module p
 
 ## Capstones
 
-Ten financial-institution capstones built on public datasets that are free for commercial and non-commercial use, each with a recorded licence. **Complete at least three** by the end of the phase: Capstone 1 (the ledger) plus any two others. Two capstones come with complete reference solutions.
+Ten financial-institution capstones built on public datasets that are free for commercial and non-commercial use, each with a recorded licence. **Complete at least three** by the end of the phase: Capstone 1 (the ledger) plus any two others. Capstones 1 and 2 have complete reference solutions, which your mentor shares once your submission has passed.
 
 → [Phase 1 capstones](capstones/README.md)
 
@@ -79,7 +79,7 @@ What a Phase 1 graduate can credibly apply for, how to present your capstones, a
 
 ## Phase 1 exit criteria
 
-- [ ] All 32 topic CBTs passed (70%+)
+- [ ] All 32 topic CBTs attempted (aim for 70%+)
 - [ ] One project per module, each on GitHub with README, tests and green CI
 - [ ] Three capstones (including Capstone 1), at least one deployed with a public health endpoint
 - [ ] Capstone defence, live-coding assessment and coding practice checkpoint passed
