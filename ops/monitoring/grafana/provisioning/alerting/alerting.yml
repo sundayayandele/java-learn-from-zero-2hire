@@ -335,7 +335,6 @@ groups:
           - refId: C
             datasourceUid: __expr__
             model: {refId: C, type: threshold, expression: A, conditions: [{evaluator: {type: gt, params: [300]}}]}
-
       - uid: itl-moodle-cron
         title: Moodle cron stalled
         condition: C
@@ -354,7 +353,6 @@ groups:
           - refId: C
             datasourceUid: __expr__
             model: {refId: C, type: threshold, expression: A, conditions: [{evaluator: {type: gt, params: [900]}}]}
-
       - uid: itl-moodle-tasks-failing
         title: Moodle scheduled tasks failing
         condition: C
@@ -373,7 +371,6 @@ groups:
           - refId: C
             datasourceUid: __expr__
             model: {refId: C, type: threshold, expression: A, conditions: [{evaluator: {type: gt, params: [0]}}]}
-
       - uid: itl-mail-queue
         title: Mail queue backlog
         condition: C
@@ -392,7 +389,6 @@ groups:
           - refId: C
             datasourceUid: __expr__
             model: {refId: C, type: threshold, expression: A, conditions: [{evaluator: {type: gt, params: [20]}}]}
-
       - uid: itl-mail-queue-age
         title: Mail stuck in the queue
         condition: C
@@ -411,7 +407,6 @@ groups:
           - refId: C
             datasourceUid: __expr__
             model: {refId: C, type: threshold, expression: A, conditions: [{evaluator: {type: gt, params: [900]}}]}
-
       - uid: itl-backup-stale
         title: Backup missing or old
         condition: C
@@ -430,7 +425,6 @@ groups:
           - refId: C
             datasourceUid: __expr__
             model: {refId: C, type: threshold, expression: A, conditions: [{evaluator: {type: gt, params: [26]}}]}
-
       - uid: itl-backup-failed
         title: Backup failed
         condition: C
@@ -449,7 +443,6 @@ groups:
           - refId: C
             datasourceUid: __expr__
             model: {refId: C, type: threshold, expression: A, conditions: [{evaluator: {type: gt, params: [0]}}]}
-
       - uid: itl-db-down
         title: Database down
         condition: C
@@ -525,3 +518,22 @@ groups:
           - refId: C
             datasourceUid: __expr__
             model: {refId: C, type: threshold, expression: A, conditions: [{evaluator: {type: gt, params: [10]}}]}
+
+      - uid: itl-backup-offsite-stale
+        title: Off-site backup missing or old
+        condition: C
+        for: 15m
+        noDataState: Alerting
+        execErrState: Error
+        labels: {severity: critical}
+        annotations:
+          summary: "The newest off-site backup copy is {{ humanize $values.A.Value }} hours old."
+          description: "The encrypted copy to the Jobe VPS did not succeed after the nightly backup. Check: journalctl -u itl-backup"
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange: {from: 300, to: 0}
+            model: {refId: A, expr: '(time() - itl_backup_offsite_last_success_timestamp_seconds) / 3600', instant: true}
+          - refId: C
+            datasourceUid: __expr__
+            model: {refId: C, type: threshold, expression: A, conditions: [{evaluator: {type: gt, params: [26]}}]}

@@ -168,3 +168,9 @@ The script:
 6. checks that every scrape target is up and the alert rules and dashboards are loaded.
 
 The Jobe side (node-exporter, Caddy metrics and their routes) is part of [`scripts/moodle/jobe/setup-jobe.sh`](../../scripts/moodle/jobe/setup-jobe.sh).
+
+## Off-site backup copy (since 29 October 2026)
+
+After each nightly backup, `itl-backup.sh` encrypts it with `age` to the operator's public key (`/etc/itl-backup/recipients.txt`) and pushes it to the Jobe VPS (`/srv/itl-backups/nightly/<name>.tar.age`). The push key can only add backups: `scripts/moodle/jobe/setup-backup-receiver.sh` forces it to `itl-backup-receive`, which can't list, read or delete. The Jobe VPS keeps the 14 newest copies plus the newest of each of the last 6 months. Grafana alerts "Off-site backup missing or old" after 26 hours.
+
+The private key (`AGE-SECRET-KEY-…`) is only on the operator's Mac, in `~/.config/itlearning/backup-age.key`. **Store a copy in your password manager. Without it, the off-site copies can't be decrypted.** To restore on a new server: copy the `.tar.age` file and the key to the new server (key in `/dev/shm`), then run `age -d -i /dev/shm/key file.tar.age | tar xf -`, delete the key with `shred -u /dev/shm/key`, and follow the restore steps above.

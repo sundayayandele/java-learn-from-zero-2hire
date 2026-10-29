@@ -76,6 +76,11 @@ RULE_SETS = {
              description="Check: journalctl -u itl-backup",
              expr="itl_backup_last_exit_code",
              op="gt", value=0, window=300),
+        dict(uid="itl-backup-offsite-stale", title="Off-site backup missing or old", for_="15m", severity="critical",
+             summary="The newest off-site backup copy is {{ humanize $values.A.Value }} hours old.",
+             description="The encrypted copy to the Jobe VPS did not succeed after the nightly backup. Check: journalctl -u itl-backup",
+             expr="(time() - itl_backup_offsite_last_success_timestamp_seconds) / 3600",
+             op="gt", value=26, window=300, nodata="Alerting"),
     ],
     "database": [
         dict(uid="itl-db-down", title="Database down", for_="2m", severity="critical",
