@@ -1,0 +1,109 @@
+{
+  "topic": "10.4",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "Transfers debits the customer in Accounts, then Ledger posting fails permanently.",
+      "question": "Which design would have made recovery clean?",
+      "options": [
+        "Reserve funds with a hold first, post, then capture; on failure, release the hold as a compensation",
+        "Retry the posting forever",
+        "Use a shared database table",
+        "Debit immediately and refund manually later"
+      ],
+      "answer": 0,
+      "explanation": "Reservations can be released without a refund; each forward step has a recorded compensation."
+    },
+    {
+      "type": "single",
+      "scenario": "An architect proposes XA two-phase commit across the Accounts, Transfers and Ledger services.",
+      "question": "What is the main objection?",
+      "options": [
+        "Java doesn't support XA",
+        "2PC only works with MongoDB",
+        "XA is too fast",
+        "It couples availability and locks across services, needs XA-capable resources (REST and Kafka aren't), and leaves in-doubt transactions if the coordinator fails"
+      ],
+      "answer": 3,
+      "explanation": "Between services, use local transactions coordinated by a saga, with idempotency and compensation."
+    },
+    {
+      "type": "single",
+      "scenario": "Two identical `reserve` requests with reference TRF-1 arrive at the same millisecond. Both pass the `findByReference` check and both create a hold.",
+      "question": "What prevents this?",
+      "options": [
+        "A longer HTTP timeout",
+        "A `synchronized` method on one instance",
+        "Checking twice in code",
+        "A UNIQUE (account_id, reference) constraint in the database, with the second request returning the existing hold"
+      ],
+      "answer": 3,
+      "explanation": "Code checks race; the database constraint is the final word. Several instances make in-process locks useless."
+    },
+    {
+      "type": "single",
+      "scenario": "A retried `reserve` request arrives after the first one succeeded but its response was lost.",
+      "question": "What should Accounts return?",
+      "options": [
+        "409 Conflict, so the caller knows it was a duplicate",
+        "A second hold",
+        "500, because duplicates are errors",
+        "The original result (the existing hold), so the caller can continue"
+      ],
+      "answer": 3,
+      "explanation": "Idempotent APIs return the same outcome for a repeated request; that makes retries after lost responses safe."
+    },
+    {
+      "type": "single",
+      "scenario": "The statements screen needs each transaction with the account holder's name, which lives in another service.",
+      "question": "Which approach respects service boundaries?",
+      "options": [
+        "Copying the other service's table nightly by direct DB access",
+        "A read model fed by the other service's events, or API composition at query time",
+        "Moving both into one table",
+        "A SQL join across the two services' databases"
+      ],
+      "answer": 1,
+      "explanation": "Without cross-service joins, compose via APIs or keep a local, event-fed copy you own."
+    },
+    {
+      "type": "single",
+      "scenario": "ITL Pay's services are only eventually consistent with each other.",
+      "question": "Which rule must be enforced with strong consistency inside a single service?",
+      "options": [
+        "Notification delivery order",
+        "No overdraft: the available-balance check and debit in one local transaction in Accounts",
+        "The statement screen showing the very latest transaction",
+        "Marketing email preferences"
+      ],
+      "answer": 1,
+      "explanation": "Put rules that must never break inside one service's transaction; let views and side effects be eventually consistent."
+    },
+    {
+      "type": "single",
+      "scenario": "Transfers crashes after Accounts reserved the funds but before Ledger posting.",
+      "question": "How does a well-designed system continue?",
+      "options": [
+        "The transfer's persisted RESERVED state is picked up and the next idempotent step is repeated",
+        "The customer must call support",
+        "The hold stays forever",
+        "All transfers are restarted from scratch"
+      ],
+      "answer": 0,
+      "explanation": "Persisting state after each step plus idempotent steps make resuming safe."
+    },
+    {
+      "type": "single",
+      "scenario": "Despite sagas and idempotency, a manual DB fix left one POSTED transfer without a ledger journal.",
+      "question": "What catches it?",
+      "options": [
+        "A daily reconciliation comparing transfers, holds and journals, with an alert when breaks are found",
+        "Java's garbage collector",
+        "Customer complaints",
+        "The circuit breaker"
+      ],
+      "answer": 0,
+      "explanation": "Reconciliation is the safety net banks rely on: independent records compared, breaks investigated."
+    }
+  ]
+}

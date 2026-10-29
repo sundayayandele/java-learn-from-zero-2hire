@@ -1834,6 +1834,96 @@
         "why": "Behavioural interviews made simple: structure and practice (optional)."
       }
     ],
+    "10.1": [
+      {
+        "id": "NdeTGlZ__Do",
+        "title": "Monolithic vs Microservice Architecture: Which To Use and When?",
+        "channel": "Alex Hyett",
+        "minutes": 10.7,
+        "published": "2023-03-17",
+        "why": "When a monolith is the right choice and when services pay off."
+      },
+      {
+        "id": "8SPVfacnFvM",
+        "title": "Domain-Driven Design: Bounded Contexts Explained! 🚀",
+        "channel": "ByteMonk",
+        "minutes": 14.0,
+        "published": "2025-04-20",
+        "why": "Bounded contexts and subdomains with clear examples."
+      },
+      {
+        "id": "xHlDyKVyvig",
+        "title": "Introduction to Spring Modulith - Modular Monoliths in Spring Boot",
+        "channel": "Dan Vega",
+        "minutes": 37.5,
+        "published": "2026-04-30",
+        "optional": true,
+        "why": "Building a modular monolith with Spring Modulith, step by step."
+      }
+    ],
+    "10.2": [
+      {
+        "id": "3XEpq_Thzdo",
+        "title": "What is Spring Cloud Gateway in Microservices?",
+        "channel": "Java Guides",
+        "minutes": 4.3,
+        "published": "2025-06-28",
+        "why": "What an API gateway does in a Spring microservices system, in four minutes."
+      },
+      {
+        "id": "2AtL7qvTjOg",
+        "title": "Spring Boot Microservices Tutorial - Part 5 - Spring Cloud Gateway MVC",
+        "channel": "Programming Techie",
+        "minutes": 13.3,
+        "published": "2024-04-16",
+        "why": "Routing services through Spring Cloud Gateway MVC, the servlet flavour this programme uses."
+      },
+      {
+        "id": "EKoq98KqvrI",
+        "title": "Building an API Gateway in Java with Spring Cloud Gateway",
+        "channel": "Dan Vega",
+        "minutes": 23.0,
+        "published": "2023-10-04",
+        "why": "A fuller walk-through of building an API gateway with Spring Cloud Gateway."
+      }
+    ],
+    "10.3": [
+      {
+        "id": "dJI2saoM5_k",
+        "title": "Circuit Breaker Pattern in Microservices",
+        "channel": "ByteMonk",
+        "minutes": 9.9,
+        "published": "2024-06-21",
+        "why": "How circuit breakers stop cascading failures, with the three states explained."
+      },
+      {
+        "id": "HRS9mIfiNn4",
+        "title": "Introduction to circuit breaker in microservices (for beginners)",
+        "channel": "sudoCODE",
+        "minutes": 11.6,
+        "published": "2023-01-09",
+        "why": "Circuit breakers for beginners: thresholds, open, half-open and fallbacks."
+      }
+    ],
+    "10.4": [
+      {
+        "id": "DOFflggE_0Q",
+        "title": "Distributed Transactions Explained: 2 Phase Commit vs Saga Pattern",
+        "channel": "Hello Interview",
+        "minutes": 14.8,
+        "published": "2026-05-05",
+        "why": "Two-phase commit versus sagas, and why services avoid distributed transactions."
+      },
+      {
+        "id": "xDuwrtwYHu8",
+        "title": "Applying the Saga Pattern • Caitie McCaffrey • GOTO 2015",
+        "channel": "GOTO Conferences",
+        "minutes": 34.2,
+        "published": "2015-07-13",
+        "optional": true,
+        "why": "Caitie McCaffrey's classic talk on applying the saga pattern."
+      }
+    ],
     "getting-hired": [
       {
         "id": "na3gWTOBJEE",

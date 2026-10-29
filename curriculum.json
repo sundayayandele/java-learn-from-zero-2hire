@@ -639,7 +639,7 @@
       "slug": "03-enterprise-cloud-native",
       "title": "Enterprise & Cloud-Native",
       "weeks": "26-37",
-      "status": "planned",
+      "status": "building",
       "summary": "Microservices, Kafka, Kubernetes, AWS, observability, reactive Java and Spring AI, delivered through one capstone system.",
       "modules": [
         {
@@ -650,19 +650,31 @@
           "topics": [
             {
               "id": "10.1",
-              "title": "Domain-driven design and service boundaries"
+              "slug": "10.1-domain-driven-design-boundaries",
+              "title": "Domain-driven design and service boundaries",
+              "week": 26,
+              "covers": "Bounded contexts, aggregates and context maps; splitting a banking monolith; the modular monolith (Spring Modulith) as the first step"
             },
             {
               "id": "10.2",
-              "title": "Spring Cloud Gateway, centralised config and service discovery"
+              "slug": "10.2-gateway-config-discovery",
+              "title": "Spring Cloud Gateway, centralised config and service discovery",
+              "week": 26,
+              "covers": "Spring Cloud Gateway (server WebMvc), routing and filters, Spring Cloud Config, service discovery with Eureka versus Kubernetes DNS"
             },
             {
               "id": "10.3",
-              "title": "Resilience patterns: retries, timeouts, bulkheads, circuit breakers"
+              "slug": "10.3-resilience-between-services",
+              "title": "Resilience patterns: retries, timeouts, bulkheads, circuit breakers",
+              "week": 27,
+              "covers": "Builds on topic 5.4: Resilience4j and Spring Cloud CircuitBreaker between your own services, rate limiting at the gateway, timeouts budgets and graceful degradation"
             },
             {
               "id": "10.4",
-              "title": "Data consistency across services; distributed transactions"
+              "slug": "10.4-data-consistency-across-services",
+              "title": "Data consistency across services; distributed transactions",
+              "week": 27,
+              "covers": "Database per service, why two-phase commit is avoided, eventual consistency, idempotency and reconciliation across services"
             }
           ],
           "projects": [
@@ -672,29 +684,44 @@
         },
         {
           "number": 11,
-          "slug": "11-event-driven-kafka",
+          "slug": "11-event-driven-kafka-batch",
           "title": "Event-Driven Architecture with Kafka, and Batch Processing",
           "weeks": "28-29",
           "topics": [
             {
               "id": "11.1",
-              "title": "Apache Kafka: topics, partitions, consumer groups, ordering"
+              "slug": "11.1-kafka-fundamentals",
+              "title": "Apache Kafka: topics, partitions, consumer groups, ordering",
+              "week": 28,
+              "covers": "Topics, partitions, offsets, consumer groups, ordering by key, delivery guarantees and running Kafka locally in KRaft mode"
             },
             {
               "id": "11.2",
-              "title": "Spring for Apache Kafka; RabbitMQ / AMQP for comparison"
+              "slug": "11.2-spring-kafka-and-rabbitmq",
+              "title": "Spring for Apache Kafka; RabbitMQ / AMQP for comparison",
+              "week": 28,
+              "covers": "Spring for Apache Kafka producers and listeners, error handlers, testing with Testcontainers; RabbitMQ and AMQP for comparison"
             },
             {
               "id": "11.3",
-              "title": "Transactional outbox, sagas and idempotent consumers"
+              "slug": "11.3-outbox-sagas-idempotent-consumers",
+              "title": "Transactional outbox, sagas and idempotent consumers",
+              "week": 29,
+              "covers": "Transactional outbox, choreographed and orchestrated sagas with compensation, idempotent consumers and exactly-once myths"
             },
             {
               "id": "11.4",
-              "title": "Dead-letter topics, retries and schema evolution"
+              "slug": "11.4-dead-letters-retries-schemas",
+              "title": "Dead-letter topics, retries and schema evolution",
+              "week": 29,
+              "covers": "Retry topics and dead-letter topics, poison messages, schema evolution with Avro or JSON Schema and a schema registry"
             },
             {
               "id": "11.5",
-              "title": "Batch jobs and scheduling in banks: Spring Batch, chunking, restarts and end-of-day runs"
+              "slug": "11.5-spring-batch-end-of-day",
+              "title": "Batch jobs and scheduling in banks: Spring Batch, chunking, restarts and end-of-day runs",
+              "week": 29,
+              "covers": "Spring Batch jobs, steps and chunks, readers and writers, restartability, partitioning and scheduling end-of-day banking runs"
             }
           ],
           "projects": [
@@ -712,23 +739,38 @@
           "topics": [
             {
               "id": "12.1",
-              "title": "Kubernetes objects: Pods, Deployments, Services, Ingress, ConfigMaps, Secrets"
+              "slug": "12.1-kubernetes-objects",
+              "title": "Kubernetes objects: Pods, Deployments, Services, Ingress, ConfigMaps, Secrets",
+              "week": 30,
+              "covers": "Pods, Deployments, Services, Ingress, ConfigMaps and Secrets for a Spring Boot service, with kubectl"
             },
             {
               "id": "12.2",
-              "title": "Probes, resource limits and autoscaling for JVM workloads"
+              "slug": "12.2-probes-resources-autoscaling",
+              "title": "Probes, resource limits and autoscaling for JVM workloads",
+              "week": 30,
+              "covers": "Liveness, readiness and startup probes, JVM memory and CPU limits, graceful shutdown and the Horizontal Pod Autoscaler"
             },
             {
               "id": "12.3",
-              "title": "Helm charts and local clusters with kind or Minikube"
+              "slug": "12.3-helm-and-local-clusters",
+              "title": "Helm charts and local clusters with kind or Minikube",
+              "week": 30,
+              "covers": "Helm charts, values per environment, and local clusters with kind or Minikube"
             },
             {
               "id": "12.4",
-              "title": "AWS essentials: IAM, VPC, RDS, S3, EKS; overview of AKS, GKE and OpenShift"
+              "slug": "12.4-aws-essentials-eks",
+              "title": "AWS essentials: IAM, VPC, RDS, S3, EKS; overview of AKS, GKE and OpenShift",
+              "week": 31,
+              "covers": "IAM, VPC, RDS, S3 and EKS, with cost control; overview of AKS, GKE and OpenShift"
             },
             {
               "id": "12.5",
-              "title": "Infrastructure as Code with Terraform; GitOps with Argo CD"
+              "slug": "12.5-terraform-and-gitops",
+              "title": "Infrastructure as Code with Terraform; GitOps with Argo CD",
+              "week": 31,
+              "covers": "Infrastructure as code with Terraform, remote state and plans in CI; GitOps with Argo CD"
             }
           ],
           "projects": [
@@ -745,23 +787,38 @@
           "topics": [
             {
               "id": "13.1",
-              "title": "Distributed tracing with OpenTelemetry; metrics with Micrometer"
+              "slug": "13.1-opentelemetry-tracing-metrics",
+              "title": "Distributed tracing with OpenTelemetry; metrics with Micrometer",
+              "week": 32,
+              "covers": "Distributed tracing with OpenTelemetry and Micrometer Tracing, trace context across HTTP and Kafka, business metrics"
             },
             {
               "id": "13.2",
-              "title": "Prometheus and Grafana dashboards; structured logging"
+              "slug": "13.2-prometheus-grafana-logging",
+              "title": "Prometheus and Grafana dashboards; structured logging",
+              "week": 32,
+              "covers": "Prometheus scraping, PromQL, Grafana dashboards and alert rules, structured JSON logs with trace ids"
             },
             {
               "id": "13.3",
-              "title": "JVM profiling and heap analysis (JFR, heap dumps, memory leaks)"
+              "slug": "13.3-jvm-profiling-heap-analysis",
+              "title": "JVM profiling and heap analysis (JFR, heap dumps, memory leaks)",
+              "week": 33,
+              "covers": "Java Flight Recorder and Mission Control, async-profiler flame graphs, heap dumps and finding memory leaks"
             },
             {
               "id": "13.4",
-              "title": "Caching strategies with Redis; database tuning under load"
+              "slug": "13.4-caching-and-database-under-load",
+              "title": "Caching strategies with Redis; database tuning under load",
+              "week": 33,
+              "covers": "Cache-aside, write-through and stampede protection with Redis; connection pools, slow queries and locking under load"
             },
             {
               "id": "13.5",
-              "title": "Load testing with k6 or JMeter; SLOs, alerts and incident response"
+              "slug": "13.5-load-testing-slos-incidents",
+              "title": "Load testing with k6 or JMeter; SLOs, alerts and incident response",
+              "week": 33,
+              "covers": "Load tests with k6 or JMeter, SLIs, SLOs and error budgets, alerting on symptoms, incident response and postmortems"
             }
           ],
           "projects": [
@@ -772,21 +829,30 @@
         },
         {
           "number": 14,
-          "slug": "14-reactive-java",
+          "slug": "14-reactive-high-throughput",
           "title": "Reactive & High-Throughput Java",
           "weeks": "34",
           "topics": [
             {
               "id": "14.1",
-              "title": "Spring WebFlux and Project Reactor basics"
+              "slug": "14.1-webflux-reactor-basics",
+              "title": "Spring WebFlux and Project Reactor basics",
+              "week": 34,
+              "covers": "Spring WebFlux, Mono and Flux, backpressure, WebClient and server-sent events"
             },
             {
               "id": "14.2",
-              "title": "Reactive database access with R2DBC"
+              "slug": "14.2-r2dbc-reactive-data",
+              "title": "Reactive database access with R2DBC",
+              "week": 34,
+              "covers": "Reactive database access with R2DBC and Spring Data R2DBC, transactions and testing"
             },
             {
               "id": "14.3",
-              "title": "Reactive vs virtual threads: choosing the right model"
+              "slug": "14.3-reactive-vs-virtual-threads",
+              "title": "Reactive vs virtual threads: choosing the right model",
+              "week": 34,
+              "covers": "Choosing between reactive and virtual threads: throughput, latency, debugging and team cost, with a benchmark"
             }
           ],
           "projects": [
@@ -796,25 +862,37 @@
         },
         {
           "number": 15,
-          "slug": "15-spring-ai",
+          "slug": "15-ai-integration-spring-ai",
           "title": "AI Integration with Spring AI",
           "weeks": "35",
           "topics": [
             {
               "id": "15.1",
-              "title": "Spring AI ChatClient with hosted and open-source models"
+              "slug": "15.1-spring-ai-chatclient",
+              "title": "Spring AI ChatClient with hosted and open-source models",
+              "week": 35,
+              "covers": "Spring AI ChatClient with hosted and open-source models (Ollama), prompts, structured output and costs"
             },
             {
               "id": "15.2",
-              "title": "Retrieval-augmented generation (RAG) with pgvector"
+              "slug": "15.2-rag-with-pgvector",
+              "title": "Retrieval-augmented generation (RAG) with pgvector",
+              "week": 35,
+              "covers": "Retrieval-augmented generation: embeddings, chunking, pgvector, and grounding answers in your own documents"
             },
             {
               "id": "15.3",
-              "title": "Tool calling and exposing services via MCP (Model Context Protocol)"
+              "slug": "15.3-tool-calling-and-mcp",
+              "title": "Tool calling and exposing services via MCP (Model Context Protocol)",
+              "week": 35,
+              "covers": "Tool calling so a model can use your services safely, and exposing services through the Model Context Protocol (MCP)"
             },
             {
               "id": "15.4",
-              "title": "Guardrails, evaluation, cost and latency control"
+              "slug": "15.4-guardrails-evaluation-cost",
+              "title": "Guardrails, evaluation, cost and latency control",
+              "week": 35,
+              "covers": "Guardrails, prompt injection, evaluation sets, cost and latency control, and keeping customer data out of prompts"
             }
           ],
           "projects": [
@@ -830,23 +908,38 @@
           "topics": [
             {
               "id": "16.1",
-              "title": "Capstone build: digital wallet, loan origination, marketplace or logistics backend"
+              "slug": "16.1-capstone-build",
+              "title": "Capstone build: digital wallet, loan origination, marketplace or logistics backend",
+              "week": 36,
+              "covers": "Finish the capstone system (digital wallet, loan origination, marketplace or logistics backend)"
             },
             {
               "id": "16.2",
-              "title": "Live deployment on Kubernetes with CI/CD; ADRs, runbook and architecture diagrams"
+              "slug": "16.2-deployment-adrs-runbook",
+              "title": "Live deployment on Kubernetes with CI/CD; ADRs, runbook and architecture diagrams",
+              "week": 36,
+              "covers": "Live deployment on Kubernetes with CI/CD, architecture decision records, a runbook and architecture diagrams"
             },
             {
               "id": "16.3",
-              "title": "Observability dashboard and load-test report"
+              "slug": "16.3-observability-and-load-report",
+              "title": "Observability dashboard and load-test report",
+              "week": 37,
+              "covers": "An observability dashboard and a load-test report with findings and fixes"
             },
             {
               "id": "16.4",
-              "title": "System-design interview practice and STAR stories"
+              "slug": "16.4-system-design-interviews",
+              "title": "System-design interview practice and STAR stories",
+              "week": 37,
+              "covers": "System-design interview practice for intermediate roles, and STAR stories from your capstone"
             },
             {
               "id": "16.5",
-              "title": "Two mock interviews: technical and behavioural"
+              "slug": "16.5-mock-interviews",
+              "title": "Two mock interviews: technical and behavioural",
+              "week": 37,
+              "covers": "Two mock interviews, technical and behavioural, with written feedback"
             }
           ],
           "projects": [

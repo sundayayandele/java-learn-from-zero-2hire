@@ -2,7 +2,8 @@
 """Generate every README.md under phases/ from the authored sources.
 
 Authored (edit these):
-    curriculum.json                          phases, modules, topics, weeks
+    curriculum.json                          phases, modules, topics, weeks; a phase's status is "planned",
+                                             "building" (only topics with a lesson.md are published) or "built"
     phases/<phase>/phase.md                  phase introduction
     phases/<phase>/<module>/module.md        module introduction and projects
     phases/<phase>/<module>/<topic>/lesson.md   reading content
@@ -109,10 +110,10 @@ def build() -> dict[Path, str]:
     cur = load(ROOT / "curriculum.json")
     for phase in cur["phases"]:
         pdir = ROOT / "phases" / phase["slug"]
-        if phase["status"] != "built":
+        if phase["status"] == "planned":
             out[pdir / "README.md"] = planned_phase(phase, pdir)
             continue
-        flat = [(m, t) for m in phase["modules"] for t in m["topics"]]
+        flat = [(m, t) for m in phase["modules"] for t in m["topics"] if ready(pdir, m, t)]
         for idx, (mod, t) in enumerate(flat):
             mdir = pdir / mod["slug"]
             tdir = mdir / t["slug"]
@@ -134,9 +135,12 @@ def build() -> dict[Path, str]:
             out[tdir / "README.md"] = "\n".join(body)
         for mod in phase["modules"]:
             mdir = pdir / mod["slug"]
+            if not (mdir / "module.md").exists():      # a phase still being built: module not started yet
+                continue
             intro = (mdir / "module.md").read_text(encoding="utf-8").strip()
             rows = ["| Topic | Week | Covers (website wording) |", "| --- | --- | --- |"]
-            rows += [f"| [{t['id']} {t['title']}]({t['slug']}/README.md){optional_mark(t)} | {t['week']} | {t['covers']} |"
+            rows += [(f"| [{t['id']} {t['title']}]({t['slug']}/README.md){optional_mark(t)}" if ready(pdir, mod, t)
+                      else f"| {t['id']} {t['title']} (coming soon)") + f" | {t['week']} | {t['covers']} |"
                      for t in mod["topics"]]
             check = mdir / "entry-check.json"
             out[mdir / "README.md"] = "\n".join([
@@ -158,6 +162,10 @@ def build() -> dict[Path, str]:
             watch_section(VIDEOS["topics"].get(video_key, [])), ""])
     out[ROOT / "CURRICULUM.md"] = curriculum_md(cur)
     return out
+
+
+def ready(pdir: Path, mod: dict, t: dict) -> bool:
+    return (pdir / mod["slug"] / t["slug"] / "lesson.md").exists()
 
 
 def short(title: str) -> str:
@@ -187,17 +195,18 @@ def curriculum_md(cur: dict) -> str:
     lines.append("")
     total_topics = optional_topics = 0
     for phase in cur["phases"]:
-        status = "built" if phase["status"] == "built" else "planned"
+        status = {"built": "built", "building": "being built"}.get(phase["status"], "planned")
+        pdir = ROOT / "phases" / phase["slug"]
         lines += [f"## Phase {phase['number']}: {phase['title']} (weeks {phase['weeks']}) · {status}", "",
                   phase["summary"], ""]
         for mod in phase["modules"]:
             link = f"[Module {mod['number']}: {mod['title']}](phases/{phase['slug']}/{mod['slug']}/README.md)" \
-                if status == "built" else f"Module {mod['number']}: {mod['title']}"
+                if (pdir / mod["slug"] / "module.md").exists() else f"Module {mod['number']}: {mod['title']}"
             lines += [f"### {link} ({weeks_label(mod['weeks'])}){optional_mark(mod)}", ""]
             for t in mod["topics"]:
                 total_topics += 1
                 optional_topics += bool(t.get("optional") or mod.get("optional"))
-                if status == "built":
+                if status != "planned" and ready(pdir, mod, t):
                     lines.append(f"- [{t['id']} {t['title']}](phases/{phase['slug']}/{mod['slug']}/{t['slug']}/README.md){optional_mark(t)}")
                 else:
                     lines.append(f"- {t['id']} {t['title']}")

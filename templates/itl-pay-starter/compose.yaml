@@ -1,0 +1,17 @@
+# ITL Pay v0.1 locally: ./mvnw -q package -DskipTests && docker compose up --build
+# Only the gateway publishes a port; the services reach each other by name on Compose's network.
+services:
+  accounts:
+    build: ./accounts
+  transfers:
+    build: ./transfers
+    environment:
+      ACCOUNTS_URL: http://accounts:8081
+  gateway:
+    build: ./gateway
+    environment:
+      ACCOUNTS_URL: http://accounts:8081
+      TRANSFERS_URL: http://transfers:8082
+    ports:
+      - "8080:8080"
+    depends_on: [accounts, transfers]

@@ -35,11 +35,13 @@ def check_cbts() -> list[str]:
     cur = json.loads((ROOT / "curriculum.json").read_text(encoding="utf-8"))
     videos = json.loads((ROOT / "lms" / "videos.json").read_text(encoding="utf-8"))["topics"]
     for phase in cur["phases"]:
-        if phase["status"] != "built":
+        if phase["status"] == "planned":
             continue
         for mod in phase["modules"]:
             for t in mod["topics"]:
                 tdir = ROOT / "phases" / phase["slug"] / mod["slug"] / t["slug"]
+                if phase["status"] == "building" and not (tdir / "lesson.md").exists():
+                    continue      # not written yet; the phase page lists it as coming
                 if not videos.get(t["id"]):
                     problems.append(f"topic {t['id']}: no videos in lms/videos.json")
                 if not (tdir / "lesson.md").exists():

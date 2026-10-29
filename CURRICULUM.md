@@ -141,16 +141,16 @@ Projects: Team workflow with peer PR reviews; Dockerised Spring Boot + Postgres 
 
 Projects: Polished junior portfolio (4-5 projects) with READMEs; Mock technical interview with feedback; Tailored CV and application plan.
 
-## Phase 3: Enterprise & Cloud-Native (weeks 26-37) · planned
+## Phase 3: Enterprise & Cloud-Native (weeks 26-37) · being built
 
 Microservices, Kafka, Kubernetes, AWS, observability, reactive Java and Spring AI, delivered through one capstone system.
 
-### Module 10: Microservices & Distributed Systems (weeks 26-27)
+### [Module 10: Microservices & Distributed Systems](phases/03-enterprise-cloud-native/10-microservices-distributed-systems/README.md) (weeks 26-27)
 
-- 10.1 Domain-driven design and service boundaries
-- 10.2 Spring Cloud Gateway, centralised config and service discovery
-- 10.3 Resilience patterns: retries, timeouts, bulkheads, circuit breakers
-- 10.4 Data consistency across services; distributed transactions
+- [10.1 Domain-driven design and service boundaries](phases/03-enterprise-cloud-native/10-microservices-distributed-systems/10.1-domain-driven-design-boundaries/README.md)
+- [10.2 Spring Cloud Gateway, centralised config and service discovery](phases/03-enterprise-cloud-native/10-microservices-distributed-systems/10.2-gateway-config-discovery/README.md)
+- [10.3 Resilience patterns: retries, timeouts, bulkheads, circuit breakers](phases/03-enterprise-cloud-native/10-microservices-distributed-systems/10.3-resilience-between-services/README.md)
+- [10.4 Data consistency across services; distributed transactions](phases/03-enterprise-cloud-native/10-microservices-distributed-systems/10.4-data-consistency-across-services/README.md)
 
 Projects: E-commerce services: User, Product, Order, Payment; Banking services: Account, Transaction, Notification.
 

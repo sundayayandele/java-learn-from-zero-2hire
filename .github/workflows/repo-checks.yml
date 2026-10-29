@@ -34,6 +34,7 @@ jobs:
           - phases/02-professional-backend/capstones/03-card-tokenisation-vault/starter
           - labs/04-boot3-to-4-upgrade
           - labs/08-broken-pipeline-and-container/app
+          - templates/itl-pay-starter
         include:
           # The practice tracks are graded against their reference solutions; learners' stubs fail by design.
           - project: practice/dsa

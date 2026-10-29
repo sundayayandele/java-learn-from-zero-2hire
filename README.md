@@ -17,7 +17,7 @@ It implements the [ITLearning Java Backend Engineer Training Program](https://it
 | --- | --- | --- |
 | [Phase 1: Foundations](phases/01-foundations/README.md) | 0–14 | **Built**: a week-0 on-ramp, 36 topics (5 optional), 10 capstones, exam, defence, live coding, Getting Hired |
 | [Phase 2: Professional Backend](phases/02-professional-backend/README.md) | 15–25 | **Built**: 27 topics, 10 capstones, 5 labs, exam, defence, live coding, Getting Hired |
-| [Phase 3: Enterprise & Cloud-Native](phases/03-enterprise-cloud-native/README.md) | 26–37 | Mapped, to be built after the Phase 1 review |
+| [Phase 3: Enterprise & Cloud-Native](phases/03-enterprise-cloud-native/README.md) | 26–37 | **Being built**: Module 10 (microservices) ready, with the [ITL Pay starter](templates/itl-pay-starter/README.md) for the capstone system; Modules 11–16 follow |
 
 The [full curriculum](CURRICULUM.md) lists every phase, module and topic.
 

@@ -1,0 +1,109 @@
+{
+  "topic": "10.1",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A team of five building a new wallet product proposes 12 microservices from day one because 'that's how big fintechs do it'.",
+      "question": "What is the best advice?",
+      "options": [
+        "Use one service per database table",
+        "Start with a modular monolith with clear module boundaries, and extract a service when there's a concrete reason such as independent release cadence or very different load",
+        "Build all 12 services now so they never need splitting later",
+        "Split by technical layer: a controller service, a service service and a repository service"
+      ],
+      "answer": 1,
+      "explanation": "Services buy independence and scaling at the cost of network calls, distributed data and operations. A small team should pay that cost only where it buys something."
+    },
+    {
+      "type": "single",
+      "scenario": "Onboarding, Payments and the Ledger all use the word 'account', each with different fields and rules. One shared `Account` class now has 60 fields.",
+      "question": "What does DDD suggest?",
+      "options": [
+        "Rename the class to AccountDto",
+        "Add more optional fields to the shared class",
+        "Treat them as separate bounded contexts, each with its own Account model, translating at the boundaries",
+        "Store the account as JSON so every team can add fields"
+      ],
+      "answer": 2,
+      "explanation": "A bounded context is where one model and vocabulary apply consistently. Different meanings of the same word signal different contexts."
+    },
+    {
+      "type": "single",
+      "scenario": "ITL Pay must integrate with NIBSS NIP, whose ISO message fields and codes don't match the team's transfer model.",
+      "question": "Which context-map relationship fits?",
+      "options": [
+        "Conformist: use NIP's message classes everywhere in the code",
+        "A shared kernel containing NIBSS's full schema",
+        "Shared database with NIBSS",
+        "An anti-corruption layer that translates NIP messages into the team's own model at the edge"
+      ],
+      "answer": 3,
+      "explanation": "An ACL keeps an external, awkward model from leaking into your domain; only the adapter knows NIP's format."
+    },
+    {
+      "type": "single",
+      "scenario": "A `Customer` aggregate contains all the customer's accounts, cards and transactions. Two simultaneous transfers on different accounts of the same customer conflict on an optimistic lock.",
+      "question": "What is the design problem?",
+      "options": [
+        "Transactions should be stored in the session",
+        "Transfers should be processed one at a time for the whole bank",
+        "The aggregate is too large; make Account its own aggregate and reference others by id",
+        "Optimistic locking should be turned off"
+      ],
+      "answer": 2,
+      "explanation": "Aggregates should be small consistency boundaries. One transaction changes one aggregate; others are referenced by id."
+    },
+    {
+      "type": "single",
+      "scenario": "The Accounts and Transfers services both read and write the `account` table in one shared database 'to keep things simple'.",
+      "question": "What is the consequence?",
+      "options": [
+        "It enables two-phase commit automatically",
+        "Better performance with no downsides",
+        "They can't be changed or deployed independently: a schema change in one breaks the other, so it's effectively one service with two deployments",
+        "None, as long as both use JPA"
+      ],
+      "answer": 2,
+      "explanation": "Database per service is what makes services independent. Others use the owner's API or events."
+    },
+    {
+      "type": "single",
+      "scenario": "A Spring Modulith project has modules `account` and `notification`. `ApplicationModules.of(App.class).verify()` fails after a change in notification.",
+      "question": "What most likely happened?",
+      "options": [
+        "Notification now uses a type from a sub-package of account (an internal type) or the modules depend on each other in a cycle",
+        "Module names must be plural",
+        "Spring Modulith doesn't support events",
+        "The test needs a running database"
+      ],
+      "answer": 0,
+      "explanation": "By default a module's API is the public types in its base package; sub-packages are internal. verify() also rejects cycles."
+    },
+    {
+      "type": "single",
+      "scenario": "Every release of your 'microservices' requires deploying Accounts, Transfers and Ledger together, and one request makes a synchronous chain of six calls.",
+      "question": "What is this called?",
+      "options": [
+        "A modular monolith",
+        "A distributed monolith: the costs of services without their independence",
+        "Event sourcing",
+        "A service mesh"
+      ],
+      "answer": 1,
+      "explanation": "If services must be released together and fail together, the boundaries are wrong or the coupling too tight."
+    },
+    {
+      "type": "single",
+      "scenario": "You must replace a 15-year-old payments monolith without a big-bang cut-over.",
+      "question": "Which approach fits?",
+      "options": [
+        "Freeze all features for two years",
+        "Copy the monolith's database into each new service and let them all write to it",
+        "The strangler fig: route one capability at a time to new code behind a gateway, and delete the old path when it has no traffic",
+        "Rewrite everything and switch over on a weekend"
+      ],
+      "answer": 2,
+      "explanation": "Incremental replacement keeps risk small and lets you prove each piece in production."
+    }
+  ]
+}

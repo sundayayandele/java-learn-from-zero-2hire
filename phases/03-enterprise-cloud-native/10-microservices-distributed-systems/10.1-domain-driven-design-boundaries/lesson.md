@@ -1,0 +1,204 @@
+## What you will be able to do
+
+- Decide whether a system should be split into services at all, and argue the trade-offs in an interview.
+- Find bounded contexts with domain-driven design (DDD): ubiquitous language, contexts and a context map.
+- Model aggregates, entities, value objects and domain events so each service protects its own rules.
+- Build a modular monolith with Spring Modulith and test that its modules respect their boundaries.
+- Split a monolith gradually with the strangler-fig pattern, and recognise a "distributed monolith".
+
+## Why this matters in a bank or fintech
+
+Most Nigerian banks run a core banking system (Finacle, T24, Flexcube) surrounded by dozens of services: channels, payments, cards, KYC, fraud, notifications. Fintechs such as payment processors started as one application and split it as teams and volume grew. The hard part is never the framework; it's deciding **where the lines go**. Draw them badly and every change needs five teams, every transfer makes ten network calls, and one slow service takes the whole platform down. Interviewers for intermediate roles ask "how would you split this?" precisely because it reveals judgement.
+
+## 1. Should you split at all?
+
+Services aren't a goal. They buy specific things and cost others:
+
+| You gain | You pay |
+| --- | --- |
+| Teams deploy independently | Network calls that can be slow or fail |
+| Each part scales on its own (statements at month end, transfers on salary day) | Data spread across databases: no joins, no single transaction |
+| A failure can be contained | Tracing a request across services needs observability (Module 13) |
+| Different parts can use different storage or runtimes | More pipelines, more deployments, more on-call |
+
+A useful rule: **start with a well-structured monolith, and extract a service when you have a concrete reason**: a team that needs its own release cadence, a part with very different load or availability needs, or a regulatory boundary (card data under PCI DSS is often isolated). "Microservices are modern" is not a reason.
+
+## 2. Ubiquitous language and bounded contexts
+
+DDD starts with words. In a bank, "account" means different things to different people:
+
+- To **customer onboarding**, an account is an application with KYC status and documents.
+- To **payments**, it's a NUBAN that can send and receive, with limits and a status.
+- To the **ledger**, it's a set of balanced journal entries.
+- To **cards**, it's whatever a PAN is linked to.
+
+Forcing one `Account` class to serve all of them produces a 60-field object nobody understands. A **bounded context** is a boundary inside which one model and one vocabulary apply consistently. Inside the Payments context, "account" means one thing; the Ledger context has its own model, and the two translate at the edge.
+
+How to find contexts:
+
+1. **Listen for the language changing.** When the same word means something different, or teams use different words for one thing, you're crossing a boundary.
+2. **Follow the business capabilities**: onboarding, accounts, transfers, ledger, cards, fraud, notifications, statements.
+3. **Run an event-storming session**: write every business event on a sticky note in past tense ("Customer verified", "Transfer requested", "Funds reserved", "Transfer posted", "Statement generated"), order them in time, then group them. Clusters of events and the rules around them suggest contexts.
+4. **Check who changes it**: things that change together for the same reason belong together.
+
+## 3. The context map
+
+A **context map** shows the contexts and how they relate. The relationships matter as much as the boxes:
+
+| Relationship | Meaning | Banking example |
+| --- | --- | --- |
+| **Customer–supplier** | The downstream team's needs shape the upstream's API | Transfers (customer) needs a "reserve funds" API from Accounts (supplier) |
+| **Conformist** | Downstream simply uses the upstream model as it is | A reporting service reading the ledger's schema |
+| **Anti-corruption layer (ACL)** | Downstream translates an awkward external model into its own | An adapter that turns NIBSS NIP messages into your `Transfer` model, so ISO codes don't leak everywhere |
+| **Published language** | A documented, shared format | ISO 20022 payment messages; your OpenAPI contracts |
+| **Shared kernel** | Two contexts share a small piece of model | A `Money` value type in a shared library (keep it tiny) |
+
+For ITL Pay, a first map might be:
+
+```
+ [Onboarding/KYC] --customer-supplier--> [Accounts] <--customer-supplier-- [Transfers] --ACL--> [NIBSS / partner banks]
+                                             |                                  |
+                                             v (events)                         v (events)
+                                         [Ledger]  ------------------------> [Notifications]
+                                                                              [Fraud screening]
+```
+
+Write it down as an architecture decision record (ADR 1 in your capstone), including what you deliberately **didn't** split and why.
+
+## 4. Inside a context: aggregates, entities, value objects, events
+
+**Value objects** are defined by their values and immutable: `Money(BigDecimal amount, Currency currency)`, `Nuban(String value)`. Records fit perfectly (topic 1.8), with validation in the compact constructor.
+
+**Entities** have an identity that persists while their attributes change: a `Customer`, an `Account`.
+
+An **aggregate** is a cluster of objects treated as one unit for changes, with one **root** that enforces the rules. Everything inside changes in one transaction; other aggregates are referenced **by id only**.
+
+```java
+public class Account {                         // aggregate root
+    private final AccountId id;
+    private Money available;
+    private AccountStatus status;
+    private final Map<String, Hold> holds = new HashMap<>();   // inside the aggregate
+
+    public Hold reserve(String reference, Money amount) {
+        if (status != AccountStatus.ACTIVE) throw new AccountNotActiveException(id);
+        if (holds.containsKey(reference)) return holds.get(reference);   // idempotent
+        if (available.isLessThan(amount)) throw new InsufficientFundsException(id, amount);
+        available = available.minus(amount);
+        Hold hold = new Hold(reference, amount);
+        holds.put(reference, hold);
+        return hold;
+    }
+}
+```
+
+Rules of thumb that interviewers like to hear:
+
+- **Keep aggregates small.** "Customer with all accounts, cards and transactions" is far too big: every transfer would lock the customer.
+- **One transaction changes one aggregate.** If a use case must change two aggregates, change one and let a **domain event** ("FundsReserved") trigger the other, accepting a short delay (topic 10.4).
+- **Invariants live in the root.** Nobody outside sets `available` directly.
+
+## 5. Service boundaries: what to avoid
+
+- **Entity services:** `CustomerService`, `AccountService`, `AddressService`, each a CRUD wrapper over one table. Every business operation then needs several of them, so they always deploy together. Split by **capability** (transfers, onboarding), not by noun.
+- **A shared database:** two services reading and writing the same tables are one service with two deployments. Each service owns its data; others go through its API or its events.
+- **The distributed monolith:** services that must be released together, call each other synchronously in long chains, and fail together. You pay every cost of services and get none of the benefits.
+- **Too small, too early:** a team of four running twelve services spends its time on plumbing.
+
+## 6. Start with a modular monolith: Spring Modulith
+
+A **modular monolith** is one deployable application whose packages are real modules with enforced boundaries. It gives you most of the design benefits with none of the network costs, and makes a later split mechanical. **Spring Modulith** (2.x for Spring Boot 4) turns each direct sub-package of your application's package into a module:
+
+```
+ng.itlearning.pay.accounts            ← AccountsApplication
+├── account                           ← module: its top-level public types are its API
+│   ├── AccountController.java
+│   ├── FundsReserved.java            (public event)
+│   └── internal/...                  (sub-packages are hidden from other modules)
+└── notification                      ← module
+    └── ReservationNotifier.java
+```
+
+Modules talk through **public types** and, preferably, **application events**:
+
+```java
+// in the account module
+events.publishEvent(new FundsReserved(id, req.reference(), req.amount()));
+
+// in the notification module
+@Component
+class ReservationNotifier {
+    @EventListener
+    void on(FundsReserved event) {
+        log.info("notify: {} reserved on {} for {}", event.amount(), event.accountId(), event.reference());
+    }
+}
+```
+
+And a test fails the build when a module reaches into another's internals or modules depend on each other in a cycle:
+
+```java
+class ModularityTests {
+    @Test
+    void modulesOnlyUseEachOthersPublicApi() {
+        ApplicationModules.of(AccountsApplication.class).verify();
+    }
+}
+```
+
+Add `spring-modulith-starter-core` and `spring-modulith-starter-test` (start.spring.io's "Spring Modulith" entry). For listeners that must run after the publishing transaction commits, and survive a crash, Modulith offers `@ApplicationModuleListener` with an **event publication registry** that stores events in your database until they're processed: a stepping stone to the transactional outbox in topic 11.3.
+
+When a module later needs its own deployment, its events become Kafka messages and its public API becomes HTTP: the boundary is already right.
+
+## 7. Splitting an existing system: the strangler fig
+
+Big-bang rewrites of banking systems fail. The **strangler-fig pattern** replaces a monolith piece by piece:
+
+1. Put a **gateway or routing layer** in front of the monolith (topic 10.2).
+2. Build the new service for one capability (say, transfer limits) and route just those requests to it.
+3. Keep data in sync during the transition (events, or the new service owning writes and publishing changes).
+4. When the old code path has no traffic, delete it. Repeat.
+
+Pick the first capability by **business value and low coupling**: something with clear inputs and outputs that changes often.
+
+## Worked example: ITL Pay's first split
+
+ITL Pay starts as one Spring Boot application. The team agrees, in ADR 1:
+
+- **Accounts** owns balances, holds and account status. It exposes `GET /accounts/{id}` and `POST /accounts/{id}/holds` (idempotent by reference) and publishes `FundsReserved`.
+- **Transfers** owns transfer requests and their state (`REQUESTED → RESERVED → POSTED`, or `REJECTED`). It calls Accounts to reserve funds and records the outcome.
+- **Ledger** owns double-entry journals. It consumes events and is the system of record for money movements; nothing else writes to it.
+- **Notifications** stays a module inside Accounts for now: no team needs to deploy it separately yet.
+- **Not split:** onboarding and KYC remain in the existing platform behind an anti-corruption layer.
+
+Each service gets its own PostgreSQL schema and credentials, so a shortcut through someone else's tables is impossible. The gateway routes `/api/accounts/**` and `/api/transfers/**`.
+
+## Common mistakes
+
+- Splitting by entity (one service per table) instead of by business capability.
+- Sharing a database between services "temporarily".
+- Aggregates that include whole object graphs, so every change locks the customer.
+- Synchronous call chains five services deep for one user request.
+- Drawing boundaries before talking to the people who run the business process.
+- Ignoring the cost side: no tracing, no runbooks, more services than engineers.
+
+## Practice
+
+1. Run a 30-minute event-storming session (alone or with a peer) for "a customer sends money to another bank's customer". List at least 15 events and group them into contexts.
+2. Draw ITL Pay's context map and label every relationship. Write ADR 1 with one rejected alternative.
+3. Model `Money`, `Nuban` and `TransferId` as records with validation, and an `Account` aggregate whose `reserve` method is idempotent.
+4. Create a Spring Modulith project with `account` and `notification` modules, publish an event from one to the other, and add the `verify()` test. Then make `notification` call a class in `account.internal` and watch the test fail.
+5. For a monolith you know (a Phase 2 capstone), propose the first service to extract with the strangler fig, and say why.
+
+## Key terms
+
+Bounded context, ubiquitous language, context map, customer–supplier, conformist, anti-corruption layer, published language, shared kernel, event storming, aggregate, aggregate root, entity, value object, domain event, invariant, modular monolith, Spring Modulith, application module, strangler fig, distributed monolith.
+
+## Further reading
+
+- [Martin Fowler: Bounded Context](https://martinfowler.com/bliki/BoundedContext.html)
+- [Martin Fowler: Microservice Prerequisites](https://martinfowler.com/bliki/MicroservicePrerequisites.html)
+- [Martin Fowler: Strangler Fig Application](https://martinfowler.com/bliki/StranglerFigApplication.html)
+- [Spring Modulith reference documentation](https://docs.spring.io/spring-modulith/reference/)
+- [Microsoft: Using domain analysis to model microservices](https://learn.microsoft.com/en-us/azure/architecture/microservices/model/domain-analysis)
+- Eric Evans, *Domain-Driven Design* (2003), and Vaughn Vernon, *Domain-Driven Design Distilled* (2016)

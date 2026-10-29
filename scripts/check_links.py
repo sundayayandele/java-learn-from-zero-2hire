@@ -25,7 +25,7 @@ SKIP_HOSTS = ("localhost", "127.0.0.1", "example", "yourname.dev", "<")
 UA = {"User-Agent": "Mozilla/5.0 (java-zero-hire link check)"}
 # These sites answer 403 to scripts but work in a browser (checked by hand on 2026-10-22 and 2026-10-29).
 BOT_BLOCKING_HOSTS = ("dev.mysql.com", "consumerfinance.gov", "leetcode.com", "hackerrank.com", "sec.gov",
-                      "paystack.com", "iso20022.org", "ffiec.cfpb.gov", "education.oracle.com")
+                      "paystack.com", "iso20022.org", "ffiec.cfpb.gov", "education.oracle.com", "queue.acm.org")
 FENCE = re.compile(r"^(```|~~~).*?^\1", re.M | re.S)
 
 

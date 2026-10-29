@@ -1,0 +1,109 @@
+{
+  "topic": "10.2",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "The gateway team adds a rule: 'transfers over ₦5,000,000 need approval', implemented as a gateway filter.",
+      "question": "What's wrong with this?",
+      "options": [
+        "Business rules belong in the owning service; a gateway full of business logic becomes a new monolith",
+        "It should be a predicate instead of a filter",
+        "Nothing; the gateway is the right place",
+        "Gateways can't read request bodies"
+      ],
+      "answer": 0,
+      "explanation": "Gateways handle cross-cutting edge concerns: routing, auth, limits, headers. Domain rules live in the service that owns them."
+    },
+    {
+      "type": "single",
+      "scenario": "A route has `Path=/api/accounts/**` and the accounts service serves `/accounts/{id}`. Requests return 404 from the service.",
+      "question": "Which filter fixes it?",
+      "options": [
+        "`Method=GET`",
+        "`Weight=accounts, 100`",
+        "`AddRequestHeader=X-Prefix, api`",
+        "`StripPrefix=1`, so /api/accounts/A1 is forwarded as /accounts/A1"
+      ],
+      "answer": 3,
+      "explanation": "StripPrefix removes the given number of path segments before forwarding."
+    },
+    {
+      "type": "single",
+      "scenario": "The gateway validates JWTs. Inside the cluster, services accept any request because 'the gateway already checked'.",
+      "question": "What is the risk?",
+      "options": [
+        "Tokens expire faster",
+        "The gateway becomes slower",
+        "No risk; internal networks are always trusted",
+        "Anything that reaches a service directly (a misconfigured port, a compromised pod) bypasses authentication; services should validate tokens too"
+      ],
+      "answer": 3,
+      "explanation": "Zero trust: validate identity at each service, not only at the edge."
+    },
+    {
+      "type": "single",
+      "scenario": "Three gateway instances each enforce '100 requests per minute per partner' with an in-memory bucket. A partner reaches 300 a minute.",
+      "question": "Why?",
+      "options": [
+        "Each instance counts separately; the limit needs a shared store such as Redis to apply across instances",
+        "Rate limits only apply to POST",
+        "The partner sent requests with GET",
+        "Bucket4j doesn't support minutes"
+      ],
+      "answer": 0,
+      "explanation": "Distributed rate limiting needs shared state, or the effective limit is multiplied by the number of instances."
+    },
+    {
+      "type": "single",
+      "scenario": "A team stores database passwords in the Git repository used by Spring Cloud Config, because it's private.",
+      "question": "What should they do?",
+      "options": [
+        "Put them in the gateway",
+        "Make the repository public so it can be audited",
+        "Base64-encode them in the repository",
+        "Keep secrets in a secrets manager (Vault, AWS Secrets Manager, Kubernetes Secrets) and only reference them from config"
+      ],
+      "answer": 3,
+      "explanation": "Config repositories are widely readable and keep history forever; secrets need a dedicated store with access control and rotation."
+    },
+    {
+      "type": "single",
+      "scenario": "A client service has `spring.config.import=optional:configserver:http://config:8888`. The config server is down at start-up.",
+      "question": "What happens?",
+      "options": [
+        "The service starts with its local defaults, because the import is optional",
+        "Spring generates random values",
+        "The service refuses to start",
+        "The gateway serves the config instead"
+      ],
+      "answer": 0,
+      "explanation": "`optional:` lets a service start without the config server; use it only where the defaults are safe."
+    },
+    {
+      "type": "single",
+      "scenario": "ITL Pay will run on Kubernetes. A developer wants to add a Eureka server for service discovery.",
+      "question": "What is the usual recommendation?",
+      "options": [
+        "Use Kubernetes Services and cluster DNS, which already provide discovery and load balancing across ready pods",
+        "Eureka is mandatory for Spring Cloud Gateway",
+        "Use both and register every pod twice",
+        "Hard-code pod IP addresses"
+      ],
+      "answer": 0,
+      "explanation": "On Kubernetes, Services give stable names and readiness-aware load balancing without another component to run."
+    },
+    {
+      "type": "single",
+      "scenario": "A route uses the predicate `Weight=rates, 90` to `rates-v1` and `Weight=rates, 10` to `rates-v2`.",
+      "question": "What does this achieve?",
+      "options": [
+        "Only requests with a weight header are routed",
+        "Both versions receive every request",
+        "A canary release: about 10% of matching requests go to the new version",
+        "Requests are retried 10 times"
+      ],
+      "answer": 2,
+      "explanation": "Weight predicates split traffic between routes in the same group by percentage."
+    }
+  ]
+}

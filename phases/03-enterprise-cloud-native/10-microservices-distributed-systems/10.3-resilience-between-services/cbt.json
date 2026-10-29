@@ -1,0 +1,109 @@
+{
+  "topic": "10.3",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "Transfers calls Accounts with no timeout. On salary day Accounts slows to 20 s per call and Transfers stops answering entirely.",
+      "question": "What happened?",
+      "options": [
+        "The JVM ran out of heap",
+        "The gateway blocked Transfers",
+        "Accounts crashed Transfers' database",
+        "A cascading failure: waiting calls exhausted Transfers' threads, so the slowness spread upstream"
+      ],
+      "answer": 3,
+      "explanation": "Unbounded waits tie up resources. Bound every call with timeouts and stop calling a failing dependency."
+    },
+    {
+      "type": "single",
+      "scenario": "The gateway timeout is 8 s, Transfers' timeout to Accounts is 30 s.",
+      "question": "What is wrong?",
+      "options": [
+        "Timeouts must all be equal",
+        "Gateways shouldn't have timeouts",
+        "Callees must time out before callers; otherwise the caller gives up while work (possibly moving money) continues",
+        "Nothing; longer is safer"
+      ],
+      "answer": 2,
+      "explanation": "Treat timeouts as a budget spent down the chain, each hop shorter than its caller."
+    },
+    {
+      "type": "single",
+      "scenario": "A wave of 'insufficient funds' responses (422) opens the circuit breaker to Accounts, and all transfers fail for 10 seconds.",
+      "question": "What should change?",
+      "options": [
+        "Retry 422 responses three times",
+        "Return 200 for insufficient funds",
+        "Configure the breaker to ignore client errors such as HttpClientErrorException, so business rejections don't count as failures",
+        "Lower the failure-rate threshold"
+      ],
+      "answer": 2,
+      "explanation": "A 4xx is the other service doing its job; only outages (timeouts, connection errors, 5xx) should trip the breaker."
+    },
+    {
+      "type": "single",
+      "scenario": "The circuit breaker to Accounts is OPEN.",
+      "question": "What happens to new calls?",
+      "options": [
+        "They are queued until Accounts recovers",
+        "They are rejected immediately without calling Accounts, and the fallback runs, until the wait duration ends and trial calls are allowed",
+        "They go to a random other service",
+        "They're sent twice"
+      ],
+      "answer": 1,
+      "explanation": "Failing fast protects both sides; half-open trial calls test recovery."
+    },
+    {
+      "type": "single",
+      "scenario": "The mobile app, the gateway and Transfers each retry failed calls 3 times.",
+      "question": "What can a single failure in Accounts turn into?",
+      "options": [
+        "Up to 27 calls to Accounts, amplifying load exactly when it's struggling",
+        "No calls, because retries cancel out",
+        "Exactly 3 calls",
+        "1 call, because retries are merged"
+      ],
+      "answer": 0,
+      "explanation": "Retry at one layer only, with backoff and jitter, within the time budget."
+    },
+    {
+      "type": "single",
+      "scenario": "Transfers wants to retry `POST /accounts/{id}/holds` after a timeout.",
+      "question": "When is that safe?",
+      "options": [
+        "Never; holds can't be retried",
+        "Only on weekends",
+        "Always; POST is idempotent",
+        "When the request carries a business key (the transfer reference) that Accounts uses to return the original result for a repeat"
+      ],
+      "answer": 3,
+      "explanation": "Retries are safe only for idempotent operations; an idempotency key makes a POST idempotent."
+    },
+    {
+      "type": "single",
+      "scenario": "The balance service is down. A developer's fallback returns the cached balance from yesterday without saying so.",
+      "question": "What's the problem?",
+      "options": [
+        "Caches are always accurate",
+        "It presents stale money data as current; an honest fallback labels it with its time or returns a clear error",
+        "Balances shouldn't be cached at all",
+        "Fallbacks must throw exceptions"
+      ],
+      "answer": 1,
+      "explanation": "Fallbacks are product decisions about risk; they must never invent or hide the age of money facts."
+    },
+    {
+      "type": "single",
+      "scenario": "A slow fraud-check dependency starts using all of Transfers' connections, slowing balance checks too.",
+      "question": "Which pattern limits the damage?",
+      "options": [
+        "A larger thread pool for everything",
+        "Removing timeouts",
+        "Caching fraud decisions forever",
+        "A bulkhead that caps concurrent calls to the fraud service"
+      ],
+      "answer": 3,
+      "explanation": "Bulkheads isolate resources per dependency so one slow dependency can't starve the rest."
+    }
+  ]
+}

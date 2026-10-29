@@ -1,0 +1,23 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: gateway
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          routes:
+            - id: accounts
+              uri: ${ACCOUNTS_URL:http://localhost:8081}
+              predicates:
+                - Path=/api/accounts/**
+              filters:
+                - StripPrefix=1
+            - id: transfers
+              uri: ${TRANSFERS_URL:http://localhost:8082}
+              predicates:
+                - Path=/api/transfers/**
+              filters:
+                - StripPrefix=1
+                - AddRequestHeader=X-Gateway, itl-pay
