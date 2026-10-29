@@ -141,6 +141,8 @@ Done (24 October 2026), built with the same settings as Phase 1 (each activity's
 
 Each course summary, which is shown on the enrolment page, explains both routes. The approval plugin `enrol_apply` was not used: it supports Moodle only up to 4.1. Email sign-up has reCAPTCHA, manual enrolment stays available and guest access is off.
 
+**Learner journey test** (`scripts/moodle/journey_test.php`, run on 29 October 2026): it creates test learners and walks Phase 1 end to end through Moodle's APIs, from sign-up to course completion and the certificate. Everything passed. Re-run it before each cohort. The certificates' scope text was updated to the current requirements (32 or 27 topic quizzes, viva, live coding, checkpoint; Phase 2 needs two capstones). The capstone defence now requires Capstone 1 passed.
+
 **Privacy and policies** (since 29 October 2026):
 
 - **Policies:** a privacy notice and terms of use (texts in [policies/](policies/)) are compulsory in Moodle's policies tool. New learners accept them at sign-up and existing users at their next sign-in. Anyone can read them at `/admin/tool/policy/viewall.php`. The operator is ITLearning, a subsidiary of SaamSoft Systems Nig Ltd, Lagos; privacy requests go to info@itlearning.ng.
