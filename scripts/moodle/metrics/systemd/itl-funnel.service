@@ -1,0 +1,7 @@
+[Unit]
+Description=Write the itlearning.tech learner funnel metrics
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/itl-funnel

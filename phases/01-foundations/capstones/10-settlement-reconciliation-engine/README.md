@@ -108,7 +108,7 @@ Each pass works only on records still unmatched. Implement the first pass as a s
 
 ## Data
 
-| | |
+| Item | Details |
 | --- | --- |
 | Base transactions (optional) | **PaySim** (CC BY-SA 4.0): <https://www.kaggle.com/datasets/ealaxi/paysim1>. Attribution: E. A. Lopez-Rojas, A. Elmir, S. Axelsson, "PaySim: A financial mobile money simulator for fraud detection", EMSS 2016. Derived files you redistribute must be CC BY-SA 4.0 |
 | Synthetic files | Produced by your own generator: release them under CC0 |

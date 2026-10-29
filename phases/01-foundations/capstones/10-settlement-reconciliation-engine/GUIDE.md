@@ -15,8 +15,8 @@ Work through the steps in order. Each step ends with a **Done when** check: don'
 ## Step 1: Create your repository from the starter
 
 ```bash
-git clone https://github.com/sundayayandele/java-zero-hire.git
-mkdir settlement-reconciliation-engine && cp -R java-zero-hire/phases/01-foundations/capstones/10-settlement-reconciliation-engine/starter/. settlement-reconciliation-engine/
+git clone https://github.com/sundayayandele/java-learn-from-zero-2hire.git
+mkdir settlement-reconciliation-engine && cp -R java-learn-from-zero-2hire/phases/01-foundations/capstones/10-settlement-reconciliation-engine/starter/. settlement-reconciliation-engine/
 cd settlement-reconciliation-engine
 git init -b main && git add . && git commit -m "Start from the Settlement reconciliation engine starter"
 ```

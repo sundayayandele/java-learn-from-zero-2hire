@@ -15,8 +15,8 @@ Work through the steps in order. Each step ends with a **Done when** check: don'
 ## Step 1: Create your repository from the starter
 
 ```bash
-git clone https://github.com/sundayayandele/java-zero-hire.git
-mkdir loan-amortisation-service && cp -R java-zero-hire/phases/01-foundations/capstones/03-loan-amortisation-service/starter/. loan-amortisation-service/
+git clone https://github.com/sundayayandele/java-learn-from-zero-2hire.git
+mkdir loan-amortisation-service && cp -R java-learn-from-zero-2hire/phases/01-foundations/capstones/03-loan-amortisation-service/starter/. loan-amortisation-service/
 cd loan-amortisation-service
 git init -b main && git add . && git commit -m "Start from the Loan amortisation and repayment service starter"
 ```

@@ -1,0 +1,302 @@
+{
+  "uid": "itl-learners",
+  "title": "ITLearning learners",
+  "tags": [
+    "itlearning"
+  ],
+  "timezone": "Africa/Lagos",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "1h",
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "bargauge",
+      "title": "Phase 1 funnel",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "enrolled",
+          "expr": "sum(itl_funnel_learners{course=\"JAVA-Z2H-P1\",stage=\"enrolled\"})",
+          "legendFormat": "enrolled",
+          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        },
+        {
+          "refId": "active",
+          "expr": "sum(itl_funnel_learners{course=\"JAVA-Z2H-P1\",stage=\"active\"})",
+          "legendFormat": "active",
+          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        },
+        {
+          "refId": "week4",
+          "expr": "sum(itl_funnel_learners{course=\"JAVA-Z2H-P1\",stage=\"week4\"})",
+          "legendFormat": "week4",
+          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        },
+        {
+          "refId": "capstone1",
+          "expr": "sum(itl_funnel_learners{course=\"JAVA-Z2H-P1\",stage=\"capstone1\"})",
+          "legendFormat": "capstone1",
+          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        },
+        {
+          "refId": "exam",
+          "expr": "sum(itl_funnel_learners{course=\"JAVA-Z2H-P1\",stage=\"exam\"})",
+          "legendFormat": "exam",
+          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        },
+        {
+          "refId": "certificate",
+          "expr": "sum(itl_funnel_learners{course=\"JAVA-Z2H-P1\",stage=\"certificate\"})",
+          "legendFormat": "certificate",
+          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        },
+        {
+          "refId": "complete",
+          "expr": "sum(itl_funnel_learners{course=\"JAVA-Z2H-P1\",stage=\"complete\"})",
+          "legendFormat": "complete",
+          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        },
+        {
+          "refId": "job",
+          "expr": "sum(itl_funnel_learners{course=\"JAVA-Z2H-P1\",stage=\"job\"})",
+          "legendFormat": "job",
+          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "basic",
+        "showUnfilled": true,
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "decimals": 0,
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "description": "Learners who reached each stage, all cohorts: enrolled \u2192 visited the course \u2192 week-4 topic quiz \u2192 Capstone 1 passed \u2192 exam passed \u2192 certificate \u2192 course complete \u2192 job (graduate survey, Phase 2)."
+    },
+    {
+      "id": 2,
+      "type": "bargauge",
+      "title": "Phase 2 funnel",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "enrolled",
+          "expr": "sum(itl_funnel_learners{course=\"JAVA-Z2H-P2\",stage=\"enrolled\"})",
+          "legendFormat": "enrolled",
+          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        },
+        {
+          "refId": "active",
+          "expr": "sum(itl_funnel_learners{course=\"JAVA-Z2H-P2\",stage=\"active\"})",
+          "legendFormat": "active",
+          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        },
+        {
+          "refId": "week4",
+          "expr": "sum(itl_funnel_learners{course=\"JAVA-Z2H-P2\",stage=\"week4\"})",
+          "legendFormat": "week4",
+          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        },
+        {
+          "refId": "capstone1",
+          "expr": "sum(itl_funnel_learners{course=\"JAVA-Z2H-P2\",stage=\"capstone1\"})",
+          "legendFormat": "capstone1",
+          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        },
+        {
+          "refId": "exam",
+          "expr": "sum(itl_funnel_learners{course=\"JAVA-Z2H-P2\",stage=\"exam\"})",
+          "legendFormat": "exam",
+          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        },
+        {
+          "refId": "certificate",
+          "expr": "sum(itl_funnel_learners{course=\"JAVA-Z2H-P2\",stage=\"certificate\"})",
+          "legendFormat": "certificate",
+          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        },
+        {
+          "refId": "complete",
+          "expr": "sum(itl_funnel_learners{course=\"JAVA-Z2H-P2\",stage=\"complete\"})",
+          "legendFormat": "complete",
+          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        },
+        {
+          "refId": "job",
+          "expr": "sum(itl_funnel_learners{course=\"JAVA-Z2H-P2\",stage=\"job\"})",
+          "legendFormat": "job",
+          "instant": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "basic",
+        "showUnfilled": true,
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "decimals": 0,
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "description": "Learners who reached each stage, all cohorts: enrolled \u2192 visited the course \u2192 week-4 topic quiz \u2192 Capstone 1 passed \u2192 exam passed \u2192 certificate \u2192 course complete \u2192 job (graduate survey, Phase 2)."
+    },
+    {
+      "id": 3,
+      "type": "table",
+      "title": "Cohorts: enrolled and complete by enrolment month",
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (course, cohort, stage) (itl_funnel_cohort_learners)",
+          "instant": true,
+          "format": "table",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "Value": "learners"
+            }
+          }
+        }
+      ],
+      "description": "Run itl-funnel on the server for the full per-cohort table with every stage."
+    }
+  ]
+}

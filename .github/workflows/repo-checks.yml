@@ -51,3 +51,28 @@ jobs:
       - name: Build and test ${{ matrix.project }}
         working-directory: ${{ matrix.project }}
         run: ./mvnw -B verify ${{ matrix.args }}
+
+  # The course targets Java 21; the starters and the practice track must also build on Java 25, the current LTS (review item 17).
+  java25:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - templates/spring-boot-service-starter
+          - templates/spring-boot-secure-service-starter
+          - templates/java-cli-starter
+        include:
+          - project: practice/dsa
+            args: -Psolutions
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+          cache-dependency-path: ${{ matrix.project }}/pom.xml
+      - name: Build and test ${{ matrix.project }} on Java 25
+        working-directory: ${{ matrix.project }}
+        run: ./mvnw -B verify ${{ matrix.args }}

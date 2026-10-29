@@ -109,7 +109,7 @@ The score is a base (e.g. 600) plus the sum of rule points, then mapped to a **r
 
 ## Data
 
-| | |
+| Item | Details |
 | --- | --- |
 | Dataset | **Default of Credit Card Clients**, UCI Machine Learning Repository: 30,000 card holders in Taiwan (2005), credit limit, demographics, repayment status, bill and payment amounts for six months, default next month (yes/no) |
 | Download | <https://archive.ics.uci.edu/dataset/350/default+of+credit+card+clients> |

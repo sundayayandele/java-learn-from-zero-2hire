@@ -108,7 +108,7 @@ The engine evaluates every enabled rule (pattern-matching `switch` over the seal
 
 ## Data
 
-| | |
+| Item | Details |
 | --- | --- |
 | Dataset | **PaySim**: synthetic mobile money transactions, 6,362,620 rows with types CASH_IN, CASH_OUT, DEBIT, PAYMENT, TRANSFER, balances before and after, and an `isFraud` label |
 | Download | <https://www.kaggle.com/datasets/ealaxi/paysim1> (free Kaggle account; ~470 MB CSV) |

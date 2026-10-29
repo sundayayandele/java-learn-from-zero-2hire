@@ -98,7 +98,7 @@ You'll build that system using the **CFPB's public complaint database** as a rea
 
 ## Data
 
-| | |
+| Item | Details |
 | --- | --- |
 | Dataset | **CFPB Consumer Complaint Database** |
 | Download | <https://files.consumerfinance.gov/ccdb/complaints.csv.zip> (several GB unzipped: filter while streaming, or keep the last 12 months). Overview: <https://www.consumerfinance.gov/data-research/consumer-complaints/> |

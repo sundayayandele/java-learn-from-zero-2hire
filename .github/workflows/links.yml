@@ -1,0 +1,21 @@
+# Weekly check of every external link in the Markdown sources (scripts/check_links.py). Separate from repo-checks
+# so a third-party site being down never blocks a push; a failure here means a link to fix or a host to review.
+name: links
+
+on:
+  schedule:
+    - cron: "17 5 * * 1"   # Mondays 05:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - run: python scripts/check_links.py

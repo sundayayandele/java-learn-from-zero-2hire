@@ -2,7 +2,7 @@
 
 ← [Phase 1](../README.md)
 
-| | |
+| Item | Details |
 | --- | --- |
 | When | Week 14, after all 31 core topic CBTs are attempted |
 | Where | Moodle (itlearning.tech), "Phase 1 end-of-phase exam" quiz |
@@ -26,7 +26,7 @@ The exam samples every core Phase 1 topic, weighted by how much each module matt
 | 4. Spring Boot 4 | 14 | 23% | DI and auto-configuration (4.1), HTTP and REST basics (4.2), MVC, validation, Problem Details (4.3), JPA and N+1 (4.4), configuration and secrets (4.5), Actuator (4.6), Boot 3 → 4 (4.7), Spring under the hood (4.8) |
 | **Total** | **60** | **100%** | |
 
-The optional topics (1.13 Kotlin, 1.14 Localization, 2.5 Modules and jlink, 4.9 Spring Boot with Kotlin) and the week-0 on-ramp aren't examined.
+The optional topics (1.13 Kotlin, 1.14 Localization, 1.15 Java 22 to 25, 2.5 Modules and jlink, 4.9 Spring Boot with Kotlin) and the week-0 on-ramp aren't examined.
 
 ## What the questions look like
 

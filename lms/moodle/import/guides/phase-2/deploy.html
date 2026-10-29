@@ -7,7 +7,7 @@ how you deploy them: an <strong>identity provider</strong> that issues
 the JWTs, <strong>outbound integrations</strong> (payment providers,
 registries, partner APIs) with secrets, and sometimes <strong>inbound
 webhooks</strong> from those partners. This guide builds on the <a
-href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/deploy/README.md">Phase 1 deployment
+href="https://github.com/sundayayandele/java-learn-from-zero-2hire/blob/main/phases/01-foundations/deploy/README.md">Phase 1 deployment
 guide</a>: do its steps for your target first (server hardening, Docker,
 database, registry, backups), then apply the Phase 2 additions
 below.</p>
@@ -117,7 +117,7 @@ lazily.</p>
 <h2 id="3-vps-app-postgresql-and-keycloak-behind-caddy">3. VPS: app,
 PostgreSQL and Keycloak behind Caddy</h2>
 <p>Follow sections 3.1–3.3 of the <a
-href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/deploy/README.md#3-deploy-to-a-vps">Phase 1
+href="https://github.com/sundayayandele/java-learn-from-zero-2hire/blob/main/phases/01-foundations/deploy/README.md#3-deploy-to-a-vps">Phase 1
 guide</a> (create, secure, install Docker). Point two DNS records at the
 server: <code>api.yourname.dev</code> and
 <code>auth.yourname.dev</code>.</p>
@@ -233,9 +233,9 @@ with a token and without one (401).</p>
 <code>keycloak</code>) daily, as in Phase 1 section 3.6.</p>
 <h2 id="4-aws-azure-and-gcp">4. AWS, Azure and GCP</h2>
 <p>Deploy the app exactly as in Phase 1 (<a
-href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/deploy/README.md#4-deploy-to-aws">AWS</a>, <a
-href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/deploy/README.md#5-deploy-to-azure">Azure</a>,
-<a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/deploy/README.md#6-deploy-to-gcp">GCP</a>)
+href="https://github.com/sundayayandele/java-learn-from-zero-2hire/blob/main/phases/01-foundations/deploy/README.md#4-deploy-to-aws">AWS</a>, <a
+href="https://github.com/sundayayandele/java-learn-from-zero-2hire/blob/main/phases/01-foundations/deploy/README.md#5-deploy-to-azure">Azure</a>,
+<a href="https://github.com/sundayayandele/java-learn-from-zero-2hire/blob/main/phases/01-foundations/deploy/README.md#6-deploy-to-gcp">GCP</a>)
 and add the environment variables from section 2. For the identity
 provider you have two choices:</p>
 <p><strong>A. Keycloak in a container (recommended for the
@@ -333,7 +333,7 @@ image scan, and its SBOM is stored with the release.</label></li>
 <li><label><input type="checkbox" />Both databases (app and identity
 provider) are backed up and a restore has been tested.</label></li>
 <li><label><input type="checkbox" />Everything from the <a
-href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/deploy/README.md#7-production-checklist">Phase
+href="https://github.com/sundayayandele/java-learn-from-zero-2hire/blob/main/phases/01-foundations/deploy/README.md#7-production-checklist">Phase
 1 production checklist</a> still holds.</label></li>
 </ul>
 

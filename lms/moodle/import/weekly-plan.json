@@ -123,6 +123,11 @@
               "id": "1.14",
               "title": "Localization",
               "optional": true
+            },
+            {
+              "id": "1.15",
+              "title": "Java 22 to 25",
+              "optional": true
             }
           ],
           "milestone": "Module 1 project pushed with tests and green CI"

@@ -225,4 +225,4 @@ Over-fetching, under-fetching, GraphQL schema, query, mutation, resolver, `@Quer
 - [gRPC: Introduction and core concepts](https://grpc.io/docs/what-is-grpc/core-concepts/)
 - [Protocol Buffers: Language guide (proto3)](https://protobuf.dev/programming-guides/proto3/)
 - [Spring gRPC reference documentation](https://docs.spring.io/spring-grpc/reference/)
-- [Spring guide: Building a GraphQL service](https://spring.io/guides/gs/graphql-server)
+- [Spring guide: Building a GraphQL service](https://spring.io/guides/gs/graphql-server/)

@@ -1,0 +1,109 @@
+{
+  "topic": "1.15",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A team on Java 21 wants to adopt new features. A colleague proposes using `StructuredTaskScope` from Java 25 in the payment service right away.",
+      "question": "What should you point out?",
+      "options": [
+        "Nothing; every Java 25 feature is final",
+        "Structured concurrency is still a preview in Java 25: it needs `--enable-preview`, can change, and shouldn't go to production",
+        "It was removed in Java 25",
+        "It only works on platform threads"
+      ],
+      "answer": 1,
+      "explanation": "Preview features are complete but not yet stable. Use final features (scoped values, gatherers, flexible constructor bodies) in production; experiment with previews elsewhere."
+    },
+    {
+      "type": "single",
+      "scenario": "A bulk-payment partner accepts at most 100 transfers per request. You have a `List<Transfer>` of 4,350 transfers on Java 25.",
+      "question": "Which is the clearest way to split them?",
+      "options": [
+        "`transfers.stream().gather(Gatherers.windowFixed(100)).toList()`",
+        "`transfers.stream().limit(100).toList()`",
+        "`transfers.stream().collect(Collectors.groupingBy(t -> 100))`",
+        "`transfers.parallelStream().toList()`"
+      ],
+      "answer": 0,
+      "explanation": "`windowFixed(100)` emits consecutive lists of 100 (the last one smaller), with no index arithmetic to get wrong."
+    },
+    {
+      "type": "single",
+      "scenario": "On Java 21, a service using virtual threads stalls under load; JFR shows `jdk.VirtualThreadPinned` events inside a JDBC driver's `synchronized` methods.",
+      "question": "What does upgrading the runtime to Java 25 change?",
+      "options": [
+        "Nothing; pinning is unchanged",
+        "Since Java 24 (JEP 491), virtual threads can unmount inside `synchronized`, so this pinning goes away without changing the driver",
+        "Virtual threads are removed",
+        "`synchronized` becomes a compile error"
+      ],
+      "answer": 1,
+      "explanation": "Pinning on `synchronized` was the main practical limit of virtual threads in Java 21. Pinning in native code (JNI) still happens."
+    },
+    {
+      "type": "single",
+      "scenario": "A request ID is stored in a `ThreadLocal` so log lines deep in the call stack can include it. The team moves to Java 25 and one virtual thread per request.",
+      "question": "What does Java 25 offer that fits better?",
+      "options": [
+        "A static field",
+        "A `ScopedValue` bound with `ScopedValue.where(REQUEST_ID, id).run(...)`: immutable, cleared when the scope ends, cheap with many virtual threads",
+        "An `InheritableThreadLocal`",
+        "A system property"
+      ],
+      "answer": 1,
+      "explanation": "Scoped values (final in Java 25) share read-only context for a bounded scope, can't leak between requests, and are inherited by structured subtasks."
+    },
+    {
+      "type": "single",
+      "scenario": "A subclass constructor must reject a negative interest rate before calling `super(number)`. On Java 21 the team uses a static helper method inside the `super(...)` call.",
+      "question": "What does Java 25 allow instead?",
+      "options": [
+        "Nothing changes",
+        "Validation statements (that don't use `this`) before `super(...)`, thanks to flexible constructor bodies (JEP 513)",
+        "Calling `super(...)` twice",
+        "Constructors without `super` in any class"
+      ],
+      "answer": 1,
+      "explanation": "Code before `super(...)` may check arguments and even assign the subclass's own fields, so an invalid object is never partly built."
+    },
+    {
+      "type": "single",
+      "scenario": "A team sets `<maven.compiler.release>25</maven.compiler.release>` and merges. CI passes, but production fails at startup with `UnsupportedClassVersionError`.",
+      "question": "What went wrong?",
+      "options": [
+        "Maven can't build Java 25",
+        "The production image still runs Java 21; class files compiled for 25 need a Java 25 runtime. Upgrade runtimes first, then raise the release level",
+        "The jar is corrupt",
+        "Spring Boot 4 doesn't support Java 25"
+      ],
+      "answer": 1,
+      "explanation": "The compiler release level must not be higher than the oldest runtime that will run the code: CI agents, container images and servers."
+    },
+    {
+      "type": "single",
+      "scenario": "A memory-hungry service on Java 25 holds tens of millions of small objects. The team wants less heap use without code changes.",
+      "question": "Which option is designed for that?",
+      "options": [
+        "`-XX:+UseCompactObjectHeaders`, which shrinks object headers from 12 to 8 bytes (opt-in in Java 25)",
+        "`-Xss1m`",
+        "`--enable-preview`",
+        "`-XX:+UseSerialGC`"
+      ],
+      "answer": 0,
+      "explanation": "Compact object headers became a product feature in Java 25 but are off by default. Measure heap and GC before and after enabling them."
+    },
+    {
+      "type": "single",
+      "scenario": "On Java 25, a file `Hello.java` contains only `void main() { IO.println(\"Hello\"); }`.",
+      "question": "What happens with `java Hello.java`?",
+      "options": [
+        "A compile error: no class is declared",
+        "It runs and prints Hello: compact source files and instance main methods are final in Java 25, and `java.lang.IO` provides `println`",
+        "It needs `--enable-preview`",
+        "It runs only inside Spring Boot"
+      ],
+      "answer": 1,
+      "explanation": "JEP 512 made compact source files standard in Java 25, mainly for learning and small scripts. On Java 21 you still need a class and `public static void main(String[] args)`."
+    }
+  ]
+}

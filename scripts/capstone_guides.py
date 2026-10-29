@@ -401,8 +401,8 @@ SETUP = """## Before you start
 ## Step 1: Create your repository from the starter
 
 ```bash
-git clone https://github.com/sundayayandele/java-zero-hire.git
-mkdir {repo} && cp -R java-zero-hire/phases/01-foundations/capstones/{slug}/starter/. {repo}/
+git clone https://github.com/sundayayandele/java-learn-from-zero-2hire.git
+mkdir {repo} && cp -R java-learn-from-zero-2hire/phases/01-foundations/capstones/{slug}/starter/. {repo}/
 cd {repo}
 git init -b main && git add . && git commit -m "Start from the {title} starter"
 ```
@@ -491,8 +491,8 @@ SETUP_P2 = """## Before you start
 ## Step 1: Create your repository from the secure starter
 
 ```bash
-git clone https://github.com/sundayayandele/java-zero-hire.git
-mkdir {repo} && cp -R java-zero-hire/phases/02-professional-backend/capstones/{slug}/starter/. {repo}/
+git clone https://github.com/sundayayandele/java-learn-from-zero-2hire.git
+mkdir {repo} && cp -R java-learn-from-zero-2hire/phases/02-professional-backend/capstones/{slug}/starter/. {repo}/
 cd {repo}
 git init -b main && git add . && git commit -m "Start from the {title} starter"
 ```

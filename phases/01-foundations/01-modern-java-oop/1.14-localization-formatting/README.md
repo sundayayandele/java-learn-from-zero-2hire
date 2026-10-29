@@ -3,7 +3,7 @@
 
 # 1.14 Localization: locales, number, currency and date formatting, resource bundles
 
-← [1.13 Kotlin for Java developers](../1.13-kotlin-for-java-developers/README.md) · [Module 1](../README.md) · [Phase 1](../../README.md) · [2.1 Threads, ExecutorService and CompletableFuture](../../02-concurrency-jvm/2.1-threads-executors-completablefuture/README.md) →
+← [1.13 Kotlin for Java developers](../1.13-kotlin-for-java-developers/README.md) · [Module 1](../README.md) · [Phase 1](../../README.md) · [1.15 Java 22 to 25](../1.15-java-22-to-25/README.md) →
 
 > **Week 5** · **Optional** · Module 1: Modern Java & OOP Foundations · Website topic covered: *Added for the Oracle OCP Java SE 21/25 exam: localization*
 
@@ -263,4 +263,4 @@ What's wrong?
 
 ---
 
-← [1.13 Kotlin for Java developers](../1.13-kotlin-for-java-developers/README.md) · [Module 1](../README.md) · [Phase 1](../../README.md) · [2.1 Threads, ExecutorService and CompletableFuture](../../02-concurrency-jvm/2.1-threads-executors-completablefuture/README.md) →
+← [1.13 Kotlin for Java developers](../1.13-kotlin-for-java-developers/README.md) · [Module 1](../README.md) · [Phase 1](../../README.md) · [1.15 Java 22 to 25](../1.15-java-22-to-25/README.md) →

@@ -100,7 +100,7 @@ Every rate response includes the **date actually used** and the **attribution** 
 
 ## Data
 
-| | |
+| Item | Details |
 | --- | --- |
 | Source | European Central Bank, euro foreign exchange reference rates |
 | Files | <https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.zip>, <https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml> |

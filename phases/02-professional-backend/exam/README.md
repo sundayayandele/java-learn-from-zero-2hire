@@ -2,7 +2,7 @@
 
 ← [Phase 2](../README.md)
 
-| | |
+| Item | Details |
 | --- | --- |
 | When | Week 25, after all 27 Phase 2 topic CBTs are attempted |
 | Where | Moodle (itlearning.tech), "Phase 2 end-of-phase exam" quiz |

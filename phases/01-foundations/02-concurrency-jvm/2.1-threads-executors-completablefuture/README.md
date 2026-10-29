@@ -3,7 +3,7 @@
 
 # 2.1 Threads, ExecutorService and CompletableFuture
 
-← [1.14 Localization](../../01-modern-java-oop/1.14-localization-formatting/README.md) · [Module 2](../README.md) · [Phase 1](../../README.md) · [2.2 Race conditions, locks, atomics and concurrent collections](../2.2-race-conditions-locks-atomics/README.md) →
+← [1.15 Java 22 to 25](../../01-modern-java-oop/1.15-java-22-to-25/README.md) · [Module 2](../README.md) · [Phase 1](../../README.md) · [2.2 Race conditions, locks, atomics and concurrent collections](../2.2-race-conditions-locks-atomics/README.md) →
 
 > **Week 6** · Module 2: Concurrency & the JVM · Website topic covered: *Threads, ExecutorService, CompletableFuture*
 
@@ -340,4 +340,4 @@ What does the caller see?
 
 ---
 
-← [1.14 Localization](../../01-modern-java-oop/1.14-localization-formatting/README.md) · [Module 2](../README.md) · [Phase 1](../../README.md) · [2.2 Race conditions, locks, atomics and concurrent collections](../2.2-race-conditions-locks-atomics/README.md) →
+← [1.15 Java 22 to 25](../../01-modern-java-oop/1.15-java-22-to-25/README.md) · [Module 2](../README.md) · [Phase 1](../../README.md) · [2.2 Race conditions, locks, atomics and concurrent collections](../2.2-race-conditions-locks-atomics/README.md) →

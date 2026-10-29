@@ -2,7 +2,7 @@
 
 Five weeks to go from "I can write a small program" to writing clean, modern, tested Java 21 from the command line and the IDE, with every change in Git. The order is deliberate: tools and Git first (1.1, 1.2), the language (1.3–1.5), unit tests as soon as you have code worth testing (1.6), modern Java and clean code (1.7–1.10), then patterns and reading old code (1.11, 1.12) so you can work in real codebases from your first week on the job. If you have never programmed before, do the [week-0 on-ramp](../00-programming-on-ramp/README.md) first.
 
-**Optional:** 1.13 Kotlin and 1.14 Localization. Do them if your target employer uses Kotlin or you're preparing for the Oracle OCP exam; they aren't in the exam or the certificate requirements.
+**Optional:** 1.13 Kotlin, 1.14 Localization and 1.15 Java 22 to 25. Do them if your target employer uses Kotlin or Java 25, or you're preparing for the Oracle OCP exam; they aren't in the exam or the certificate requirements.
 
 **Weekly rhythm (16–19 hours, see the [phase plan](../README.md#how-much-time-this-phase-takes)):** read the lesson and code along (40%), watch the videos (15%), do the lesson's practice tasks (25%), take the topic CBT and aim for 70% (5%), and spend the rest on this module's project.
 

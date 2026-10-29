@@ -190,7 +190,7 @@ def find_or_create_course(m: Moodle, course: dict, category_id: int, n_sections:
         "categoryid": category_id, "format": "topics", "visible": 0, "enablecompletion": 1,
         "courseformatoptions": [{"name": "numsections", "value": n_sections}],
         "summary": "Self-paced, project-based Java backend training built on financial-institution use cases. "
-                   "Content and code: https://github.com/sundayayandele/java-zero-hire",
+                   "Content and code: https://github.com/sundayayandele/java-learn-from-zero-2hire",
         "summaryformat": 1}])
     print(f"created course {course['shortname']} (hidden until reviewed)")
     return int(created[0]["id"])

@@ -106,7 +106,7 @@ Products (configured in the database by a migration): name, method, annual rate 
 
 ## Data
 
-| | |
+| Item | Details |
 | --- | --- |
 | **World Bank WDI, `FR.INR.LEND`** | Lending interest rate (%) for Nigeria (`NGA`) and comparison countries. Use it to set realistic product rate ranges and as context in your README. API: `https://api.worldbank.org/v2/country/NGA/indicator/FR.INR.LEND?format=json`. **Licence: CC BY 4.0.** Attribution: "Source: World Bank, World Development Indicators (CC BY 4.0)." |
 | **UCI Statlog (German Credit Data)** | 1,000 real historical loan applications with **duration (months)** and **credit amount**. Use them as realistic test inputs: generate quotes for all 1,000, check every schedule sums exactly, and report the distribution of instalments. **Licence: CC BY 4.0.** Citation: Hofmann, H. (1994), UCI Machine Learning Repository, <https://doi.org/10.24432/C5NC77>. Amounts are in Deutsche Mark: treat them as illustrative units, or scale them and say so. |

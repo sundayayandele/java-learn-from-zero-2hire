@@ -16,8 +16,8 @@ Work through the steps in order. Each step ends with a **Done when** check: don'
 ## Step 1: Create your repository from the secure starter
 
 ```bash
-git clone https://github.com/sundayayandele/java-zero-hire.git
-mkdir fraud-case-management && cp -R java-zero-hire/phases/02-professional-backend/capstones/10-fraud-case-management/starter/. fraud-case-management/
+git clone https://github.com/sundayayandele/java-learn-from-zero-2hire.git
+mkdir fraud-case-management && cp -R java-learn-from-zero-2hire/phases/02-professional-backend/capstones/10-fraud-case-management/starter/. fraud-case-management/
 cd fraud-case-management
 git init -b main && git add . && git commit -m "Start from the Fraud case management service starter"
 ```

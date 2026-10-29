@@ -57,17 +57,17 @@ Every number must be real and reproducible from your repository. Link each proje
 Create a repository named exactly like your username; its `README.md` appears on your profile:
 
 ```markdown
-# Hi, I'm Ada 👋
+# Hi, I'm <your name> 👋
 Junior Java backend engineer building secure, tested payment and banking services.
 Looking for backend roles in Lagos or remote (Java, Spring Boot, PostgreSQL).
 
 **Featured projects**
-- [core-banking-ledger](https://github.com/ada/core-banking-ledger): double-entry ledger, concurrency-safe transfers · [live](https://ledger.ada.dev/actuator/health)
-- [payment-gateway-hub](https://github.com/ada/payment-gateway-hub): gateway integration, signed webhooks, resilience
-- [aml-monitoring](https://github.com/ada/aml-monitoring): SQL-driven AML scenarios over 5M transactions
+- [core-banking-ledger](https://github.com/your-username/core-banking-ledger): double-entry ledger, concurrency-safe transfers · [live](https://ledger.your-domain.dev/actuator/health)
+- [payment-gateway-hub](https://github.com/your-username/payment-gateway-hub): gateway integration, signed webhooks, resilience
+- [aml-monitoring](https://github.com/your-username/aml-monitoring): SQL-driven AML scenarios over 5M transactions
 
 **Stack:** Java 21 · Spring Boot 4 · PostgreSQL · Docker · GitHub Actions · Keycloak
-**Writing:** [How I made transfers idempotent](https://dev.to/ada/idempotent-transfers)
+**Writing:** [How I made transfers idempotent](https://dev.to/your-username/idempotent-transfers)
 ```
 
 ### Pinned repositories

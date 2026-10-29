@@ -93,7 +93,7 @@ You'll build an internal **LEI reference-data service**: bulk-load the global LE
 
 ## Data
 
-| | |
+| Item | Details |
 | --- | --- |
 | Dataset | **GLEIF LEI Golden Copy** (Level 1 and optional Level 2): 2.5 million+ entities worldwide |
 | Download | [GLEIF Golden Copy and delta files](https://www.gleif.org/en/lei-data/gleif-golden-copy); API for small tests: `https://api.gleif.org/api/v1/lei-records?filter[entity.legalAddress.country]=NG` |

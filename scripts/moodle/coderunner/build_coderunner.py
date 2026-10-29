@@ -32,7 +32,7 @@ DSA = ROOT / "practice" / "dsa"
 PKG = "ng/itlearning/practice"
 OUT = ROOT / "lms" / "moodle" / "import" / "coderunner"
 BUILD = ROOT / "build" / "coderunner"
-REPO_URL = "https://github.com/sundayayandele/java-zero-hire/blob/main"
+REPO_URL = "https://github.com/sundayayandele/java-learn-from-zero-2hire/blob/main"
 COURSE_CATEGORY = "Java Zero-to-Hired"
 JDK_IMAGE = "eclipse-temurin:21-jdk"
 

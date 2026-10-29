@@ -160,6 +160,14 @@
               "week": 5,
               "covers": "Added for the Oracle OCP Java SE 21/25 exam: localization",
               "optional": true
+            },
+            {
+              "id": "1.15",
+              "slug": "1.15-java-22-to-25",
+              "title": "Java 22 to 25: what's new since Java 21",
+              "week": 5,
+              "covers": "Added for the job: features finalised in Java 22-25 (unnamed variables, flexible constructor bodies, gatherers, scoped values, compact source files) and upgrading from 21 to 25",
+              "optional": true
             }
           ],
           "projects": [
@@ -665,7 +673,7 @@
         {
           "number": 11,
           "slug": "11-event-driven-kafka",
-          "title": "Event-Driven Architecture with Kafka",
+          "title": "Event-Driven Architecture with Kafka, and Batch Processing",
           "weeks": "28-29",
           "topics": [
             {
@@ -683,12 +691,17 @@
             {
               "id": "11.4",
               "title": "Dead-letter topics, retries and schema evolution"
+            },
+            {
+              "id": "11.5",
+              "title": "Batch jobs and scheduling in banks: Spring Batch, chunking, restarts and end-of-day runs"
             }
           ],
           "projects": [
             "Event-driven order and payment processing",
             "Real-time transaction notifications",
-            "Audit-logging pipeline"
+            "Audit-logging pipeline",
+            "End-of-day interest posting batch job that can restart after a failure"
           ]
         },
         {

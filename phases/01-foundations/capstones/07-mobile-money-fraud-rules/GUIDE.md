@@ -15,8 +15,8 @@ Work through the steps in order. Each step ends with a **Done when** check: don'
 ## Step 1: Create your repository from the starter
 
 ```bash
-git clone https://github.com/sundayayandele/java-zero-hire.git
-mkdir mobile-money-fraud-rules && cp -R java-zero-hire/phases/01-foundations/capstones/07-mobile-money-fraud-rules/starter/. mobile-money-fraud-rules/
+git clone https://github.com/sundayayandele/java-learn-from-zero-2hire.git
+mkdir mobile-money-fraud-rules && cp -R java-learn-from-zero-2hire/phases/01-foundations/capstones/07-mobile-money-fraud-rules/starter/. mobile-money-fraud-rules/
 cd mobile-money-fraud-rules
 git init -b main && git add . && git commit -m "Start from the Mobile money fraud rules engine starter"
 ```

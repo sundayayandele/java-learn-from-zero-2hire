@@ -16,8 +16,8 @@ Work through the steps in order. Each step ends with a **Done when** check: don'
 ## Step 1: Create your repository from the secure starter
 
 ```bash
-git clone https://github.com/sundayayandele/java-zero-hire.git
-mkdir bill-payments-aggregator && cp -R java-zero-hire/phases/02-professional-backend/capstones/08-bill-payments-aggregator/starter/. bill-payments-aggregator/
+git clone https://github.com/sundayayandele/java-learn-from-zero-2hire.git
+mkdir bill-payments-aggregator && cp -R java-learn-from-zero-2hire/phases/02-professional-backend/capstones/08-bill-payments-aggregator/starter/. bill-payments-aggregator/
 cd bill-payments-aggregator
 git init -b main && git add . && git commit -m "Start from the Bill payments aggregator starter"
 ```

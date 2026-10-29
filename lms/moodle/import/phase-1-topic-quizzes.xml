@@ -1942,6 +1942,129 @@
     <answer fraction="100" format="html"><text><![CDATA[A single quote starts a quoted section in MessageFormat; write two single quotes (Today''s) for a literal apostrophe]]></text><feedback format="html"><text></text></feedback></answer>
   </question>
   <question type="category">
+    <category><text>$course$/top/Java Zero-to-Hired/Phase 1/1.15 Java 22 to 25</text></category>
+  </question>
+  <question type="multichoice">
+    <name><text>1.15-Q01</text></name>
+    <questiontext format="html"><text><![CDATA[<p>A team on Java 21 wants to adopt new features. A colleague proposes using <code>StructuredTaskScope</code> from Java 25 in the payment service right away.</p><p><strong>What should you point out?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Preview features are complete but not yet stable. Use final features (scoped values, gatherers, flexible constructor bodies) in production; experiment with previews elsewhere.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[Nothing; every Java 25 feature is final]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[Structured concurrency is still a preview in Java 25: it needs <code>--enable-preview</code>, can change, and shouldn't go to production]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[It was removed in Java 25]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[It only works on platform threads]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>1.15-Q02</text></name>
+    <questiontext format="html"><text><![CDATA[<p>A bulk-payment partner accepts at most 100 transfers per request. You have a <code>List&lt;Transfer&gt;</code> of 4,350 transfers on Java 25.</p><p><strong>Which is the clearest way to split them?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p><code>windowFixed(100)</code> emits consecutive lists of 100 (the last one smaller), with no index arithmetic to get wrong.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="100" format="html"><text><![CDATA[<code>transfers.stream().gather(Gatherers.windowFixed(100)).toList()</code>]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[<code>transfers.stream().limit(100).toList()</code>]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[<code>transfers.stream().collect(Collectors.groupingBy(t -&gt; 100))</code>]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[<code>transfers.parallelStream().toList()</code>]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>1.15-Q03</text></name>
+    <questiontext format="html"><text><![CDATA[<p>On Java 21, a service using virtual threads stalls under load; JFR shows <code>jdk.VirtualThreadPinned</code> events inside a JDBC driver's <code>synchronized</code> methods.</p><p><strong>What does upgrading the runtime to Java 25 change?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Pinning on <code>synchronized</code> was the main practical limit of virtual threads in Java 21. Pinning in native code (JNI) still happens.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[Nothing; pinning is unchanged]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[Since Java 24 (JEP 491), virtual threads can unmount inside <code>synchronized</code>, so this pinning goes away without changing the driver]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Virtual threads are removed]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[<code>synchronized</code> becomes a compile error]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>1.15-Q04</text></name>
+    <questiontext format="html"><text><![CDATA[<p>A request ID is stored in a <code>ThreadLocal</code> so log lines deep in the call stack can include it. The team moves to Java 25 and one virtual thread per request.</p><p><strong>What does Java 25 offer that fits better?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Scoped values (final in Java 25) share read-only context for a bounded scope, can't leak between requests, and are inherited by structured subtasks.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[A static field]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[A <code>ScopedValue</code> bound with <code>ScopedValue.where(REQUEST_ID, id).run(...)</code>: immutable, cleared when the scope ends, cheap with many virtual threads]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[An <code>InheritableThreadLocal</code>]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[A system property]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>1.15-Q05</text></name>
+    <questiontext format="html"><text><![CDATA[<p>A subclass constructor must reject a negative interest rate before calling <code>super(number)</code>. On Java 21 the team uses a static helper method inside the <code>super(...)</code> call.</p><p><strong>What does Java 25 allow instead?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Code before <code>super(...)</code> may check arguments and even assign the subclass's own fields, so an invalid object is never partly built.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[Nothing changes]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[Validation statements (that don't use <code>this</code>) before <code>super(...)</code>, thanks to flexible constructor bodies (JEP 513)]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Calling <code>super(...)</code> twice]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Constructors without <code>super</code> in any class]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>1.15-Q06</text></name>
+    <questiontext format="html"><text><![CDATA[<p>A team sets <code>&lt;maven.compiler.release&gt;25&lt;/maven.compiler.release&gt;</code> and merges. CI passes, but production fails at startup with <code>UnsupportedClassVersionError</code>.</p><p><strong>What went wrong?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>The compiler release level must not be higher than the oldest runtime that will run the code: CI agents, container images and servers.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[Maven can't build Java 25]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[The production image still runs Java 21; class files compiled for 25 need a Java 25 runtime. Upgrade runtimes first, then raise the release level]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[The jar is corrupt]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[Spring Boot 4 doesn't support Java 25]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>1.15-Q07</text></name>
+    <questiontext format="html"><text><![CDATA[<p>A memory-hungry service on Java 25 holds tens of millions of small objects. The team wants less heap use without code changes.</p><p><strong>Which option is designed for that?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>Compact object headers became a product feature in Java 25 but are off by default. Measure heap and GC before and after enabling them.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="100" format="html"><text><![CDATA[<code>-XX:+UseCompactObjectHeaders</code>, which shrinks object headers from 12 to 8 bytes (opt-in in Java 25)]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[<code>-Xss1m</code>]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[<code>--enable-preview</code>]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[<code>-XX:+UseSerialGC</code>]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="multichoice">
+    <name><text>1.15-Q08</text></name>
+    <questiontext format="html"><text><![CDATA[<p>On Java 25, a file <code>Hello.java</code> contains only <code>void main() { IO.println("Hello"); }</code>.</p><p><strong>What happens with <code>java Hello.java</code>?</strong></p>]]></text></questiontext>
+    <generalfeedback format="html"><text><![CDATA[<p>JEP 512 made compact source files standard in Java 25, mainly for learning and small scripts. On Java 21 you still need a class and <code>public static void main(String[] args)</code>.</p>]]></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0.3333333</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>true</shuffleanswers>
+    <answernumbering>ABCD</answernumbering>
+    <answer fraction="0" format="html"><text><![CDATA[A compile error: no class is declared]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="100" format="html"><text><![CDATA[It runs and prints Hello: compact source files and instance main methods are final in Java 25, and <code>java.lang.IO</code> provides <code>println</code>]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[It needs <code>--enable-preview</code>]]></text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text><![CDATA[It runs only inside Spring Boot]]></text><feedback format="html"><text></text></feedback></answer>
+  </question>
+  <question type="category">
     <category><text>$course$/top/Java Zero-to-Hired/Phase 1/2.1 Threads, ExecutorService and CompletableFuture</text></category>
   </question>
   <question type="multichoice">

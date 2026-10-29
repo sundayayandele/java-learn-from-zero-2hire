@@ -293,6 +293,6 @@ Same Flyway migrations, same PostgreSQL, same Actuator endpoints, same Docker im
 
 - [Spring Boot reference: Kotlin support](https://docs.spring.io/spring-boot/reference/features/kotlin.html)
 - [Spring Framework reference: Kotlin](https://docs.spring.io/spring-framework/reference/languages/kotlin.html)
-- [Spring guide: Building web applications with Spring Boot and Kotlin](https://spring.io/guides/tutorials/spring-boot-kotlin)
+- [Spring guide: Building web applications with Spring Boot and Kotlin](https://spring.io/guides/tutorials/spring-boot-kotlin/)
 - [Kotlin docs: Compiler plugins: all-open and no-arg](https://kotlinlang.org/docs/all-open-plugin.html)
 - [Kotlin docs: Null safety](https://kotlinlang.org/docs/null-safety.html)

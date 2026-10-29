@@ -202,7 +202,7 @@ def curriculum_md(cur: dict) -> str:
                 else:
                     lines.append(f"- {t['id']} {t['title']}")
             lines += ["", "Projects: " + "; ".join(mod["projects"]) + ".", ""]
-    lines += [f"_{total_topics} topics in total, {optional_topics} of them optional (the week-0 on-ramp and four specialist topics)._", ""]
+    lines += [f"_{total_topics} topics in total, {optional_topics} of them optional (the week-0 on-ramp and five specialist topics)._", ""]
     return "\n".join(lines)
 
 

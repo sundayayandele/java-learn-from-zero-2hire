@@ -16,8 +16,8 @@ Work through the steps in order. Each step ends with a **Done when** check: don'
 ## Step 1: Create your repository from the secure starter
 
 ```bash
-git clone https://github.com/sundayayandele/java-zero-hire.git
-mkdir merchant-api-platform && cp -R java-zero-hire/phases/02-professional-backend/capstones/05-merchant-api-platform/starter/. merchant-api-platform/
+git clone https://github.com/sundayayandele/java-learn-from-zero-2hire.git
+mkdir merchant-api-platform && cp -R java-learn-from-zero-2hire/phases/02-professional-backend/capstones/05-merchant-api-platform/starter/. merchant-api-platform/
 cd merchant-api-platform
 git init -b main && git add . && git commit -m "Start from the Merchant onboarding and API key platform starter"
 ```

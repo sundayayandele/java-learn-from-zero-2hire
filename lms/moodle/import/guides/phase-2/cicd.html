@@ -2,7 +2,7 @@
 (Phase 2): quality gates on six platforms</h1>
 
 <p>Phase 1 gave every starter the same build-test-publish pipeline on
-six platforms (<a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/cicd/README.md">Phase 1
+six platforms (<a href="https://github.com/sundayayandele/java-learn-from-zero-2hire/blob/main/phases/01-foundations/cicd/README.md">Phase 1
 CI/CD guide</a>: read it first). Phase 2 adds <strong>quality
 gates</strong>: automatic checks that stop code from merging or images
 from shipping when they fall below the team's bar. This is what "the
@@ -92,7 +92,7 @@ reason and an expiry date, and get it reviewed like code.</p>
 <code>scan</code>, <code>dependency-review</code> (PRs only) and
 <code>image</code> (main only: build, scan, then push). To add the
 deployment from the <a
-href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/deploy/README.md#37-deploy-updates">Phase 1
+href="https://github.com/sundayayandele/java-learn-from-zero-2hire/blob/main/phases/01-foundations/deploy/README.md#37-deploy-updates">Phase 1
 guide</a>, add a <code>deploy</code> job with <code>needs: image</code>,
 and protect it with a GitHub <strong>environment</strong>
 (<code>environment: production</code>) that requires a reviewer: a

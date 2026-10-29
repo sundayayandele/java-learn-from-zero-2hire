@@ -101,8 +101,11 @@ The 403 for `portainer.itlearning.tech` and `mailgui.itlearning.tech` comes from
 | Database connections near the limit | Over 80% of the connection limit (50), for 10 min | warning |
 | Database slow queries | More than 5 slow queries in 15 min, for 10 min | warning |
 | Database connection errors | More than 10 aborted connections in 15 min, for 10 min | warning |
+| Off-site backup missing or old | The newest encrypted copy on the Jobe VPS is over 26 h old | critical |
+| Weekly plan messages failed | The last Monday run of `itl-weekly-plan` exited with an error | warning |
+| Weekly plan messages not sent | Nothing has gone out for more than 8 days, for 1 h | warning |
 
-The latency rules need a minimum of traffic, so a single slow request at night can't fire them. The rules are in [`grafana/provisioning/alerting/alerting.yml`](grafana/provisioning/alerting/alerting.yml). The later ones are generated from compact definitions in [`grafana/add_rules.py`](grafana/add_rules.py). Change them there and re-run the installer, so the server and the repository stay in step. After all 27 were installed, none was firing on the healthy system (63 alert instances checked).
+The latency rules need a minimum of traffic, so a single slow request at night can't fire them. The rules are in [`grafana/provisioning/alerting/alerting.yml`](grafana/provisioning/alerting/alerting.yml). The later ones are generated from compact definitions in [`grafana/add_rules.py`](grafana/add_rules.py). Change them there and re-run the installer, so the server and the repository stay in step. After the first 27 were installed, none was firing on the healthy system (63 alert instances checked).
 
 ### Where alerts go
 
@@ -193,3 +196,25 @@ The newest off-site copy was restored onto the Jobe VPS with [`restore-drill.sh`
 - restoring NPM's own data, which is not in the nightly backup (its proxy hosts are four entries, quick to re-create).
 
 **Repeat:** every quarter, and after any change to the backup script.
+
+## Learner timers (since 29 October 2026)
+
+Two more timers run on the Moodle server, installed from `scripts/moodle/weekly/` and `scripts/moodle/metrics/` (each has an `install.sh`):
+
+| Timer | When | What |
+| --- | --- | --- |
+| `itl-weekly-plan.timer` | Mondays 06:00 UTC | Each learner's plan for the week, nudges, the mentors' silent-learner digest, and graduate-survey invitations 3 and 6 months after Phase 2. Writes `itl_weekly_plan_*` metrics. |
+| `itl-funnel.timer` | Daily 05:00 UTC | The learner funnel (enrolled → active → week 4 → Capstone 1 → exam → certificate → complete → job) as `itl_funnel_*` metrics, shown on the **ITLearning learners** dashboard. Run `itl-funnel` by hand for the full table per enrolment-month cohort. |
+
+## Staging copy (since 29 October 2026)
+
+There's no permanent staging site. Before a Moodle upgrade, a plugin install or a big course change, bring up an anonymised copy of production on the Jobe VPS from the newest off-site backup, try the change there, then delete it:
+
+```bash
+sh ops/staging/staging.sh up        # on the operator's Mac; about 15 minutes
+ssh -N -L 8098:127.0.0.1:8098 jobe  # then open http://localhost:8098 and sign in as the admin
+sh ops/staging/staging.sh down
+```
+
+[`staging.sh`](../staging/staging.sh) decrypts the backup on the Jobe VPS (the key goes to `/dev/shm` and is shredded), rebuilds the image and restores with [`restore-drill.sh`](restore-drill.sh), then runs [`anonymise.sql`](../staging/anonymise.sql): every account except the admin becomes "Learner &lt;id&gt;" with no password, MFA or email; messages, notifications, forum posts, submissions, feedback comments, survey answers and logs are removed or blanked. The copy listens only on the Jobe VPS's loopback address, has no cron and never sends email. Take it down the same day: it still holds course data and the admin account.
+

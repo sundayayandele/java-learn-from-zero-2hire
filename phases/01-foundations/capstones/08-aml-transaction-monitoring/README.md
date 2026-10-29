@@ -102,7 +102,7 @@ Each scenario is a SQL query in a versioned file (`src/main/resources/scenarios/
 
 ## Data
 
-| | |
+| Item | Details |
 | --- | --- |
 | Dataset | **IBM Transactions for Anti Money Laundering (AMLworld)**: synthetic, labelled financial transactions generated from a multi-agent world model, with laundering typologies |
 | Download | <https://www.kaggle.com/datasets/ealtman2019/ibm-transactions-for-anti-money-laundering-aml> (free Kaggle account). Use **`HI-Small_Trans.csv`** (~5 million transactions) for Phase 1; the patterns file lists labelled laundering attempts by typology |

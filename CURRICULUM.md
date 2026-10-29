@@ -45,6 +45,7 @@ Projects: Market-stall receipt printer; Savings goal planner; Class score report
 - [1.12 Reading legacy Java 8/11/17 code and migrating it forward](phases/01-foundations/01-modern-java-oop/1.12-legacy-java-migration/README.md)
 - [1.13 Kotlin for Java developers](phases/01-foundations/01-modern-java-oop/1.13-kotlin-for-java-developers/README.md) (optional)
 - [1.14 Localization: locales, number, currency and date formatting, resource bundles](phases/01-foundations/01-modern-java-oop/1.14-localization-formatting/README.md) (optional)
+- [1.15 Java 22 to 25: what's new since Java 21](phases/01-foundations/01-modern-java-oop/1.15-java-22-to-25/README.md) (optional)
 
 Projects: Wallet & transfers simulator (accounts, transfers, statements); Library management CLI (loans, fines, reports); Payroll calculator with PAYE-style tax rules; Retail inventory manager with reorder alerts.
 
@@ -153,14 +154,15 @@ Microservices, Kafka, Kubernetes, AWS, observability, reactive Java and Spring A
 
 Projects: E-commerce services: User, Product, Order, Payment; Banking services: Account, Transaction, Notification.
 
-### Module 11: Event-Driven Architecture with Kafka (weeks 28-29)
+### Module 11: Event-Driven Architecture with Kafka, and Batch Processing (weeks 28-29)
 
 - 11.1 Apache Kafka: topics, partitions, consumer groups, ordering
 - 11.2 Spring for Apache Kafka; RabbitMQ / AMQP for comparison
 - 11.3 Transactional outbox, sagas and idempotent consumers
 - 11.4 Dead-letter topics, retries and schema evolution
+- 11.5 Batch jobs and scheduling in banks: Spring Batch, chunking, restarts and end-of-day runs
 
-Projects: Event-driven order and payment processing; Real-time transaction notifications; Audit-logging pipeline.
+Projects: Event-driven order and payment processing; Real-time transaction notifications; Audit-logging pipeline; End-of-day interest posting batch job that can restart after a failure.
 
 ### Module 12: Kubernetes, Helm & Cloud on AWS (weeks 30-31)
 
@@ -209,4 +211,4 @@ Projects: Customer-support assistant grounded in your API docs; Transaction-quer
 
 Projects: Digital wallet & payments platform; Loan origination system; Marketplace backend; Ride-hailing / logistics backend.
 
-_95 topics in total, 7 of them optional (the week-0 on-ramp and four specialist topics)._
+_97 topics in total, 8 of them optional (the week-0 on-ramp and five specialist topics)._

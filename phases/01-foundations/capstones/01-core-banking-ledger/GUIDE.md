@@ -15,8 +15,8 @@ Work through the steps in order. Each step ends with a **Done when** check: don'
 ## Step 1: Create your repository from the starter
 
 ```bash
-git clone https://github.com/sundayayandele/java-zero-hire.git
-mkdir core-banking-ledger && cp -R java-zero-hire/phases/01-foundations/capstones/01-core-banking-ledger/starter/. core-banking-ledger/
+git clone https://github.com/sundayayandele/java-learn-from-zero-2hire.git
+mkdir core-banking-ledger && cp -R java-learn-from-zero-2hire/phases/01-foundations/capstones/01-core-banking-ledger/starter/. core-banking-ledger/
 cd core-banking-ledger
 git init -b main && git add . && git commit -m "Start from the Core banking ledger starter"
 ```

@@ -14,7 +14,7 @@ Each topic page has three parts, and you should do them in this order:
 
 Then do the topic's **practice** tasks and, each module, at least one **module project**. From week 6, start your **capstones**. From week 3, spend about 3 hours a week on the [coding-interview practice track](../../practice/README.md): auto-graded Java and SQL problems in the format of the online assessments most employers use as their first filter.
 
-**Optional topics.** Four topics are marked *optional*: 1.13 Kotlin, 1.14 Localization, 2.5 Modules and `jlink`, and 4.9 Spring Boot with Kotlin. They matter for some employers and for the Oracle OCP exam, but rarely come up in junior Java backend interviews. They aren't in the exam or the certificate requirements; do them if you have time or your target employer uses them.
+**Optional topics.** Five topics are marked *optional*: 1.13 Kotlin, 1.14 Localization, 1.15 Java 22 to 25, 2.5 Modules and `jlink`, and 4.9 Spring Boot with Kotlin. Kotlin, localization and `jlink` matter for some employers and for the Oracle OCP exam but rarely come up in junior Java backend interviews; 1.15 prepares you for teams already on Java 25. None of them is in the exam or the certificate requirements; do them if you have time or your target employer uses them.
 
 ### How much time this phase takes
 
@@ -41,7 +41,7 @@ That is **16–19 hours a week over the 14 scheduled weeks**. If you can give 10
 | 2 | 1 | 1.4 OOP and SOLID, 1.5 Collections and generics | |
 | 3 | 1 | 1.6 Unit testing with JUnit 5, 1.7 Lambdas and streams | Practice track starts |
 | 4 | 1 | 1.8 Records, sealed types, pattern matching, 1.9 Exceptions and clean code, 1.10 I/O and NIO.2 | |
-| 5 | 1 | 1.11 Design patterns, 1.12 Legacy Java migration; optional 1.13 Kotlin, 1.14 Localization | Module 1 project pushed with tests and green CI |
+| 5 | 1 | 1.11 Design patterns, 1.12 Legacy Java migration; optional 1.13 Kotlin, 1.14 Localization, 1.15 Java 22 to 25 | Module 1 project pushed with tests and green CI |
 | 6 | 2 Concurrency & JVM | 2.1 Threads and executors, 2.2 Races and locks | Start Capstone 1 design |
 | 7 | 2 | 2.3 Virtual threads, 2.4 JVM memory and GC, 2.6 Debugging and troubleshooting; optional 2.5 Modules and jlink | Module 2 find-and-fix lab |
 | 8 | 3 Databases | 3.1 Relational design and joins, 3.2 Transactions and locking | Ledger schema (project 3.B) |
@@ -95,7 +95,7 @@ What a Phase 1 graduate can credibly apply for, how to present your capstones, a
 
 ## Phase 1 exit criteria
 
-- [ ] All 31 core topic CBTs attempted (aim for 70%+); the on-ramp and the four optional topics don't count
+- [ ] All 31 core topic CBTs attempted (aim for 70%+); the on-ramp and the five optional topics don't count
 - [ ] One project per module, each on GitHub with README, tests and green CI
 - [ ] Three capstones (including Capstone 1), at least one deployed with a public health endpoint
 - [ ] Capstone defence, live-coding assessment and coding practice checkpoint passed

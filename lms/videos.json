@@ -499,6 +499,33 @@
         "why": "A worked currency-formatting exercise across several locales."
       }
     ],
+    "1.15": [
+      {
+        "id": "lCNNA1erCfk",
+        "title": "What’s New in Java 25 in 2 Minutes... More or Less - Sip of Java",
+        "channel": "Java",
+        "minutes": 5.2,
+        "published": "2025-09-19",
+        "why": "The Java team's own short tour of what's new in Java 25."
+      },
+      {
+        "id": "9i2AgGEXlz4",
+        "title": "Modern Java Features That Change How We Write Code | Java 21 & 25 | Geekific",
+        "channel": "Geekific",
+        "minutes": 7.0,
+        "published": "2025-12-20",
+        "why": "The modern language features from Java 21 to 25, side by side with older code."
+      },
+      {
+        "id": "hIbCu1slooE",
+        "title": "How to Level Up Your Java Streams with JDK 24's New Gatherers Feature (Practical Tutorial)",
+        "channel": "Dan Vega",
+        "minutes": 30.8,
+        "published": "2025-03-27",
+        "optional": true,
+        "why": "A practical tutorial on stream gatherers, including writing your own."
+      }
+    ],
     "2.1": [
       {
         "id": "r_MbozD32eo",

@@ -11,6 +11,7 @@
 5. Every cbt.json is valid: 5-10 questions, answers in range, no duplicate options.
 6. Every relative Markdown link points to an existing file.
 7. Practice-track stubs match their reference solutions (scripts/practice_stubs.py --check).
+8. Every page published to Moodle passes the automated accessibility checks (scripts/check_accessibility.py).
 """
 from __future__ import annotations
 
@@ -83,6 +84,7 @@ def main() -> int:
     ok &= run("scripts/architecture/generate.py", "--check")
     ok &= run("scripts/capstone_guides.py", "--check")
     ok &= run("scripts/practice_stubs.py", "--check")
+    ok &= run("scripts/check_accessibility.py")
     problems = check_cbts() + check_links()
     for p in problems:
         print(p, file=sys.stderr)

@@ -5,6 +5,7 @@
 // enrolment date: the topics, the week's milestone, how far behind the plan they are, a nudge if they haven't
 // opened the course for 7 days, and the office hour link once it's published. Mentors get a digest of learners
 // who have been silent for 14 days or more (editing teachers see everyone; non-editing teachers see their groups).
+// Graduates of the --survey course (Phase 2) are invited to the graduate survey 3 and 6 months after completing it.
 //
 // Runs inside the Moodle container (itl-weekly-plan.sh copies it in):
 //   php weekly_plan.php --plan=/tmp/weekly-plan.json                 dry run: print what would be sent
@@ -19,7 +20,8 @@ require('/var/www/html/config.php');
 require_once($CFG->libdir . '/clilib.php');
 require_once($CFG->libdir . '/completionlib.php');
 
-[$opts] = cli_get_params(['plan' => '', 'send' => false, 'courses' => '4:1,5:2', 'user' => 0, 'now' => '', 'force' => false], []);
+[$opts] = cli_get_params(['plan' => '', 'send' => false, 'courses' => '4:1,5:2', 'survey' => 5, 'user' => 0, 'now' => '',
+    'force' => false], []);
 $plan = json_decode(file_get_contents($opts['plan']), true) ?: cli_error('Pass --plan=weekly-plan.json');
 $now = $opts['now'] ? strtotime($opts['now'] . ' 06:00 UTC') : time();
 const WEEK = 7 * 86400;
@@ -139,7 +141,36 @@ foreach (explode(',', $opts['courses']) as $pair) {
         }
     }
 }
-echo ($opts['send'] ? "sent $sent" : "dry run") . ", $skipped already had this week's plan\n";
+// Graduate survey invitations, 3 and 6 months after course completion (a two-week window, so one missed run is caught).
+$surveycm = null;
+foreach ($opts['survey'] ? get_fast_modinfo((int)$opts['survey'])->get_cms() : [] as $cm) {
+    if ($cm->modname === 'feedback' && str_starts_with($cm->name, 'Graduate survey') && $cm->visible) { $surveycm = $cm; }
+}
+$invited = 0;
+if ($surveycm) {
+    $survey = get_course((int)$opts['survey']);
+    $graduates = $DB->get_records_sql("SELECT u.*, cc.timecompleted FROM {course_completions} cc JOIN {user} u ON u.id = cc.userid
+        WHERE cc.course = ? AND cc.timecompleted > 0 AND u.deleted = 0 AND u.suspended = 0" . ($opts['user'] ? ' AND u.id = ?' : ''),
+        array_filter([(int)$opts['survey'], (int)$opts['user']]));
+    foreach ($graduates as $u) {
+        $days = intdiv($now - $u->timecompleted, 86400);
+        foreach ([3 => [84, 98], 6 => [175, 189]] as $months => [$from, $to]) {
+            $pref = "itl_gradsurvey_{$months}m";
+            if ($days < $from || $days > $to || (!$opts['force'] && get_user_preferences($pref, '', $u->id))) { continue; }
+            $subject = "$months months on: how is the job search going?";
+            $html = '<p>Hi ' . s($u->firstname) . ",</p><p>It's been about $months months since you finished "
+                . s($survey->fullname) . '. Please take two minutes to tell us where you are now in the '
+                . '<a href="' . $surveycm->url->out(false) . '">graduate survey</a>. Your answers show us whether the programme works '
+                . 'and what to change for the next cohort. If you\'re still looking, say so: your mentor can help with your CV, '
+                . 'mock interviews and introductions.</p>';
+            if (!$opts['send']) { echo "--- survey invite to {$u->id} " . fullname($u) . ": $subject\n"; continue; }
+            notify($u, $survey->id, $subject, $html, $surveycm->url->out(false), $surveycm->name);
+            set_user_preference($pref, date('Y-m-d', $now), $u->id);
+            $invited++;
+        }
+    }
+}
+echo ($opts['send'] ? "sent $sent" : "dry run") . ", $skipped already had this week's plan, $invited survey invitation(s)\n";
 
 function compose(stdClass $u, stdClass $course, int $phase, int $week, int $index, int $length, int $start1, int $last,
         ?array $plan, array $pages, array $behind, int $daysaway, ?cm_info $officehour, ?cm_info $entrycheck, string $courseurl): array {

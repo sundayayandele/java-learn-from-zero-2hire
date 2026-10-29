@@ -4,7 +4,7 @@ A self-paced, project-based path from no programming experience to a hireable Ja
 
 It implements the [ITLearning Java Backend Engineer Training Program](https://itlearning.ng/java-backend-engineer-training-program/) topic for topic, adds Kotlin, and is delivered through the ITLearning Moodle LMS at itlearning.tech, with this repository as the source of truth.
 
-| | |
+| Item | Details |
 | --- | --- |
 | Stack | Java 21 LTS (Java 25 noted where relevant) · Spring Boot 4.1 · Kotlin 2.4 · Maven · PostgreSQL 17 · Redis · MongoDB · Docker |
 | CI/CD | GitHub Actions (primary) · GitLab CI (secondary) · Azure DevOps · AWS CodeBuild/CodePipeline · Jenkins · Argo CD |
@@ -15,7 +15,7 @@ It implements the [ITLearning Java Backend Engineer Training Program](https://it
 
 | Phase | Weeks | Status |
 | --- | --- | --- |
-| [Phase 1: Foundations](phases/01-foundations/README.md) | 0–14 | **Built**: a week-0 on-ramp, 35 topics (4 optional), 10 capstones, exam, defence, live coding, Getting Hired |
+| [Phase 1: Foundations](phases/01-foundations/README.md) | 0–14 | **Built**: a week-0 on-ramp, 36 topics (5 optional), 10 capstones, exam, defence, live coding, Getting Hired |
 | [Phase 2: Professional Backend](phases/02-professional-backend/README.md) | 15–25 | **Built**: 27 topics, 10 capstones, 5 labs, exam, defence, live coding, Getting Hired |
 | [Phase 3: Enterprise & Cloud-Native](phases/03-enterprise-cloud-native/README.md) | 26–37 | Mapped, to be built after the Phase 1 review |
 
@@ -24,7 +24,7 @@ The [full curriculum](CURRICULUM.md) lists every phase, module and topic.
 ## What's in Phase 1
 
 - **A week-0 on-ramp** for complete beginners (first programs, loops, arrays, strings and methods), with a 15-question entry check that lets experienced learners skip it.
-- **35 topics** (the website's topics; Git, unit testing and HTTP basics taught early, where the projects first need them; Kotlin, three topics that complete the Oracle OCP Java SE 21/25 objectives, and three interview essentials: design patterns, debugging and troubleshooting, and Spring under the hood). Four are optional: Kotlin, Spring Boot with Kotlin, localization, and modules and `jlink`, each with authored reading content, curated and verified YouTube videos (English, captioned, embeddable), practice tasks and a **scenario-based CBT** (6–10 questions, 281 in total including the on-ramp).
+- **36 topics** (the website's topics; Git, unit testing and HTTP basics taught early, where the projects first need them; Kotlin, three topics that complete the Oracle OCP Java SE 21/25 objectives, and three interview essentials: design patterns, debugging and troubleshooting, and Spring under the hood). Five are optional: Kotlin, Spring Boot with Kotlin, localization, modules and `jlink`, and a Java 22–25 update for teams already on Java 25, each with authored reading content, curated and verified YouTube videos (English, captioned, embeddable), practice tasks and a **scenario-based CBT** (6–10 questions, 281 in total including the on-ramp).
 - **Module projects** from the ITLearning programme (wallet simulator, payroll, parallel transaction processor, ledger schema, query-tuning lab, task API, Spring Boot 3 → 4 upgrade and more), plus three hands-on [labs](labs/).
 - **10 capstones** on financial-institution use cases using public data free for commercial and non-commercial use, each licence recorded in [docs/data-sources.md](docs/data-sources.md). Every capstone has a generated, tested Spring Boot 4 **starter**; Capstones 1 (core banking ledger) and 2 (FX rates) have complete, tested **reference solutions**, which mentors share once a learner's submission has passed.
 - **Deployment and CI/CD guide** with infrastructure sizing and step-by-step setup for a VPS, AWS, Azure and GCP.
