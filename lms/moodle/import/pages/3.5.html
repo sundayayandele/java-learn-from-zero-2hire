@@ -1,4 +1,4 @@
-<p><em>Week 8 · Module 3: Databases: SQL &amp; NoSQL</em></p>
+<p><em>Week 9 · Module 3: Databases: SQL &amp; NoSQL</em></p>
 <h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
 <ul>
 <li>Connect to PostgreSQL from Java with JDBC and explain the roles of
@@ -70,7 +70,7 @@ public Optional&lt;AccountRow&gt; findByNumber(String number) throws SQLExceptio
 <p>The essentials:</p>
 <ul>
 <li><strong>try-with-resources</strong> for <code>Connection</code>,
-<code>PreparedStatement</code> and <code>ResultSet</code> (topic 1.7).
+<code>PreparedStatement</code> and <code>ResultSet</code> (topic 1.9).
 With a pool, <code>close()</code> returns the connection to the pool
 rather than closing it, and forgetting it leaks a pooled
 connection.</li>
@@ -315,7 +315,7 @@ Spring Boot's default).</p>
 <pre class="java"><code>HikariConfig cfg = new HikariConfig();
 cfg.setJdbcUrl(&quot;jdbc:postgresql://localhost:5432/bank?reWriteBatchedInserts=true&quot;);
 cfg.setUsername(&quot;bank_app&quot;);
-cfg.setPassword(System.getenv(&quot;DB_PASSWORD&quot;));     // never hard-code secrets (topic 4.4)
+cfg.setPassword(System.getenv(&quot;DB_PASSWORD&quot;));     // never hard-code secrets (topic 4.5)
 cfg.setMaximumPoolSize(10);
 cfg.setConnectionTimeout(3_000);                   // ms to wait for a free connection before failing
 cfg.setLeakDetectionThreshold(20_000);             // log a stack trace if a connection is held &gt; 20 s
@@ -346,7 +346,7 @@ simple services.</p>
         .query(AccountRow.class)       // maps columns to record components by name
         .optional();</code></pre></li>
 <li><p><strong>Spring Data JDBC / JPA with Hibernate</strong> (topic
-4.3): map objects to tables.</p></li>
+4.4): map objects to tables.</p></li>
 <li><p><strong>jOOQ</strong>: type-safe SQL generated from your
 schema.</p></li>
 <li><p><strong>MyBatis</strong>: SQL in XML or annotations, common in

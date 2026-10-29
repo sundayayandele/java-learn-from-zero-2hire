@@ -2,7 +2,7 @@
 package ng.itlearning.practice.design;
 
 /**
- * Week 23. Pattern: exact money allocation.
+ * Week 24. Pattern: exact money allocation.
  * <p>
  * Split {@code totalKobo} (non-negative) into {@code parts} amounts that differ by at most 1 kobo and add up
  * exactly to the total; earlier parts get the extra kobo. ₦100.00 in 3 parts is [3334, 3333, 3333].

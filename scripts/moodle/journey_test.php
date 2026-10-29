@@ -1,7 +1,7 @@
 <?php
 // End-to-end learner journey test for itlearning.tech Phase 1 (course 4), driven through Moodle's own APIs:
-// sign-up age rule, policies, self-enrolment with the key, cohort approval (Phase 2), every page, all topic
-// quizzes and the CodeRunner coding quiz (graded on Jobe), the exam lock and a 60-question random exam,
+// sign-up age rule, policies, self-enrolment with the key, cohort approval (Phase 2), every core page, all core
+// topic quizzes and the CodeRunner coding quiz (graded on Jobe), the exam lock and a 60-question random exam,
 // submissions, rubric grading on the pass marks, certificate issue and PDF, and course completion.
 // Two clearly named test learners (email off) are created; `cleanup` deletes them and all their data.
 //
@@ -136,12 +136,19 @@ function grade_assignment($cm, $user, ?array $levels, ?float $simplegrade): arra
     return [$method ?: 'simple', $expected, $item->grades[$user->id]->grade ?? null, $item->gradepass, $item->grademax];
 }
 
+/** Phase 1 activities in course order. The learner skips the week-0 on-ramp and the optional topics, as an
+ *  experienced learner would: the exam and the certificate must still unlock without them. */
 function phase1_cms(int $userid = 0): array {
     $modinfo = get_fast_modinfo(COURSE, $userid);
     $out = [];
     foreach ($modinfo->get_section_info_all() as $section) {
+        if (str_starts_with($section->name ?? '', 'Week 0:')) {
+            continue;
+        }
         foreach ($modinfo->sections[$section->section] ?? [] as $cmid) {
-            $out[] = $modinfo->cms[$cmid];
+            if (!str_contains($modinfo->cms[$cmid]->name, '(optional)')) {
+                $out[] = $modinfo->cms[$cmid];
+            }
         }
     }
     return $out;
@@ -203,7 +210,7 @@ if ($cmd === 'walk') {
     $examcmid = 201;
     echo "== Before any work\n";
     $exam = get_fast_modinfo(COURSE, $u->id)->get_cm($examcmid);
-    say(!$exam->available, 'the exam is locked until every topic quiz is attempted');
+    say(!$exam->available, 'the exam is locked until every core topic quiz is attempted');
     $cert = get_fast_modinfo(COURSE, $u->id)->get_cm(264);
     say(!$cert->available, 'the certificate is locked');
 
@@ -243,8 +250,8 @@ if ($cmd === 'walk') {
             }
         }
     }
-    say($counts['page'] == 48, "pages viewed and complete: {$counts['page']} of 48");
-    say(!$quizfail, "quizzes passed with full marks: {$counts['quiz']} (topic quizzes and the coding quiz)");
+    say($counts['page'] == 47, "pages viewed and complete: {$counts['page']} of 47 (31 core topics, guides and capstones)");
+    say(!$quizfail && $counts['quiz'] == 32, "quizzes passed with full marks: {$counts['quiz']} of 32 (31 core topic quizzes and the coding quiz)");
     foreach ($quizfail as $f) {
         say(false, $f);
     }
@@ -252,7 +259,7 @@ if ($cmd === 'walk') {
 
     echo "== The exam\n";
     $exam = get_fast_modinfo(COURSE, $u->id)->get_cm($examcmid);
-    say($exam->available, 'with every topic quiz attempted, the exam unlocks');
+    say($exam->available, 'with every core topic quiz attempted (on-ramp and optional topics skipped), the exam unlocks');
     if ($exam->available) {
         $t = microtime(true);
         [$n, $grade, $max] = attempt_quiz($exam, $u);

@@ -1,6 +1,6 @@
 # Lab 4.D: Upgrade a Spring Boot 3.5 service to Spring Boot 4.1
 
-← [Module 4](../../phases/01-foundations/04-spring-boot-fundamentals/README.md) · [Topic 4.6](../../phases/01-foundations/04-spring-boot-fundamentals/4.6-spring-boot-3-to-4-upgrade/README.md)
+← [Module 4](../../phases/01-foundations/04-spring-boot-fundamentals/README.md) · [Topic 4.7](../../phases/01-foundations/04-spring-boot-fundamentals/4.7-spring-boot-3-to-4-upgrade/README.md)
 
 `account-service` is a small, working **Spring Boot 3.5.16** service: one entity, Flyway migrations, a REST endpoint, a Jackson customiser, a `@MockBean` test and a Testcontainers integration test. It is typical of what you'll find in real teams.
 
@@ -14,7 +14,7 @@
 
 1. Record the baseline: tests green, and note what `accountJsonContract` asserts (it's your JSON safety net).
 2. Add one more safety net: a test that asserts Flyway applied `V1` (query `flyway_schema_history`).
-3. Upgrade to Spring Boot **4.1.x** by hand, following topic 4.6. You should hit, at minimum:
+3. Upgrade to Spring Boot **4.1.x** by hand, following topic 4.7. You should hit, at minimum:
    - the parent version and Testcontainers 2 artifact/package changes;
    - modular starters (`webmvc`, and what happens to Flyway without its starter: check your new test catches it);
    - test starters, `@MockBean` → `@MockitoBean`, `@AutoConfigureMockMvc`'s new package;

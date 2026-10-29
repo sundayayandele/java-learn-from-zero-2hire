@@ -5,7 +5,7 @@
 
 ← [2.1 Threads, ExecutorService and CompletableFuture](../2.1-threads-executors-completablefuture/README.md) · [Module 2](../README.md) · [Phase 1](../../README.md) · [2.3 Virtual threads (Project Loom) and structured concurrency](../2.3-virtual-threads-structured-concurrency/README.md) →
 
-> **Week 5** · Module 2: Concurrency & the JVM · Website topic covered: *Race conditions, locks, atomics and concurrent collections*
+> **Week 6** · Module 2: Concurrency & the JVM · Website topic covered: *Race conditions, locks, atomics and concurrent collections*
 
 ## What you will be able to do
 
@@ -167,7 +167,7 @@ For counters updated by many threads at once (requests per second, transactions 
 
 ## 6. Concurrent collections
 
-The ordinary collections from topic 1.4 are not thread-safe. `Collections.synchronizedMap(map)` wraps every method in one lock, which is correct but slow, and compound actions are still racy. Prefer `java.util.concurrent`:
+The ordinary collections from topic 1.5 are not thread-safe. `Collections.synchronizedMap(map)` wraps every method in one lock, which is correct but slow, and compound actions are still racy. Prefer `java.util.concurrent`:
 
 | Need | Use |
 | --- | --- |
@@ -254,7 +254,7 @@ public Response callPartner(Request r) throws InterruptedException {
 
 The most reliable concurrent code avoids shared mutable state:
 
-- **Immutability** (topic 1.7): immutable objects need no locks.
+- **Immutability** (topic 1.9): immutable objects need no locks.
 - **Confinement**: give each thread its own data, then merge results at the end (as the statement generator in topic 2.1 did).
 - **Message passing**: hand data between threads through a queue instead of sharing it.
 - **Let the database do it**: for money, the database transaction and its locks are the source of truth (topic 3.2).
@@ -322,7 +322,7 @@ Race condition, check-then-act, read-modify-write, critical section, atomicity, 
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [#89 Race Condition in Java](https://www.youtube.com/watch?v=7eV4nib3Cm8) · Telusko · 12 min. A race condition reproduced live, then fixed with synchronized.
 - [Using volatile vs AtomicInteger in Java concurrency](https://www.youtube.com/watch?v=WH5UvQJizH0) · Defog Tech · 7 min. volatile vs AtomicInteger: visibility is not the same as atomicity.

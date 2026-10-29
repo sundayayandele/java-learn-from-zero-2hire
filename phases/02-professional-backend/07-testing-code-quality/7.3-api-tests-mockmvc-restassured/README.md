@@ -5,7 +5,7 @@
 
 ← [7.2 Integration tests with Testcontainers (real Postgres, Kafka, Redis)](../7.2-testcontainers-integration/README.md) · [Module 7](../README.md) · [Phase 2](../../README.md) · [7.4 Coverage with JaCoCo and static analysis with SonarQube](../7.4-jacoco-sonarqube/README.md) →
 
-> **Week 20** · Module 7: Testing & Code Quality · Website topic covered: *MockMvc and MockMvcTester, RestTestClient, REST Assured, contract tests*
+> **Week 21** · Module 7: Testing & Code Quality · Website topic covered: *MockMvc and MockMvcTester, RestTestClient, REST Assured, contract tests*
 
 ## What you will be able to do
 
@@ -223,7 +223,7 @@ Web slice test, `@WebMvcTest`, `MockMvc`, `MockMvcTester`, `@MockitoBean`, `json
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [Spring Boot | Controller Unit Testing | Mockito | MockMVC](https://www.youtube.com/watch?v=9-mX5MACs5U) · TheCodeStorm · 17 min. Testing Spring MVC controllers with MockMvc.
 - [REST Assured Beginner Tutorial 1 | Getting Started | What is Rest Assured](https://www.youtube.com/watch?v=oVNbaBlrhbo) · Automation Step by Step · 7 min. REST Assured: given, when, then API tests in Java.

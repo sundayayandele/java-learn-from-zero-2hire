@@ -1,7 +1,7 @@
 package ng.itlearning.practice.windows;
 
 /**
- * Week 6. Pattern: fixed-size sliding window.
+ * Week 7. Pattern: fixed-size sliding window.
  * <p>
  * Given daily transaction totals (kobo), return the largest total over any {@code k} consecutive days.
  * Throw {@link IllegalArgumentException} if {@code k} is not between 1 and the number of days. O(n).

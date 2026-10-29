@@ -5,7 +5,7 @@
 
 ← [6.5 Password hashing, secrets management, dependency scanning](../../06-security-essentials/6.5-passwords-secrets-dependency-scanning/README.md) · [Module 7](../README.md) · [Phase 2](../../README.md) · [7.2 Integration tests with Testcontainers (real Postgres, Kafka, Redis)](../7.2-testcontainers-integration/README.md) →
 
-> **Week 19** · Module 7: Testing & Code Quality · Website topic covered: *JUnit 5, AssertJ, Mockito, test doubles, red-green-refactor*
+> **Week 20** · Module 7: Testing & Code Quality · Website topic covered: *JUnit 5, AssertJ, Mockito, test doubles, red-green-refactor*
 
 ## What you will be able to do
 
@@ -291,7 +291,7 @@ Unit test, JUnit Jupiter, `@Test`, `@ParameterizedTest`, `@CsvSource`, `@Nested`
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [Java Testing - JUnit 5 Crash Course](https://www.youtube.com/watch?v=flpmSXVTqBI) · freeCodeCamp.org · 26 min. JUnit 5 course: assertions, lifecycle, parameterised tests.
 - [Mock, When and ThenReturn with Mockito - JUnit Tutorial](https://www.youtube.com/watch?v=MztH6vkeFVk) · Aneesh Mistry · 11 min. Mockito basics: mocks, stubbing and verification.

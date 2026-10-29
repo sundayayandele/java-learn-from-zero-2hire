@@ -17,7 +17,7 @@ import java.net.URI;
 import java.util.Map;
 
 /**
- * Turns every error into an RFC 9457 Problem Details response (topic 4.2).
+ * Turns every error into an RFC 9457 Problem Details response (topic 4.3).
  * Add one @ExceptionHandler per domain exception; never expose stack traces or internal messages.
  */
 @RestControllerAdvice

@@ -5,7 +5,7 @@
   </question>
   <question type="coderunner">
     <name><text>P2-CODE-01 ReverseList</text></name>
-    <questiontext format="html"><text><![CDATA[<p><strong>Week 14. Pattern: pointer manipulation.</strong></p><p>Reverse a singly linked list in place and return the new head. O(<i>n</i>) time, O(1) extra space.</p><p>Complete the class <code>ReverseList</code> in the answer box, keeping these signatures:</p><ul><li><code>public static Node reverse(Node head)</code></li></ul><p>The <code>Node</code> class is provided; don't include it in your answer.</p><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 15. Pattern: pointer manipulation.</strong></p><p>Reverse a singly linked list in place and return the new head. O(<i>n</i>) time, O(1) extra space.</p><p>Complete the class <code>ReverseList</code> in the answer box, keeping these signatures:</p><ul><li><code>public static Node reverse(Node head)</code></li></ul><p>The <code>Node</code> class is provided; don't include it in your answer.</p><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
     <generalfeedback format="html"><text><![CDATA[<p>Pattern: pointer manipulation. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/lists/ReverseList.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
@@ -21,7 +21,7 @@
     <answerboxlines>30</answerboxlines>
     <answerboxcolumns>100</answerboxcolumns>
     <answerpreload><![CDATA[/**
- * Week 14. Pattern: pointer manipulation.
+ * Week 15. Pattern: pointer manipulation.
  * <p>
  * Reverse a singly linked list in place and return the new head. O(n) time, O(1) extra space.
  */
@@ -128,7 +128,7 @@ final class NO_PUBLIC_CLASS_FOUND {
     <iscombinatortemplate>1</iscombinatortemplate>
     <allowmultiplestdins>0</allowmultiplestdins>
     <answer><![CDATA[/**
- * Week 14. Pattern: pointer manipulation.
+ * Week 15. Pattern: pointer manipulation.
  * <p>
  * Reverse a singly linked list in place and return the new head. O(n) time, O(1) extra space.
  */
@@ -203,7 +203,7 @@ public final class ReverseList {
   </question>
   <question type="coderunner">
     <name><text>P2-CODE-02 HasCycle</text></name>
-    <questiontext format="html"><text><![CDATA[<p><strong>Week 15. Pattern: fast and slow pointers (Floyd).</strong></p><p>A corrupted approval chain may loop back on itself. Return whether the list has a cycle, using O(1) extra space (no HashSet).</p><p>Complete the class <code>HasCycle</code> in the answer box, keeping these signatures:</p><ul><li><code>public static boolean hasCycle(Node head)</code></li></ul><p>The <code>Node</code> class is provided; don't include it in your answer.</p><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 16. Pattern: fast and slow pointers (Floyd).</strong></p><p>A corrupted approval chain may loop back on itself. Return whether the list has a cycle, using O(1) extra space (no HashSet).</p><p>Complete the class <code>HasCycle</code> in the answer box, keeping these signatures:</p><ul><li><code>public static boolean hasCycle(Node head)</code></li></ul><p>The <code>Node</code> class is provided; don't include it in your answer.</p><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
     <generalfeedback format="html"><text><![CDATA[<p>Pattern: fast and slow pointers (Floyd). Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/lists/HasCycle.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
@@ -219,7 +219,7 @@ public final class ReverseList {
     <answerboxlines>30</answerboxlines>
     <answerboxcolumns>100</answerboxcolumns>
     <answerpreload><![CDATA[/**
- * Week 15. Pattern: fast and slow pointers (Floyd).
+ * Week 16. Pattern: fast and slow pointers (Floyd).
  * <p>
  * A corrupted approval chain may loop back on itself. Return whether the list has a cycle, using O(1) extra
  * space (no HashSet).
@@ -327,7 +327,7 @@ final class NO_PUBLIC_CLASS_FOUND {
     <iscombinatortemplate>1</iscombinatortemplate>
     <allowmultiplestdins>0</allowmultiplestdins>
     <answer><![CDATA[/**
- * Week 15. Pattern: fast and slow pointers (Floyd).
+ * Week 16. Pattern: fast and slow pointers (Floyd).
  * <p>
  * A corrupted approval chain may loop back on itself. Return whether the list has a cycle, using O(1) extra
  * space (no HashSet).
@@ -415,7 +415,7 @@ System.out.println(HasCycle.hasCycle(single));]]></text></testcode>
   </question>
   <question type="coderunner">
     <name><text>P2-CODE-03 MergeSortedLists</text></name>
-    <questiontext format="html"><text><![CDATA[<p><strong>Week 15. Pattern: dummy head and splicing.</strong></p><p>Merge two sorted linked lists into one sorted list by relinking the existing nodes (no new nodes except an optional dummy head).</p><p>Complete the class <code>MergeSortedLists</code> in the answer box, keeping these signatures:</p><ul><li><code>public static Node merge(Node a, Node b)</code></li></ul><p>The <code>Node</code> class is provided; don't include it in your answer.</p><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 16. Pattern: dummy head and splicing.</strong></p><p>Merge two sorted linked lists into one sorted list by relinking the existing nodes (no new nodes except an optional dummy head).</p><p>Complete the class <code>MergeSortedLists</code> in the answer box, keeping these signatures:</p><ul><li><code>public static Node merge(Node a, Node b)</code></li></ul><p>The <code>Node</code> class is provided; don't include it in your answer.</p><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
     <generalfeedback format="html"><text><![CDATA[<p>Pattern: dummy head and splicing. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/lists/MergeSortedLists.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
@@ -431,7 +431,7 @@ System.out.println(HasCycle.hasCycle(single));]]></text></testcode>
     <answerboxlines>30</answerboxlines>
     <answerboxcolumns>100</answerboxcolumns>
     <answerpreload><![CDATA[/**
- * Week 15. Pattern: dummy head and splicing.
+ * Week 16. Pattern: dummy head and splicing.
  * <p>
  * Merge two sorted linked lists into one sorted list by relinking the existing nodes (no new nodes except an
  * optional dummy head).
@@ -539,7 +539,7 @@ final class NO_PUBLIC_CLASS_FOUND {
     <iscombinatortemplate>1</iscombinatortemplate>
     <allowmultiplestdins>0</allowmultiplestdins>
     <answer><![CDATA[/**
- * Week 15. Pattern: dummy head and splicing.
+ * Week 16. Pattern: dummy head and splicing.
  * <p>
  * Merge two sorted linked lists into one sorted list by relinking the existing nodes (no new nodes except an
  * optional dummy head).
@@ -631,7 +631,7 @@ System.out.println((merged == a) + " " + (merged.next == b));]]></text></testcod
   </question>
   <question type="coderunner">
     <name><text>P2-CODE-04 StatementOrdering</text></name>
-    <questiontext format="html"><text><![CDATA[<p><strong>Week 14. Pattern: Comparator composition.</strong></p><p>Sort transactions for an investigation report: largest amount first; for equal amounts (compare with <code>compareTo</code>, so 10.0 equals 10.00), earliest time first; then reference ascending. Return a new list; don't modify the input.</p><p>Complete the class <code>StatementOrdering</code> in the answer box, keeping these signatures:</p><ul><li><code>public record Txn(String reference, BigDecimal amount, Instant at)</code></li><li><code>public static List&lt;Txn&gt; sorted(List&lt;Txn&gt; txns)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 15. Pattern: Comparator composition.</strong></p><p>Sort transactions for an investigation report: largest amount first; for equal amounts (compare with <code>compareTo</code>, so 10.0 equals 10.00), earliest time first; then reference ascending. Return a new list; don't modify the input.</p><p>Complete the class <code>StatementOrdering</code> in the answer box, keeping these signatures:</p><ul><li><code>public record Txn(String reference, BigDecimal amount, Instant at)</code></li><li><code>public static List&lt;Txn&gt; sorted(List&lt;Txn&gt; txns)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
     <generalfeedback format="html"><text><![CDATA[<p>Pattern: Comparator composition. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/search/StatementOrdering.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
@@ -652,7 +652,7 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Week 14. Pattern: Comparator composition.
+ * Week 15. Pattern: Comparator composition.
  * <p>
  * Sort transactions for an investigation report: largest amount first; for equal amounts (compare with
  * {@code compareTo}, so 10.0 equals 10.00), earliest time first; then reference ascending. Return a new list;
@@ -742,7 +742,7 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Week 14. Pattern: Comparator composition.
+ * Week 15. Pattern: Comparator composition.
  * <p>
  * Sort transactions for an investigation report: largest amount first; for equal amounts (compare with
  * {@code compareTo}, so 10.0 equals 10.00), earliest time first; then reference ascending. Return a new list;
@@ -828,7 +828,7 @@ System.out.println(input.stream().map(StatementOrdering.Txn::reference).toList()
   </question>
   <question type="coderunner">
     <name><text>P2-CODE-05 TreeDepth</text></name>
-    <questiontext format="html"><text><![CDATA[<p><strong>Week 16. Pattern: recursion on trees.</strong></p><p>Return the number of levels in a reporting hierarchy (an empty tree has depth 0).</p><p>Complete the class <code>TreeDepth</code> in the answer box, keeping these signatures:</p><ul><li><code>public static int depth(TreeNode root)</code></li></ul><p>The <code>TreeNode</code> class is provided; don't include it in your answer.</p><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 17. Pattern: recursion on trees.</strong></p><p>Return the number of levels in a reporting hierarchy (an empty tree has depth 0).</p><p>Complete the class <code>TreeDepth</code> in the answer box, keeping these signatures:</p><ul><li><code>public static int depth(TreeNode root)</code></li></ul><p>The <code>TreeNode</code> class is provided; don't include it in your answer.</p><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
     <generalfeedback format="html"><text><![CDATA[<p>Pattern: recursion on trees. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/trees/TreeDepth.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
@@ -844,7 +844,7 @@ System.out.println(input.stream().map(StatementOrdering.Txn::reference).toList()
     <answerboxlines>30</answerboxlines>
     <answerboxcolumns>100</answerboxcolumns>
     <answerpreload><![CDATA[/**
- * Week 16. Pattern: recursion on trees.
+ * Week 17. Pattern: recursion on trees.
  * <p>
  * Return the number of levels in a reporting hierarchy (an empty tree has depth 0).
  */
@@ -947,7 +947,7 @@ final class NO_PUBLIC_CLASS_FOUND {
     <iscombinatortemplate>1</iscombinatortemplate>
     <allowmultiplestdins>0</allowmultiplestdins>
     <answer><![CDATA[/**
- * Week 16. Pattern: recursion on trees.
+ * Week 17. Pattern: recursion on trees.
  * <p>
  * Return the number of levels in a reporting hierarchy (an empty tree has depth 0).
  */
@@ -1015,7 +1015,7 @@ public final class TreeDepth {
   </question>
   <question type="coderunner">
     <name><text>P2-CODE-06 ValidSearchTree</text></name>
-    <questiontext format="html"><text><![CDATA[<p><strong>Week 16. Pattern: recursion with bounds.</strong></p><p>Return whether a binary tree is a valid binary search tree: every value in a node's left subtree is strictly smaller and every value in its right subtree strictly larger. Checking only the children is not enough.</p><p>Complete the class <code>ValidSearchTree</code> in the answer box, keeping these signatures:</p><ul><li><code>public static boolean isValid(TreeNode root)</code></li></ul><p>The <code>TreeNode</code> class is provided; don't include it in your answer.</p><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 17. Pattern: recursion with bounds.</strong></p><p>Return whether a binary tree is a valid binary search tree: every value in a node's left subtree is strictly smaller and every value in its right subtree strictly larger. Checking only the children is not enough.</p><p>Complete the class <code>ValidSearchTree</code> in the answer box, keeping these signatures:</p><ul><li><code>public static boolean isValid(TreeNode root)</code></li></ul><p>The <code>TreeNode</code> class is provided; don't include it in your answer.</p><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
     <generalfeedback format="html"><text><![CDATA[<p>Pattern: recursion with bounds. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/trees/ValidSearchTree.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
@@ -1031,7 +1031,7 @@ public final class TreeDepth {
     <answerboxlines>30</answerboxlines>
     <answerboxcolumns>100</answerboxcolumns>
     <answerpreload><![CDATA[/**
- * Week 16. Pattern: recursion with bounds.
+ * Week 17. Pattern: recursion with bounds.
  * <p>
  * Return whether a binary tree is a valid binary search tree: every value in a node's left subtree is strictly
  * smaller and every value in its right subtree strictly larger. Checking only the children is not enough.
@@ -1135,7 +1135,7 @@ final class NO_PUBLIC_CLASS_FOUND {
     <iscombinatortemplate>1</iscombinatortemplate>
     <allowmultiplestdins>0</allowmultiplestdins>
     <answer><![CDATA[/**
- * Week 16. Pattern: recursion with bounds.
+ * Week 17. Pattern: recursion with bounds.
  * <p>
  * Return whether a binary tree is a valid binary search tree: every value in a node's left subtree is strictly
  * smaller and every value in its right subtree strictly larger. Checking only the children is not enough.
@@ -1233,7 +1233,7 @@ System.out.println(ValidSearchTree.isValid(TreeNode.of(5, TreeNode.of(3, null, T
   </question>
   <question type="coderunner">
     <name><text>P2-CODE-07 LevelOrder</text></name>
-    <questiontext format="html"><text><![CDATA[<p><strong>Week 17. Pattern: breadth-first search with a queue.</strong></p><p>Return the names in an org chart level by level, left to right.</p><p>Complete the class <code>LevelOrder</code> in the answer box, keeping these signatures:</p><ul><li><code>public static List&lt;List&lt;String&gt;&gt; levels(TreeNode root)</code></li></ul><p>The <code>TreeNode</code> class is provided; don't include it in your answer.</p><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 18. Pattern: breadth-first search with a queue.</strong></p><p>Return the names in an org chart level by level, left to right.</p><p>Complete the class <code>LevelOrder</code> in the answer box, keeping these signatures:</p><ul><li><code>public static List&lt;List&lt;String&gt;&gt; levels(TreeNode root)</code></li></ul><p>The <code>TreeNode</code> class is provided; don't include it in your answer.</p><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
     <generalfeedback format="html"><text><![CDATA[<p>Pattern: breadth-first search with a queue. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/trees/LevelOrder.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
@@ -1254,7 +1254,7 @@ import java.util.Deque;
 import java.util.List;
 
 /**
- * Week 17. Pattern: breadth-first search with a queue.
+ * Week 18. Pattern: breadth-first search with a queue.
  * <p>
  * Return the names in an org chart level by level, left to right.
  */
@@ -1362,7 +1362,7 @@ import java.util.Deque;
 import java.util.List;
 
 /**
- * Week 17. Pattern: breadth-first search with a queue.
+ * Week 18. Pattern: breadth-first search with a queue.
  * <p>
  * Return the names in an org chart level by level, left to right.
  */
@@ -1455,7 +1455,7 @@ System.out.println(LevelOrder.levels(ceo));]]></text></testcode>
   </question>
   <question type="coderunner">
     <name><text>P2-CODE-08 FewestHops</text></name>
-    <questiontext format="html"><text><![CDATA[<p><strong>Week 18. Pattern: breadth-first search for shortest paths in an unweighted graph.</strong></p><p>Transfers are directed edges. Return the fewest transfers needed for money to move from <code>source</code> to <code>target</code> (0 if they are the same account), or -1 if it can't.</p><p>Complete the class <code>FewestHops</code> in the answer box, keeping these signatures:</p><ul><li><code>public static int hops(Map&lt;String, List&lt;String&gt;&gt; sentTo, String source, String target)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 19. Pattern: breadth-first search for shortest paths in an unweighted graph.</strong></p><p>Transfers are directed edges. Return the fewest transfers needed for money to move from <code>source</code> to <code>target</code> (0 if they are the same account), or -1 if it can't.</p><p>Complete the class <code>FewestHops</code> in the answer box, keeping these signatures:</p><ul><li><code>public static int hops(Map&lt;String, List&lt;String&gt;&gt; sentTo, String source, String target)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
     <generalfeedback format="html"><text><![CDATA[<p>Pattern: breadth-first search for shortest paths in an unweighted graph. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/graphs/FewestHops.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
@@ -1477,7 +1477,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Week 18. Pattern: breadth-first search for shortest paths in an unweighted graph.
+ * Week 19. Pattern: breadth-first search for shortest paths in an unweighted graph.
  * <p>
  * Transfers are directed edges. Return the fewest transfers needed for money to move from {@code source} to
  * {@code target} (0 if they are the same account), or -1 if it can't.
@@ -1564,7 +1564,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Week 18. Pattern: breadth-first search for shortest paths in an unweighted graph.
+ * Week 19. Pattern: breadth-first search for shortest paths in an unweighted graph.
  * <p>
  * Transfers are directed edges. Return the fewest transfers needed for money to move from {@code source} to
  * {@code target} (0 if they are the same account), or -1 if it can't.
@@ -1672,7 +1672,7 @@ System.out.println(FewestHops.hops(sentTo, "A", "Z"));]]></text></testcode>
   </question>
   <question type="coderunner">
     <name><text>P2-CODE-09 LinkedAccountGroups</text></name>
-    <questiontext format="html"><text><![CDATA[<p><strong>Week 18. Pattern: union-find (or BFS/DFS over an undirected graph).</strong></p><p>Fraud analysts treat accounts that have sent money to each other, directly or through other accounts, as one group. Given transfers as [from, to] pairs, return the number of groups among all accounts that appear.</p><p>Complete the class <code>LinkedAccountGroups</code> in the answer box, keeping these signatures:</p><ul><li><code>public record Transfer(String from, String to)</code></li><li><code>public static int groups(List&lt;Transfer&gt; transfers)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 19. Pattern: union-find (or BFS/DFS over an undirected graph).</strong></p><p>Fraud analysts treat accounts that have sent money to each other, directly or through other accounts, as one group. Given transfers as [from, to] pairs, return the number of groups among all accounts that appear.</p><p>Complete the class <code>LinkedAccountGroups</code> in the answer box, keeping these signatures:</p><ul><li><code>public record Transfer(String from, String to)</code></li><li><code>public static int groups(List&lt;Transfer&gt; transfers)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
     <generalfeedback format="html"><text><![CDATA[<p>Pattern: union-find (or BFS/DFS over an undirected graph). Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/graphs/LinkedAccountGroups.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
@@ -1692,7 +1692,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Week 18. Pattern: union-find (or BFS/DFS over an undirected graph).
+ * Week 19. Pattern: union-find (or BFS/DFS over an undirected graph).
  * <p>
  * Fraud analysts treat accounts that have sent money to each other, directly or through other accounts, as one
  * group. Given transfers as [from, to] pairs, return the number of groups among all accounts that appear.
@@ -1780,7 +1780,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Week 18. Pattern: union-find (or BFS/DFS over an undirected graph).
+ * Week 19. Pattern: union-find (or BFS/DFS over an undirected graph).
  * <p>
  * Fraud analysts treat accounts that have sent money to each other, directly or through other accounts, as one
  * group. Given transfers as [from, to] pairs, return the number of groups among all accounts that appear.
@@ -1887,7 +1887,7 @@ within(3000, () -> LinkedAccountGroups.groups(chain));]]></text></testcode>
   </question>
   <question type="coderunner">
     <name><text>P2-CODE-10 JobOrder</text></name>
-    <questiontext format="html"><text><![CDATA[<p><strong>Week 19. Pattern: topological sort (Kahn&#x27;s algorithm).</strong></p><p>End-of-day batch jobs depend on each other: <code>dependsOn.get("interest")</code> lists jobs that must finish before "interest". Every job appears as a key. Return an order that runs each job after its dependencies, choosing the alphabetically smallest ready job whenever several are ready, or empty if there is a cycle.</p><p>Complete the class <code>JobOrder</code> in the answer box, keeping these signatures:</p><ul><li><code>public static Optional&lt;List&lt;String&gt;&gt; order(Map&lt;String, List&lt;String&gt;&gt; dependsOn)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 20. Pattern: topological sort (Kahn&#x27;s algorithm).</strong></p><p>End-of-day batch jobs depend on each other: <code>dependsOn.get("interest")</code> lists jobs that must finish before "interest". Every job appears as a key. Return an order that runs each job after its dependencies, choosing the alphabetically smallest ready job whenever several are ready, or empty if there is a cycle.</p><p>Complete the class <code>JobOrder</code> in the answer box, keeping these signatures:</p><ul><li><code>public static Optional&lt;List&lt;String&gt;&gt; order(Map&lt;String, List&lt;String&gt;&gt; dependsOn)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
     <generalfeedback format="html"><text><![CDATA[<p>Pattern: topological sort (Kahn&#x27;s algorithm). Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/graphs/JobOrder.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
@@ -1912,7 +1912,7 @@ import java.util.Optional;
 import java.util.TreeMap;
 
 /**
- * Week 19. Pattern: topological sort (Kahn's algorithm).
+ * Week 20. Pattern: topological sort (Kahn's algorithm).
  * <p>
  * End-of-day batch jobs depend on each other: {@code dependsOn.get("interest")} lists jobs that must finish
  * before "interest". Every job appears as a key. Return an order that runs each job after its dependencies,
@@ -2003,7 +2003,7 @@ import java.util.Optional;
 import java.util.TreeMap;
 
 /**
- * Week 19. Pattern: topological sort (Kahn's algorithm).
+ * Week 20. Pattern: topological sort (Kahn's algorithm).
  * <p>
  * End-of-day batch jobs depend on each other: {@code dependsOn.get("interest")} lists jobs that must finish
  * before "interest". Every job appears as a key. Return an order that runs each job after its dependencies,
@@ -2099,7 +2099,7 @@ public final class JobOrder {
   </question>
   <question type="coderunner">
     <name><text>P2-CODE-11 FewestNotes</text></name>
-    <questiontext format="html"><text><![CDATA[<p><strong>Week 20. Pattern: dynamic programming (minimum).</strong></p><p>An ATM must dispense exactly <code>amount</code> with the fewest notes from the given denominations (unlimited of each). Return that number, or -1 if it is impossible. Greedy choice fails for some denomination sets.</p><p>Complete the class <code>FewestNotes</code> in the answer box, keeping these signatures:</p><ul><li><code>public static int fewest(int[] notes, int amount)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 21. Pattern: dynamic programming (minimum).</strong></p><p>An ATM must dispense exactly <code>amount</code> with the fewest notes from the given denominations (unlimited of each). Return that number, or -1 if it is impossible. Greedy choice fails for some denomination sets.</p><p>Complete the class <code>FewestNotes</code> in the answer box, keeping these signatures:</p><ul><li><code>public static int fewest(int[] notes, int amount)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
     <generalfeedback format="html"><text><![CDATA[<p>Pattern: dynamic programming (minimum). Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/dp/FewestNotes.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
@@ -2117,7 +2117,7 @@ public final class JobOrder {
     <answerpreload><![CDATA[import java.util.Arrays;
 
 /**
- * Week 20. Pattern: dynamic programming (minimum).
+ * Week 21. Pattern: dynamic programming (minimum).
  * <p>
  * An ATM must dispense exactly {@code amount} with the fewest notes from the given denominations (unlimited of
  * each). Return that number, or -1 if it is impossible. Greedy choice fails for some denomination sets.
@@ -2200,7 +2200,7 @@ final class NO_PUBLIC_CLASS_FOUND {
     <answer><![CDATA[import java.util.Arrays;
 
 /**
- * Week 20. Pattern: dynamic programming (minimum).
+ * Week 21. Pattern: dynamic programming (minimum).
  * <p>
  * An ATM must dispense exactly {@code amount} with the fewest notes from the given denominations (unlimited of
  * each). Return that number, or -1 if it is impossible. Greedy choice fails for some denomination sets.
@@ -2286,7 +2286,7 @@ System.out.println(FewestNotes.fewest(new int[] {1, 3, 4}, 6));]]></text></testc
   </question>
   <question type="coderunner">
     <name><text>P2-CODE-12 BestSingleTrade</text></name>
-    <questiontext format="html"><text><![CDATA[<p><strong>Week 21. Pattern: running minimum.</strong></p><p>Given daily prices of a stock or currency, return the best profit from one buy followed by one later sell, or 0 if no profitable trade exists. O(<i>n</i>).</p><p>Complete the class <code>BestSingleTrade</code> in the answer box, keeping these signatures:</p><ul><li><code>public static long maxProfit(long[] prices)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 22. Pattern: running minimum.</strong></p><p>Given daily prices of a stock or currency, return the best profit from one buy followed by one later sell, or 0 if no profitable trade exists. O(<i>n</i>).</p><p>Complete the class <code>BestSingleTrade</code> in the answer box, keeping these signatures:</p><ul><li><code>public static long maxProfit(long[] prices)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
     <generalfeedback format="html"><text><![CDATA[<p>Pattern: running minimum. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/dp/BestSingleTrade.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
@@ -2302,7 +2302,7 @@ System.out.println(FewestNotes.fewest(new int[] {1, 3, 4}, 6));]]></text></testc
     <answerboxlines>30</answerboxlines>
     <answerboxcolumns>100</answerboxcolumns>
     <answerpreload><![CDATA[/**
- * Week 21. Pattern: running minimum.
+ * Week 22. Pattern: running minimum.
  * <p>
  * Given daily prices of a stock or currency, return the best profit from one buy followed by one later sell,
  * or 0 if no profitable trade exists. O(n).
@@ -2383,7 +2383,7 @@ final class NO_PUBLIC_CLASS_FOUND {
     <iscombinatortemplate>1</iscombinatortemplate>
     <allowmultiplestdins>0</allowmultiplestdins>
     <answer><![CDATA[/**
- * Week 21. Pattern: running minimum.
+ * Week 22. Pattern: running minimum.
  * <p>
  * Given daily prices of a stock or currency, return the best profit from one buy followed by one later sell,
  * or 0 if no profitable trade exists. O(n).
@@ -2457,7 +2457,7 @@ public final class BestSingleTrade {
   </question>
   <question type="coderunner">
     <name><text>P2-CODE-13 NonAdjacentBonus</text></name>
-    <questiontext format="html"><text><![CDATA[<p><strong>Week 21. Pattern: dynamic programming with two states.</strong></p><p>A promotion pays bonuses on chosen days, but never on two consecutive days. Given the bonus available each day (non-negative), return the largest total you can collect. O(<i>n</i>) time, O(1) space.</p><p>Complete the class <code>NonAdjacentBonus</code> in the answer box, keeping these signatures:</p><ul><li><code>public static long best(long[] bonus)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 22. Pattern: dynamic programming with two states.</strong></p><p>A promotion pays bonuses on chosen days, but never on two consecutive days. Given the bonus available each day (non-negative), return the largest total you can collect. O(<i>n</i>) time, O(1) space.</p><p>Complete the class <code>NonAdjacentBonus</code> in the answer box, keeping these signatures:</p><ul><li><code>public static long best(long[] bonus)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
     <generalfeedback format="html"><text><![CDATA[<p>Pattern: dynamic programming with two states. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/dp/NonAdjacentBonus.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
@@ -2473,7 +2473,7 @@ public final class BestSingleTrade {
     <answerboxlines>30</answerboxlines>
     <answerboxcolumns>100</answerboxcolumns>
     <answerpreload><![CDATA[/**
- * Week 21. Pattern: dynamic programming with two states.
+ * Week 22. Pattern: dynamic programming with two states.
  * <p>
  * A promotion pays bonuses on chosen days, but never on two consecutive days. Given the bonus available each
  * day (non-negative), return the largest total you can collect. O(n) time, O(1) space.
@@ -2554,7 +2554,7 @@ final class NO_PUBLIC_CLASS_FOUND {
     <iscombinatortemplate>1</iscombinatortemplate>
     <allowmultiplestdins>0</allowmultiplestdins>
     <answer><![CDATA[/**
- * Week 21. Pattern: dynamic programming with two states.
+ * Week 22. Pattern: dynamic programming with two states.
  * <p>
  * A promotion pays bonuses on chosen days, but never on two consecutive days. Given the bonus available each
  * day (non-negative), return the largest total you can collect. O(n) time, O(1) space.
@@ -2629,7 +2629,7 @@ public final class NonAdjacentBonus {
   </question>
   <question type="coderunner">
     <name><text>P2-CODE-14 LruCache</text></name>
-    <questiontext format="html"><text><![CDATA[<p><strong>Week 22. Pattern: hash map plus access order.</strong></p><p>A name-enquiry cache holding at most <code>capacity</code> entries. <code>get</code> and <code>put</code> are O(1); when full, <code>put</code> of a new key evicts the least recently used entry (a <code>get</code> or <code>put</code> counts as a use). You may use <code>LinkedHashMap</code> or build your own list + map; be ready to explain both in an interview.</p><p>Complete the class <code>LruCache</code> in the answer box, keeping these signatures:</p><ul><li><code>public LruCache(int capacity)</code></li><li><code>public Optional&lt;V&gt; get(K key)</code></li><li><code>public void put(K key, V value)</code></li><li><code>public int size()</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 23. Pattern: hash map plus access order.</strong></p><p>A name-enquiry cache holding at most <code>capacity</code> entries. <code>get</code> and <code>put</code> are O(1); when full, <code>put</code> of a new key evicts the least recently used entry (a <code>get</code> or <code>put</code> counts as a use). You may use <code>LinkedHashMap</code> or build your own list + map; be ready to explain both in an interview.</p><p>Complete the class <code>LruCache</code> in the answer box, keeping these signatures:</p><ul><li><code>public LruCache(int capacity)</code></li><li><code>public Optional&lt;V&gt; get(K key)</code></li><li><code>public void put(K key, V value)</code></li><li><code>public int size()</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
     <generalfeedback format="html"><text><![CDATA[<p>Pattern: hash map plus access order. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/design/LruCache.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
@@ -2649,7 +2649,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Week 22. Pattern: hash map plus access order.
+ * Week 23. Pattern: hash map plus access order.
  * <p>
  * A name-enquiry cache holding at most {@code capacity} entries. {@code get} and {@code put} are O(1); when full,
  * {@code put} of a new key evicts the least recently used entry (a {@code get} or {@code put} counts as a use).
@@ -2744,7 +2744,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Week 22. Pattern: hash map plus access order.
+ * Week 23. Pattern: hash map plus access order.
  * <p>
  * A name-enquiry cache holding at most {@code capacity} entries. {@code get} and {@code put} are O(1); when full,
  * {@code put} of a new key evicts the least recently used entry (a {@code get} or {@code put} counts as a use).
@@ -2857,7 +2857,7 @@ System.out.println("created");]]></text></testcode>
   </question>
   <question type="coderunner">
     <name><text>P2-CODE-15 SplitAmount</text></name>
-    <questiontext format="html"><text><![CDATA[<p><strong>Week 23. Pattern: exact money allocation.</strong></p><p>Split <code>totalKobo</code> (non-negative) into <code>parts</code> amounts that differ by at most 1 kobo and add up exactly to the total; earlier parts get the extra kobo. ₦100.00 in 3 parts is [3334, 3333, 3333]. Throw <code>IllegalArgumentException</code> if parts is less than 1 or the total is negative.</p><p>Complete the class <code>SplitAmount</code> in the answer box, keeping these signatures:</p><ul><li><code>public static long[] split(long totalKobo, int parts)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
+    <questiontext format="html"><text><![CDATA[<p><strong>Week 24. Pattern: exact money allocation.</strong></p><p>Split <code>totalKobo</code> (non-negative) into <code>parts</code> amounts that differ by at most 1 kobo and add up exactly to the total; earlier parts get the extra kobo. ₦100.00 in 3 parts is [3334, 3333, 3333]. Throw <code>IllegalArgumentException</code> if parts is less than 1 or the total is negative.</p><p>Complete the class <code>SplitAmount</code> in the answer box, keeping these signatures:</p><ul><li><code>public static long[] split(long totalKobo, int parts)</code></li></ul><p>Use only the Java standard library. Click <em>Check</em> to run the tests; you can check as often as you like with no penalty. Say your approach and its time complexity out loud before you code.</p>]]></text></questiontext>
     <generalfeedback format="html"><text><![CDATA[<p>Pattern: exact money allocation. Compare your answer with the reference solution in <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/practice/dsa/solutions/ng/itlearning/practice/design/SplitAmount.java">practice/dsa/solutions</a>, then write one line in your NOTES.md: the pattern, the complexity, and the mistake you made.</p>]]></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
@@ -2873,7 +2873,7 @@ System.out.println("created");]]></text></testcode>
     <answerboxlines>30</answerboxlines>
     <answerboxcolumns>100</answerboxcolumns>
     <answerpreload><![CDATA[/**
- * Week 23. Pattern: exact money allocation.
+ * Week 24. Pattern: exact money allocation.
  * <p>
  * Split {@code totalKobo} (non-negative) into {@code parts} amounts that differ by at most 1 kobo and add up
  * exactly to the total; earlier parts get the extra kobo. ₦100.00 in 3 parts is [3334, 3333, 3333].
@@ -2955,7 +2955,7 @@ final class NO_PUBLIC_CLASS_FOUND {
     <iscombinatortemplate>1</iscombinatortemplate>
     <allowmultiplestdins>0</allowmultiplestdins>
     <answer><![CDATA[/**
- * Week 23. Pattern: exact money allocation.
+ * Week 24. Pattern: exact money allocation.
  * <p>
  * Split {@code totalKobo} (non-negative) into {@code parts} amounts that differ by at most 1 kobo and add up
  * exactly to the total; earlier parts get the extra kobo. ₦100.00 in 3 parts is [3334, 3333, 3333].

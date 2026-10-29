@@ -1,0 +1,127 @@
+{
+  "title": "Entry check: do you need the on-ramp?",
+  "pass_mark": 12,
+  "note": "15 questions, about 15 minutes, no notes. 12 or more: skip the on-ramp and start at topic 1.1. Under 12: do the on-ramp first. Public: the answers are in the on-ramp README.",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "`int x = 7; x = x + 3; x = x * 2;`",
+      "question": "What is the value of `x` afterwards?",
+      "options": ["13", "20", "17", "10"],
+      "answer": 1,
+      "explanation": "x becomes 10, then 20. `=` stores the value on the right in the variable on the left."
+    },
+    {
+      "type": "single",
+      "scenario": "`int a = 17; int b = 5; System.out.println(a / b + \" \" + a % b);`",
+      "question": "What is printed?",
+      "options": ["3.4 0", "3 2", "3 3", "4 2"],
+      "answer": 1,
+      "explanation": "Whole-number division drops the fraction (17 / 5 = 3) and `%` gives the remainder (2)."
+    },
+    {
+      "type": "single",
+      "scenario": "`int total = 0; for (int i = 1; i <= 4; i++) { total += i; }`",
+      "question": "What is `total` after the loop?",
+      "options": ["4", "6", "10", "15"],
+      "answer": 2,
+      "explanation": "1 + 2 + 3 + 4 = 10. The loop runs for i = 1, 2, 3 and 4."
+    },
+    {
+      "type": "single",
+      "scenario": "`for (int i = 0; i < 5; i++) { System.out.print(\"*\"); }`",
+      "question": "How many stars are printed?",
+      "options": ["4", "5", "6", "It never stops"],
+      "answer": 1,
+      "explanation": "i takes the values 0, 1, 2, 3 and 4: five rounds."
+    },
+    {
+      "type": "single",
+      "scenario": "`int balance = 300; int amount = 500; if (amount > balance) { System.out.println(\"Declined\"); } else { System.out.println(\"Approved\"); }`",
+      "question": "What is printed?",
+      "options": ["Approved", "Declined", "Both", "Nothing"],
+      "answer": 1,
+      "explanation": "500 > 300 is true, so only the first block runs."
+    },
+    {
+      "type": "single",
+      "scenario": "`int score = 50; String grade; if (score >= 70) grade = \"A\"; else if (score >= 60) grade = \"B\"; else if (score >= 50) grade = \"C\"; else grade = \"F\";`",
+      "question": "What is `grade`?",
+      "options": ["A", "B", "C", "F"],
+      "answer": 2,
+      "explanation": "Conditions are checked top to bottom; 50 >= 50 is the first one that is true."
+    },
+    {
+      "type": "single",
+      "scenario": "`int[] amounts = {40, 15, 90, 25};`",
+      "question": "What is `amounts[2]`, and what is `amounts.length`?",
+      "options": ["15 and 4", "90 and 4", "90 and 3", "15 and 3"],
+      "answer": 1,
+      "explanation": "Array indexes start at 0, so index 2 is the third element, 90. The array holds 4 elements."
+    },
+    {
+      "type": "single",
+      "scenario": "`int[] a = {3, 8, 2, 8, 5}; int best = a[0]; for (int x : a) { if (x > best) best = x; }`",
+      "question": "What is `best` after the loop?",
+      "options": ["3", "5", "8", "26"],
+      "answer": 2,
+      "explanation": "The loop keeps the largest value seen so far: 3, then 8; nothing later is bigger."
+    },
+    {
+      "type": "single",
+      "scenario": "`int count = 0; int[] a = {12, 55, 70, 49, 50}; for (int x : a) { if (x >= 50) count++; }`",
+      "question": "What is `count`?",
+      "options": ["2", "3", "4", "5"],
+      "answer": 1,
+      "explanation": "55, 70 and 50 are at least 50. 50 counts because the condition is `>=`."
+    },
+    {
+      "type": "single",
+      "scenario": "`int n = 10; while (n > 1) { n = n / 2; }`",
+      "question": "What is `n` when the loop ends?",
+      "options": ["0", "1", "2", "5"],
+      "answer": 1,
+      "explanation": "10 → 5 → 2 → 1. When n is 1, `n > 1` is false and the loop stops."
+    },
+    {
+      "type": "single",
+      "scenario": "`String code = \"NGN-2026\";`",
+      "question": "What are `code.length()` and `code.charAt(0)`?",
+      "options": ["7 and 'G'", "8 and 'N'", "8 and 'G'", "7 and 'N'"],
+      "answer": 1,
+      "explanation": "The string has 8 characters, and index 0 is the first character, 'N'."
+    },
+    {
+      "type": "single",
+      "scenario": "Two `String` variables hold text typed by users.",
+      "question": "How do you check, in Java, whether they hold the same text?",
+      "options": ["`a == b`", "`a.equals(b)`", "`a = b`", "`a.length() == b.length()`"],
+      "answer": 1,
+      "explanation": "`.equals` compares the characters. `==` compares whether they are the same object, which can be false for equal text."
+    },
+    {
+      "type": "single",
+      "scenario": "`static int square(int x) { return x * x; }` and `int y = square(3) + square(4);`",
+      "question": "What is `y`?",
+      "options": ["7", "14", "25", "49"],
+      "answer": 2,
+      "explanation": "square(3) returns 9 and square(4) returns 16; 9 + 16 = 25."
+    },
+    {
+      "type": "single",
+      "scenario": "`static void addTen(int x) { x = x + 10; }` and in `main`: `int v = 5; addTen(v); System.out.println(v);`",
+      "question": "What is printed?",
+      "options": ["5", "10", "15", "It doesn't compile"],
+      "answer": 0,
+      "explanation": "The method receives a copy of the value. Changing `x` inside it doesn't change `v`; to get a new value out, the method must return it."
+    },
+    {
+      "type": "single",
+      "scenario": "A program stops with `ArrayIndexOutOfBoundsException: Index 5 out of bounds for length 5` in a loop written `for (int i = 0; i <= a.length; i++)`.",
+      "question": "What is the fix?",
+      "options": ["`i <= a.length - 2`", "`i < a.length`", "Start at `i = 1`", "Make the array bigger"],
+      "answer": 1,
+      "explanation": "Valid indexes run from 0 to length - 1, so the loop must stop before `a.length`."
+    }
+  ]
+}

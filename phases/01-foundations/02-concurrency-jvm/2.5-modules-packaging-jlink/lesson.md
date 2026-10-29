@@ -1,4 +1,4 @@
-> **Why this topic is here.** "Packaging and Deploying Java Code" is an objective group in the Oracle OCP Java SE 21 and 25 exams: modules, services, jars, runtime images and migration. It also explains what the JDK itself is made of, which helps when containers and upgrades misbehave (topics 1.8 and 2.4). See the [certification mapping](../../../../docs/certifications.md).
+> **Why this topic is here.** "Packaging and Deploying Java Code" is an objective group in the Oracle OCP Java SE 21 and 25 exams: modules, services, jars, runtime images and migration. It also explains what the JDK itself is made of, which helps when containers and upgrades misbehave (topics 1.12 and 2.4). See the [certification mapping](../../../../docs/certifications.md).
 
 ## What you will be able to do
 
@@ -10,7 +10,7 @@
 
 ## Why this matters in a bank or fintech
 
-Spring Boot fat jars run on the classpath, so many teams never write a `module-info.java`. But the JDK is modular, and you meet the module system constantly: `InaccessibleObjectException` after an upgrade (topic 1.8), `--add-opens` flags in old Dockerfiles, and libraries published as named modules. `jlink` builds small, patched runtimes for containers, shrinking the attack surface security teams care about. The OCP exam tests all of this directly.
+Spring Boot fat jars run on the classpath, so many teams never write a `module-info.java`. But the JDK is modular, and you meet the module system constantly: `InaccessibleObjectException` after an upgrade (topic 1.12), `--add-opens` flags in old Dockerfiles, and libraries published as named modules. `jlink` builds small, patched runtimes for containers, shrinking the attack surface security teams care about. The OCP exam tests all of this directly.
 
 ## 1. Compiling and running
 
@@ -115,7 +115,7 @@ Two migration strategies:
 - **Bottom-up:** modularise libraries with no dependencies first, then the modules that use them.
 - **Top-down:** put the application's jar on the module path as a named module, and its not-yet-modular dependencies on the module path as automatic modules; replace them as they gain descriptors.
 
-`jdeps` analyses what each jar needs (`jdeps --print-module-deps app.jar`, `jdeps --generate-module-info out lib.jar`), and `--add-opens`/`--add-exports` are temporary escape hatches, to be removed as libraries update (topic 1.8).
+`jdeps` analyses what each jar needs (`jdeps --print-module-deps app.jar`, `jdeps --generate-module-info out lib.jar`), and `--add-opens`/`--add-exports` are temporary escape hatches, to be removed as libraries update (topic 1.12).
 
 ## 6. Runtime images with `jlink`
 
@@ -141,7 +141,7 @@ fx-treasury/   module ng.itlearning.fx.treasury   requires ng.itlearning.fx.api;
 fx-app/        module ng.itlearning.fx.app        requires ng.itlearning.fx.api; uses RateProvider
 ```
 
-`fx-app` loads whatever providers are on the module path, picks the first that supports a currency pair, and never imports an implementation class. Dropping `fx-treasury.jar` onto the module path adds NGN support without recompiling the app, which is the open/closed principle (topic 1.3) at the deployment level.
+`fx-app` loads whatever providers are on the module path, picks the first that supports a currency pair, and never imports an implementation class. Dropping `fx-treasury.jar` onto the module path adds NGN support without recompiling the app, which is the open/closed principle (topic 1.4) at the deployment level.
 
 ## Common mistakes
 

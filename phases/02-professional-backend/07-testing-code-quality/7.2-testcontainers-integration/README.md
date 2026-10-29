@@ -5,7 +5,7 @@
 
 ← [7.1 Unit testing with JUnit and Mockito; test-driven development](../7.1-junit-mockito-tdd/README.md) · [Module 7](../README.md) · [Phase 2](../../README.md) · [7.3 API tests with MockMvc and REST Assured](../7.3-api-tests-mockmvc-restassured/README.md) →
 
-> **Week 19** · Module 7: Testing & Code Quality · Website topic covered: *Testcontainers 2 with PostgreSQL, Redis and Kafka, @ServiceConnection, reusable containers*
+> **Week 20** · Module 7: Testing & Code Quality · Website topic covered: *Testcontainers 2 with PostgreSQL, Redis and Kafka, @ServiceConnection, reusable containers*
 
 ## What you will be able to do
 
@@ -244,7 +244,7 @@ Integration test, Testcontainers, `PostgreSQLContainer`, `GenericContainer`, `Ka
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [Testcontainers have forever changed the way I write tests](https://www.youtube.com/watch?v=sNg0bnMF_qY) · Dreams of Code · 12 min. Testcontainers: real databases in your tests, explained clearly.
 - [Spring Boot 3 Integration Testing With TestContainers | Junit 5 | JavaTechie](https://www.youtube.com/watch?v=Q-0Z6KZF1xM) · Java Techie · 22 min. Testcontainers with Spring Boot and PostgreSQL, step by step.

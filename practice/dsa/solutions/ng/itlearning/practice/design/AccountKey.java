@@ -1,7 +1,7 @@
 package ng.itlearning.practice.design;
 
 /**
- * Week 23. Pattern: the equals/hashCode contract.
+ * Week 24. Pattern: the equals/hashCode contract.
  * <p>
  * A key identifying an account by bank code and account number, used in HashMaps and HashSets. Two keys are
  * equal when both parts are equal, ignoring leading and trailing spaces. Implement {@code equals} and

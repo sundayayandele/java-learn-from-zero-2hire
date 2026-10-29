@@ -5,7 +5,7 @@
 
 ← [2.2 Race conditions, locks, atomics and concurrent collections](../2.2-race-conditions-locks-atomics/README.md) · [Module 2](../README.md) · [Phase 1](../../README.md) · [2.4 The JVM memory model, heap vs stack and garbage collection](../2.4-jvm-memory-gc/README.md) →
 
-> **Week 6** · Module 2: Concurrency & the JVM · Website topic covered: *Virtual threads (Project Loom) and structured concurrency concepts*
+> **Week 7** · Module 2: Concurrency & the JVM · Website topic covered: *Virtual threads (Project Loom) and structured concurrency concepts*
 
 ## What you will be able to do
 
@@ -221,7 +221,7 @@ Platform thread, virtual thread, carrier thread, mount/unmount, throughput vs la
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [Java Threads vs Virtual Threads | Why This Changes Everything](https://www.youtube.com/watch?v=0NtIcbSsjBc) · ByteMonk · 8 min. Platform threads vs virtual threads, with a clear mental model of carrier threads.
 - [Java Virtual Threads](https://www.youtube.com/watch?v=kirhhcFAGB4) · Jakob Jenkov · 9 min. Creating and running virtual threads in code.

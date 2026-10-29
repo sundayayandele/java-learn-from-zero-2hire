@@ -1,0 +1,9 @@
+[Unit]
+Description=Weekly plan messages every Monday at 06:00 UTC (07:00 in Lagos)
+
+[Timer]
+OnCalendar=Mon *-*-* 06:00:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

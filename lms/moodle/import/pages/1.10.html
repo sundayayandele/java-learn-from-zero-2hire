@@ -89,7 +89,7 @@ formatting:</p>
 (<code>StandardCharsets.UTF_8</code>). Since Java 18 the default charset
 is UTF-8 everywhere (JEP 400), but files from partners can still be
 ISO-8859-1 or Windows-1252, and naming the charset documents your
-assumption. Always use <strong>try-with-resources</strong> (topic 1.7)
+assumption. Always use <strong>try-with-resources</strong> (topic 1.9)
 so handles are released even on exceptions.</p>
 <p>Key methods to know:</p>
 <ul>
@@ -231,7 +231,7 @@ deserialise untrusted data</h3>
 remote-code-execution vulnerabilities (gadget chains in common
 libraries). In backend services:</p>
 <ul>
-<li>Exchange data as <strong>JSON</strong> (Jackson, topic 4.2), CSV or
+<li>Exchange data as <strong>JSON</strong> (Jackson, topic 4.3), CSV or
 Protobuf, never Java serialization, across trust boundaries.</li>
 <li>If you must deserialise, configure an <code>ObjectInputFilter</code>
 allow-list (JEP 290 / 415).</li>

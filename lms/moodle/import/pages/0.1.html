@@ -1,0 +1,325 @@
+<p><em>Week 0 · Module 0: Programming On-Ramp</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Explain what a program is and what happens when you run one.</li>
+<li>Write, run and change a small Java program that prints output and
+reads input.</li>
+<li>Store values in variables of the right type (<code>int</code>,
+<code>long</code>, <code>String</code>, <code>boolean</code>) and change
+them.</li>
+<li>Do arithmetic, including whole-number division and remainders,
+without surprises.</li>
+<li>Read a compiler error and a runtime error, find the line it points
+to, and fix it.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Every banking system, from a USSD transfer menu to a card switch, is
+built from the same small pieces you meet this week: values, variables,
+decisions and repetition. Engineers who are comfortable with the basics
+read code faster, and they don't panic when a build fails at 2 a.m. The
+single most useful habit you can build now is reading the error message
+before doing anything else.</p>
+<h2 id="1-what-a-program-is">1. What a program is</h2>
+<p>A program is a list of instructions the computer follows <strong>in
+order, one at a time, exactly as written</strong>. It doesn't guess what
+you meant. That is frustrating at first and reassuring later: if the
+program does something wrong, the reason is in the code, and you can
+find it.</p>
+<p>Java programs go through two steps:</p>
+<ol type="1">
+<li><strong>Compile.</strong> The Java compiler reads your source code
+(<code>Main.java</code>) and checks that it follows the language rules.
+If it doesn't, you get a <strong>compile error</strong> and nothing
+runs.</li>
+<li><strong>Run.</strong> The Java Virtual Machine (JVM) executes the
+compiled program. Problems that only appear while it runs (dividing by
+zero, reading a number that isn't one) are <strong>runtime
+errors</strong>.</li>
+</ol>
+<p>For this week, one command does both:
+<code>java Main.java</code>.</p>
+<h2 id="2-your-first-program">2. Your first program</h2>
+<p>Create a folder <code>onramp</code>, and inside it a file called
+<code>Main.java</code>:</p>
+<pre class="java"><code>public class Main {
+    public static void main(String[] args) {
+        System.out.println(&quot;Welcome to ITLearning Bank&quot;);
+        System.out.println(&quot;Your balance is being calculated...&quot;);
+    }
+}</code></pre>
+<p>Run it from a terminal in that folder:</p>
+<pre class="bash"><code>java Main.java</code></pre>
+<pre><code>Welcome to ITLearning Bank
+Your balance is being calculated...</code></pre>
+<p>For now, treat the first two lines and the two closing braces as the
+frame every program needs. Your instructions go between the inner
+<code>{</code> and <code>}</code>. Each instruction (a
+<strong>statement</strong>) ends with a semicolon.
+<code>System.out.println(...)</code> prints what's in the brackets and
+moves to a new line; <code>System.out.print(...)</code> prints without
+the new line.</p>
+<p><strong>Try it:</strong> add a third line that prints your name. Then
+remove one semicolon, run it again, and read the error (section 6
+explains it).</p>
+<h2 id="3-values-and-variables">3. Values and variables</h2>
+<p>A <strong>variable</strong> is a named box that holds a value. You
+declare its <strong>type</strong> (what kind of value it may hold) and
+its name, then give it a value:</p>
+<pre class="java"><code>int customers = 120;              // whole numbers up to about 2.1 billion
+long balanceKobo = 1_500_000L;    // bigger whole numbers; ₦15,000.00 stored as kobo
+String accountName = &quot;Ada Obi&quot;;   // text, in double quotes
+boolean isFrozen = false;         // true or false</code></pre>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Holds</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>int</code></td>
+<td>whole numbers, about ±2.1 billion</td>
+<td><code>42</code>, <code>-7</code></td>
+</tr>
+<tr>
+<td><code>long</code></td>
+<td>larger whole numbers (end literals with <code>L</code>)</td>
+<td><code>9_000_000_000L</code></td>
+</tr>
+<tr>
+<td><code>String</code></td>
+<td>text</td>
+<td><code>"NGN"</code></td>
+</tr>
+<tr>
+<td><code>boolean</code></td>
+<td><code>true</code> or <code>false</code></td>
+<td><code>false</code></td>
+</tr>
+<tr>
+<td><code>double</code></td>
+<td>numbers with a fraction</td>
+<td><code>3.75</code>, but <strong>never money</strong> (topic 1.3
+explains why)</td>
+</tr>
+</tbody>
+</table>
+<p>Money in this on-ramp is a whole number of <strong>kobo</strong> in a
+<code>long</code>: ₦250.75 is <code>25075</code>. Integers are exact,
+which is what a bank needs.</p>
+<p>Variables can change. The <code>=</code> sign means "store the value
+on the right in the box on the left", not "is equal to":</p>
+<pre class="java"><code>long balanceKobo = 500_000;       // ₦5,000.00
+balanceKobo = balanceKobo + 250_000;   // now 750_000
+balanceKobo += 100_000;                // shorthand: now 850_000
+balanceKobo -= 50_000;                 // now 800_000
+System.out.println(&quot;Balance in kobo: &quot; + balanceKobo);</code></pre>
+<p><code>+</code> between a <code>String</code> and anything else joins
+them into one string. Names follow a convention reviewers check:
+<code>camelCase</code> for variables, starting with a lower-case letter,
+and descriptive (<code>balanceKobo</code>, not <code>b</code>).</p>
+<h2 id="4-arithmetic-and-the-two-surprises">4. Arithmetic, and the two
+surprises</h2>
+<pre class="java"><code>int a = 17, b = 5;
+System.out.println(a + b);   // 22
+System.out.println(a - b);   // 12
+System.out.println(a * b);   // 85
+System.out.println(a / b);   // 3   &lt;- surprise 1
+System.out.println(a % b);   // 2   &lt;- the remainder</code></pre>
+<p><strong>Surprise 1: dividing two whole numbers gives a whole
+number.</strong> <code>17 / 5</code> is <code>3</code>; Java throws the
+fraction away (it doesn't round). That's useful when you mean it: ₦1,000
+shared between 3 people is 333 naira each, and <code>1000 % 3</code>
+tells you 1 naira is left over.</p>
+<p><strong>Surprise 2: order of operations.</strong> <code>*</code>,
+<code>/</code> and <code>%</code> happen before <code>+</code> and
+<code>-</code>, as in maths. <code>2 + 3 * 4</code> is <code>14</code>.
+Use brackets when in doubt: <code>(2 + 3) * 4</code> is
+<code>20</code>.</p>
+<p>To print kobo as naira and kobo, use division and remainder:</p>
+<pre class="java"><code>long amountKobo = 125_075;
+long naira = amountKobo / 100;     // 1250
+long kobo = amountKobo % 100;      // 75
+System.out.println(&quot;₦&quot; + naira + &quot;.&quot; + kobo);   // ₦1250.75</code></pre>
+<p><strong>Try it:</strong> what does this print for
+<code>amountKobo = 125_005</code>? (<code>₦1250.5</code>, which is
+wrong.) Fix it with <code>String.format("₦%d.%02d", naira, kobo)</code>,
+where <code>%02d</code> means "at least two digits, padded with
+zeros".</p>
+<h2 id="5-reading-input">5. Reading input</h2>
+<p>A program that only prints is a poster. <code>Scanner</code> reads
+what the user types:</p>
+<pre class="java"><code>import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner in = new Scanner(System.in);
+        System.out.print(&quot;Amount to send in kobo: &quot;);
+        long amount = in.nextLong();
+        System.out.print(&quot;Recipient name: &quot;);
+        in.nextLine();                          // finish the line the number was on
+        String name = in.nextLine();
+        long fee = amount &lt; 500_000 ? 1_000 : 2_500;   // ₦10 under ₦5,000, else ₦25
+        System.out.println(&quot;Sending &quot; + amount + &quot; kobo to &quot; + name + &quot;, fee &quot; + fee + &quot; kobo&quot;);
+    }
+}</code></pre>
+<p>The <code>import</code> line at the top tells Java where
+<code>Scanner</code> comes from. <code>nextLong()</code> reads a whole
+number, <code>nextLine()</code> reads the rest of a line as text. After
+reading a number, the Enter key is still waiting in the input, so call
+<code>nextLine()</code> once to discard it before reading text. (The
+<code>? :</code> on the fee line is a compact if/else; lesson 0.2 covers
+decisions properly.)</p>
+<h2 id="6-reading-error-messages">6. Reading error messages</h2>
+<p>Errors are the computer telling you exactly where it got confused.
+Read them from the top.</p>
+<p><strong>A compile error</strong> (the program never starts):</p>
+<pre><code>Main.java:4: error: &#39;;&#39; expected
+        long balanceKobo = 500_000
+                                  ^
+1 error</code></pre>
+<p>It names the <strong>file and line</strong>
+(<code>Main.java:4</code>), the <strong>problem</strong>
+(<code>';' expected</code>), and points with <code>^</code> to where it
+noticed. The real mistake is sometimes on the line before, because Java
+only notices something's missing when the next thing doesn't fit.</p>
+<p>Common compile errors at this stage:</p>
+<table>
+<thead>
+<tr>
+<th>Message</th>
+<th>Usual cause</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>';' expected</code></td>
+<td>a missing semicolon</td>
+</tr>
+<tr>
+<td><code>cannot find symbol ... variable balence</code></td>
+<td>a misspelt name, or a variable used before it's declared</td>
+</tr>
+<tr>
+<td><code>incompatible types: String cannot be converted to int</code></td>
+<td>putting text into a number variable</td>
+</tr>
+<tr>
+<td><code>class, interface, enum, or record expected</code></td>
+<td>a <code>}</code> too many, or code outside <code>main</code></td>
+</tr>
+<tr>
+<td><code>unclosed string literal</code></td>
+<td>a missing closing <code>"</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>A runtime error</strong> (the program started, then
+stopped):</p>
+<pre><code>Exception in thread &quot;main&quot; java.util.InputMismatchException
+    at java.base/java.util.Scanner.throwFor(Scanner.java:947)
+    at java.base/java.util.Scanner.next(Scanner.java:1602)
+    at java.base/java.util.Scanner.nextLong(Scanner.java:2382)
+    at java.base/java.util.Scanner.nextLong(Scanner.java:2337)
+    at Main.main(Main.java:7)</code></pre>
+<p>The first line says <strong>what</strong> went wrong
+(<code>InputMismatchException</code>: the user typed <code>abc</code>
+where a number was expected). The lines starting with <code>at</code>
+are the <strong>stack trace</strong>: the route the program took. Find
+the first line that mentions <strong>your</strong> file
+(<code>Main.java:7</code>): that's where to look. Another one you'll
+meet: <code>ArithmeticException: / by zero</code>.</p>
+<p><strong>The routine that always works:</strong> read the first line
+of the message, go to the line number in your file, compare what you
+wrote with what the message expected, change one thing, run again.</p>
+<h2 id="worked-example-a-transfer-summary">Worked example: a transfer
+summary</h2>
+<pre class="java"><code>import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner in = new Scanner(System.in);
+        System.out.print(&quot;Opening balance (kobo): &quot;);
+        long balance = in.nextLong();
+        System.out.print(&quot;Transfer amount (kobo): &quot;);
+        long amount = in.nextLong();
+
+        long fee = 1_000;                      // ₦10 flat
+        long vatOnFee = fee * 75 / 1000;       // 7.5% VAT on the fee: 75 kobo
+        long totalDebit = amount + fee + vatOnFee;
+        long closing = balance - totalDebit;
+
+        System.out.println(&quot;Amount:      &quot; + String.format(&quot;₦%d.%02d&quot;, amount / 100, amount % 100));
+        System.out.println(&quot;Fee + VAT:   &quot; + String.format(&quot;₦%d.%02d&quot;, (fee + vatOnFee) / 100, (fee + vatOnFee) % 100));
+        System.out.println(&quot;New balance: &quot; + String.format(&quot;₦%d.%02d&quot;, closing / 100, closing % 100));
+    }
+}</code></pre>
+<p>Run it with an opening balance of <code>2000000</code> and an amount
+of <code>500000</code>. Work out the answer on paper first (₦20,000.00 −
+₦5,000.00 − ₦10.75 = ₦14,989.25), then check the program agrees.
+Checking against a hand calculation is a habit professional engineers
+keep for their whole career; topic 1.6 turns it into automated
+tests.</p>
+<p>Notice <code>fee * 75 / 1000</code>: multiplying first keeps the
+result exact. <code>fee * (75 / 1000)</code> would be
+<code>fee * 0</code>, because <code>75 / 1000</code> is whole-number
+division.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Using <code>=</code> when you mean "compare" (that's
+<code>==</code>, in lesson 0.2).</li>
+<li>Dividing whole numbers and expecting a fraction (<code>7 / 2</code>
+is <code>3</code>).</li>
+<li>Storing money in a <code>double</code>. Use whole kobo in a
+<code>long</code> for now.</li>
+<li>Forgetting the <code>nextLine()</code> after <code>nextLong()</code>
+before reading text.</li>
+<li>Changing five things at once after an error, so you never learn
+which one fixed it.</li>
+<li>Copy-pasting examples instead of typing them: your fingers need the
+practice.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Print a three-line bank letterhead: name, address and a line of
+<code>=</code> signs.</li>
+<li>Read two amounts in kobo and print their sum, difference and which
+one is larger (you may use <code>Math.max</code>).</li>
+<li>Read a number of seconds and print it as hours, minutes and seconds,
+using <code>/</code> and <code>%</code> only (<code>3725</code> →
+<code>1h 2m 5s</code>).</li>
+<li>Deliberately cause four different compile errors from the table and
+one <code>ArithmeticException</code>. For each, write down the message
+and what fixed it.</li>
+<li>Change the worked example so the fee is ₦10 for amounts up to ₦5,000
+and ₦25 above (copy the <code>? :</code> line from section 5).</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Program, statement, compile, compiler, runtime, JVM, variable, type,
+<code>int</code>, <code>long</code>, <code>String</code>,
+<code>boolean</code>, assignment, integer division, remainder (modulo),
+<code>Scanner</code>, compile error, runtime error, exception, stack
+trace.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a href="https://dev.java/learn/getting-started/">dev.java (Oracle):
+Getting Started with Java</a></li>
+<li><a
+href="https://dev.java/learn/language-basics/variables/">dev.java:
+Creating Variables and Naming Them</a></li>
+<li><a
+href="https://docs.oracle.com/javase/tutorial/java/nutsandbolts/datatypes.html">The
+Java Tutorials: Primitive Data Types</a></li>
+<li><a href="https://openjdk.org/jeps/330">JEP 330: Launch Single-File
+Source-Code Programs</a> (why <code>java Main.java</code> works without
+<code>javac</code>)</li>
+</ul>
+
+<h2>Watch</h2>
+<h3>How to accept user input in Java ⌨️【8 minutes】</h3><p>Bro Code · 8 min. Reading input from the keyboard with Scanner, step by step.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/wAEPokhj5Q4" title="How to accept user input in Java ⌨️【8 minutes】" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Java arithmetic is easy! 🧮</h3><p>Bro Code · 8 min. Arithmetic operators, including whole-number division and the remainder.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/QAD5unRlCyo" title="Java arithmetic is easy! 🧮" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>How to read Java stack traces efficiently - Tips &amp; Tricks #006 | Vlogs</h3><p>Marco Behler · 6 min. How to read a Java stack trace: what went wrong and which line to open first.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/PFSJlZgNJXM" title="How to read Java stack traces efficiently - Tips &amp; Tricks #006 | Vlogs" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/00-programming-on-ramp/0.1-first-programs-values-errors/README.md">0.1 Your first programs: values, variables, input and reading error messages</a></p>

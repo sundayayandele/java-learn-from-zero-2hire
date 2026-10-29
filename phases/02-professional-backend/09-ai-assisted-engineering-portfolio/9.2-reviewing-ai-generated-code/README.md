@@ -5,7 +5,7 @@
 
 ← [9.1 Daily workflows with AI coding assistants (GitHub Copilot, Claude Code, Cursor and similar)](../9.1-ai-coding-assistants/README.md) · [Module 9](../README.md) · [Phase 2](../../README.md) · [9.3 Using AI to write tests, docs and refactors without losing understanding](../9.3-ai-tests-docs-refactors/README.md) →
 
-> **Week 23** · Module 9: AI-Assisted Engineering & Junior Portfolio · Website topic covered: *Reviewing AI output for correctness, security, licensing and maintainability*
+> **Week 24** · Module 9: AI-Assisted Engineering & Junior Portfolio · Website topic covered: *Reviewing AI output for correctness, security, licensing and maintainability*
 
 ## What you will be able to do
 
@@ -145,7 +145,7 @@ Author of record, hallucinated API, outdated idiom, plausible-but-wrong logic, c
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [How Developers Secure AI-Generated Code: 5 Security Best Practices](https://www.youtube.com/watch?v=X0UI0O8YzJM) · IBM Technology · 11 min. IBM: five practices for securing AI-generated code.
 - [Vibe Coding Has A Security Problem (And How To Fix It)](https://www.youtube.com/watch?v=tK4NQtzfZbM) · Chris Raroque · 16 min. Why vibe-coded apps fail security checks, and how to fix it.

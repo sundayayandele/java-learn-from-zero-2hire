@@ -71,7 +71,7 @@ Then refactor in **small, behaviour-preserving steps**, running the tests after 
 
 For large mechanical migrations, prefer **recipe-based tools** that are tested and repeatable over free-form generation:
 
-- **OpenRewrite** recipes for Java version upgrades, Spring Boot 3 → 4, JUnit 4 → 5, Jakarta namespace changes (Phase 1 topics 1.8 and 4.6):
+- **OpenRewrite** recipes for Java version upgrades, Spring Boot 3 → 4, JUnit 4 → 5, Jakarta namespace changes (Phase 1 topics 1.12 and 4.7):
 
 ```bash
 ./mvnw -U org.openrewrite.maven:rewrite-maven-plugin:run \

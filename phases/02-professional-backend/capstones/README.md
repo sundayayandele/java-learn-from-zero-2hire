@@ -10,7 +10,7 @@ Ten integration- and security-heavy fintech capstones: the work Lagos fintechs, 
 
 **Every starter** is generated from the [Spring Boot secure service starter](../../../templates/spring-boot-secure-service-starter/README.md): OAuth2 resource server with Keycloak, method security, OpenAPI, JaCoCo coverage gate, SBOM, Trivy scans and CI/CD for six platforms.
 
-**Complete at least two by the end of week 24: Capstone 1 plus any one other**, then defend them in a 20-minute [capstone defence](../../../docs/assessments/capstone-defence.md) (demo, code questions and a live change). A third capstone is welcome but optional: depth beats breadth in interviews. Capstones 1 and 2 have complete, tested reference solutions; your mentor shares each one once your submission has passed.
+**Complete at least two by the end of week 25: Capstone 1 plus any one other**, then defend them in a 20-minute [capstone defence](../../../docs/assessments/capstone-defence.md) (demo, code questions and a live change). A third capstone is welcome but optional: depth beats breadth in interviews. Capstones 1 and 2 have complete, tested reference solutions; your mentor shares each one once your submission has passed.
 
 | # | Capstone | Core skills | Data (licence) | Good for | Reference solution |
 | --- | --- | --- | --- | --- | --- |

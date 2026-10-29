@@ -2,7 +2,7 @@
 package ng.itlearning.practice.lists;
 
 /**
- * Week 15. Pattern: dummy head and splicing.
+ * Week 16. Pattern: dummy head and splicing.
  * <p>
  * Merge two sorted linked lists into one sorted list by relinking the existing nodes (no new nodes except an
  * optional dummy head).

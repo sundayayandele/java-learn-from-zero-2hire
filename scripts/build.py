@@ -7,6 +7,7 @@ Authored (edit these):
     phases/<phase>/<module>/module.md        module introduction and projects
     phases/<phase>/<module>/<topic>/lesson.md   reading content
     phases/<phase>/<module>/<topic>/cbt.json    topic quiz
+    phases/<phase>/<module>/entry-check.json    optional entry check shown on the module page (the on-ramp)
     phases/<phase>/deploy/guide.md, getting-hired/guide.md
     lms/videos.json                          videos per topic
 
@@ -57,6 +58,20 @@ def cbt_section(cbt: dict) -> str:
     lines = ["## Check your understanding", "",
              f"{len(qs)} scenario questions. Answer each one before opening the explanation. "
              "On Moodle this is the topic quiz: unlimited attempts, and aim for 70% or more.", ""]
+    return "\n".join(lines + question_lines(qs))
+
+
+def entry_check_section(check: dict) -> str:
+    qs = check["questions"]
+    lines = [f"## {check['title']}", "",
+             f"{len(qs)} questions. Write your answers down first, then open the explanations and count your score. "
+             f"**{check['pass_mark']} or more:** skip the on-ramp and start at topic 1.1. **Under {check['pass_mark']}:** "
+             "do the on-ramp first. On Moodle this is the *Entry check* quiz.", ""]
+    return "\n".join(lines + question_lines(qs))
+
+
+def question_lines(qs: list[dict]) -> list[str]:
+    lines = []
     for i, q in enumerate(qs, 1):
         kind = " *(choose all that apply)*" if q["type"] == "multi" else ""
         lines.append(f"**Q{i}.** {q['scenario']}")
@@ -69,7 +84,15 @@ def cbt_section(cbt: dict) -> str:
         letters = ", ".join(LETTERS[a] for a in ans)
         lines += ["", "<details><summary>Answer</summary>", "",
                   f"**{letters}.** {q['explanation']}", "", "</details>", ""]
-    return "\n".join(lines)
+    return lines
+
+
+def weeks_label(weeks: str) -> str:
+    return f"weeks {weeks}" if "-" in str(weeks) else f"week {weeks}"
+
+
+def optional_mark(item: dict) -> str:
+    return " (optional)" if item.get("optional") else ""
 
 
 def nav(items: list[str]) -> str:
@@ -105,7 +128,7 @@ def build() -> dict[Path, str]:
             cbt = load(tdir / "cbt.json")
             body = [BANNER.format(src=f"{t['slug']}/lesson.md, cbt.json and lms/videos.json"),
                     f"# {t['id']} {t['title']}", "", bar,
-                    f"> **Week {t['week']}** · Module {mod['number']}: {mod['title']} · "
+                    f"> **Week {t['week']}**{' · **Optional**' if t.get('optional') else ''} · Module {mod['number']}: {mod['title']} · "
                     f"Website topic covered: *{t['covers']}*", "",
                     lesson, "", watch_section(VIDEOS["topics"].get(t["id"], [])), cbt_section(cbt), "---", "", bar]
             out[tdir / "README.md"] = "\n".join(body)
@@ -113,12 +136,15 @@ def build() -> dict[Path, str]:
             mdir = pdir / mod["slug"]
             intro = (mdir / "module.md").read_text(encoding="utf-8").strip()
             rows = ["| Topic | Week | Covers (website wording) |", "| --- | --- | --- |"]
-            rows += [f"| [{t['id']} {t['title']}]({t['slug']}/README.md) | {t['week']} | {t['covers']} |" for t in mod["topics"]]
+            rows += [f"| [{t['id']} {t['title']}]({t['slug']}/README.md){optional_mark(t)} | {t['week']} | {t['covers']} |"
+                     for t in mod["topics"]]
+            check = mdir / "entry-check.json"
             out[mdir / "README.md"] = "\n".join([
-                BANNER.format(src=f"{mod['slug']}/module.md and curriculum.json"),
-                f"# Module {mod['number']}: {mod['title']} (weeks {mod['weeks']})", "",
+                BANNER.format(src=f"{mod['slug']}/module.md{', entry-check.json' if check.exists() else ''} and curriculum.json"),
+                f"# Module {mod['number']}: {mod['title']} ({weeks_label(mod['weeks'])}){optional_mark(mod)}", "",
                 f"← [Phase {phase['number']}: {phase['title']}](../README.md) · [Home](../../../README.md)", "",
-                "## Topics", "", *rows, "", intro, ""])
+                "## Topics", "", *rows, "", intro, "",
+                entry_check_section(load(check)) if check.exists() else ""])
         intro = (pdir / "phase.md").read_text(encoding="utf-8").strip()
         out[pdir / "README.md"] = "\n".join([
             BANNER.format(src=f"phases/{phase['slug']}/phase.md and curriculum.json"),
@@ -159,7 +185,7 @@ def curriculum_md(cur: dict) -> str:
              "## Stack", "", "| Area | Choice |", "| --- | --- |"]
     lines += [f"| {k.replace('_', ' ').title()} | {v} |" for k, v in cur["stack"].items()]
     lines.append("")
-    total_topics = 0
+    total_topics = optional_topics = 0
     for phase in cur["phases"]:
         status = "built" if phase["status"] == "built" else "planned"
         lines += [f"## Phase {phase['number']}: {phase['title']} (weeks {phase['weeks']}) · {status}", "",
@@ -167,15 +193,16 @@ def curriculum_md(cur: dict) -> str:
         for mod in phase["modules"]:
             link = f"[Module {mod['number']}: {mod['title']}](phases/{phase['slug']}/{mod['slug']}/README.md)" \
                 if status == "built" else f"Module {mod['number']}: {mod['title']}"
-            lines += [f"### {link} (weeks {mod['weeks']})", ""]
+            lines += [f"### {link} ({weeks_label(mod['weeks'])}){optional_mark(mod)}", ""]
             for t in mod["topics"]:
                 total_topics += 1
+                optional_topics += bool(t.get("optional") or mod.get("optional"))
                 if status == "built":
-                    lines.append(f"- [{t['id']} {t['title']}](phases/{phase['slug']}/{mod['slug']}/{t['slug']}/README.md)")
+                    lines.append(f"- [{t['id']} {t['title']}](phases/{phase['slug']}/{mod['slug']}/{t['slug']}/README.md){optional_mark(t)}")
                 else:
                     lines.append(f"- {t['id']} {t['title']}")
             lines += ["", "Projects: " + "; ".join(mod["projects"]) + ".", ""]
-    lines += [f"_{total_topics} topics in total._", ""]
+    lines += [f"_{total_topics} topics in total, {optional_topics} of them optional (the week-0 on-ramp and four specialist topics)._", ""]
     return "\n".join(lines)
 
 

@@ -1,421 +1,399 @@
 <p><em>Week 4 · Module 1: Modern Java &amp; OOP Foundations</em></p>
 <h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
 <ul>
-<li>Recognise code written for Java 8, 11 and 17 and translate it into
-modern Java 21 idioms.</li>
-<li>Explain the main changes between LTS releases that affect existing
-code: modules and strong encapsulation, removed APIs, <code>javax</code>
-→ <code>jakarta</code>, new garbage collectors.</li>
-<li>Plan and execute a migration safely: tests first,
-<code>jdeps</code>, compiler warnings, OpenRewrite recipes, one step at
-a time.</li>
-<li>Read unfamiliar legacy code methodically.</li>
+<li>Model immutable data with <strong>records</strong>, including
+validation in compact constructors.</li>
+<li>Close a type hierarchy with <strong>sealed</strong> classes and
+interfaces.</li>
+<li>Use <strong>pattern matching</strong> for <code>instanceof</code>,
+record patterns and <code>switch</code>, with guards and exhaustiveness
+checks.</li>
+<li>Write multi-line strings with <strong>text blocks</strong>.</li>
+<li>Combine these features into "data-oriented" domain models that the
+compiler checks for you.</li>
 </ul>
 <h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
 bank or fintech</h2>
-<p>Banks run Java code written over twenty years. Many of your first
-tickets will be in a service still on Java 8 or 11: fixing a bug, adding
-a field, or upgrading it because the old JDK is out of support and fails
-a security audit. Job ads say "Java 8/11/17/21" for exactly this reason.
-Engineers who can read old code without fear, and move it forward
-without breaking it, are the ones teams trust with critical systems.</p>
-<h2 id="1-a-timeline-you-should-know">1. A timeline you should know</h2>
+<p>Financial domains are full of closed sets of cases: a payment is a
+card payment, a bank transfer or a wallet top-up; a transaction outcome
+is approved, declined or pending review. When a new case is added, every
+place that handles the set must change, and missing one is a production
+bug. Java 21's records, sealed types and pattern matching let the
+compiler find every one of those places for you. Job postings that ask
+for "Java 21+" are asking whether you write code this way.</p>
+<h2 id="1-records">1. Records</h2>
+<p>A record is a class whose purpose is to carry data. You declare the
+components; the compiler generates the constructor, private final
+fields, accessors, <code>equals</code>, <code>hashCode</code> and
+<code>toString</code>.</p>
+<pre class="java"><code>public record Money(BigDecimal amount, Currency currency) { }
+
+Money m = new Money(new BigDecimal(&quot;1500.00&quot;), Currency.getInstance(&quot;NGN&quot;));
+m.amount();       // accessor is amount(), not getAmount()
+m.equals(new Money(new BigDecimal(&quot;1500.00&quot;), Currency.getInstance(&quot;NGN&quot;)));   // true: value equality
+m.toString();     // Money[amount=1500.00, currency=NGN]</code></pre>
+<p>That one line replaces about 50 lines of hand-written class, and it
+cannot get <code>equals</code>/<code>hashCode</code> wrong.</p>
+<h3 id="validation-in-a-compact-constructor">Validation in a compact
+constructor</h3>
+<pre class="java"><code>public record Money(BigDecimal amount, Currency currency) {
+    public Money {                                       // compact constructor: no parameter list
+        Objects.requireNonNull(amount, &quot;amount&quot;);
+        Objects.requireNonNull(currency, &quot;currency&quot;);
+        if (amount.scale() &gt; currency.getDefaultFractionDigits()) {
+            throw new IllegalArgumentException(&quot;Too many decimal places for &quot; + currency);
+        }
+    }
+
+    public static Money naira(String value) {            // static factory
+        return new Money(new BigDecimal(value), Currency.getInstance(&quot;NGN&quot;));
+    }
+
+    public Money plus(Money other) {                     // records can have methods
+        requireSameCurrency(other);
+        return new Money(amount.add(other.amount), currency);   // return a new value
+    }
+
+    private void requireSameCurrency(Money other) {
+        if (!currency.equals(other.currency)) {
+            throw new IllegalArgumentException(currency + &quot; vs &quot; + other.currency);
+        }
+    }
+}</code></pre>
+<p>What records can and cannot do:</p>
+<ul>
+<li>Fields are final; there are no setters. "Changing" a record means
+creating a new one (a "wither" such as <code>withAmount(...)</code> if
+you need it).</li>
+<li>They can have static fields and methods, instance methods, nested
+types, and implement interfaces.</li>
+<li>They cannot extend another class (they implicitly extend
+<code>java.lang.Record</code>) and cannot declare extra instance
+fields.</li>
+<li>Immutability is <strong>shallow</strong>: a record holding a
+<code>List</code> should copy it defensively
+(<code>this.items = List.copyOf(items)</code> in the compact
+constructor).</li>
+</ul>
+<p>Use records for value objects (<code>Money</code>,
+<code>AccountNumber</code>, <code>DateRange</code>), DTOs
+(request/response bodies), events (<code>TransferCompleted</code>) and
+map keys. Do not use them for JPA entities, which need mutable state and
+a no-argument constructor (Module 4).</p>
+<h2 id="2-sealed-classes-and-interfaces">2. Sealed classes and
+interfaces</h2>
+<p>A sealed type lists exactly which classes may extend or implement
+it.</p>
+<pre class="java"><code>public sealed interface PaymentMethod permits Card, BankTransfer, Wallet { }
+
+public record Card(String token, String last4, YearMonth expiry) implements PaymentMethod { }
+public record BankTransfer(String bankCode, String accountNumber) implements PaymentMethod { }
+public record Wallet(String walletId, String provider) implements PaymentMethod { }</code></pre>
+<p>Each permitted subclass must be <code>final</code> (records are),
+<code>sealed</code> (with its own <code>permits</code>), or
+<code>non-sealed</code> (open again for extension). Permitted subclasses
+must live in the same module, or in the same package if you are not
+using modules.</p>
+<p>Sealing does two things. It documents intent: "these are all the
+payment methods, by design". And it lets the compiler <strong>know the
+full list</strong>, which makes exhaustive <code>switch</code>
+possible.</p>
+<p>Inheritance in topic 1.4 was "open": anyone can add a subclass.
+Sealed hierarchies are "closed", and the right choice when the business
+defines a fixed set of variants.</p>
+<h2 id="3-pattern-matching">3. Pattern matching</h2>
+<h3 id="instanceof-patterns-java-16"><code>instanceof</code> patterns
+(Java 16)</h3>
+<pre class="java"><code>// Old style: test, then cast
+if (method instanceof Card) {
+    Card c = (Card) method;
+    charge(c.token());
+}
+
+// Pattern matching: test and bind in one step
+if (method instanceof Card c &amp;&amp; c.expiry().isAfter(YearMonth.now())) {
+    charge(c.token());
+}</code></pre>
+<h3 id="record-patterns-java-21">Record patterns (Java 21)</h3>
+<p>A record pattern takes a record apart into its components, and
+patterns can nest:</p>
+<pre class="java"><code>if (method instanceof BankTransfer(String bankCode, String acct)) {
+    validateNuban(bankCode, acct);
+}
+
+record Transfer(Money amount, PaymentMethod from, PaymentMethod to) { }
+
+if (t instanceof Transfer(Money(var amt, var ccy), Wallet w, BankTransfer b)) {
+    // amt, ccy, w and b are all in scope
+}</code></pre>
+<h3 id="pattern-matching-for-switch-java-21">Pattern matching for
+<code>switch</code> (Java 21)</h3>
+<p><code>switch</code> can now match on types and record shapes, with
+<strong>guards</strong> (<code>when</code>) and full exhaustiveness
+checking:</p>
+<pre class="java"><code>BigDecimal processingFee(PaymentMethod method, Money amount) {
+    return switch (method) {
+        case Card c when c.expiry().isBefore(YearMonth.now()) -&gt;
+                throw new CardExpiredException(c.last4());
+        case Card c -&gt; amount.amount().multiply(new BigDecimal(&quot;0.015&quot;))
+                .min(new BigDecimal(&quot;2000.00&quot;));
+        case BankTransfer(var bank, var acct) when bank.equals(OUR_BANK_CODE) -&gt; BigDecimal.ZERO;
+        case BankTransfer b -&gt; new BigDecimal(&quot;10.75&quot;);
+        case Wallet w -&gt; new BigDecimal(&quot;5.00&quot;);
+    };   // no default: the compiler knows PaymentMethod has exactly these three subtypes
+}</code></pre>
+<p>Now add
+<code>record Ussd(String phone) implements PaymentMethod</code> to the
+<code>permits</code> list. <strong>Every</strong> switch over
+<code>PaymentMethod</code> without a default stops compiling until
+someone decides what the USSD fee is. That is the payoff: a business
+change becomes a compiler-guided checklist instead of a production
+incident.</p>
+<p>Details worth knowing:</p>
+<ul>
+<li>Cases are checked top to bottom. A more specific case
+(<code>Card c when ...</code>) must come before a general one
+(<code>Card c</code>), or the compiler reports it as dominated.</li>
+<li><code>case null -&gt;</code> handles null explicitly; without it, a
+null selector throws <code>NullPointerException</code> as before.</li>
+<li>Adding <code>default</code> switches off exhaustiveness checking for
+future subtypes. Avoid it with sealed hierarchies.</li>
+<li>Java 22 made the unnamed pattern <code>_</code> final
+(<code>case BankTransfer(var bank, _) -&gt; ...</code>); in Java 21 it
+is a preview feature, so name every variable there.</li>
+</ul>
+<h3 id="modelling-outcomes-not-just-inputs">Modelling outcomes, not just
+inputs</h3>
+<p>Sealed records are just as useful for results, replacing booleans and
+error codes:</p>
+<pre class="java"><code>public sealed interface AuthorisationResult
+        permits Approved, Declined, ReferToIssuer { }
+public record Approved(String authCode) implements AuthorisationResult { }
+public record Declined(String reason) implements AuthorisationResult { }
+public record ReferToIssuer(String phone) implements AuthorisationResult { }
+
+String message = switch (authorise(request)) {
+    case Approved a -&gt; &quot;Approved, code &quot; + a.authCode();
+    case Declined d -&gt; &quot;Declined: &quot; + d.reason();
+    case ReferToIssuer r -&gt; &quot;Call your bank on &quot; + r.phone();
+};</code></pre>
+<p>This style, plain data in records plus behaviour in exhaustive
+switches, is often called <strong>data-oriented programming</strong>. It
+complements, rather than replaces, the object-oriented design from topic
+1.4: use polymorphic methods when each subtype owns its behaviour, and
+pattern matching when an operation sits outside the types (reports,
+fees, serialisation).</p>
+<h2 id="4-text-blocks">4. Text blocks</h2>
+<p>Text blocks (Java 15) are multi-line string literals delimited by
+<code>"""</code>. They make embedded SQL, JSON and messages
+readable:</p>
+<pre class="java"><code>String sql = &quot;&quot;&quot;
+        SELECT a.number, a.balance, c.full_name
+        FROM account a
+        JOIN customer c ON c.id = a.customer_id
+        WHERE a.status = &#39;ACTIVE&#39;
+          AND a.balance &lt; ?
+        &quot;&quot;&quot;;
+
+String webhook = &quot;&quot;&quot;
+        {
+          &quot;event&quot;: &quot;transfer.completed&quot;,
+          &quot;reference&quot;: &quot;%s&quot;,
+          &quot;amount&quot;: %s
+        }
+        &quot;&quot;&quot;.formatted(reference, amount);</code></pre>
+<p>Rules:</p>
+<ul>
+<li>The opening <code>"""</code> must be followed by a line break.</li>
+<li>Indentation is stripped up to the leftmost line, <em>including</em>
+the line with the closing <code>"""</code>. Move the closing delimiter
+left to keep indentation in the string.</li>
+<li>A <code>\</code> at the end of a line joins it with the next (no
+newline); <code>\s</code> keeps a trailing space that would otherwise be
+stripped.</li>
+<li>Use <code>.formatted(...)</code> for placeholders.
+<strong>Never</strong> build SQL with string formatting from user input:
+use <code>?</code> parameters (topic 3.5).</li>
+</ul>
+<h2 id="5-other-modern-features-you-will-meet">5. Other modern features
+you will meet</h2>
+<ul>
+<li><strong>Switch expressions</strong> (Java 14): covered in topic
+1.3.</li>
+<li><strong><code>var</code></strong> (Java 10): covered in topic
+1.3.</li>
+<li><strong>Helpful NullPointerExceptions</strong> (Java 14): messages
+now name the null expression, e.g.
+<code>Cannot invoke "Account.balance()" because "acc" is null</code>.</li>
+<li><strong>Sequenced collections</strong> (Java 21): covered in topic
+1.5.</li>
+<li><strong>Virtual threads</strong> (Java 21): Module 2.</li>
+<li>In <strong>Java 25</strong>: unnamed variables and patterns are long
+final, module import declarations
+(<code>import module java.base;</code>), flexible constructor bodies
+(statements before <code>super(...)</code>), compact source files with
+instance <code>main</code> methods for small programs, and primitive
+types in patterns still in preview. None are required for this
+programme, but you should recognise them in newer codebases.</li>
+</ul>
+<h2 id="6-reading-lombok-code">6. Reading Lombok code</h2>
+<p>Many codebases you will join were written before records existed, and
+use <strong>Lombok</strong>, an annotation processor that generates code
+at compile time. You need to read it fluently even if you write records
+in new code:</p>
 <table>
 <thead>
 <tr>
-<th>Release</th>
-<th>Year</th>
-<th>LTS</th>
-<th>Changes you will see in code</th>
+<th>Lombok</th>
+<th>Generates</th>
+<th>Modern alternative</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Java 8</td>
-<td>2014</td>
-<td>yes</td>
-<td>Lambdas, streams, <code>Optional</code>, <code>java.time</code>,
-default methods</td>
+<td><code>@Getter</code>, <code>@Setter</code></td>
+<td>Accessors for fields</td>
+<td>Records (immutable) or explicit methods</td>
 </tr>
 <tr>
-<td>Java 9</td>
-<td>2017</td>
-<td></td>
-<td>Module system (JPMS), <code>List.of</code>/<code>Map.of</code>,
-<code>jshell</code>, private interface methods</td>
+<td><code>@RequiredArgsConstructor</code></td>
+<td>A constructor for <code>final</code> fields (often used for Spring
+constructor injection)</td>
+<td>A hand-written constructor</td>
 </tr>
 <tr>
-<td>Java 10</td>
-<td>2018</td>
-<td></td>
-<td><code>var</code></td>
-</tr>
-<tr>
-<td>Java 11</td>
-<td>2018</td>
-<td>yes</td>
-<td><code>HttpClient</code>,
-<code>String.isBlank/strip/lines/repeat</code>,
-<code>Files.readString</code>, single-file launch; <strong>Java EE
-modules removed</strong> (JAXB, JAX-WS, CORBA)</td>
-</tr>
-<tr>
-<td>Java 14–16</td>
-<td>2020–21</td>
-<td></td>
-<td>Switch expressions, records, text blocks, <code>instanceof</code>
-patterns, <code>Stream.toList()</code>, helpful NPEs</td>
-</tr>
-<tr>
-<td>Java 17</td>
-<td>2021</td>
-<td>yes</td>
-<td>Sealed classes; <strong>strong encapsulation of JDK
-internals</strong> (no more <code>--illegal-access</code>); Security
-Manager deprecated</td>
-</tr>
-<tr>
-<td>Java 21</td>
-<td>2023</td>
-<td>yes</td>
-<td>Virtual threads, record patterns, pattern matching for switch,
-sequenced collections, generational ZGC</td>
-</tr>
-<tr>
-<td>Java 25</td>
-<td>2025</td>
-<td>yes</td>
-<td>Scoped values and module imports final; compact source files;
-Security Manager gone; 32-bit x86 removed</td>
-</tr>
-</tbody>
-</table>
-<p>Oracle, Adoptium and other vendors patch LTS releases for years, but
-each eventually reaches end of support. Running an unsupported JDK means
-unpatched vulnerabilities, which auditors and regulators flag.</p>
-<h2 id="2-reading-legacy-code-translation-table">2. Reading legacy code:
-translation table</h2>
-<p>When you open a Java 8 codebase you will see patterns like the left
-column. Recognise them, and use the right column in new code.</p>
-<table>
-<thead>
-<tr>
-<th>Legacy idiom</th>
-<th>Modern equivalent</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>List&lt;String&gt; l = new ArrayList&lt;String&gt;();</code></td>
-<td><code>var l = new ArrayList&lt;String&gt;();</code> or
-<code>List.of(...)</code> for constants</td>
-</tr>
-<tr>
-<td><code>Arrays.asList("a", "b")</code> for constants</td>
-<td><code>List.of("a", "b")</code> (truly unmodifiable, no nulls)</td>
-</tr>
-<tr>
-<td><code>Collections.unmodifiableList(new ArrayList&lt;&gt;(x))</code></td>
-<td><code>List.copyOf(x)</code></td>
-</tr>
-<tr>
-<td>Anonymous inner class
-<code>new Comparator&lt;Txn&gt;() { public int compare(...) {...} }</code></td>
-<td><code>Comparator.comparing(Txn::date)</code></td>
-</tr>
-<tr>
-<td><code>for</code> loop building a filtered list</td>
-<td><code>stream().filter(...).toList()</code></td>
-</tr>
-<tr>
-<td><code>.collect(Collectors.toList())</code></td>
-<td><code>.toList()</code> (unmodifiable; check callers don't mutate the
-result)</td>
-</tr>
-<tr>
-<td><code>if (o instanceof Card) { Card c = (Card) o; ... }</code></td>
-<td><code>if (o instanceof Card c) { ... }</code></td>
-</tr>
-<tr>
-<td>Long <code>if/else if</code> on a type or enum</td>
-<td>Switch expression, pattern matching over a sealed type</td>
-</tr>
-<tr>
-<td><code>switch</code> with <code>case X: ... break;</code></td>
-<td><code>case X -&gt; ...</code></td>
-</tr>
-<tr>
-<td>POJO with constructor, getters, <code>equals</code>,
-<code>hashCode</code>, <code>toString</code> (or Lombok
-<code>@Value</code>)</td>
+<td><code>@Value</code></td>
+<td>Immutable class: private final fields, getters,
+<code>equals</code>/<code>hashCode</code>/<code>toString</code></td>
 <td><code>record</code></td>
 </tr>
 <tr>
-<td>String concatenation with <code>"\n" +</code></td>
-<td>Text block</td>
+<td><code>@Data</code></td>
+<td>Getters, setters, <code>equals</code>/<code>hashCode</code>,
+<code>toString</code>, required-args constructor</td>
+<td>Rarely appropriate; see below</td>
 </tr>
 <tr>
-<td><code>new Date()</code>, <code>Calendar</code>,
-<code>SimpleDateFormat</code> (not thread-safe!)</td>
-<td><code>Instant.now()</code>, <code>LocalDate</code>,
-<code>DateTimeFormatter</code></td>
+<td><code>@Builder</code></td>
+<td>A builder (topic 1.11)</td>
+<td>Hand-written builder or static factories</td>
 </tr>
 <tr>
-<td><code>str.trim().isEmpty()</code></td>
-<td><code>str.isBlank()</code></td>
-</tr>
-<tr>
-<td><code>new String(Files.readAllBytes(p), UTF_8)</code></td>
-<td><code>Files.readString(p)</code></td>
-</tr>
-<tr>
-<td>Apache <code>HttpClient</code> / <code>HttpURLConnection</code>
-boilerplate</td>
-<td><code>java.net.http.HttpClient</code> (or Spring's
-<code>RestClient</code>)</td>
-</tr>
-<tr>
-<td><code>Executors.newFixedThreadPool(200)</code> for blocking I/O</td>
-<td>Virtual threads (topic 2.3)</td>
-</tr>
-<tr>
-<td><code>new Integer(5)</code>, <code>new BigDecimal(0.1)</code></td>
-<td><code>Integer.valueOf(5)</code>,
-<code>new BigDecimal("0.1")</code></td>
-</tr>
-<tr>
-<td><code>Optional</code> returned and then <code>.get()</code></td>
-<td><code>.orElseThrow()</code>, <code>.map(...)</code></td>
+<td><code>@Slf4j</code></td>
+<td><code>private static final Logger log = LoggerFactory.getLogger(...)</code></td>
+<td>Declare the logger yourself</td>
 </tr>
 </tbody>
 </table>
-<p>A small before/after:</p>
-<pre class="java"><code>// Java 8 style
-public List&lt;String&gt; largeDebitReferences(List&lt;Transaction&gt; txs) {
-    List&lt;String&gt; refs = new ArrayList&lt;String&gt;();
-    for (Transaction tx : txs) {
-        if (tx instanceof DebitTransaction) {
-            DebitTransaction d = (DebitTransaction) tx;
-            if (d.getAmount().compareTo(new BigDecimal(&quot;1000000&quot;)) &gt; 0) {
-                refs.add(d.getReference());
-            }
-        }
+<pre class="java"><code>@Service
+@RequiredArgsConstructor          // constructor injection of the final fields below
+@Slf4j
+class TransferService {
+    private final AccountRepository accounts;
+    private final FeeCalculator fees;
+}</code></pre>
+<p>Know the traps: <code>@Data</code> on a JPA entity generates
+<code>equals</code>/<code>hashCode</code> over all fields (including
+lazy collections and the generated id), which breaks
+<code>HashSet</code>s and can trigger lazy loading;
+<code>@ToString</code> can print sensitive fields such as BVNs or tokens
+into logs (exclude them with <code>@ToString.Exclude</code>); and Lombok
+must be configured as an annotation processor in Maven and enabled in
+IntelliJ IDEA. Spring Boot manages the Lombok version (1.18.48 in Boot
+4.1.2), so you add the dependency with
+<code>&lt;optional&gt;true&lt;/optional&gt;</code> and no version.</p>
+<h2 id="worked-example-a-fee-engine-with-no-if-chains">Worked example: a
+fee engine with no <code>if</code> chains</h2>
+<pre class="java"><code>public sealed interface Txn permits CardTxn, TransferTxn, AirtimeTxn { Money amount(); }
+public record CardTxn(Money amount, String mcc, boolean international) implements Txn { }
+public record TransferTxn(Money amount, String destinationBank) implements Txn { }
+public record AirtimeTxn(Money amount, String network) implements Txn { }
+
+public final class FeeEngine {
+    private static final BigDecimal CAP = new BigDecimal(&quot;2000.00&quot;);
+
+    public Money fee(Txn txn) {
+        BigDecimal fee = switch (txn) {
+            case CardTxn c when c.international() -&gt; pct(c.amount(), &quot;0.030&quot;);
+            case CardTxn c -&gt; pct(c.amount(), &quot;0.015&quot;).min(CAP);
+            case TransferTxn t when t.amount().amount().compareTo(new BigDecimal(&quot;5000&quot;)) &lt;= 0 -&gt; new BigDecimal(&quot;10.75&quot;);
+            case TransferTxn t when t.amount().amount().compareTo(new BigDecimal(&quot;50000&quot;)) &lt;= 0 -&gt; new BigDecimal(&quot;26.88&quot;);
+            case TransferTxn t -&gt; new BigDecimal(&quot;53.75&quot;);
+            case AirtimeTxn a -&gt; BigDecimal.ZERO;
+        };
+        return new Money(fee.setScale(2, RoundingMode.HALF_EVEN), txn.amount().currency());
     }
-    Collections.sort(refs);
-    return Collections.unmodifiableList(refs);
-}
 
-// Java 21 style
-public List&lt;String&gt; largeDebitReferences(List&lt;Transaction&gt; txs) {
-    return txs.stream()
-            .filter(tx -&gt; tx instanceof DebitTransaction d &amp;&amp; d.amount().compareTo(LARGE) &gt; 0)
-            .map(Transaction::reference)
-            .sorted()
-            .toList();
-}</code></pre>
-<p><strong>Do not modernise for its own sake.</strong> Rewriting working
-legacy code without tests is how outages happen. Modernise code you are
-already changing, behind tests, in small commits.</p>
-<h2 id="3-what-actually-breaks-when-you-upgrade">3. What actually breaks
-when you upgrade</h2>
-<h3 id="from-java-8-to-11">From Java 8 to 11</h3>
-<ul>
-<li><strong>Removed Java EE modules.</strong>
-<code>javax.xml.bind</code> (JAXB), <code>javax.xml.ws</code> (JAX-WS),
-<code>javax.annotation</code>, <code>javax.activation</code> and CORBA
-were deleted from the JDK. Code that compiled on 8 fails with
-<code>package javax.xml.bind does not exist</code>. Fix: add the
-libraries as normal Maven dependencies (now under the
-<code>jakarta.*</code> names; see below).</li>
-<li><strong>Internal APIs.</strong> Code (or old libraries) using
-<code>sun.misc.BASE64Encoder</code> and similar internals. Fix:
-<code>java.util.Base64</code>, and upgrade the library.</li>
-<li><strong>Module system warnings</strong> about illegal reflective
-access, from old versions of libraries such as Spring, Hibernate,
-Mockito, Lombok and ASM. Fix: upgrade those libraries first.</li>
-<li><code>ClassLoader</code> changes: the system class loader is no
-longer a <code>URLClassLoader</code>; hacks that cast it break.</li>
-</ul>
-<h3 id="from-11-to-17">From 11 to 17</h3>
-<ul>
-<li><strong>Strong encapsulation of JDK internals.</strong> The
-<code>--illegal-access</code> escape hatch is gone. Reflection into
-<code>java.*</code> private fields fails with
-<code>InaccessibleObjectException</code>. Old Lombok, Mockito, Byte
-Buddy, Groovy and Gradle versions are typical culprits. Fix: upgrade
-them; use <code>--add-opens</code> only as a documented, temporary
-workaround.</li>
-<li>Removed: Nashorn JavaScript engine, RMI activation, experimental
-AOT/Graal JIT.</li>
-</ul>
-<h3 id="from-17-to-21">From 17 to 21</h3>
-<p>Usually smooth for application code. Watch for: libraries that need a
-version bump to understand Java 21 class files (ASM, Byte Buddy, Jacoco,
-Mockito, Lombok); deprecation of finalisation; and behaviour changes
-such as <code>Thread.stop</code> now always throwing. Default GC remains
-G1; consider Generational ZGC for low-latency services after
-measuring.</p>
-<h3 id="javax--jakarta"><code>javax</code> → <code>jakarta</code></h3>
-<p>Not a JDK change but the biggest migration in enterprise Java. When
-Oracle handed Java EE to the Eclipse Foundation, it became
-<strong>Jakarta EE</strong>, and from Jakarta EE 9 the package names
-changed from <code>javax.*</code> to <code>jakarta.*</code>:
-<code>javax.persistence.Entity</code> →
-<code>jakarta.persistence.Entity</code>, <code>javax.servlet</code> →
-<code>jakarta.servlet</code>, <code>javax.validation</code> →
-<code>jakarta.validation</code>. Spring Boot 3 moved to Jakarta EE 9/10,
-and Spring Boot 4 to Jakarta EE 11. Note that <code>javax.sql</code>,
-<code>javax.crypto</code> and other packages that are part of the JDK
-itself did <strong>not</strong> change. Topic 4.6 covers the Spring
-side.</p>
-<h2 id="4-a-safe-migration-process">4. A safe migration process</h2>
-<ol type="1">
-<li><p><strong>Get a green build on the current version.</strong> If
-tests are missing, write characterisation tests that pin down current
-behaviour, especially around money calculations and date
-handling.</p></li>
-<li><p><strong>Inventory.</strong> <code>./mvnw dependency:tree</code>
-for library versions; <code>jdeps --jdk-internals target/app.jar</code>
-to find uses of JDK internals;
-<code>jdeps --multi-release 21 --print-module-deps</code> to see which
-JDK modules the code needs.</p></li>
-<li><p><strong>Upgrade build tooling and plugins first</strong>: Maven
-3.9+, <code>maven-compiler-plugin</code> with
-<code>&lt;release&gt;21&lt;/release&gt;</code>, Surefire/Failsafe,
-JaCoCo, and Lombok/Mockito/Byte Buddy to versions that support Java
-21.</p></li>
-<li><p><strong>Move one LTS at a time</strong> when the jump is large (8
-→ 11 → 17 → 21), getting the build green at each step. Run on the new
-JDK with the old <code>release</code> level first, then raise the
-language level.</p></li>
-<li><p><strong>Automate the mechanical parts with OpenRewrite.</strong>
-Recipes such as
-<code>org.openrewrite.java.migrate.UpgradeToJava21</code> and
-<code>org.openrewrite.java.migrate.jakarta.JavaxMigrationToJakarta</code>
-rewrite imports, deprecated APIs and build files across the codebase in
-one reviewed commit:</p>
-<pre class="bash"><code>./mvnw -U org.openrewrite.maven:rewrite-maven-plugin:run \
-  -Drewrite.recipeArtifactCoordinates=org.openrewrite.recipe:rewrite-migrate-java:RELEASE \
-  -Drewrite.activeRecipes=org.openrewrite.java.migrate.UpgradeToJava21</code></pre>
-<p>Run it on a branch, read the whole diff, and run every test before
-merging.</p></li>
-<li><p><strong>Fix compiler warnings</strong> with
-<code>-Xlint:all</code>: deprecations often become removals in the next
-LTS.</p></li>
-<li><p><strong>Test in a production-like environment</strong>:
-performance, memory (GC defaults and container awareness changed between
-8 and 11), TLS (older protocols and ciphers are disabled by default),
-time zones and locales.</p></li>
-<li><p><strong>Roll out gradually</strong> and keep the previous build
-ready for rollback.</p></li>
-</ol>
-<h2 id="5-how-to-read-an-unfamiliar-legacy-codebase">5. How to read an
-unfamiliar legacy codebase</h2>
-<ul>
-<li>Start from the <strong>entry points</strong>: <code>main</code>, web
-controllers, scheduled jobs, message listeners. Follow one real request
-end to end in the debugger.</li>
-<li>Read the <strong>tests</strong> (if any) to learn what the code is
-supposed to do.</li>
-<li>Use <strong>Find Usages</strong> and <strong>Call Hierarchy</strong>
-in IntelliJ instead of guessing.</li>
-<li>Check <strong>Git history</strong>
-(<code>git log -p --follow File.java</code>, <code>git blame</code>) to
-see why something odd was done: the commit message often references a
-ticket or a regulator.</li>
-<li>Keep a short <strong>notes file</strong> of what you learn, and turn
-it into README content or an architecture decision record for the next
-person.</li>
-<li>Change one thing at a time, behind a test.</li>
-</ul>
-<h2 id="worked-example-modernising-a-statement-formatter">Worked
-example: modernising a statement formatter</h2>
-<p>Legacy (Java 8):</p>
-<pre class="java"><code>public class StatementLine {
-    private final Date date; private final String narration; private final BigDecimal amount;
-    public StatementLine(Date date, String narration, BigDecimal amount) { ... }
-    public Date getDate() { return date; }            // leaks a mutable Date
-    // getters, equals, hashCode, toString: 60 more lines
-}
-
-public static String format(List&lt;StatementLine&gt; lines) {
-    SimpleDateFormat fmt = new SimpleDateFormat(&quot;dd/MM/yyyy&quot;);   // not thread-safe if made static
-    StringBuilder sb = new StringBuilder();
-    for (StatementLine l : lines) {
-        sb.append(fmt.format(l.getDate())).append(&quot; | &quot;).append(l.getNarration())
-          .append(&quot; | &quot;).append(l.getAmount()).append(&quot;\n&quot;);
+    private static BigDecimal pct(Money m, String rate) {
+        return m.amount().multiply(new BigDecimal(rate));
     }
-    return sb.toString();
 }</code></pre>
-<p>Modern (Java 21):</p>
-<pre class="java"><code>public record StatementLine(LocalDate date, String narration, BigDecimal amount) { }
-
-private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern(&quot;dd/MM/yyyy&quot;);  // immutable, thread-safe
-
-public static String format(List&lt;StatementLine&gt; lines) {
-    return lines.stream()
-            .map(l -&gt; &quot;%s | %s | %s&quot;.formatted(DATE.format(l.date()), l.narration(), l.amount()))
-            .collect(Collectors.joining(&quot;\n&quot;, &quot;&quot;, &quot;\n&quot;));
-}</code></pre>
-<p>Before changing it, write a test that formats three known lines and
-asserts the exact output string; run it before and after.</p>
+<p>The transfer bands mirror the familiar Nigerian NIP-style fee tiers;
+treat the numbers as illustrative, since each bank publishes its
+own.</p>
 <h2 id="common-mistakes">Common mistakes</h2>
 <ul>
-<li>Upgrading the JDK and all libraries and the framework in one giant
-commit.</li>
-<li>Treating <code>--add-opens</code> flags as a permanent fix.</li>
-<li>Replacing <code>.collect(Collectors.toList())</code> with
-<code>.toList()</code> where callers later add to the list (it is
-unmodifiable).</li>
-<li>Running a global find-and-replace of <code>javax.</code> →
-<code>jakarta.</code> and breaking
-<code>javax.sql</code>/<code>javax.crypto</code> imports.</li>
-<li>Modernising untested code that works.</li>
+<li>Calling <code>money.getAmount()</code>: record accessors have no
+<code>get</code> prefix.</li>
+<li>Assuming records are deeply immutable when they hold mutable lists
+or arrays.</li>
+<li>Putting a <code>default</code> branch in a switch over a sealed
+type, which silently swallows new variants.</li>
+<li>Ordering a general case before a guarded specific one.</li>
+<li>Using records as JPA entities.</li>
+<li>Building SQL from text blocks with
+<code>formatted(userInput)</code>.</li>
 </ul>
 <h2 id="practice">Practice</h2>
 <ol type="1">
-<li>Take the Java 8 <code>largeDebitReferences</code> and
-<code>StatementLine</code> examples, write tests for them, then
-modernise them and keep the tests green.</li>
-<li>Clone any open-source Java 8 or 11 project, run
-<code>jdeps --jdk-internals</code> on its jar, and write a short
-migration risk list.</li>
-<li>Create a small Java 11 Maven project that uses
-<code>javax.xml.bind.DatatypeConverter</code>, then migrate it to Java
-21 (replacing it with <code>java.util.HexFormat</code> or
-<code>Base64</code>). Document each error and fix.</li>
-<li>Run the OpenRewrite <code>UpgradeToJava21</code> recipe on a
-practice project and review the diff line by line. Which changes would
-you accept, and which would you question?</li>
+<li>Write <code>record AccountNumber(String value)</code> that rejects
+anything but 10 digits, and
+<code>record DateRange(LocalDate from, LocalDate to)</code> that rejects
+<code>from</code> after <code>to</code>. Add
+<code>boolean contains(LocalDate)</code>.</li>
+<li>Model
+<code>sealed interface LoanDecision permits Approved, Rejected, ManualReview</code>
+with sensible components, and write an exhaustive switch that produces
+the customer SMS text.</li>
+<li>Add a fourth <code>Txn</code> type, <code>BillPaymentTxn</code>, to
+the worked example. Note every compile error, fix them, and explain why
+this is better than a runtime failure.</li>
+<li>Rewrite a 15-line JSON string built with <code>+</code> and
+<code>\n</code> as a text block with <code>formatted</code>.</li>
+<li>Take a Lombok <code>@Data</code> class from an open-source Spring
+project, rewrite it as a record or a hand-written class, and list every
+method Lombok was generating.</li>
 </ol>
 <h2 id="key-terms">Key terms</h2>
-<p>LTS, end of support, JPMS, strong encapsulation, <code>jdeps</code>,
-<code>--add-opens</code>, Jakarta EE, <code>javax</code> →
-<code>jakarta</code>, OpenRewrite, recipe, characterisation test,
-<code>release</code> flag.</p>
+<p>Record, component, compact constructor, canonical constructor, value
+equality, sealed, <code>permits</code>, <code>non-sealed</code>, pattern
+matching, type pattern, record pattern, guard (<code>when</code>),
+exhaustiveness, dominance, data-oriented programming, text block,
+Lombok, annotation processor, <code>@Data</code>, <code>@Value</code>,
+<code>@RequiredArgsConstructor</code>, <code>@Builder</code>.</p>
 <h2 id="further-reading">Further reading</h2>
 <ul>
+<li><a href="https://openjdk.org/jeps/395">JEP 395: Records</a></li>
+<li><a href="https://openjdk.org/jeps/409">JEP 409: Sealed
+Classes</a></li>
+<li><a href="https://openjdk.org/jeps/440">JEP 440: Record
+Patterns</a></li>
+<li><a href="https://openjdk.org/jeps/441">JEP 441: Pattern Matching for
+switch</a></li>
+<li><a href="https://openjdk.org/jeps/378">JEP 378: Text Blocks</a></li>
 <li><a
-href="https://docs.oracle.com/en/java/javase/21/migrate/getting-started.html">Oracle
-JDK Migration Guide (Java 21)</a></li>
+href="https://www.infoq.com/articles/data-oriented-programming-java/">Brian
+Goetz: Data-Oriented Programming in Java (InfoQ)</a></li>
+<li><a href="https://dev.java/learn/language/oop/records/">dev.java
+(Oracle): Records</a></li>
 <li><a
-href="https://docs.openrewrite.org/recipes/java/migrate/upgradetojava21">OpenRewrite:
-Migrate to Java 21</a></li>
-<li><a
-href="https://docs.oracle.com/en/java/javase/21/docs/specs/man/jdeps.html"><code>jdeps</code>
-tool reference</a></li>
-<li><a
-href="https://jakarta.ee/blogs/javax-jakartaee-namespace-ecosystem-progress/">Jakarta
-EE: the javax to jakarta namespace change (Eclipse Foundation)</a></li>
-<li><a
-href="https://www.oracle.com/java/technologies/java-se-support-roadmap.html">Oracle:
-Java SE Support Roadmap</a></li>
-<li><a href="https://dev.java/evolution/">dev.java (Oracle): Java
-release history and new features</a></li>
+href="https://docs.oracle.com/en/java/javase/21/language/java-language-changes.html">Oracle:
+Java SE 21 language changes</a></li>
 </ul>
 
 <h2>Watch</h2>
-<h3>Ranking Java Features Added from Versions 8 to 21!</h3><p>Tales from the jar side · 27 min. Every major language and API change from Java 8 to 21, ranked by how much it matters day to day.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/RuMogS3ycKs" title="Ranking Java Features Added from Versions 8 to 21!" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
-<h3>Migrate to Java 21 using OpenRewrite</h3><p>Moderne and OpenRewrite · 7 min. Automating a Java 21 migration with OpenRewrite recipes.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/uViRlX-RahA" title="Migrate to Java 21 using OpenRewrite" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
-<h3>All New Java Language Features Since Java 21 #RoadTo25 (optional, longer)</h3><p>Java · 35 min. The Java team on what changed after 21, so you know what Java 25 adds.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/X0-TGhktFnE" title="All New Java Language Features Since Java 21 #RoadTo25" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
-<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/01-modern-java-oop/1.8-legacy-java-migration/README.md">1.8 Reading legacy Java 8/11/17 code and migrating it forward</a></p>
+<h3>Records In Java - Full Tutorial - The Best New Java Feature You&#x27;re Not Using</h3><p>Coding with John · 14 min. Records: what they generate for you and when to use them.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/gJ9DYC-jswo" title="Records In Java - Full Tutorial - The Best New Java Feature You&#x27;re Not Using" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Sealed Classes in Java | Java 17 features</h3><p>Telusko · 10 min. Sealed classes and interfaces: closing a type hierarchy on purpose.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/glvYULuaf-k" title="Sealed Classes in Java | Java 17 features" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Java 21 Pattern Matching Tutorial #RoadTo21</h3><p>Java · 23 min. The Java team&#x27;s own tour of pattern matching in Java 21: record patterns and switch.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/QrwFrm1R8OY" title="Java 21 Pattern Matching Tutorial #RoadTo21" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Text Blocks - JEP Café #5</h3><p>Java · 11 min. Text blocks from the Java team: indentation rules, escapes and formatting.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/NDaA9MrTLBM" title="Text Blocks - JEP Café #5" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/01-modern-java-oop/1.8-modern-java-features/README.md">1.8 Modern Java: records, sealed classes, pattern matching for switch and text blocks</a></p>

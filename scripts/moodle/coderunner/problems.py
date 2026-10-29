@@ -10,7 +10,7 @@ Tests marked example=True are shown as examples in the question text.
 
 # (phase, path under ng/itlearning/practice, tests); tests are (code, example)
 PROBLEMS = [
-    # ---------------- Phase 1 (practice weeks 2-13) ----------------
+    # ---------------- Phase 1 (practice weeks 3-14) ----------------
     (1, "arrays/TwoSumTransfers", [
         ("show(TwoSumTransfers.find(new long[] {500_00, 2_000_00, 1_250_00, 750_00}, 2_000_00));", True),
         ("show(TwoSumTransfers.find(new long[] {1, 4, 3, 2, 3}, 6));", True),
@@ -138,7 +138,7 @@ PROBLEMS = [
         ("System.out.println(KthLargestTransfer.kthLargest(new long[] {1}, 0));", False),
     ]),
 
-    # ---------------- Phase 2 (practice weeks 14-24) ----------------
+    # ---------------- Phase 2 (practice weeks 15-25) ----------------
     (2, "lists/ReverseList", [
         ("System.out.println(Node.toList(ReverseList.reverse(Node.of(1, 2, 3, 4))));", True),
         ("System.out.println(Node.toList(ReverseList.reverse(Node.of(7))));", False),

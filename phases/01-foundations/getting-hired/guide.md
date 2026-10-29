@@ -1,8 +1,8 @@
-# Getting hired after Phase 1 (week 13, then ongoing)
+# Getting hired after Phase 1 (week 14, then ongoing)
 
 ← [Phase 1](../README.md) · [Capstones](../capstones/README.md) · [Home](../../../README.md)
 
-Phase 1 doesn't make you a finished backend engineer; Phases 2 and 3 do. But by week 13 you can credibly compete for **Java internships, graduate trainee programmes, junior support-engineering roles on Java systems, and some junior backend roles** at fintechs and banks, especially if your three capstones are deployed and well documented. Start the visibility work now so it compounds by month 6.
+Phase 1 doesn't make you a finished backend engineer; Phases 2 and 3 do. But by week 14 you can credibly compete for **Java internships, graduate trainee programmes, junior support-engineering roles on Java systems, and some junior backend roles** at fintechs and banks, especially if your three capstones are deployed and well documented. Start the visibility work now so it compounds by month 6.
 
 ## What you can honestly claim after Phase 1
 
@@ -79,7 +79,7 @@ Use Situation, Task, Action, Result, and keep each under two minutes:
 3. **Seek referrals**: engage with engineers from target companies on LinkedIn by commenting usefully on their technical posts, attend Java and fintech meetups (Lagos Java User Group, Google Developer Groups, fintech events), and ask cohort alumni.
 4. **Track everything** in a spreadsheet: company, role, date, contact, stage, feedback, next step.
 5. **Apply in waves of 4–5** so interviews cluster and you can compare offers. After each rejection, ask for feedback and redo one practice exercise in that area.
-6. Keep building: Phase 2 starts in week 14. Each new module adds a line to your CV.
+6. Keep building: Phase 2 starts in week 15. Each new module adds a line to your CV.
 
 ## Phase 1 Getting Hired checklist
 

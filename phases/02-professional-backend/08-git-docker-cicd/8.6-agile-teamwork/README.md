@@ -5,7 +5,7 @@
 
 ← [8.5 Deploying a container to a cloud host](../8.5-deploying-containers-cloud/README.md) · [Module 8](../README.md) · [Phase 2](../../README.md) · [9.1 Daily workflows with AI coding assistants (GitHub Copilot, Claude Code, Cursor and similar)](../../09-ai-assisted-engineering-portfolio/9.1-ai-coding-assistants/README.md) →
 
-> **Week 22** · Module 8: Git, Docker & CI/CD · Website topic covered: *Added for the job: Scrum and Kanban, user stories and acceptance criteria, estimation, stand-ups, bug reports, definition of done*
+> **Week 23** · Module 8: Git, Docker & CI/CD · Website topic covered: *Added for the job: Scrum and Kanban, user stories and acceptance criteria, estimation, stand-ups, bug reports, definition of done*
 
 ## What you will be able to do
 
@@ -147,7 +147,7 @@ Agile, Scrum, sprint, sprint goal, product owner, Scrum master, backlog, refinem
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [Scrum Essentials in Under 10 Minutes](https://www.youtube.com/watch?v=RtQ3tpq-RuE) · Scrum Alliance · 10 min. Scrum essentials in under ten minutes, from the Scrum Alliance.
 - [How to write good User Stories in Agile](https://www.youtube.com/watch?v=7hoGqhb6qAs) · The Agile Shop · 4 min. How to write good user stories.

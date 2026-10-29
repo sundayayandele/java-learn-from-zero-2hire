@@ -6,7 +6,7 @@ import java.math.MathContext;
 import java.math.RoundingMode;
 
 /**
- * Week 24. Pattern: BigDecimal arithmetic with an explicit rounding policy.
+ * Week 25. Pattern: BigDecimal arithmetic with an explicit rounding policy.
  * <p>
  * Return the balance after {@code months} of monthly compounding at {@code annualRatePercent} (for example
  * "18.5"): each month multiply by (1 + rate / 100 / 12). Keep full precision during the calculation

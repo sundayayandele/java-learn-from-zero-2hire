@@ -2,7 +2,7 @@
 package ng.itlearning.practice.strings;
 
 /**
- * Week 8. Pattern: weighted checksum.
+ * Week 9. Pattern: weighted checksum.
  * <p>
  * A 10-digit NUBAN account number is a 9-digit serial plus a check digit computed with the bank's 3-digit code
  * (CBN NUBAN standard). Multiply the 12 digits of bankCode + serial by the weights

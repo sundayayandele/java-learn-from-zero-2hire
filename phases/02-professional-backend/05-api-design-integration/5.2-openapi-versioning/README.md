@@ -5,7 +5,7 @@
 
 ← [5.1 Resource design, HTTP semantics and status codes](../5.1-resource-design-http/README.md) · [Module 5](../README.md) · [Phase 2](../../README.md) · [5.3 Standard error responses (Problem Details), pagination, idempotency keys](../5.3-errors-pagination-idempotency/README.md) →
 
-> **Week 14** · Module 5: API Design & Integration · Website topic covered: *OpenAPI 3.1 with springdoc, contract-first vs code-first, API versioning strategies, deprecation*
+> **Week 15** · Module 5: API Design & Integration · Website topic covered: *OpenAPI 3.1 with springdoc, contract-first vs code-first, API versioning strategies, deprecation*
 
 ## What you will be able to do
 
@@ -270,7 +270,7 @@ OpenAPI Specification, Swagger UI, springdoc-openapi, `/v3/api-docs`, schema, `o
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [API Versioning Made Simple with Spring Boot 4.0](https://www.youtube.com/watch?v=qjo2tYf01xo) · Dan Vega · 27 min. First-class API versioning in Spring Boot 4: header, path and media-type strategies.
 - [Spring Doc OpenApi Setup In SpringBoot | Swagger Setuo using SpringDoc Open api|SpringBoot tutorials](https://www.youtube.com/watch?v=LsD89_f9vjE) · KB Tutorials · 18 min. Adding springdoc-openapi to a Spring Boot app and reading the generated Swagger UI.

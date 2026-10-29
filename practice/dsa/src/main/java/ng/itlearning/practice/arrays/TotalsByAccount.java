@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * Week 3. Pattern: grouping with a map.
+ * Week 4. Pattern: grouping with a map.
  * <p>
  * Given postings (account number and a signed amount in kobo: credits positive, debits negative), return each
  * account's net total, ordered by total descending and, for equal totals, by account number ascending.

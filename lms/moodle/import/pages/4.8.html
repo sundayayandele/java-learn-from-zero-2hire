@@ -1,4 +1,4 @@
-<p><em>Week 13 · Module 4: Spring Boot 4 Fundamentals</em></p>
+<p><em>Week 14 · Module 4: Spring Boot 4 Fundamentals</em></p>
 <h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
 <ul>
 <li>Explain how Spring adds behaviour through <strong>proxies</strong>,
@@ -35,7 +35,7 @@ annotations get their behaviour</h2>
 <code>@Async</code>, <code>@Retryable</code> or similar, Spring doesn't
 change your class. At start-up, a <code>BeanPostProcessor</code>
 replaces the bean with a <strong>proxy</strong> that wraps calls to it
-(topic 1.12). Other beans receive the proxy. Spring Boot uses
+(topic 1.11). Other beans receive the proxy. Spring Boot uses
 <strong>class-based (CGLIB) proxies</strong> by default: a generated
 subclass of your class.</p>
 <pre class="text"><code>Controller ──calls──&gt; [Proxy: start tx] ──&gt; TransferService.transfer() ──&gt; [Proxy: commit/rollback]</code></pre>
@@ -180,7 +180,7 @@ the whole call. Commit first, then call, or use events after commit
 <tr>
 <td><code>singleton</code> (default)</td>
 <td>Application context</td>
-<td>Must be stateless or thread-safe (topic 1.12)</td>
+<td>Must be stateless or thread-safe (topic 1.11)</td>
 </tr>
 <tr>
 <td><code>prototype</code></td>
@@ -233,7 +233,7 @@ and needs reflection in tests.</p>
 <h2 id="4-application-events">4. Application events</h2>
 <p><code>ApplicationEventPublisher.publishEvent(...)</code> sends any
 object to listeners in the same application (the Observer pattern, topic
-1.12).</p>
+1.11).</p>
 <pre class="java"><code>@Component
 class FraudScoring {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -305,7 +305,7 @@ a property is set.</li>
 <strong>conditions evaluation report</strong>, or call the Actuator
 <code>conditions</code> endpoint (restricted to operators). Spring Boot
 4 splits auto-configuration into many modules, so a missing starter
-means the condition never matches (topic 4.6).</p>
+means the condition never matches (topic 4.7).</p>
 <h2 id="common-mistakes">Common mistakes</h2>
 <ul>
 <li><code>@Transactional</code> on a private method, or a method called

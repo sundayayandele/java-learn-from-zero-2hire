@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.TreeMap;
 
 /**
- * Week 19. Pattern: topological sort (Kahn's algorithm).
+ * Week 20. Pattern: topological sort (Kahn's algorithm).
  * <p>
  * End-of-day batch jobs depend on each other: {@code dependsOn.get("interest")} lists jobs that must finish
  * before "interest". Every job appears as a key. Return an order that runs each job after its dependencies,

@@ -1,0 +1,96 @@
+{
+  "topic": "0.2",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A loop is meant to print instalments for months 1 to 12: `for (int m = 1; m < 12; m++) { ... }`.",
+      "question": "What happens?",
+      "options": [
+        "It prints months 1 to 12",
+        "It prints months 1 to 11: the condition stops before 12, so `m <= 12` is needed",
+        "It prints months 0 to 11",
+        "It never stops"
+      ],
+      "answer": 1,
+      "explanation": "The loop continues while `m < 12`, so the last round is m = 11. This is an off-by-one error; ask what the first and last values are before writing the condition."
+    },
+    {
+      "type": "single",
+      "scenario": "A USSD menu reads the channel the customer chose into `String channel` and checks `if (channel == \"TRANSFER\")`. It works in a quick test but fails for real input.",
+      "question": "What is the fix?",
+      "options": [
+        "Use `channel.equals(\"TRANSFER\")`",
+        "Use `channel = \"TRANSFER\"`",
+        "Convert both to numbers first",
+        "Use `channel.length() == 8`"
+      ],
+      "answer": 0,
+      "explanation": "`==` on strings compares whether they are the same object, not whether they hold the same text. `.equals` compares the text; `.equalsIgnoreCase` also ignores capital letters."
+    },
+    {
+      "type": "single",
+      "scenario": "`long[] amounts = {500, 1200, 300};` and the code reads `amounts[3]`.",
+      "question": "What happens?",
+      "options": [
+        "It returns 300, the last element",
+        "It returns 0",
+        "The program stops with ArrayIndexOutOfBoundsException, because the indexes are 0, 1 and 2",
+        "It compiles to an error"
+      ],
+      "answer": 2,
+      "explanation": "Arrays are numbered from 0, so the last index is `length - 1`, here 2. The compiler can't check index values, so the mistake shows up at runtime."
+    },
+    {
+      "type": "single",
+      "scenario": "A learner finds the largest debit in `long[] debits = {-500, -200, -900}` using `long largest = 0;` and `if (d > largest) largest = d;`.",
+      "question": "What does it report, and why?",
+      "options": [
+        "-200, which is correct",
+        "0, because no element is greater than the starting value of 0",
+        "-900",
+        "It fails to compile"
+      ],
+      "answer": 1,
+      "explanation": "Every element is below 0, so `largest` never changes. Start a \"best so far\" variable with the first element, `debits[0]`, so it is always a real value from the array."
+    },
+    {
+      "type": "single",
+      "scenario": "A PIN check uses `while (!unlocked && attempts < 3) { String pin = in.nextLine(); if (pin.equals(\"4321\")) unlocked = true; }` and never stops for a customer who keeps typing a wrong PIN.",
+      "question": "What is missing?",
+      "options": [
+        "A `break` at the end of the block",
+        "Something that changes `attempts`, such as `attempts++` inside the loop",
+        "Brackets around `!unlocked`",
+        "A `for` loop instead"
+      ],
+      "answer": 1,
+      "explanation": "With a wrong PIN, neither `unlocked` nor `attempts` ever changes, so the condition stays true forever. Every loop needs something inside it that moves it towards its end."
+    },
+    {
+      "type": "single",
+      "scenario": "An `if` / `else if` chain checks transfers in this order: `amount > 0` → approve; `isFrozen` → reject; `amount > balance` → reject.",
+      "question": "What is wrong with it?",
+      "options": [
+        "Nothing; the order doesn't matter",
+        "Any positive amount is approved before the frozen and balance checks are reached, because only the first matching branch runs",
+        "`else if` can only be used once",
+        "It rejects every transfer"
+      ],
+      "answer": 1,
+      "explanation": "Java runs only the first branch whose condition is true. Put the rejections (frozen, invalid amount, insufficient funds) first and approve in the final `else`."
+    },
+    {
+      "type": "single",
+      "scenario": "`String ref = \"trf-001\"; ref.toUpperCase(); System.out.println(ref);`",
+      "question": "What is printed?",
+      "options": [
+        "TRF-001",
+        "trf-001, because strings never change and the new upper-case string wasn't stored",
+        "An error, because `-` can't be upper-cased",
+        "Trf-001"
+      ],
+      "answer": 1,
+      "explanation": "String methods return a new string. Write `ref = ref.toUpperCase();` to keep the result."
+    }
+  ]
+}

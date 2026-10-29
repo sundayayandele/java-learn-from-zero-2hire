@@ -1,8 +1,8 @@
 ## What this module gives you
 
-Two weeks on how Java runs many things at once, and how the JVM manages memory underneath. Week 5 covers classic concurrency: threads, pools, `CompletableFuture`, races and locks. Week 6 covers Java 21's virtual threads, structured concurrency, and the JVM memory model and garbage collection.
+Two weeks on how Java runs many things at once, and how the JVM manages memory underneath. Week 6 covers classic concurrency: threads, pools, `CompletableFuture`, races and locks. Week 7 covers Java 21's virtual threads, structured concurrency, the JVM memory model and garbage collection, and debugging. Topic 2.5 (modules, packaging and `jlink`) is **optional**: it completes the Oracle OCP objectives but rarely comes up in junior interviews.
 
-**Exit check for Module 2:** all four topic CBTs passed, and project 2.C below completed (it is short and everyone should do it), plus either 2.A or 2.B.
+**Exit check for Module 2:** the five core topic CBTs attempted (aim for 70%+), and project 2.C below completed (it is short and everyone should do it), plus either 2.A or 2.B.
 
 ## Module projects
 

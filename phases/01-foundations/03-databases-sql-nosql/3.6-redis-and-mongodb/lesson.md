@@ -219,7 +219,7 @@ db.kyc_cases.find({ status: "PENDING_REVIEW", tier: 2 }).explain("executionStats
 
 MongoDB supports multi-document ACID transactions on replica sets, but if your design needs them constantly, the data is probably relational. Schema validation (`$jsonSchema` validators) lets you enforce required fields, which is wise for regulated data.
 
-With Spring Boot, `spring-boot-starter-data-mongodb` gives you `MongoTemplate` and repository interfaces like Spring Data JPA's (topic 4.3). Note that Spring Boot 4 changed how `UUID` and `BigDecimal` are represented in MongoDB by default; check the migration notes before upgrading an existing app.
+With Spring Boot, `spring-boot-starter-data-mongodb` gives you `MongoTemplate` and repository interfaces like Spring Data JPA's (topic 4.4). Note that Spring Boot 4 changed how `UUID` and `BigDecimal` are represented in MongoDB by default; check the migration notes before upgrading an existing app.
 
 ## Worked example: an FX-rate service with a cache
 

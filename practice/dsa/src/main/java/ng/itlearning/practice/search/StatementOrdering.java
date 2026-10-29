@@ -7,7 +7,7 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Week 14. Pattern: Comparator composition.
+ * Week 15. Pattern: Comparator composition.
  * <p>
  * Sort transactions for an investigation report: largest amount first; for equal amounts (compare with
  * {@code compareTo}, so 10.0 equals 10.00), earliest time first; then reference ascending. Return a new list;

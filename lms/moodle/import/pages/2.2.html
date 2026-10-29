@@ -1,4 +1,4 @@
-<p><em>Week 5 · Module 2: Concurrency &amp; the JVM</em></p>
+<p><em>Week 6 · Module 2: Concurrency &amp; the JVM</em></p>
 <h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
 <ul>
 <li>Recognise race conditions (check-then-act, read-modify-write) and
@@ -214,7 +214,7 @@ transactions processed), <code>LongAdder</code> spreads updates across
 cells and is much faster than <code>AtomicLong</code> under
 contention.</p>
 <h2 id="6-concurrent-collections">6. Concurrent collections</h2>
-<p>The ordinary collections from topic 1.4 are not thread-safe.
+<p>The ordinary collections from topic 1.5 are not thread-safe.
 <code>Collections.synchronizedMap(map)</code> wraps every method in one
 lock, which is correct but slow, and compound actions are still racy.
 Prefer <code>java.util.concurrent</code>:</p>
@@ -317,7 +317,7 @@ public Response callPartner(Request r) throws InterruptedException {
 <h2 id="9-the-best-lock-is-no-lock">9. The best lock is no lock</h2>
 <p>The most reliable concurrent code avoids shared mutable state:</p>
 <ul>
-<li><strong>Immutability</strong> (topic 1.7): immutable objects need no
+<li><strong>Immutability</strong> (topic 1.9): immutable objects need no
 locks.</li>
 <li><strong>Confinement</strong>: give each thread its own data, then
 merge results at the end (as the statement generator in topic 2.1

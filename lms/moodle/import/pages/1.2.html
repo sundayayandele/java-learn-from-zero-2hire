@@ -1,407 +1,335 @@
 <p><em>Week 1 · Module 1: Modern Java &amp; OOP Foundations</em></p>
 <h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
 <ul>
-<li>Declare variables with the right primitive or reference type, and
-explain how each is stored.</li>
-<li>Represent money correctly with <code>BigDecimal</code> and explain
-why <code>double</code> is wrong for it.</li>
-<li>Write decisions and loops with <code>if</code>, <code>switch</code>
-expressions, <code>for</code>, enhanced <code>for</code>,
-<code>while</code> and <code>do-while</code>.</li>
-<li>Write small, well-named methods with parameters and return values,
-and understand pass-by-value.</li>
-<li>Use <code>String</code>, <code>StringBuilder</code>, arrays and
-<code>var</code> appropriately.</li>
+<li>Explain what version control is for, and what a commit, a repository
+and a remote are.</li>
+<li>Set up Git, make commits, see what changed and go back to an earlier
+version.</li>
+<li>Keep build output and secrets out of a repository with
+<code>.gitignore</code>.</li>
+<li>Put a project on GitHub, push changes, and clone it on another
+machine.</li>
+<li>Work on a branch, open a pull request on your own repository, review
+the diff and merge it.</li>
+<li>Add a GitHub Actions workflow that builds and tests every push, and
+show its badge in your README.</li>
 </ul>
 <h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
 bank or fintech</h2>
-<p>Most production incidents in financial software are not exotic. They
-are an <code>int</code> that overflowed when transaction volume grew, a
-<code>double</code> that turned ₦0.30 into ₦0.29999999999999998, a
-string compared with <code>==</code> instead of <code>equals</code>, or
-an off-by-one in a loop over a statement. This topic is about getting
-the basics exactly right, because in finance "almost right" is a
-reconciliation break.</p>
-<h2 id="1-anatomy-of-a-java-program">1. Anatomy of a Java program</h2>
-<pre class="java"><code>package ng.itlearning.bank;              // the namespace; matches the folder path
-
-import java.math.BigDecimal;             // use a class from another package
-
-public class Account {                   // one public class per file, same name as the file
-    private final String number;         // a field: state that belongs to each object
-    private BigDecimal balance;
-
-    public Account(String number, BigDecimal opening) {   // a constructor
-        this.number = number;
-        this.balance = opening;
-    }
-
-    public BigDecimal balance() {        // a method
-        return balance;
-    }
-
-    public static void main(String[] args) {   // the program&#39;s entry point
-        Account acc = new Account(&quot;0123456789&quot;, new BigDecimal(&quot;1500.00&quot;));
-        System.out.println(acc.balance());
-    }
-}</code></pre>
-<p>Statements end with <code>;</code>, blocks live inside
-<code>{ }</code>, and Java is case-sensitive. Names follow conventions
-that every reviewer checks: <code>PascalCase</code> for classes,
-<code>camelCase</code> for methods and variables,
-<code>UPPER_SNAKE_CASE</code> for constants, all-lowercase for
-packages.</p>
-<h2 id="2-types-primitives-and-references">2. Types: primitives and
-references</h2>
-<p>Java is <strong>statically typed</strong>: every variable has a type
-the compiler knows, and it refuses to compile code that mixes types
-incorrectly. That catches whole classes of bugs before the code ever
-runs.</p>
-<h3 id="the-eight-primitives">The eight primitives</h3>
+<p>Every line of code in a bank is in version control. Auditors ask "who
+changed this fee rule, when, and who approved it?", and the answer comes
+from Git history and pull requests. Teams deploy only what has passed CI
+on the main branch. For you, GitHub is also your portfolio: hiring
+managers open your repositories before they open your CV. This topic
+covers what you need from day one; Module 8 (topic 8.1) adds team
+workflows, rebasing and branch protection.</p>
+<h2 id="1-what-git-does">1. What Git does</h2>
+<p>Git records <strong>snapshots</strong> of a project folder over time.
+Each snapshot is a <strong>commit</strong>: the full state of the
+tracked files, a message saying why it changed, the author and a
+timestamp. Commits form a history you can read, compare and return
+to.</p>
 <table>
 <thead>
 <tr>
-<th>Type</th>
-<th>Size</th>
-<th>Range / notes</th>
-<th>Use for</th>
+<th>Term</th>
+<th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>byte</code></td>
-<td>8 bit</td>
-<td>-128 to 127</td>
-<td>raw binary data</td>
+<td><strong>Repository (repo)</strong></td>
+<td>A project folder whose history Git tracks (in a hidden
+<code>.git</code> folder)</td>
 </tr>
 <tr>
-<td><code>short</code></td>
-<td>16 bit</td>
-<td>±32 thousand</td>
-<td>rarely used</td>
+<td><strong>Working tree</strong></td>
+<td>The files as they are on your disk right now</td>
 </tr>
 <tr>
-<td><code>int</code></td>
-<td>32 bit</td>
-<td>about ±2.1 billion</td>
-<td>counts, indexes</td>
+<td><strong>Staging area</strong></td>
+<td>The changes you've chosen to include in the next commit</td>
 </tr>
 <tr>
-<td><code>long</code></td>
-<td>64 bit</td>
-<td>about ±9.2 quintillion</td>
-<td>IDs, timestamps, amounts in minor units (kobo, cents)</td>
+<td><strong>Commit</strong></td>
+<td>A saved snapshot with a message, identified by a hash such as
+<code>3f9c2ab</code></td>
 </tr>
 <tr>
-<td><code>float</code></td>
-<td>32 bit</td>
-<td>~7 decimal digits</td>
-<td>almost never</td>
+<td><strong>Branch</strong></td>
+<td>A movable name for a line of commits; the default is
+<code>main</code></td>
 </tr>
 <tr>
-<td><code>double</code></td>
-<td>64 bit</td>
-<td>~15 decimal digits, binary fraction</td>
-<td>scientific values, ratios, <strong>never money</strong></td>
-</tr>
-<tr>
-<td><code>char</code></td>
-<td>16 bit</td>
-<td>one UTF-16 code unit</td>
-<td>single characters</td>
-</tr>
-<tr>
-<td><code>boolean</code></td>
-<td>—</td>
-<td><code>true</code> / <code>false</code></td>
-<td>flags</td>
+<td><strong>Remote</strong></td>
+<td>A copy of the repository on a server, usually GitHub, named
+<code>origin</code></td>
 </tr>
 </tbody>
 </table>
-<p>Primitives hold their value directly. Everything else
-(<code>String</code>, <code>BigDecimal</code>, arrays, your own classes)
-is a <strong>reference type</strong>: the variable holds a reference (an
-address) to an object on the heap. A reference can be <code>null</code>,
-which means "points to nothing", and calling a method on
-<code>null</code> throws <code>NullPointerException</code>.</p>
-<p>Each primitive has a <strong>wrapper class</strong>
-(<code>Integer</code>, <code>Long</code>, <code>Double</code>,
-<code>Boolean</code>...) so it can live in collections. Java converts
-between them automatically (autoboxing), which has a trap:
-<code>Integer</code> values compared with <code>==</code> compare
-references, and only small values (-128 to 127) are cached.</p>
-<pre class="java"><code>Integer a = 127, b = 127;   a == b   // true (cached)
-Integer c = 1000, d = 1000; c == d   // false! different objects
-c.equals(d)                          // true: compare values with equals</code></pre>
-<h3 id="overflow-the-silent-bug">Overflow: the silent bug</h3>
-<pre class="java"><code>int dailyVolumeKobo = 2_000_000_000;      // ₦20 million in kobo
-dailyVolumeKobo += 500_000_000;            // wraps to a negative number. No error.
-long safe = 2_000_000_000L + 500_000_000L; // use long
-Math.addExact(2_000_000_000, 500_000_000); // or throw ArithmeticException on overflow</code></pre>
-<p>Underscores in numeric literals (<code>1_000_000</code>) are only for
-readability.</p>
-<h3 id="money-bigdecimal-never-double">Money: <code>BigDecimal</code>,
-never <code>double</code></h3>
-<p><code>double</code> stores numbers in binary, and most decimal
-fractions (0.1, 0.3) have no exact binary representation:</p>
-<pre class="java"><code>System.out.println(0.1 + 0.2);            // 0.30000000000000004</code></pre>
-<p>Over millions of transactions those errors add up, and a ledger that
-does not balance to the kobo is a failed audit. Use
-<code>java.math.BigDecimal</code>:</p>
-<pre class="java"><code>import java.math.BigDecimal;
-import java.math.RoundingMode;
-
-BigDecimal price = new BigDecimal(&quot;0.10&quot;);      // ALWAYS construct from a String
-BigDecimal wrong = new BigDecimal(0.1);          // 0.1000000000000000055511151231257827...
-BigDecimal total = price.add(new BigDecimal(&quot;0.20&quot;));         // 0.30 exactly
-
-BigDecimal principal = new BigDecimal(&quot;250000.00&quot;);
-BigDecimal monthlyRate = new BigDecimal(&quot;0.18&quot;)
-        .divide(new BigDecimal(&quot;12&quot;), 10, RoundingMode.HALF_EVEN);  // must give scale + rounding
-BigDecimal interest = principal.multiply(monthlyRate)
-        .setScale(2, RoundingMode.HALF_EVEN);    // round to kobo: 3750.00</code></pre>
-<p>Rules to remember:</p>
+<p><strong>Git</strong> is the tool on your machine.
+<strong>GitHub</strong> is a website that hosts repositories and adds
+pull requests, reviews and CI. (GitLab and Azure DevOps do the same; the
+Git commands are identical.)</p>
+<h2 id="2-set-up-once">2. Set up once</h2>
+<p>Install Git (<a href="https://git-scm.com/downloads">git-scm.com</a>;
+on macOS <code>xcode-select --install</code>, on Ubuntu
+<code>sudo apt install git</code>), then tell it who you are. This name
+and email go into every commit:</p>
+<pre class="bash"><code>git config --global user.name &quot;Ada Obi&quot;
+git config --global user.email &quot;ada.obi@example.com&quot;   # use the email on your GitHub account
+git config --global init.defaultBranch main
+git --version                                           # 2.40 or newer is fine</code></pre>
+<h2 id="3-your-first-commits">3. Your first commits</h2>
+<p>Start from the <a
+href="https://github.com/sundayayandele/java-zero-hire/blob/main/templates/java-cli-starter/README.md">Java CLI
+starter</a> or any Maven project from topic 1.1:</p>
+<pre class="bash"><code>cd fee-calculator
+git init                         # create the repository
+git status                       # what has changed? (run this constantly)</code></pre>
+<p><code>git status</code> lists <strong>untracked</strong> files.
+Before adding anything, create <code>.gitignore</code> so build output
+and personal files never enter the repository:</p>
+<pre><code>target/
+.idea/
+*.iml
+.env
+*.log
+.DS_Store</code></pre>
+<p>Then stage and commit:</p>
+<pre class="bash"><code>git add .gitignore pom.xml mvnw mvnw.cmd .mvn src
+git commit -m &quot;Create fee calculator project with Maven wrapper&quot;
+git log --oneline                # 3f9c2ab Create fee calculator project with Maven wrapper</code></pre>
+<p>The everyday loop is: <strong>change files → <code>git status</code>
+→ <code>git diff</code> → <code>git add</code> →
+<code>git commit</code></strong>.</p>
+<pre class="bash"><code># edit FeeCalculator.java, then:
+git diff                         # exactly what changed, line by line (- removed, + added)
+git add src/main/java/ng/itlearning/fees/FeeCalculator.java
+git commit -m &quot;Charge ₦25 for transfers above ₦5,000&quot;</code></pre>
+<h3 id="writing-good-commit-messages">Writing good commit messages</h3>
+<p>A commit message explains <strong>why</strong>, for the reader in six
+months (often you). Use the imperative mood ("Add", "Fix", "Charge"),
+keep the first line under about 72 characters, and make each commit one
+logical change.</p>
+<table>
+<thead>
+<tr>
+<th>Weak</th>
+<th>Better</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>update</code></td>
+<td><code>Reject transfers from frozen wallets</code></td>
+</tr>
+<tr>
+<td><code>fix bug</code></td>
+<td><code>Round VAT on fees half-even to the kobo</code></td>
+</tr>
+<tr>
+<td><code>stuff</code></td>
+<td><code>Add statement export as CSV</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="looking-back-and-undoing">Looking back and undoing</h3>
+<pre class="bash"><code>git log --oneline --graph        # history
+git show 3f9c2ab                 # one commit in full
+git diff HEAD~1                  # compare with the previous commit
+git restore FeeCalculator.java   # throw away uncommitted changes to a file (careful: gone for good)
+git restore --staged pom.xml     # unstage, keeping your edits
+git revert 3f9c2ab               # a new commit that undoes an old one: safe on shared history</code></pre>
+<p>Topic 8.1 covers the more powerful (and more dangerous) tools such as
+<code>reset</code> and interactive rebase.</p>
+<h2 id="4-secrets-never-go-in-git">4. Secrets never go in Git</h2>
+<p>Passwords, API keys, tokens and private keys must
+<strong>never</strong> be committed, even to a private repository, and
+even "just for testing". Git keeps every version forever: deleting the
+file in a later commit doesn't remove it from history, and bots scan
+public GitHub for keys within minutes.</p>
 <ul>
-<li>Construct from <code>String</code> (or
-<code>BigDecimal.valueOf(long)</code>), never from a <code>double</code>
-literal.</li>
-<li><code>BigDecimal</code> is immutable: <code>a.add(b)</code> returns
-a new value; it does not change <code>a</code>.</li>
-<li><code>divide</code> needs a scale and a <code>RoundingMode</code>,
-or it throws for non-terminating results like 1/3.</li>
-<li><code>HALF_EVEN</code> ("banker's rounding") is the usual choice in
-finance because it does not bias totals upward.</li>
-<li>Compare with <code>compareTo</code>, not <code>equals</code>:
-<code>new BigDecimal("2.0").equals(new BigDecimal("2.00"))</code> is
-<code>false</code> because the scales differ, while
-<code>compareTo</code> returns 0.</li>
+<li>Keep secrets in environment variables or a local <code>.env</code>
+file that is listed in <code>.gitignore</code> (topic 4.5 covers
+configuration properly).</li>
+<li>Commit a <code>.env.example</code> with the variable
+<strong>names</strong> and fake values, so others know what to set.</li>
+<li>Turn on GitHub's <strong>secret scanning and push
+protection</strong> (repository Settings → Code security). It blocks
+many known key formats before they leave your machine.</li>
+<li><strong>If you do commit a secret: rotate it first</strong> (create
+a new key and revoke the old one), then remove it from the code.
+Rotating is the fix; cleaning history is secondary. In the capstones, a
+committed secret caps your <em>Delivery</em> score.</li>
 </ul>
-<p>The alternative many payment systems use is a <code>long</code>
-holding <strong>minor units</strong> (kobo, cents), which is fast and
-exact for addition. Either way, the currency travels with the amount;
-you will model that properly in topic 1.6.</p>
-<h3 id="var-local-type-inference"><code>var</code>: local type
-inference</h3>
-<pre class="java"><code>var accounts = new ArrayList&lt;Account&gt;();   // the compiler infers ArrayList&lt;Account&gt;
-var rate = new BigDecimal(&quot;0.18&quot;);</code></pre>
-<p><code>var</code> works only for local variables with an initialiser.
-The variable is still statically typed. Use it when the type is obvious
-from the right-hand side; spell the type out when it is not
-(<code>var x = service.process();</code> hides what <code>x</code>
-is).</p>
-<h3 id="strings">Strings</h3>
-<p><code>String</code> is an immutable sequence of characters. Every
-"modification" creates a new string.</p>
-<pre class="java"><code>String name = &quot;Ada&quot;;
-name.toUpperCase();            // returns &quot;ADA&quot;; name is still &quot;Ada&quot;
-String a = new String(&quot;NGN&quot;);
-a == &quot;NGN&quot;                     // false: different objects
-a.equals(&quot;NGN&quot;)                // true: compare strings with equals, always
-&quot;NGN&quot;.equals(currency)         // null-safe: works even if currency is null
-String.format(&quot;%s owes ₦%,.2f&quot;, name, 1234.5)   // &quot;Ada owes ₦1,234.50&quot;
-&quot;  0123456789 &quot;.strip()        // trim whitespace (Unicode-aware)</code></pre>
-<p>Building a long string in a loop with <code>+</code> creates
-thousands of throwaway objects; use <code>StringBuilder</code>:</p>
-<pre class="java"><code>var sb = new StringBuilder();
-for (var line : statementLines) sb.append(line).append(&#39;\n&#39;);
-String statement = sb.toString();</code></pre>
-<h3 id="arrays">Arrays</h3>
-<pre class="java"><code>long[] dailyTotals = new long[31];            // fixed size, filled with 0
-String[] currencies = {&quot;NGN&quot;, &quot;USD&quot;, &quot;GBP&quot;};
-currencies.length                              // 3 (a field, not a method)
-currencies[3]                                  // ArrayIndexOutOfBoundsException</code></pre>
-<p>Arrays have a fixed size. You will mostly use <code>List</code>
-instead (topic 1.4), but arrays still appear in method signatures
-(<code>main(String[] args)</code>) and performance-sensitive code.</p>
-<h2 id="3-operators">3. Operators</h2>
-<p>Arithmetic <code>+ - * / %</code>, comparison
-<code>== != &lt; &gt; &lt;= &gt;=</code>, logical
-<code>&amp;&amp; || !</code> and assignment <code>+= -=</code> work as
-you would expect, with three traps:</p>
-<ul>
-<li><strong>Integer division truncates</strong>: <code>7 / 2</code> is
-<code>3</code>. <code>7 / 2.0</code> is <code>3.5</code>.</li>
-<li><strong><code>%</code> is remainder</strong>, useful for "every 10th
-transaction" (<code>i % 10 == 0</code>) or check digits.</li>
-<li><strong><code>&amp;&amp;</code> and <code>||</code>
-short-circuit</strong>: in
-<code>acc != null &amp;&amp; acc.isActive()</code> the second part runs
-only if the first is true, which is how you avoid a
-<code>NullPointerException</code>.</li>
-</ul>
-<h2 id="4-control-flow">4. Control flow</h2>
-<h3 id="if--else">if / else</h3>
-<pre class="java"><code>if (amount.compareTo(BigDecimal.ZERO) &lt;= 0) {
-    throw new IllegalArgumentException(&quot;Amount must be positive&quot;);
-} else if (amount.compareTo(dailyLimit) &gt; 0) {
-    return Decision.REQUIRES_APPROVAL;
-} else {
-    return Decision.APPROVED;
-}</code></pre>
-<p>Always use braces, even for one line. The famous "goto fail" security
-bug was an <code>if</code> without braces.</p>
-<h3 id="switch-expressions-java-14">switch expressions (Java 14+)</h3>
-<p>The modern <code>switch</code> is an <em>expression</em>: it returns
-a value, uses <code>-&gt;</code> with no fall-through, and the compiler
-checks you covered every case of an enum.</p>
-<pre class="java"><code>enum Channel { MOBILE, USSD, POS, BRANCH }
+<h2 id="5-github-remotes-push-and-clone">5. GitHub: remotes, push and
+clone</h2>
+<p>Create a free account at <a href="https://github.com">github.com</a>
+with a professional username (it appears on your CV). Then authenticate
+your machine once. The simplest way is the GitHub CLI:</p>
+<pre class="bash"><code>gh auth login                    # choose GitHub.com, HTTPS, and log in with a browser</code></pre>
+<p>(Alternatively, add an SSH key:
+<code>ssh-keygen -t ed25519 -C "you@example.com"</code>, then paste the
+<code>.pub</code> file into GitHub → Settings → SSH and GPG keys. GitHub
+doesn't accept your account password for Git operations.)</p>
+<p>Create an empty repository on GitHub (no README, so the histories
+don't clash), then connect and push:</p>
+<pre class="bash"><code>git remote add origin https://github.com/example-user/fee-calculator.git
+git push -u origin main          # -u remembers the link; afterwards just &quot;git push&quot;</code></pre>
+<p>On another computer, or to start from someone else's project:</p>
+<pre class="bash"><code>git clone https://github.com/example-user/fee-calculator.git
+cd fee-calculator
+git pull                         # fetch and merge new commits from GitHub</code></pre>
+<p>Push at the end of every working session. A laptop can be stolen;
+GitHub is your backup and your portfolio.</p>
+<h2 id="6-branches-and-pull-requests">6. Branches and pull requests</h2>
+<p>A <strong>branch</strong> lets you work on a change without
+disturbing <code>main</code>. Even working alone, use a branch per
+change and merge it through a <strong>pull request (PR)</strong>,
+because that's how every team works and it gives you a page to review
+your own diff.</p>
+<pre class="bash"><code>git switch -c add-pos-fee        # create a branch and move to it
+# edit, test, commit as usual
+git commit -am &quot;Add 0.5% POS fee capped at ₦100&quot;
+git push -u origin add-pos-fee</code></pre>
+<p>GitHub then offers <strong>Compare &amp; pull request</strong>. A
+good PR description says what changed, why, and how you tested it. Read
+the <strong>Files changed</strong> tab line by line before merging:
+reviewers find a surprising number of bugs in their own diffs. Click
+<strong>Merge pull request</strong>, then update your local
+<code>main</code>:</p>
+<pre class="bash"><code>git switch main
+git pull
+git branch -d add-pos-fee        # delete the merged branch</code></pre>
+<h3 id="merge-conflicts-briefly">Merge conflicts, briefly</h3>
+<p>If two branches change the same lines, Git can't choose and marks the
+file:</p>
+<pre><code>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+    return 2_500;
+=======
+    return 2_600;
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; add-pos-fee</code></pre>
+<p>Edit the file to the correct final version, remove the three marker
+lines, then <code>git add</code> the file and <code>git commit</code>.
+Run the tests before you commit. Topic 8.1 practises conflicts in a team
+setting.</p>
+<h2 id="7-your-first-github-actions-workflow">7. Your first GitHub
+Actions workflow</h2>
+<p><strong>Continuous integration (CI)</strong> means a server builds
+and tests every push, so "it works on my machine" is checked on a clean
+machine. Add <code>.github/workflows/ci.yml</code>:</p>
+<pre class="yaml"><code>name: ci
 
-BigDecimal feeFor(Channel channel) {
-    return switch (channel) {
-        case MOBILE, USSD -&gt; new BigDecimal(&quot;10.00&quot;);
-        case POS -&gt; new BigDecimal(&quot;25.00&quot;);
-        case BRANCH -&gt; {
-            log(&quot;branch fee applied&quot;);
-            yield new BigDecimal(&quot;50.00&quot;);     // yield returns a value from a block
-        }
-    };   // no default needed: all enum constants covered, so a new constant becomes a compile error
-}</code></pre>
-<p>You will still read the old statement form with <code>case X:</code>
-and <code>break;</code> in legacy code. Forgetting <code>break</code>
-makes execution "fall through" to the next case, a classic bug that the
-arrow form eliminates. Topic 1.6 extends <code>switch</code> with
-pattern matching.</p>
-<h3 id="loops">Loops</h3>
-<pre class="java"><code>for (int i = 0; i &lt; transactions.size(); i++) { ... }   // classic: when you need the index
+on:
+  push:
+  pull_request:
 
-for (Transaction tx : transactions) { ... }              // enhanced for: most of the time
+permissions:
+  contents: read
 
-while (retries &lt; 3 &amp;&amp; !sent) { sent = trySend(); retries++; }   // condition checked first
-
-do { pin = prompt(); } while (!isValid(pin));            // body runs at least once</code></pre>
-<p><code>break</code> leaves a loop; <code>continue</code> skips to the
-next iteration. Watch the boundaries: <code>i &lt;= list.size()</code>
-reads one element past the end.</p>
-<h2 id="5-methods">5. Methods</h2>
-<p>A method is a named, reusable block with inputs (parameters) and an
-optional output (return value):</p>
-<pre class="java"><code>static BigDecimal monthlyInstalment(BigDecimal principal, BigDecimal annualRate, int months) {
-    BigDecimal r = annualRate.divide(BigDecimal.valueOf(12), 10, RoundingMode.HALF_EVEN);
-    BigDecimal onePlusRPowN = BigDecimal.ONE.add(r).pow(months);
-    return principal.multiply(r).multiply(onePlusRPowN)
-            .divide(onePlusRPowN.subtract(BigDecimal.ONE), 2, RoundingMode.HALF_EVEN);
-}</code></pre>
-<ul>
-<li><strong>Overloading</strong>: several methods may share a name if
-their parameter lists differ (<code>deposit(BigDecimal)</code> and
-<code>deposit(BigDecimal, String reference)</code>).</li>
-<li><strong><code>static</code></strong> methods belong to the class,
-not to an object; call them as
-<code>LoanMath.monthlyInstalment(...)</code>. Instance methods need an
-object.</li>
-<li><strong>Java is always pass-by-value.</strong> For a primitive the
-value is copied. For an object, the <em>reference</em> is copied: the
-method can change the object it points to, but reassigning the parameter
-does not affect the caller's variable.</li>
-</ul>
-<pre class="java"><code>static void reassign(Account a) { a = new Account(&quot;999&quot;, BigDecimal.ZERO); }  // caller unaffected
-static void mutate(Account a)   { a.deposit(new BigDecimal(&quot;100&quot;)); }          // caller sees the change</code></pre>
-<h3 id="var-args-the-math-api-and-evaluation-rules">Var-args, the Math
-API and evaluation rules</h3>
-<pre class="java"><code>static BigDecimal total(BigDecimal... amounts) {          // var-args: zero or more arguments, seen as an array
-    return Arrays.stream(amounts).reduce(BigDecimal.ZERO, BigDecimal::add);
-}
-total();                                                  // allowed: empty array
-total(a, b, c);</code></pre>
-<p>A var-arg parameter must be the last one, and only one is allowed.
-Overload resolution prefers an exact match, then widening, then boxing,
-and var-args last.</p>
-<p><code>Math</code> covers everyday numeric helpers:
-<code>Math.max/min/abs</code>, <code>Math.round</code> (returns
-<code>long</code> for <code>double</code>),
-<code>Math.floorDiv</code>/<code>floorMod</code> (correct for negatives,
-unlike <code>/</code> and <code>%</code>), <code>Math.pow</code>,
-<code>Math.sqrt</code>, and the overflow-checking
-<code>Math.addExact</code>/<code>multiplyExact</code>/<code>toIntExact</code>.
-For money keep using <code>BigDecimal</code>.</p>
-<p>Evaluation rules the OCP exam loves: <code>*</code>, <code>/</code>,
-<code>%</code> bind tighter than <code>+</code> and <code>-</code>;
-<code>i++</code> yields the old value, <code>++i</code> the new one;
-compound assignment includes an implicit cast
-(<code>byte b = 10; b += 5;</code> compiles, <code>b = b + 5;</code>
-doesn't); <code>int</code> arithmetic on
-<code>byte</code>/<code>short</code>/<code>char</code> operands promotes
-them to <code>int</code>; and narrowing casts can lose information
-silently (<code>(int) 3_000_000_000L</code> is negative).</p>
-<p>Good methods are short, do one thing, and have names that say what
-they return or do: <code>isOverdrawn()</code>,
-<code>calculateFee()</code>, <code>postTransfer()</code>.</p>
-<h2 id="worked-example-a-loan-repayment-schedule">Worked example: a loan
-repayment schedule</h2>
-<pre class="java"><code>public static void printSchedule(BigDecimal principal, BigDecimal annualRate, int months) {
-    BigDecimal instalment = monthlyInstalment(principal, annualRate, months);
-    BigDecimal r = annualRate.divide(BigDecimal.valueOf(12), 10, RoundingMode.HALF_EVEN);
-    BigDecimal balance = principal;
-    for (int month = 1; month &lt;= months; month++) {
-        BigDecimal interest = balance.multiply(r).setScale(2, RoundingMode.HALF_EVEN);
-        BigDecimal principalPart = (month == months) ? balance : instalment.subtract(interest);
-        balance = balance.subtract(principalPart);
-        System.out.printf(&quot;%2d  interest %10s  principal %10s  balance %12s%n&quot;,
-                month, interest, principalPart, balance);
-    }
-}</code></pre>
-<p>The last month pays off whatever is left, so rounding pennies never
-leave a non-zero balance. That one line is the difference between a toy
-and a real amortisation schedule, and you will build the full version in
-Capstone 3.</p>
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: &quot;21&quot;
+          cache: maven
+      - run: ./mvnw -B verify</code></pre>
+<p>Commit and push it, then open the <strong>Actions</strong> tab: a
+green tick means the project compiled and every test passed on a fresh
+Ubuntu machine with Java 21. If it's red, click into the failed step and
+read the log from the first error, just as you would locally. On Linux
+the wrapper must be executable; if CI says
+<code>Permission denied</code>, run
+<code>git update-index --chmod=+x mvnw</code> and commit.</p>
+<p>Show the result on your README so a recruiter sees it at a
+glance:</p>
+<pre class="markdown"><code>![ci](https://github.com/example-user/fee-calculator/actions/workflows/ci.yml/badge.svg)</code></pre>
+<p>From now on, <strong>every project in this programme is pushed to
+GitHub with a green CI run</strong>: the module projects, the capstones
+and the practice track. Topic 1.6 adds the tests that make that green
+tick mean something.</p>
+<h2 id="worked-example-a-fee-change-from-branch-to-merge">Worked
+example: a fee change from branch to merge</h2>
+<ol type="1">
+<li><code>git switch -c raise-transfer-fee</code>.</li>
+<li>Change the ₦25 band to ₦26.88 (₦25 plus 7.5% VAT), update the
+README's fee table, and run <code>./mvnw verify</code> locally.</li>
+<li><code>git diff</code> to check only the intended lines changed, then
+<code>git commit -am "Include VAT in the mid-band transfer fee"</code>.</li>
+<li><code>git push -u origin raise-transfer-fee</code>, open a PR, and
+write: <em>"Why: finance asked for VAT-inclusive fees. Tested: existing
+tests updated; boundary at ₦5,000.00 and ₦5,000.01 checked."</em></li>
+<li>Wait for the CI check on the PR to go green, read <strong>Files
+changed</strong> once more, merge,
+<code>git switch main &amp;&amp; git pull</code>.</li>
+</ol>
+<p>The history now shows who changed the fee, when, why, and that the
+build passed: exactly what an auditor asks for.</p>
 <h2 id="common-mistakes">Common mistakes</h2>
 <ul>
-<li>Using <code>double</code> or <code>float</code> for money, or
-<code>new BigDecimal(0.1)</code>.</li>
-<li>Comparing <code>String</code>, <code>Integer</code> or
-<code>BigDecimal</code> values with <code>==</code>.</li>
-<li><code>int</code> overflow on counters and amounts that grow with
-business volume.</li>
-<li>Missing braces on <code>if</code>, or forgetting <code>break</code>
-in an old-style <code>switch</code>.</li>
-<li>Off-by-one loop bounds (<code>&lt;=</code> vs
-<code>&lt;</code>).</li>
-<li>Methods that do three things and are named after none of them.</li>
+<li>Committing <code>target/</code>, <code>.idea/</code> or
+<code>.env</code> because <code>.gitignore</code> came after the first
+<code>git add .</code>.</li>
+<li>Committing a password or API key, then "fixing" it by deleting the
+file instead of rotating the key.</li>
+<li>One giant commit called <code>update</code> at the end of the week
+instead of small commits with reasons.</li>
+<li>Working directly on <code>main</code> and pushing untested
+code.</li>
+<li>Forgetting to push, so the work exists only on one laptop.</li>
+<li>Ignoring a red CI run, or a README badge that's red.</li>
 </ul>
 <h2 id="practice">Practice</h2>
 <ol type="1">
-<li>Write <code>FeeCalculator.fee(Channel, BigDecimal amount)</code>: a
-flat fee per channel, plus 0.5% for amounts over ₦100,000, capped at
-₦2,000. Round to kobo with <code>HALF_EVEN</code>.</li>
-<li>Print <code>0.1 + 0.2</code> as a <code>double</code> and as a
-<code>BigDecimal</code>, then explain the difference to a non-engineer
-in two sentences.</li>
-<li>Write <code>isValidNuban(String)</code> that checks a 10-digit
-account number contains only digits. Stretch: research the NUBAN
-check-digit algorithm and implement it with a loop and
-<code>%</code>.</li>
-<li>Build the repayment schedule above for ₦500,000 at 24% over 6 months
-and check that the final balance is exactly <code>0.00</code>.</li>
+<li>Put your on-ramp project (or any program from topic 1.1) under Git
+with a <code>.gitignore</code>, make at least five small commits, and
+push it to a public GitHub repository.</li>
+<li>Make a change, look at it with <code>git diff</code>, then throw it
+away with <code>git restore</code>. Make another change, commit it, and
+undo it with <code>git revert</code>.</li>
+<li>Create a branch, change one method, open a pull request, review your
+own diff in <strong>Files changed</strong>, and merge it.</li>
+<li>Create a merge conflict on purpose: change the same line on
+<code>main</code> and on a branch, merge, resolve it, and commit.</li>
+<li>Add the CI workflow above and the badge. Break the build on a branch
+(a compile error), push, see the red check on the pull request, fix it
+and merge only when green.</li>
+<li>Turn on secret scanning and push protection for your
+repository.</li>
 </ol>
 <h2 id="key-terms">Key terms</h2>
-<p>Static typing, primitive, reference, wrapper class, autoboxing,
-overflow, <code>BigDecimal</code>, scale, rounding mode, immutability,
-switch expression, <code>yield</code>, enhanced for, pass-by-value,
-overloading, <code>static</code>.</p>
+<p>Version control, repository, working tree, staging area, commit,
+hash, <code>.gitignore</code>, remote, <code>origin</code>, push, pull,
+clone, branch, <code>main</code>, pull request, diff, merge, merge
+conflict, revert, continuous integration (CI), GitHub Actions, workflow,
+badge, secret scanning, rotation.</p>
 <h2 id="further-reading">Further reading</h2>
 <ul>
+<li><a href="https://git-scm.com/book/en/v2">Pro Git (free book),
+chapters 1–3</a></li>
 <li><a
-href="https://docs.oracle.com/javase/tutorial/java/nutsandbolts/index.html">The
-Java Tutorials: Language Basics</a> (written for Java 8, still accurate
-for the basics)</li>
+href="https://docs.github.com/en/get-started/getting-started-with-git">GitHub
+Docs: Get started with Git</a></li>
 <li><a
-href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/math/BigDecimal.html"><code>BigDecimal</code>
-API (Java 21)</a></li>
-<li><a href="https://openjdk.org/jeps/361">JEP 361: Switch
-Expressions</a></li>
-<li><a href="https://openjdk.org/jeps/286">JEP 286: Local-Variable Type
-Inference (<code>var</code>)</a></li>
+href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests">GitHub
+Docs: About pull requests</a></li>
 <li><a
-href="https://dev.java/learn/language/constructs/basics/">dev.java
-(Oracle): Language Basics</a></li>
+href="https://docs.github.com/en/actions/use-cases-and-examples/building-and-testing/building-and-testing-java-with-maven">GitHub
+Docs: Building and testing Java with Maven</a></li>
 <li><a
-href="https://docs.oracle.com/javase/specs/jls/se21/html/index.html">The
-Java Language Specification, Java SE 21</a></li>
+href="https://docs.github.com/en/code-security/secret-scanning/introduction/about-push-protection">GitHub
+Docs: Secret scanning and push protection</a></li>
+<li><a href="https://cli.github.com/manual/gh_auth_login">GitHub CLI
+manual: <code>gh auth login</code></a></li>
 </ul>
 
 <h2>Watch</h2>
-<h3>Variables in Java ✘【12 minutes】</h3><p>Bro Code · 12 min. Variables, primitive types and String, explained slowly with examples.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/so1iUWaLmKA" title="Variables in Java ✘【12 minutes】" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
-<h3>Java if statements 🚧【6 minutes】</h3><p>Bro Code · 6 min. if / else if / else decisions in six minutes.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/MY03bt_0JQI" title="Java if statements 🚧【6 minutes】" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
-<h3>Java methods explained in 10+ minutes! 📞</h3><p>Bro Code · 11 min. Defining and calling methods, parameters and return values.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/v5p_SUfi710" title="Java methods explained in 10+ minutes! 📞" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
-<h3>Java Main Method Explained - What Does All That Stuff Mean?</h3><p>Coding with John · 7 min. What every word in `public static void main(String[] args)` actually means.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/P-_Nzi_mCRo" title="Java Main Method Explained - What Does All That Stuff Mean?" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
-<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/01-modern-java-oop/1.2-syntax-types-control-flow/README.md">1.2 Java syntax, types, control flow and methods</a></p>
+<h3>Git Explained in 100 Seconds</h3><p>Fireship · 2 min. What Git is for, in under two minutes.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/hwP7WQkmECE" title="Git Explained in 100 Seconds" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>How Git Works: Explained in 4 Minutes</h3><p>ByteByteGo · 4 min. How Git stores commits, branches and remotes, visually.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/e9lnsKot_SQ" title="How Git Works: Explained in 4 Minutes" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Git and GitHub for Beginners - Crash Course (optional, longer)</h3><p>freeCodeCamp.org · 68 min. A full beginner crash course: commits, branches, GitHub, pull requests and merge conflicts.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/RGOj5yH7evk" title="Git and GitHub for Beginners - Crash Course" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/01-modern-java-oop/1.2-git-github-essentials/README.md">1.2 Git and GitHub essentials: commits, branches, pushes and pull requests</a></p>

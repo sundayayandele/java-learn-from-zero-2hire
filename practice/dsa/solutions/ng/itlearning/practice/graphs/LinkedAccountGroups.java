@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Week 18. Pattern: union-find (or BFS/DFS over an undirected graph).
+ * Week 19. Pattern: union-find (or BFS/DFS over an undirected graph).
  * <p>
  * Fraud analysts treat accounts that have sent money to each other, directly or through other accounts, as one
  * group. Given transfers as [from, to] pairs, return the number of groups among all accounts that appear.

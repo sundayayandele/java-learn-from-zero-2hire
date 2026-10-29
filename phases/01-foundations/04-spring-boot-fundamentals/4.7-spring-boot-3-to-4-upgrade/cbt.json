@@ -1,0 +1,113 @@
+{
+  "topic": "4.7",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "After upgrading a service from Boot 3.5 to 4.1, it starts cleanly, but new tables from migration V12 never appear. The POM still has `org.flywaydb:flyway-core` and no Flyway starter.",
+      "question": "What is the cause and fix?",
+      "options": [
+        "Set ddl-auto=update",
+        "Boot 4's modular auto-configuration only applies Flyway with spring-boot-starter-flyway; add it (plus flyway-database-postgresql)",
+        "Migrations must be renamed for Boot 4",
+        "Flyway is not supported in Boot 4"
+      ],
+      "answer": 1,
+      "explanation": "In Boot 4, technologies that used to activate from the bare library need their starter. Without it the auto-configuration isn't on the classpath and migrations silently don't run."
+    },
+    {
+      "type": "single",
+      "scenario": "Tests using `@MockBean PaymentGateway gateway;` stop compiling after the upgrade.",
+      "question": "What replaces it?",
+      "options": [
+        "Nothing; mocking beans isn't possible in Boot 4",
+        "@Mock from Mockito, unchanged",
+        "@TestBean only",
+        "@MockitoBean (and @MockitoSpyBean for spies) from Spring Framework's test support"
+      ],
+      "answer": 3,
+      "explanation": "Boot 4 removed @MockBean/@SpyBean. Spring Framework's @MockitoBean/@MockitoSpyBean replace them, with slightly different rules (for example, not on @Configuration classes)."
+    },
+    {
+      "type": "single",
+      "scenario": "A `@SpringBootTest` that autowires `MockMvc` fails after the upgrade with 'No qualifying bean of type MockMvc'.",
+      "question": "What change is needed?",
+      "options": [
+        "Add @AutoConfigureMockMvc to the test class (and the webmvc test starter)",
+        "Use @WebMvcTest only",
+        "Create MockMvc manually in every test",
+        "Downgrade to Boot 3"
+      ],
+      "answer": 0,
+      "explanation": "In Boot 4, @SpringBootTest no longer configures MockMvc on its own; @AutoConfigureMockMvc opts in explicitly."
+    },
+    {
+      "type": "single",
+      "scenario": "A custom `Jackson2ObjectMapperBuilderCustomizer` bean no longer affects JSON output after the upgrade.",
+      "question": "Why, and what's the Boot 4 equivalent?",
+      "options": [
+        "Use an ObjectMapper bean; it always wins",
+        "Boot 4 uses Jackson 3 and auto-configures a JsonMapper; use a JsonMapperBuilderCustomizer (tools.jackson packages) instead",
+        "Set spring.jackson.enabled=false",
+        "Customisers were removed entirely"
+      ],
+      "answer": 1,
+      "explanation": "Jackson 3 changed packages and Boot renamed the customiser. Defining an ObjectMapper bean is no longer enough to replace the auto-configured JsonMapper."
+    },
+    {
+      "type": "single",
+      "scenario": "You inherit a service on Spring Boot 3.1 and must move it to 4.1.",
+      "question": "What should the first step be?",
+      "options": [
+        "Change the parent version straight to 4.1.x",
+        "Rewrite the service from scratch",
+        "Upgrade to the latest 3.5.x, fix all deprecation warnings and get a green build",
+        "Switch to the classic starters permanently"
+      ],
+      "answer": 2,
+      "explanation": "APIs deprecated in 3.x were removed in 4.0. Upgrading within 3.x first surfaces them as warnings, while everything still compiles."
+    },
+    {
+      "type": "single",
+      "scenario": "After the upgrade, startup logs show several warnings about renamed configuration keys, which your team wants to find quickly and fix.",
+      "question": "Which tool helps, and how should it be used?",
+      "options": [
+        "Delete application.yaml",
+        "Use --debug",
+        "Keep the properties migrator permanently in production",
+        "Add spring-boot-properties-migrator temporarily, fix the reported properties in config files, then remove it"
+      ],
+      "answer": 3,
+      "explanation": "The migrator reports changed/removed properties and maps them temporarily at runtime. It's a migration aid, not something to ship long term."
+    },
+    {
+      "type": "single",
+      "scenario": "The API team is worried that dates, nulls or BigDecimal formatting in responses might change silently with the Jackson 3 switch.",
+      "question": "What is the best safety net to add before upgrading?",
+      "options": [
+        "Logging every response",
+        "Manual testing in Postman after deploy",
+        "JSON contract (snapshot) tests that serialise known objects and compare them with stored expected JSON",
+        "Turning off Jackson"
+      ],
+      "answer": 2,
+      "explanation": "Contract tests make any change in serialisation fail the build, so you can decide deliberately (or set use-jackson2-defaults) rather than discovering it in client apps."
+    },
+    {
+      "type": "multi",
+      "scenario": "A team lists changes they expect when moving from Boot 3.5 to Boot 4.x.",
+      "question": "Which of these are real Boot 4 changes?",
+      "options": [
+        "Java 21 is the new minimum",
+        "Undertow support removed",
+        "Jakarta EE 11 baseline with Spring Framework 7",
+        "spring-boot-starter-web renamed to spring-boot-starter-webmvc (old name deprecated)"
+      ],
+      "answer": [
+        1,
+        2,
+        3
+      ],
+      "explanation": "Boot 4 still requires Java 17 as a minimum (21 or 25 recommended). The other three are documented changes."
+    }
+  ]
+}

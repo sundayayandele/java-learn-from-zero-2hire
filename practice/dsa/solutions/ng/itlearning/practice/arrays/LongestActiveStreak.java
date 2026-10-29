@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Week 4. Pattern: hash set with sequence starts.
+ * Week 5. Pattern: hash set with sequence starts.
  * <p>
  * Given the (unsorted, possibly repeated) dates on which a customer transacted, return the length of the
  * longest run of consecutive calendar days. Aim for O(n) rather than sorting.

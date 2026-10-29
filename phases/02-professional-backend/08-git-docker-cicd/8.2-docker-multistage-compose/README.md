@@ -5,7 +5,7 @@
 
 ← [8.1 Git branching, pull requests, rebasing and branch-protection rules](../8.1-git-branching-prs/README.md) · [Module 8](../README.md) · [Phase 2](../../README.md) · [8.3 CI/CD with GitHub Actions (build, test, scan, publish image), plus GitLab CI](../8.3-ci-cd-github-actions-gitlab/README.md) →
 
-> **Week 21** · Module 8: Git, Docker & CI/CD · Website topic covered: *Multi-stage Dockerfiles, layered jars, buildpacks, non-root images, Docker Compose*
+> **Week 22** · Module 8: Git, Docker & CI/CD · Website topic covered: *Multi-stage Dockerfiles, layered jars, buildpacks, non-root images, Docker Compose*
 
 ## What you will be able to do
 
@@ -206,7 +206,7 @@ Image, layer, container, registry, repository, tag, digest, Dockerfile, build co
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [Docker Multi-Stage Builds - Fast and Efficient Dockerfiles](https://www.youtube.com/watch?v=_Q9KSFUZH0c) · Depot · 6 min. Multi-stage Docker builds: small, secure production images.
 - [Docker Compose in 12 Minutes](https://www.youtube.com/watch?v=Qw9zlE3t8Ko) · Jake Wright · 12 min. Docker Compose for multi-container local environments.

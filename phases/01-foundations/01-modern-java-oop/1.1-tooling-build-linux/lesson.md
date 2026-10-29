@@ -60,7 +60,7 @@ java Interest.java      # since Java 11: compile in memory and run a single file
 jshell                  # an interactive Java shell; try 250_000 * 0.18
 ```
 
-Using `double` for money is a deliberate mistake here. You will see why and fix it with `BigDecimal` in topic 1.2.
+Using `double` for money is a deliberate mistake here. You will see why and fix it with `BigDecimal` in topic 1.3.
 
 ## 2. IntelliJ IDEA
 

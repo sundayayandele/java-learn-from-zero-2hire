@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Week 2. Pattern: hash set.
+ * Week 3. Pattern: hash set.
  * <p>
  * A settlement file must not contain the same transaction reference twice. Return the first reference that
  * appears for the second time (scanning in order), ignoring case and surrounding spaces, or empty if all are

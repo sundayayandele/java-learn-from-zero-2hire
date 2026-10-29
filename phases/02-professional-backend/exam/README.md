@@ -4,9 +4,9 @@
 
 | | |
 | --- | --- |
-| When | Week 24, after all 27 Phase 2 topic CBTs are attempted |
+| When | Week 25, after all 27 Phase 2 topic CBTs are attempted |
 | Where | Moodle (itlearning.tech), "Phase 2 end-of-phase exam" quiz |
-| Format | **60 scenario-based multiple-choice questions**, each a short workplace situation with one best answer, drawn at random for every attempt from a bank of 120 (the module weights below are fixed) |
+| Format | **60 scenario-based multiple-choice questions**, each a short workplace situation with one best answer, drawn at random for every attempt from a bank of 200 (the module weights below are fixed) |
 | Time | **2 hours** (120 minutes), one sitting; the timer keeps running if you close the browser |
 | Pass mark | **70%** |
 | Attempts | 2, at least 48 hours apart; highest grade counts |

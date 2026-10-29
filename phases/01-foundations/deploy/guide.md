@@ -49,7 +49,7 @@ Every starter already contains both pipelines. You don't need to write them, but
 Recommended repository settings:
 
 - **Branch protection on `main`**: require the `build` check to pass and require pull requests.
-- **Secret scanning and push protection** (Settings → Code security), so committed secrets are blocked (topic 4.4).
+- **Secret scanning and push protection** (Settings → Code security), so committed secrets are blocked (topic 4.5).
 - **Package visibility:** make the GHCR package public (Package settings → Change visibility) if your deployment target should pull without credentials, or create a read-only token for the target.
 
 **Continuous deployment (optional):** add a third job that deploys after `image`, for example SSH to your VPS and run `docker compose pull && docker compose up -d` (section 3.7), or call your cloud's CLI (sections 4–6). Store credentials as **GitHub Actions secrets**, never in the workflow file. For AWS, Azure and GCP prefer **OIDC federation** (`aws-actions/configure-aws-credentials`, `azure/login`, `google-github-actions/auth`) over long-lived keys.

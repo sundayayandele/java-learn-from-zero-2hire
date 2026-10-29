@@ -5,7 +5,7 @@
 
 ← [3.1 Relational design](../3.1-relational-design-normalisation-joins/README.md) · [Module 3](../README.md) · [Phase 1](../../README.md) · [3.3 Indexing and reading query plans in PostgreSQL and MySQL](../3.3-indexing-query-plans/README.md) →
 
-> **Week 7** · Module 3: Databases: SQL & NoSQL · Website topic covered: *Transactions, isolation levels and locking*
+> **Week 8** · Module 3: Databases: SQL & NoSQL · Website topic covered: *Transactions, isolation levels and locking*
 
 ## What you will be able to do
 
@@ -145,7 +145,7 @@ UPDATE account SET balance = :newBalance, version = version + 1
 WHERE id = :id AND version = 7;                                 -- 0 rows → someone else won; retry
 ```
 
-No locks are held between read and write; conflicts are detected at write time. It suits low-contention data and long user think-time (editing a customer profile). JPA's `@Version` does exactly this (topic 4.3). Under high contention (a hot merchant settlement account), many retries make pessimistic locking or Option A better.
+No locks are held between read and write; conflicts are detected at write time. It suits low-contention data and long user think-time (editing a customer profile). JPA's `@Version` does exactly this (topic 4.4). Under high contention (a hot merchant settlement account), many retries make pessimistic locking or Option A better.
 
 ### Option D: let the database prove it with Serializable
 
@@ -229,7 +229,7 @@ Transaction, ACID, commit, rollback, savepoint, WAL, isolation level, dirty read
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [ACID Properties in Databases With Examples](https://www.youtube.com/watch?v=GAe5oB742dw) · ByteByteGo · 5 min. ACID properties with examples, from ByteByteGo.
 - [Transaction Isolation Levels With PostgreSQL as an example](https://www.youtube.com/watch?v=G8wDjV0N9tk) · mkdev · 8 min. Isolation levels and their anomalies, demonstrated in PostgreSQL.

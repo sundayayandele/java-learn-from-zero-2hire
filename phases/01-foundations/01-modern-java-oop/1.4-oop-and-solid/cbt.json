@@ -1,0 +1,112 @@
+{
+  "topic": "1.4",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "In code review you see `account.setBalance(account.getBalance().subtract(amount));` repeated in four different services, each with its own slightly different overdraft check.",
+      "question": "Which principle is being violated, and what is the fix?",
+      "options": [
+        "Interface segregation; split Account into two interfaces",
+        "Encapsulation; move the rule into Account.withdraw(amount) and remove the public setter",
+        "Inheritance; make Account abstract",
+        "Polymorphism; add more subclasses"
+      ],
+      "answer": 1,
+      "explanation": "The account's invariant (no overdraft beyond the limit) is enforced outside the object, so every caller re-implements it differently. Encapsulating the rule in withdraw() makes it impossible to bypass."
+    },
+    {
+      "type": "single",
+      "scenario": "Every time the bank adds a payment channel, a developer edits the same 200-line `calculateFee` method full of if/else branches, and twice this year a change broke an existing channel's fee.",
+      "question": "Which refactor best applies the Open/Closed Principle?",
+      "options": [
+        "Introduce a FeeRule interface with one implementation per channel, and have a FeeEngine iterate over the rules",
+        "Replace the if/else chain with a switch statement",
+        "Add comments to each branch",
+        "Move the method into a static utility class"
+      ],
+      "answer": 0,
+      "explanation": "With one class per rule, adding a channel means adding a class; the engine and existing rules are not edited, so they cannot be broken by the change."
+    },
+    {
+      "type": "single",
+      "scenario": "`FixedDepositAccount extends Account` and overrides `withdraw` to throw `UnsupportedOperationException`. A batch job that withdraws monthly fees from a `List<Account>` now crashes.",
+      "question": "Which principle does this violate?",
+      "options": [
+        "Liskov Substitution",
+        "Encapsulation",
+        "Dependency Inversion",
+        "Single Responsibility"
+      ],
+      "answer": 0,
+      "explanation": "Code written against Account cannot safely use the subtype: the subtype breaks the supertype's contract. Model fixed deposits so they are not a withdrawable Account."
+    },
+    {
+      "type": "single",
+      "scenario": "`TransferService` creates `new PostgresAccountRepository()` and `new SmtpNotifier()` inside its constructor. Unit tests need a running database and mail server.",
+      "question": "What change makes it testable?",
+      "options": [
+        "Make the fields public so tests can replace them",
+        "Depend on AccountRepository and Notifier interfaces and receive implementations through the constructor",
+        "Use static methods instead",
+        "Catch exceptions from the database in tests"
+      ],
+      "answer": 1,
+      "explanation": "Dependency Inversion plus constructor injection: the service depends on abstractions, and tests pass in-memory fakes while production passes real implementations."
+    },
+    {
+      "type": "single",
+      "scenario": "A class `Iban` overrides `equals` to compare the normalised IBAN string but does not override `hashCode`. A `HashSet<Iban>` used to de-duplicate beneficiaries keeps duplicates.",
+      "question": "Why?",
+      "options": [
+        "equals must be declared final",
+        "Strings cannot be stored in sets",
+        "HashSet uses compareTo, not equals",
+        "Equal objects have different default hash codes, so the set looks in different buckets and never calls equals"
+      ],
+      "answer": 3,
+      "explanation": "Hash-based collections first use hashCode to pick a bucket. Without a matching hashCode, two equal IBANs land in different buckets and are both kept. Always override both."
+    },
+    {
+      "type": "single",
+      "scenario": "A `CoreBankingService` interface has 34 methods. The team writing a read-only balance widget must implement or mock all 34 in tests.",
+      "question": "Which principle suggests a better design?",
+      "options": [
+        "Single inheritance: extend instead of implement",
+        "Interface Segregation: split into small client-focused interfaces such as BalanceQuery",
+        "Open/Closed: make the interface abstract class",
+        "Liskov Substitution: add default methods"
+      ],
+      "answer": 1,
+      "explanation": "Clients should depend only on what they use. A BalanceQuery interface with one or two methods lets the widget (and its tests) ignore the other 32."
+    },
+    {
+      "type": "single",
+      "scenario": "You need several loan products that share an identical interest-calculation algorithm but differ in how the rate is chosen. They also share constructor validation of the principal.",
+      "question": "Which design fits best?",
+      "options": [
+        "An interface with only abstract methods",
+        "A static utility class with a switch on product type",
+        "An abstract Loan class with the shared algorithm and constructor, and an abstract annualRate() method each product implements",
+        "Copy the algorithm into each product class"
+      ],
+      "answer": 2,
+      "explanation": "Shared state and a shared algorithm with one varying step is the template-method pattern, which is exactly what abstract classes are for. Interfaces cannot hold the shared field or constructor."
+    },
+    {
+      "type": "multi",
+      "scenario": "You are reviewing a pull request that adds `toString()` to a `Card` class.",
+      "question": "Which fields must NOT appear in the output?",
+      "options": [
+        "The last four digits of the card",
+        "The full card number (PAN)",
+        "The CVV",
+        "The card's expiry month and year"
+      ],
+      "answer": [
+        1,
+        2
+      ],
+      "explanation": "toString output ends up in logs. PCI DSS forbids storing the CVV at all and requires the PAN to be masked. The last four digits (and usually expiry) are normally acceptable for support purposes, but check your organisation's policy."
+    }
+  ]
+}

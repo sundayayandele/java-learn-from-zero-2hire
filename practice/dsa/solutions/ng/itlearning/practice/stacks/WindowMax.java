@@ -4,7 +4,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 /**
- * Week 11. Pattern: monotonic deque.
+ * Week 12. Pattern: monotonic deque.
  * <p>
  * For a stream of per-minute transaction counts, return the maximum of every window of {@code k} consecutive
  * minutes (n - k + 1 values). O(n), not O(n·k). Throw {@link IllegalArgumentException} for k outside 1..n.

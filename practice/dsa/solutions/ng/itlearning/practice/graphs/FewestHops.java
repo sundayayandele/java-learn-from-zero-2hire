@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Week 18. Pattern: breadth-first search for shortest paths in an unweighted graph.
+ * Week 19. Pattern: breadth-first search for shortest paths in an unweighted graph.
  * <p>
  * Transfers are directed edges. Return the fewest transfers needed for money to move from {@code source} to
  * {@code target} (0 if they are the same account), or -1 if it can't.

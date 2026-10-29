@@ -1,0 +1,289 @@
+<p><em>Week 0 · Module 0: Programming On-Ramp</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Write methods that take parameters and return a value, and call them
+from <code>main</code>.</li>
+<li>Choose good method names and keep each method to one job.</li>
+<li>Break a problem into steps with plain-language pseudocode before
+writing Java.</li>
+<li>Check each method with small hand-worked examples, including edge
+cases.</li>
+<li>Know what to do when you're stuck, and how to ask for help
+well.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Real banking code is thousands of small methods with clear names:
+<code>calculateFee</code>, <code>isWithinDailyLimit</code>,
+<code>maskAccountNumber</code>. Each can be read, tested and changed on
+its own. Engineers who can split a vague requirement ("charge the right
+fee") into small, checkable steps are the ones teams trust with new
+features. That skill matters more in interviews than knowing any
+library.</p>
+<h2 id="1-methods-name-a-piece-of-work">1. Methods: name a piece of
+work</h2>
+<p>A <strong>method</strong> is a named block of code you can run (call)
+whenever you need it. You've used methods already:
+<code>System.out.println</code>, <code>in.nextLong()</code>,
+<code>ref.length()</code>. Now you write your own:</p>
+<pre class="java"><code>public class Main {
+
+    static long transferFee(long amountKobo) {
+        if (amountKobo &lt;= 500_000) {         // up to ₦5,000
+            return 1_000;                    // ₦10
+        } else if (amountKobo &lt;= 5_000_000) {
+            return 2_500;                    // ₦25
+        }
+        return 5_000;                        // ₦50
+    }
+
+    public static void main(String[] args) {
+        long fee = transferFee(1_200_000);
+        System.out.println(&quot;Fee in kobo: &quot; + fee);      // 2500
+        System.out.println(transferFee(300_000));       // 1000
+    }
+}</code></pre>
+<p>Reading the first line of <code>transferFee</code>:</p>
+<ul>
+<li><code>static</code>: for now, every method you write starts with it
+(topic 1.4 explains why).</li>
+<li><code>long</code>: the <strong>return type</strong>, what the method
+gives back. Use <code>void</code> if it gives back nothing (it only
+prints, for example).</li>
+<li><code>transferFee</code>: the name, a verb phrase in
+<code>camelCase</code>.</li>
+<li><code>(long amountKobo)</code>: the <strong>parameter</strong>, a
+value the caller must supply. A method can take several, separated by
+commas.</li>
+</ul>
+<p><code>return</code> hands the value back and ends the method
+immediately. Every path through a non-<code>void</code> method must
+reach a <code>return</code>, or Java won't compile it
+(<code>missing return statement</code>).</p>
+<p>When <code>main</code> calls <code>transferFee(1_200_000)</code>, the
+value <code>1_200_000</code> is copied into <code>amountKobo</code>, the
+method runs, and the call is replaced by what it returned.</p>
+<h2 id="2-methods-with-several-parameters-and-boolean-methods">2.
+Methods with several parameters, and <code>boolean</code> methods</h2>
+<pre class="java"><code>static boolean canTransfer(long balance, long amount, boolean isFrozen) {
+    return !isFrozen &amp;&amp; amount &gt; 0 &amp;&amp; amount &lt;= balance;
+}
+
+static String formatNaira(long kobo) {
+    return String.format(&quot;₦%,d.%02d&quot;, kobo / 100, kobo % 100);
+}</code></pre>
+<p>A method that answers a yes/no question returns <code>boolean</code>
+and is usually named <code>is...</code>, <code>has...</code> or
+<code>can...</code>. Then the calling code reads like a sentence:</p>
+<pre class="java"><code>if (canTransfer(balance, amount, isFrozen)) {
+    balance -= amount + transferFee(amount);
+    System.out.println(&quot;Sent. Balance &quot; + formatNaira(balance));
+}</code></pre>
+<p>(<code>%,d</code> adds thousands separators:
+<code>₦1,250.00</code>.)</p>
+<p><strong>Variables inside a method belong to that method.</strong>
+<code>amountKobo</code> exists only while <code>transferFee</code> runs;
+<code>main</code> can't see it. To get a result out, <code>return</code>
+it.</p>
+<h2 id="3-one-job-per-method">3. One job per method</h2>
+<p>A good method does <strong>one thing</strong> that its name describes
+completely. Compare:</p>
+<pre class="java"><code>// Hard to read, hard to check: it parses, calculates and prints
+static void doIt(String input) { ... 40 lines ... }
+
+// Each step can be checked on its own
+static long parseAmountKobo(String input) { ... }
+static long transferFee(long amountKobo) { ... }
+static String formatNaira(long kobo) { ... }
+static void printReceipt(String name, long amount, long fee) { ... }</code></pre>
+<p>Signs a method should be split: you need "and" to describe it, it's
+longer than your screen, or you've copied the same five lines into two
+places.</p>
+<h2 id="4-breaking-a-problem-into-steps">4. Breaking a problem into
+steps</h2>
+<p>Before writing Java, write the steps in plain language:
+<strong>pseudocode</strong>. It needn't be formal; it must be clear
+enough that someone else could follow it.</p>
+<p><strong>Problem:</strong> "A savings account earns 1% interest per
+month. Given a starting balance, a monthly deposit and a goal, how many
+months until the goal is reached?"</p>
+<pre><code>read start, deposit, goal
+if deposit is 0 and start &lt; goal: say &quot;never&quot; and stop
+balance = start, months = 0
+while balance &lt; goal:
+    balance = balance + interest on balance (1%)
+    balance = balance + deposit
+    months = months + 1
+print months</code></pre>
+<p>Then ask the questions that find bugs before they exist:</p>
+<ul>
+<li><strong>What are the inputs and the output?</strong> Three amounts
+in; a number of months out.</li>
+<li><strong>What are the edge cases?</strong> The goal already reached
+(answer 0). A zero deposit (and zero interest: never). Very large goals
+(the loop runs for a long time: is that acceptable?).</li>
+<li><strong>Is interest added before or after the deposit?</strong> The
+requirement doesn't say. In a real job, you <strong>ask</strong>. Here,
+decide and write it down.</li>
+</ul>
+<p>Now each line of pseudocode becomes a small piece of Java, and the
+interest calculation becomes its own method:</p>
+<pre class="java"><code>static long monthlyInterest(long balanceKobo) {
+    return balanceKobo / 100;          // 1%, rounded down to the kobo
+}
+
+static int monthsToGoal(long start, long deposit, long goal) {
+    if (deposit == 0 &amp;&amp; monthlyInterest(start) == 0 &amp;&amp; start &lt; goal) {
+        return -1;                     // never: the caller prints a message
+    }
+    long balance = start;
+    int months = 0;
+    while (balance &lt; goal) {
+        balance += monthlyInterest(balance);
+        balance += deposit;
+        months++;
+    }
+    return months;
+}</code></pre>
+<p>Returning <code>-1</code> for "never" is a common beginner
+convention; topic 1.9 shows better tools for it (exceptions and
+<code>Optional</code>).</p>
+<h2 id="5-checking-your-methods-with-examples">5. Checking your methods
+with examples</h2>
+<p>Work out a few answers <strong>by hand first</strong>, then
+compare:</p>
+<pre class="java"><code>public static void main(String[] args) {
+    check(transferFee(500_000) == 1_000, &quot;fee at exactly ₦5,000&quot;);
+    check(transferFee(500_001) == 2_500, &quot;fee just above ₦5,000&quot;);
+    check(monthsToGoal(0, 1_000_000, 1_000_000) == 1, &quot;one deposit reaches the goal&quot;);
+    check(monthsToGoal(5_000_000, 0, 1_000_000) == 0, &quot;goal already reached&quot;);
+    check(monthsToGoal(0, 0, 1_000_000) == -1, &quot;can never reach the goal&quot;);
+}
+
+static void check(boolean ok, String what) {
+    System.out.println((ok ? &quot;PASS &quot; : &quot;FAIL &quot;) + what);
+}</code></pre>
+<p>Notice which examples were chosen: <strong>exactly on a
+boundary</strong> (₦5,000), <strong>just over it</strong>,
+<strong>already done</strong>, and <strong>impossible</strong>. Bugs
+live at the edges, not in the middle. In topic 1.6 you'll replace this
+home-made <code>check</code> with JUnit, the testing tool every Java
+team uses, but the thinking is the same.</p>
+<h2 id="6-when-youre-stuck">6. When you're stuck</h2>
+<ol type="1">
+<li><strong>Re-read the problem.</strong> Write the inputs, the output
+and one worked example by hand.</li>
+<li><strong>Shrink it.</strong> Get the simplest version working (one
+transfer, one month, one item), then grow it.</li>
+<li><strong>Print the values.</strong> Add
+<code>System.out.println("balance=" + balance + " months=" + months);</code>
+inside the loop and compare with your hand trace.</li>
+<li><strong>Explain it out loud</strong>, line by line, to a friend or a
+rubber duck. You'll often hear the bug.</li>
+<li><strong>Ask after 20–30 minutes</strong>, in the <em>Questions and
+help</em> forum: say what you're trying to do, paste the code and the
+<strong>full</strong> error message, and say what you've already tried.
+A good question gets a fast answer, and writing it often solves the
+problem.</li>
+</ol>
+<p>Using an AI assistant to <em>explain an error message</em> is fine.
+Using it to write the answer for you skips exactly the practice this
+week exists for; you'll need these skills unaided in the live-coding
+assessment.</p>
+<h2
+id="worked-example-a-fee-and-receipt-program-in-small-methods">Worked
+example: a fee-and-receipt program in small methods</h2>
+<pre class="java"><code>import java.util.Scanner;
+
+public class Main {
+
+    static long transferFee(long amountKobo) {
+        if (amountKobo &lt;= 500_000) return 1_000;
+        if (amountKobo &lt;= 5_000_000) return 2_500;
+        return 5_000;
+    }
+
+    static long vat(long feeKobo) {
+        return feeKobo * 75 / 1000;            // 7.5%, rounded down to the kobo
+    }
+
+    static String formatNaira(long kobo) {
+        return String.format(&quot;₦%,d.%02d&quot;, kobo / 100, kobo % 100);
+    }
+
+    static void printReceipt(String name, long amount) {
+        long fee = transferFee(amount);
+        long tax = vat(fee);
+        System.out.println(&quot;To:     &quot; + name);
+        System.out.println(&quot;Amount: &quot; + formatNaira(amount));
+        System.out.println(&quot;Fee:    &quot; + formatNaira(fee) + &quot; + VAT &quot; + formatNaira(tax));
+        System.out.println(&quot;Total:  &quot; + formatNaira(amount + fee + tax));
+    }
+
+    public static void main(String[] args) {
+        Scanner in = new Scanner(System.in);
+        System.out.print(&quot;Recipient: &quot;);
+        String name = in.nextLine();
+        System.out.print(&quot;Amount in kobo: &quot;);
+        long amount = in.nextLong();
+        printReceipt(name, amount);
+    }
+}</code></pre>
+<p><code>main</code> now reads like the requirement: ask for the name,
+ask for the amount, print the receipt. Each rule (the fee bands, VAT,
+formatting) lives in exactly one place, so when the bank changes a fee
+band, you change one line.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Printing a result inside a method instead of returning it, so the
+caller can't use it.</li>
+<li>A non-<code>void</code> method where one path has no
+<code>return</code> (<code>missing return statement</code>).</li>
+<li>Expecting a variable declared in one method to be visible in
+another.</li>
+<li>Long methods named <code>process</code> or <code>doIt</code> that
+hide three jobs.</li>
+<li>Testing only the "normal" case and never the boundaries.</li>
+<li>Starting to type Java before you can say the steps in plain
+language.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Write <code>static boolean isValidAccountNumber(String s)</code>:
+exactly 10 characters, all digits. Check it with five examples,
+including <code>"012345678"</code> (9 digits) and
+<code>"01234S6789"</code>.</li>
+<li>Write <code>static String maskAccount(String s)</code> that keeps
+only the last four digits, and use it in a receipt.</li>
+<li>Write
+<code>static long splitEvenly(long totalKobo, int people)</code> and
+<code>static long remainder(long totalKobo, int people)</code>. Check
+that <code>people × share + remainder == total</code> for three
+examples.</li>
+<li>Write pseudocode, then Java, for: "Print a loan repayment table:
+equal monthly payments of principal, plus 2% interest per month on what
+is still owed." Check the final balance is exactly 0.</li>
+<li>Take your longest practice program from lesson 0.2 and split it into
+at least three methods with clear names.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Method, call, parameter, argument, return type, <code>return</code>,
+<code>void</code>, <code>static</code>, local variable, scope,
+pseudocode, decomposition, edge case, boundary, hand-worked example,
+rubber-duck debugging.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://dev.java/learn/classes-objects/defining-methods/">dev.java:
+Defining Methods</a></li>
+<li><a
+href="https://docs.oracle.com/javase/tutorial/java/javaOO/arguments.html">The
+Java Tutorials: Passing Information to a Method</a></li>
+<li><a href="https://stackoverflow.com/help/how-to-ask">How to ask a
+good question (Stack Overflow)</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Planning Your Problem Solving (Think Like a Programmer)</h3><p>V. Anton Spraul · 7 min. The author of Think Like a Programmer on planning a solution before writing code.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/mvFrq4xTRE4" title="Planning Your Problem Solving (Think Like a Programmer)" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>How to Think Like a Programmer</h3><p>Codecademy · 6 min. Breaking a problem into small steps you can solve and check one at a time.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/rWMuEIcdJP4" title="How to Think Like a Programmer" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/00-programming-on-ramp/0.3-methods-problem-solving/README.md">0.3 Methods and breaking a problem into steps</a></p>

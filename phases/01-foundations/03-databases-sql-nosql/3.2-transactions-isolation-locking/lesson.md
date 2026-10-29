@@ -136,7 +136,7 @@ UPDATE account SET balance = :newBalance, version = version + 1
 WHERE id = :id AND version = 7;                                 -- 0 rows → someone else won; retry
 ```
 
-No locks are held between read and write; conflicts are detected at write time. It suits low-contention data and long user think-time (editing a customer profile). JPA's `@Version` does exactly this (topic 4.3). Under high contention (a hot merchant settlement account), many retries make pessimistic locking or Option A better.
+No locks are held between read and write; conflicts are detected at write time. It suits low-contention data and long user think-time (editing a customer profile). JPA's `@Version` does exactly this (topic 4.4). Under high contention (a hot merchant settlement account), many retries make pessimistic locking or Option A better.
 
 ### Option D: let the database prove it with Serializable
 

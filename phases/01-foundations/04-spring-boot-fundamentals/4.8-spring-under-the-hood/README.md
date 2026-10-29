@@ -3,9 +3,9 @@
 
 # 4.8 Spring under the hood: proxies, transactions, bean scopes, lifecycle, events and scheduling
 
-← [4.7 Spring Boot with Kotlin](../4.7-spring-boot-with-kotlin/README.md) · [Module 4](../README.md) · [Phase 1](../../README.md)
+← [4.7 What changed from Spring Boot 3 to 4, and how to upgrade](../4.7-spring-boot-3-to-4-upgrade/README.md) · [Module 4](../README.md) · [Phase 1](../../README.md) · [4.9 Spring Boot with Kotlin](../4.9-spring-boot-with-kotlin/README.md) →
 
-> **Week 13** · Module 4: Spring Boot 4 Fundamentals · Website topic covered: *Added for interviews: AOP proxies, @Transactional propagation and rollback rules, self-invocation, bean scopes and lifecycle, application events, @Scheduled and @Async pitfalls*
+> **Week 14** · Module 4: Spring Boot 4 Fundamentals · Website topic covered: *Added for interviews: AOP proxies, @Transactional propagation and rollback rules, self-invocation, bean scopes and lifecycle, application events, @Scheduled and @Async pitfalls*
 
 ## What you will be able to do
 
@@ -21,7 +21,7 @@ The bugs that reach production in Spring applications are rarely syntax errors. 
 
 ## 1. Proxies: how annotations get their behaviour
 
-When a bean has methods annotated with `@Transactional`, `@Cacheable`, `@PreAuthorize`, `@Async`, `@Retryable` or similar, Spring doesn't change your class. At start-up, a `BeanPostProcessor` replaces the bean with a **proxy** that wraps calls to it (topic 1.12). Other beans receive the proxy. Spring Boot uses **class-based (CGLIB) proxies** by default: a generated subclass of your class.
+When a bean has methods annotated with `@Transactional`, `@Cacheable`, `@PreAuthorize`, `@Async`, `@Retryable` or similar, Spring doesn't change your class. At start-up, a `BeanPostProcessor` replaces the bean with a **proxy** that wraps calls to it (topic 1.11). Other beans receive the proxy. Spring Boot uses **class-based (CGLIB) proxies** by default: a generated subclass of your class.
 
 ```text
 Controller ──calls──> [Proxy: start tx] ──> TransferService.transfer() ──> [Proxy: commit/rollback]
@@ -102,7 +102,7 @@ Never call a slow external API (a payment provider, an email server) inside a da
 
 | Scope | One instance per | Notes |
 | --- | --- | --- |
-| `singleton` (default) | Application context | Must be stateless or thread-safe (topic 1.12) |
+| `singleton` (default) | Application context | Must be stateless or thread-safe (topic 1.11) |
 | `prototype` | Each injection or `getBean` call | Spring doesn't call destroy callbacks |
 | `request` | HTTP request | Web only; injected through a scoped proxy |
 | `session` | HTTP session | Avoid in stateless APIs |
@@ -124,7 +124,7 @@ Prefer **constructor injection**: dependencies are explicit, objects are immutab
 
 ## 4. Application events
 
-`ApplicationEventPublisher.publishEvent(...)` sends any object to listeners in the same application (the Observer pattern, topic 1.12).
+`ApplicationEventPublisher.publishEvent(...)` sends any object to listeners in the same application (the Observer pattern, topic 1.11).
 
 ```java
 @Component
@@ -171,7 +171,7 @@ Auto-configuration classes are ordinary `@Configuration` classes guarded by **co
 - `@ConditionalOnMissingBean`: only if you haven't defined your own bean, which is how you override defaults.
 - `@ConditionalOnProperty("app.feature.enabled")`: only if a property is set.
 
-To see what was applied and why, start the application with `--debug` (or `debug=true`) to print the **conditions evaluation report**, or call the Actuator `conditions` endpoint (restricted to operators). Spring Boot 4 splits auto-configuration into many modules, so a missing starter means the condition never matches (topic 4.6).
+To see what was applied and why, start the application with `--debug` (or `debug=true`) to print the **conditions evaluation report**, or call the Actuator `conditions` endpoint (restricted to operators). Spring Boot 4 splits auto-configuration into many modules, so a missing starter means the condition never matches (topic 4.7).
 
 ## Common mistakes
 
@@ -210,7 +210,7 @@ Proxy, CGLIB, JDK dynamic proxy, `BeanPostProcessor`, self-invocation, `@Transac
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [[QUESTION] Why doesn't @Transactional work when called within the same class?](https://www.youtube.com/watch?v=gDpmbUoEpPQ) · Laur Spilca · 16 min. Why @Transactional doesn't work when called within the same class.
 - [Spring Transaction Propagation Explained | Spring Boot Transactions Part 3](https://www.youtube.com/watch?v=LCltftLZ_W0) · CodeSnippet by Chetan · 28 min. Spring transaction propagation explained with runnable examples.
@@ -342,4 +342,4 @@ What is the quickest way to find out?
 
 ---
 
-← [4.7 Spring Boot with Kotlin](../4.7-spring-boot-with-kotlin/README.md) · [Module 4](../README.md) · [Phase 1](../../README.md)
+← [4.7 What changed from Spring Boot 3 to 4, and how to upgrade](../4.7-spring-boot-3-to-4-upgrade/README.md) · [Module 4](../README.md) · [Phase 1](../../README.md) · [4.9 Spring Boot with Kotlin](../4.9-spring-boot-with-kotlin/README.md) →

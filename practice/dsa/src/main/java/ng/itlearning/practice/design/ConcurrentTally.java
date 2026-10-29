@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
- * Week 24. Pattern: thread-safe aggregation.
+ * Week 25. Pattern: thread-safe aggregation.
  * <p>
  * Many threads record card payments per merchant at once. Implement {@code record} and {@code total} so that no
  * update is ever lost, without a global {@code synchronized} lock (use ConcurrentHashMap with atomic operations,

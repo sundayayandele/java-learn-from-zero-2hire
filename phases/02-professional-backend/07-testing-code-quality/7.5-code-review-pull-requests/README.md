@@ -5,7 +5,7 @@
 
 ← [7.4 Coverage with JaCoCo and static analysis with SonarQube](../7.4-jacoco-sonarqube/README.md) · [Module 7](../README.md) · [Phase 2](../../README.md) · [8.1 Git branching, pull requests, rebasing and branch-protection rules](../../08-git-docker-cicd/8.1-git-branching-prs/README.md) →
 
-> **Week 20** · Module 7: Testing & Code Quality · Website topic covered: *Pull-request size and description, review checklists, giving and receiving feedback*
+> **Week 21** · Module 7: Testing & Code Quality · Website topic covered: *Pull-request size and description, review checklists, giving and receiving feedback*
 
 ## What you will be able to do
 
@@ -159,7 +159,7 @@ Pull request, merge request, four-eyes principle, code review, reviewer, author,
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [Better Code Reviews in 6 SIMPLE STEPS](https://www.youtube.com/watch?v=d9_fweNDjKw) · Modern Software Engineering · 20 min. Dave Farley on what effective code review is for.
 - [Code Review Tips (How I Review Code as a Staff Software Engineer)](https://www.youtube.com/watch?v=Y9sp8gONv9M) · Cody Engel · 12 min. Writing pull requests that are easy to review.

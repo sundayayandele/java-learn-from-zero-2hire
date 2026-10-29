@@ -6,8 +6,12 @@
 Writes to lms/moodle/out/ (git-ignored):
     questions/topic-<id>.xml          Moodle XML question bank, one category per topic (graded topic quizzes)
     questions/phase-<n>-exam.xml      end-of-phase exam bank (only if assessments/private/phase-<n>-exam.json exists)
+    questions/phase-<n>-entry-check.xml   the on-ramp entry check (modules with an entry-check.json)
     pages/<id>.html                   lesson as HTML with embedded videos, ready for a Moodle Page activity
     course-structure.json             sections and activities, used by push.py
+
+and to lms/moodle/import/ (committed): the combined topic banks, the pages, and weekly-plan.json, the week-by-week
+plan that scripts/moodle/weekly/weekly_plan.php sends to each learner.
 
 Requires pandoc (https://pandoc.org) to convert lessons to HTML. Standard library otherwise.
 """
@@ -164,25 +168,55 @@ def combine_topic_banks(phase_number: int, topic_ids: list[str]) -> None:
                       encoding="utf-8")
 
 
-# Per phase: number of topic quizzes, week capstones start, capstone rubric total and pass mark.
-PHASE_FACTS = {1: (32, 5, 20, 14), 2: (27, 15, 24, 17)}
+# Per phase: number of required (core) topic quizzes, week capstones start, capstone rubric total and pass mark.
+PHASE_FACTS = {1: (31, 6, 20, 14), 2: (27, 16, 24, 17)}
 # Per phase: how many capstones besides Capstone 1 are required.
 OTHER_CAPSTONES = {1: "two others", 2: "one other"}
 
+ONRAMP = ("<li><strong>New to programming? Start with week 0.</strong> Take the <em>Entry check</em> quiz in the "
+          "<em>Week 0: programming on-ramp</em> section (15 questions, about 15 minutes). With 12 or more, skip the "
+          "on-ramp and start at topic 1.1; otherwise work through the three on-ramp lessons first. The on-ramp "
+          "doesn't count towards the exam or the certificate.</li>\n")
+OPTIONAL_NOTE = (" Topics marked <em>optional</em> ({names}) don't count towards the exam or the certificate; do them "
+                 "if you have time or your target employer uses them.")
+
 START_HERE = """<h2>How this course works on ITLearning</h2>
 <ol>
-<li><strong>Work through the modules in order.</strong> Each topic has a <em>Lesson</em> page (read it and type the code yourself, then watch the embedded videos) followed by a <em>Check your understanding</em> quiz.</li>
-<li><strong>Take every topic quiz and aim for 70% or more.</strong> The quizzes are there to help you learn and keep pace, not to grade you: attempts are unlimited and you see feedback straight away. A topic counts as complete when you've viewed the lesson and attempted its quiz. If you score under 70%, reread the explanations and try again; the exam draws on the same topics.</li>
+{onramp}<li><strong>Work through the modules in order, a week at a time.</strong> Each topic has a <em>Lesson</em> page (read it and type the code yourself, then watch the embedded videos) followed by a <em>Check your understanding</em> quiz. Each activity shows a date: that's when to finish it to keep to the {weeks}-week plan, counted from the day you enrolled. Every Monday you get a message with that week's plan.</li>
+<li><strong>Take every topic quiz and aim for 70% or more.</strong> The quizzes are there to help you learn and keep pace, not to grade you: attempts are unlimited and you see feedback straight away. A topic counts as complete when you've viewed the lesson and attempted its quiz. If you score under 70%, reread the explanations and try again; the exam draws on the same topics.{optional}</li>
 <li><strong>Do the practice tasks and module projects</strong> listed at the end of each lesson and module.</li>
 <li><strong>Build your capstones from week {week}</strong>: Capstone 1 plus {others}, then defend them in a 20-minute <em>capstone defence</em> (demo, code questions and a live change). Each capstone page has the brief, the architecture diagrams and a step-by-step build guide. Submit each one in its <em>Submission</em> assignment; it is marked out of {total} with the rubric, and {passmark} is a pass.</li>
 <li><strong>Keep up the coding practice track</strong> (about 3 hours a week): auto-graded Java and SQL interview problems. Submit your progress at the <em>coding practice checkpoint</em>.</li>
-<li><strong>Sit the end-of-phase assessments</strong>: the exam once you've attempted all {quizzes} topic quizzes (60 questions drawn at random, 2 hours, pass mark 70%, two attempts at least 48 hours apart) and the 90-minute <em>live-coding assessment</em>.</li>
+<li><strong>Sit the end-of-phase assessments</strong>: the exam once you've attempted all {quizzes} core topic quizzes (60 questions drawn at random, 2 hours, pass mark 70%, two attempts at least 48 hours apart) and the 90-minute <em>live-coding assessment</em>.</li>
 <li><strong>Grading and booking</strong>: mentors grade projects, capstones and the checkpoint within 5 working days, with written feedback, and you can resubmit until you pass. Book your capstone defence and live-coding assessment yourself in <em>Book your capstone defence</em> and <em>Book your live-coding assessment</em>; new slots appear every week.</li>
 <li><strong>Get hired</strong>: work through the Getting hired section and submit your checklist.</li>
 </ol>
-<p>Stuck? Ask in the <em>Questions and help</em> forum in this section. Say which topic or capstone, what you tried, and paste the error message.</p>
+<p>Stuck? Ask in the <em>Questions and help</em> forum in this section. Say which topic or capstone, what you tried, and paste the error message. Come to the weekly <em>office hour</em> (link in this section) with questions, and meet the rest of your cohort in the <em>Cohort lounge</em> forum.</p>
 <hr>
 """
+
+
+def weekly_plan(cur: dict) -> dict:
+    """Week-by-week topics and milestones per phase, read by scripts/moodle/weekly/weekly_plan.php. Week numbers are
+    the programme's; the script turns them into "week N of your plan" from each learner's enrolment date."""
+    plan = {"generated_from": "curriculum.json and phases/<phase>/phase.md", "phases": {}}
+    for phase in cur["phases"]:
+        if phase["status"] != "built":
+            continue
+        weeks: dict[int, dict] = {}
+        for mod in phase["modules"]:
+            for t in mod["topics"]:
+                w = weeks.setdefault(t["week"], {"week": t["week"], "topics": [], "milestone": ""})
+                w["topics"].append({"id": t["id"], "title": t["title"].split(":")[0],
+                                    "optional": bool(t.get("optional") or mod.get("optional"))})
+        table = (ROOT / "phases" / phase["slug"] / "phase.md").read_text(encoding="utf-8")
+        for m in re.finditer(r"^\| (\d+) \|[^|]*\|[^|]*\| ([^|]*)\|$", table, re.M):
+            if int(m.group(1)) in weeks:
+                weeks[int(m.group(1))]["milestone"] = re.sub(r"\*\*", "", m.group(2)).strip()
+        first, last = (int(x) for x in phase["weeks"].split("-"))
+        plan["phases"][str(phase["number"])] = {"title": phase["title"], "first_week": first, "last_week": last,
+                                                "weeks": [weeks[w] for w in sorted(weeks)]}
+    return plan
 
 
 def publish_pages() -> None:
@@ -231,7 +265,8 @@ def main() -> int:
             for t in mod["topics"]:
                 tdir = pdir / mod["slug"] / t["slug"]
                 body = absolutise(lesson_html((tdir / "lesson.md").read_text(encoding="utf-8")), tdir)
-                page = (f"<p><em>Week {t['week']} · Module {mod['number']}: {html.escape(mod['title'])}</em></p>\n"
+                page = (f"<p><em>Week {t['week']}{' · Optional' if t.get('optional') else ''} · "
+                        f"Module {mod['number']}: {html.escape(mod['title'])}</em></p>\n"
                         f"{body}\n{videos_html(videos.get(t['id'], []))}\n"
                         f'<p>Source on GitHub: <a href="{REPO_URL}/phases/{phase["slug"]}/{mod["slug"]}/{t["slug"]}/README.md">'
                         f"{html.escape(t['id'] + ' ' + t['title'])}</a></p>")
@@ -240,17 +275,35 @@ def main() -> int:
                 category = f"{COURSE_CATEGORY}/Phase {phase['number']}/{t['id']} {t['title'].split(':')[0][:60].replace('/', '-')}"
                 (OUT / "questions" / f"topic-{t['id']}.xml").write_text(
                     bank_xml(category, t["id"], cbt["questions"]), encoding="utf-8")
+                optional = bool(t.get("optional") or mod.get("optional"))
+                suffix = " (optional)" if t.get("optional") else ""
                 activities += [
-                    {"type": "page", "name": f"{t['id']} {t['title']}", "file": f"pages/{t['id']}.html"},
-                    {"type": "quiz", "name": f"{t['id']} Check your understanding",
+                    {"type": "page", "name": f"{t['id']} {t['title']}{suffix}", "file": f"pages/{t['id']}.html",
+                     "week": t["week"], "optional": optional},
+                    {"type": "quiz", "name": f"{t['id']} Check your understanding{suffix}",
                      "questions": f"questions/topic-{t['id']}.xml", "count": len(cbt["questions"]),
+                     "week": t["week"], "optional": optional,
                      "settings": {"grade_to_pass_percent": 70, "attempts": "unlimited", "time_limit": None}},
                 ]
             activities.append({"type": "url", "name": f"Module {mod['number']} projects",
                                "url": f"{REPO_URL}/phases/{phase['slug']}/{mod['slug']}/README.md#module-projects"})
-            sections.append({"name": f"Module {mod['number']}: {mod['title']} (weeks {mod['weeks']})",
-                             "summary": f"Topics, videos and graded checks for Module {mod['number']}.",
-                             "activities": activities})
+            check = pdir / mod["slug"] / "entry-check.json"
+            if check.exists():
+                entry = load(check)
+                (OUT / "questions" / f"phase-{n}-entry-check.xml").write_text(
+                    bank_xml(f"{COURSE_CATEGORY}/Phase {n}/Entry check", f"P{n}-ENTRY", entry["questions"]),
+                    encoding="utf-8")
+                activities.insert(0, {"type": "quiz", "name": entry["title"], "week": 0, "optional": True,
+                                      "questions": f"questions/phase-{n}-entry-check.xml", "count": len(entry["questions"]),
+                                      "settings": {"grade_to_pass": entry["pass_mark"], "attempts": "unlimited",
+                                                   "time_limit": None}})
+            if mod["number"] == 0:
+                name = "Week 0: programming on-ramp (optional)"
+                summary = "For complete beginners. Take the entry check first: 12 or more out of 15 means you can skip this week."
+            else:
+                name = f"Module {mod['number']}: {mod['title']} (weeks {mod['weeks']})"
+                summary = f"Topics, videos and graded checks for Module {mod['number']}."
+            sections.append({"name": name, "summary": summary, "activities": activities})
         guides = {"start-here": (pdir / "phase.md", None),
                   "getting-hired": (pdir / "getting-hired" / "guide.md", vprefix + "getting-hired"),
                   "deploy": (pdir / "deploy" / "guide.md", vprefix + "deploy"),
@@ -261,8 +314,15 @@ def main() -> int:
             body = absolutise(lesson_html(md), src.parent if name != "start-here" else pdir)
             body = re.sub(r"<p>←.*?</p>", "", body, count=1, flags=re.S)
             if name == "start-here":
+                optional_topics = [f"{t['id']} {t['title'].split(':')[0]}" for mod in phase["modules"]
+                                   for t in mod["topics"] if t.get("optional")]
+                has_onramp = any(mod.get("optional") for mod in phase["modules"])
+                first, last = (int(x) for x in phase["weeks"].split("-"))
                 body = START_HERE.format(week=cap_week, total=cap_total, passmark=cap_pass, quizzes=quizzes,
-                                         others=OTHER_CAPSTONES[n]) \
+                                         others=OTHER_CAPSTONES[n], weeks=last - max(first, 1) + 1,
+                                         onramp=ONRAMP if has_onramp else "",
+                                         optional=OPTIONAL_NOTE.format(names=", ".join(optional_topics))
+                                         if optional_topics else "") \
                     + re.sub(r"<!--.*?-->", "", body, flags=re.S)
             (OUT / "guides" / f"{sub}{name}.html").write_text(body + "\n" + videos_html(videos.get(video_key, []) if video_key else []),
                                                         encoding="utf-8")
@@ -309,6 +369,8 @@ def main() -> int:
         combine_topic_banks(n, topic_ids)
 
     (OUT / "course-structure.json").write_text(json.dumps(structure, indent=2) + "\n", encoding="utf-8")
+    (ROOT / "lms" / "moodle" / "import" / "weekly-plan.json").write_text(
+        json.dumps(weekly_plan(cur), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     publish_pages()
     n_q = len(list((OUT / "questions").glob("*.xml")))
     n_p = len(list((OUT / "pages").glob("*.html")))

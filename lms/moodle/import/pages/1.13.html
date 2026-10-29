@@ -1,0 +1,325 @@
+<p><em>Week 5 · Optional · Module 1: Modern Java &amp; OOP Foundations</em></p>
+<blockquote>
+<p><strong>Why this topic is here.</strong> Kotlin is not on the
+ITLearning programme page, but it was added to this programme on
+purpose: many fintechs and banks in Nigeria, the UK and Europe run
+Kotlin services alongside Java, Spring Boot supports it as a first-class
+language, and Android work is Kotlin-first. You do not need to become a
+Kotlin expert in Phase 1. You need to read it fluently, write simple
+code, and mix it with Java in one project. Topic 4.9 applies it to
+Spring Boot.</p>
+</blockquote>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Explain what Kotlin is, why JVM teams adopt it, and how it
+interoperates with Java.</li>
+<li>Write Kotlin with <code>val</code>/<code>var</code>, null safety,
+functions, classes, data classes, sealed classes, <code>when</code> and
+string templates.</li>
+<li>Use Kotlin's collection operations and extension functions.</li>
+<li>Add Kotlin to a Maven project and call Java from Kotlin and Kotlin
+from Java.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Kotlin removes whole categories of the bugs you met in topics
+1.3–1.9: the compiler tracks nullability, so
+<code>NullPointerException</code> mostly disappears; data classes
+replace boilerplate; and immutable <code>val</code> is the default.
+Teams that adopt it usually keep their Java code and add Kotlin file by
+file, because both compile to the same JVM bytecode and call each other
+freely. A Java engineer who can review a Kotlin pull request is more
+useful to those teams on day one.</p>
+<h2 id="1-kotlin-in-one-paragraph">1. Kotlin in one paragraph</h2>
+<p>Kotlin is a statically typed JVM language created by JetBrains (the
+makers of IntelliJ IDEA) and released in 2016. It compiles to Java
+bytecode, runs on the same JVM, uses the same libraries (Spring,
+Hibernate, JUnit, Jackson) and builds with Maven or Gradle. The current
+major line is Kotlin 2.x with the K2 compiler. Spring Boot 4 requires
+Kotlin 2.2 or later.</p>
+<h2 id="2-syntax-side-by-side">2. Syntax side by side</h2>
+<pre class="kotlin"><code>// Kotlin                                         // Java
+val rate = 0.18                                   // final double rate = 0.18;     (val = read-only)
+var balance = BigDecimal(&quot;1500.00&quot;)               // BigDecimal balance = new BigDecimal(&quot;1500.00&quot;);
+val name: String = &quot;Ada&quot;                          // types are inferred, or declared after a colon
+
+fun fee(amount: BigDecimal): BigDecimal {         // static BigDecimal fee(BigDecimal amount) {
+    return amount.multiply(BigDecimal(&quot;0.005&quot;))
+}
+fun double(x: Int) = x * 2                        // single-expression function
+
+println(&quot;Balance for $name is ${balance.setScale(2)}&quot;)   // string templates</code></pre>
+<ul>
+<li>No semicolons, no <code>new</code>.</li>
+<li><code>val</code> (read-only reference, like <code>final</code>) is
+the default choice; use <code>var</code> only when you need to
+reassign.</li>
+<li>Functions can live at the top level of a file: no utility class
+needed.</li>
+<li><code>==</code> in Kotlin calls <code>equals</code> (structural
+equality), so string comparison just works. <code>===</code> compares
+references.</li>
+<li>Default and named arguments replace most overloads and
+builders:</li>
+</ul>
+<pre class="kotlin"><code>fun transfer(from: String, to: String, amount: BigDecimal, narration: String = &quot;Transfer&quot;) { ... }
+transfer(from = &quot;0123456789&quot;, to = &quot;9876543210&quot;, amount = BigDecimal(&quot;5000&quot;))</code></pre>
+<h2 id="3-null-safety">3. Null safety</h2>
+<p>The headline feature. Types are non-nullable unless you add
+<code>?</code>:</p>
+<pre class="kotlin"><code>var accountName: String = &quot;Ada&quot;
+accountName = null                 // compile error
+
+var middleName: String? = null     // nullable type
+middleName.length                  // compile error: might be null
+middleName?.length                 // safe call: null if middleName is null
+middleName?.length ?: 0            // Elvis operator: default when null
+middleName!!.length                // &quot;I promise it&#39;s not null&quot;: throws NPE if it is. Avoid.
+
+if (middleName != null) {
+    println(middleName.length)     // smart cast: the compiler knows it&#39;s non-null here
+}</code></pre>
+<p>The compiler forces you to deal with "might be missing" at compile
+time instead of discovering it in production at 2 a.m.</p>
+<p><strong>Platform types.</strong> Values coming from Java code have
+unknown nullability (shown as <code>String!</code> in the IDE). Kotlin
+trusts you; if you treat a Java <code>null</code> as non-null, you still
+get an NPE. Annotating Java APIs with nullability annotations
+(JSpecify's <code>@Nullable</code>/<code>@NonNull</code>, which Spring
+Framework 7 uses throughout) lets Kotlin see the truth.</p>
+<h2 id="4-classes-data-classes-and-objects">4. Classes, data classes and
+objects</h2>
+<pre class="kotlin"><code>class Account(val number: String, private var balance: BigDecimal) {   // primary constructor declares properties
+    init {
+        require(number.matches(Regex(&quot;\\d{10}&quot;))) { &quot;Account number must be 10 digits&quot; }
+    }
+
+    fun withdraw(amount: BigDecimal) {
+        require(amount.signum() &gt; 0) { &quot;Amount must be positive&quot; }
+        check(balance &gt;= amount) { &quot;Insufficient funds&quot; }   // operators work on Comparable
+        balance -= amount                                   // BigDecimal operators via Kotlin stdlib
+    }
+
+    fun balance() = balance
+}</code></pre>
+<ul>
+<li>Classes are <code>final</code> by default; mark them
+<code>open</code> to allow subclassing. (Spring needs proxies on some
+classes, which is why Spring projects use the <code>kotlin-spring</code>
+compiler plugin: topic 4.9.)</li>
+<li>Properties replace fields plus getters/setters. From Java,
+<code>account.number</code> appears as <code>getNumber()</code>.</li>
+<li><code>require</code> throws <code>IllegalArgumentException</code>,
+<code>check</code> throws <code>IllegalStateException</code>: guard
+clauses in one line.</li>
+</ul>
+<p><strong>Data classes</strong> are Kotlin's records, with one
+extra:</p>
+<pre class="kotlin"><code>data class Money(val amount: BigDecimal, val currency: String)
+
+val a = Money(BigDecimal(&quot;100.00&quot;), &quot;NGN&quot;)
+val b = a.copy(amount = BigDecimal(&quot;250.00&quot;))   // copy with changes: immutable updates made easy
+val (amt, ccy) = a                              // destructuring</code></pre>
+<p><code>object</code> declares a singleton, and a
+<code>companion object</code> holds what Java would make
+<code>static</code>:</p>
+<pre class="kotlin"><code>object FeeSchedule { val TRANSFER_FEE = BigDecimal(&quot;10.75&quot;) }
+
+class AccountNumber private constructor(val value: String) {
+    companion object {
+        fun of(raw: String): AccountNumber = AccountNumber(raw.trim())
+    }
+}</code></pre>
+<h2 id="5-sealed-classes-and-when">5. Sealed classes and
+<code>when</code></h2>
+<p>Kotlin had sealed hierarchies and exhaustive <code>when</code> long
+before Java 21, and they look very similar:</p>
+<pre class="kotlin"><code>sealed interface PaymentMethod
+data class Card(val token: String, val last4: String) : PaymentMethod
+data class BankTransfer(val bankCode: String, val account: String) : PaymentMethod
+data class Wallet(val id: String) : PaymentMethod
+
+fun fee(method: PaymentMethod, amount: BigDecimal): BigDecimal = when (method) {
+    is Card -&gt; (amount * BigDecimal(&quot;0.015&quot;)).min(BigDecimal(&quot;2000.00&quot;))   // smart cast to Card
+    is BankTransfer -&gt; BigDecimal(&quot;10.75&quot;)
+    is Wallet -&gt; BigDecimal(&quot;5.00&quot;)
+}   // exhaustive: adding a subtype breaks compilation until handled</code></pre>
+<p><code>when</code> also replaces <code>switch</code> on values and
+ranges:
+<code>when (score) { in 700..850 -&gt; "A"; in 600 until 700 -&gt; "B"; else -&gt; "C" }</code>.</p>
+<h2 id="6-collections-and-lambdas">6. Collections and lambdas</h2>
+<p>Kotlin distinguishes read-only and mutable collections in the type
+system, and has collection operations built in (no
+<code>.stream()</code>/<code>.collect()</code>):</p>
+<pre class="kotlin"><code>val txs: List&lt;Txn&gt; = loadTransactions()              // read-only List
+val mutable = mutableListOf&lt;Txn&gt;()                   // MutableList
+
+val totalByAccount: Map&lt;String, BigDecimal&gt; = txs
+    .filter { it.type == Type.DEBIT }                // `it` is the implicit single parameter
+    .groupBy { it.account }
+    .mapValues { (_, list) -&gt; list.sumOf { it.amount } }
+
+val top5 = txs.sortedByDescending { it.amount }.take(5)
+val (large, small) = txs.partition { it.amount &gt; BigDecimal(&quot;1000000&quot;) }</code></pre>
+<p>These operations are eager (each step builds a list). For very large
+data or long chains, <code>txs.asSequence()</code> makes them lazy like
+Java streams.</p>
+<p><strong>Extension functions</strong> add methods to existing types
+without inheritance:</p>
+<pre class="kotlin"><code>fun String.maskAccount(): String = &quot;******&quot; + takeLast(4)
+&quot;0123456789&quot;.maskAccount()      // ******6789
+
+fun BigDecimal.toKobo(): Long = (this * BigDecimal(100)).longValueExact()</code></pre>
+<p><strong>Scope functions</strong> (<code>let</code>,
+<code>apply</code>, <code>also</code>, <code>run</code>,
+<code>with</code>) are concise but easy to overuse. The two you will see
+most: <code>x?.let { ... }</code> to run code only when <code>x</code>
+is non-null, and <code>Builder().apply { a = 1; b = 2 }</code> to
+configure an object.</p>
+<h2 id="7-interoperability-with-java">7. Interoperability with Java</h2>
+<p>Java and Kotlin classes can live in the same Maven module and call
+each other.</p>
+<p>Calling Java from Kotlin is natural: getters become properties
+(<code>customer.name</code> calls <code>getName()</code>), and static
+methods are called on the class.</p>
+<p>Calling Kotlin from Java needs a few annotations for a natural
+API:</p>
+<pre class="kotlin"><code>class RateTable {
+    companion object {
+        @JvmStatic fun standard(): RateTable = RateTable()   // Java: RateTable.standard()
+        const val VERSION = &quot;2026-10&quot;                        // Java: RateTable.VERSION
+    }
+}</code></pre>
+<pre class="kotlin"><code>// MoneyUtils.kt: the file annotation must be the first line of the file
+@file:JvmName(&quot;MoneyUtils&quot;)                // top-level functions appear as MoneyUtils.round(...) in Java
+
+package ng.itlearning.bank
+
+@JvmOverloads fun round(x: BigDecimal, scale: Int = 2) = x.setScale(scale, RoundingMode.HALF_EVEN)</code></pre>
+<p>Kotlin has <strong>no checked exceptions</strong>. Java callers of a
+Kotlin function that throws <code>IOException</code> will not be forced
+to catch it unless the function is annotated
+<code>@Throws(IOException::class)</code>.</p>
+<h3 id="adding-kotlin-to-a-maven-build">Adding Kotlin to a Maven
+build</h3>
+<pre class="xml"><code>&lt;properties&gt;
+  &lt;kotlin.version&gt;2.4.21&lt;/kotlin.version&gt;
+&lt;/properties&gt;
+
+&lt;dependencies&gt;
+  &lt;dependency&gt;
+    &lt;groupId&gt;org.jetbrains.kotlin&lt;/groupId&gt;
+    &lt;artifactId&gt;kotlin-stdlib&lt;/artifactId&gt;
+    &lt;version&gt;${kotlin.version}&lt;/version&gt;
+  &lt;/dependency&gt;
+&lt;/dependencies&gt;
+
+&lt;build&gt;
+  &lt;plugins&gt;
+    &lt;plugin&gt;
+      &lt;groupId&gt;org.jetbrains.kotlin&lt;/groupId&gt;
+      &lt;artifactId&gt;kotlin-maven-plugin&lt;/artifactId&gt;
+      &lt;version&gt;${kotlin.version}&lt;/version&gt;
+      &lt;configuration&gt;&lt;jvmTarget&gt;21&lt;/jvmTarget&gt;&lt;/configuration&gt;
+      &lt;executions&gt;
+        &lt;execution&gt;&lt;id&gt;compile&lt;/id&gt;&lt;goals&gt;&lt;goal&gt;compile&lt;/goal&gt;&lt;/goals&gt;
+          &lt;configuration&gt;&lt;sourceDirs&gt;
+            &lt;sourceDir&gt;${project.basedir}/src/main/kotlin&lt;/sourceDir&gt;
+            &lt;sourceDir&gt;${project.basedir}/src/main/java&lt;/sourceDir&gt;
+          &lt;/sourceDirs&gt;&lt;/configuration&gt;
+        &lt;/execution&gt;
+        &lt;execution&gt;&lt;id&gt;test-compile&lt;/id&gt;&lt;goals&gt;&lt;goal&gt;test-compile&lt;/goal&gt;&lt;/goals&gt;&lt;/execution&gt;
+      &lt;/executions&gt;
+    &lt;/plugin&gt;
+    &lt;!-- maven-compiler-plugin must run after Kotlin so Java can see Kotlin classes;
+         see the Kotlin Maven docs for the exact execution overrides. --&gt;
+  &lt;/plugins&gt;
+&lt;/build&gt;</code></pre>
+<p>The Kotlin compiler must run before <code>javac</code> in a mixed
+project so each language can see the other's classes. The <a
+href="https://kotlinlang.org/docs/maven.html">Kotlin Maven guide</a> has
+the exact configuration, and start.spring.io generates it for you when
+you choose Kotlin (topic 4.9).</p>
+<h2 id="8-coroutines-briefly">8. Coroutines, briefly</h2>
+<p>Kotlin's answer to asynchronous code is <strong>coroutines</strong>
+(<code>suspend</code> functions, <code>launch</code>,
+<code>async</code>), which let you write non-blocking code that reads
+sequentially. Java 21's virtual threads (topic 2.3) solve much of the
+same problem for blocking code. In Spring MVC services, virtual threads
+are usually enough; coroutines matter more in Spring WebFlux and
+Android. You only need to recognise <code>suspend fun</code> in Phase
+1.</p>
+<h2 id="worked-example-the-same-rule-in-both-languages">Worked example:
+the same rule in both languages</h2>
+<pre class="java"><code>// Java 21
+public record Txn(String account, Type type, BigDecimal amount) { }
+
+static Map&lt;String, BigDecimal&gt; debitTotals(List&lt;Txn&gt; txs) {
+    return txs.stream()
+            .filter(t -&gt; t.type() == Type.DEBIT)
+            .collect(Collectors.groupingBy(Txn::account,
+                    Collectors.reducing(BigDecimal.ZERO, Txn::amount, BigDecimal::add)));
+}</code></pre>
+<pre class="kotlin"><code>// Kotlin
+data class Txn(val account: String, val type: Type, val amount: BigDecimal)
+
+fun debitTotals(txs: List&lt;Txn&gt;): Map&lt;String, BigDecimal&gt; =
+    txs.filter { it.type == Type.DEBIT }
+       .groupBy { it.account }
+       .mapValues { (_, list) -&gt; list.sumOf { it.amount } }</code></pre>
+<p>Same JVM, same <code>BigDecimal</code>, same result. Choose the
+language your team uses; be able to read both.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Using <code>!!</code> to silence the compiler instead of handling
+null.</li>
+<li>Forgetting that classes are final by default (frameworks that proxy
+classes need <code>open</code> or the <code>kotlin-spring</code>
+plugin).</li>
+<li>Assuming Java values are non-null (platform types).</li>
+<li>Expecting Java callers to be forced to catch Kotlin exceptions.</li>
+<li>Overusing scope functions until code is unreadable.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Install the Kotlin plugin (bundled in IntelliJ) and write
+<code>Money</code>, <code>Account</code> and the
+<code>PaymentMethod</code> sealed hierarchy in Kotlin.</li>
+<li>In one Maven project, write a Java <code>FeeEngine</code> that calls
+a Kotlin <code>RateTable</code>, and a Kotlin test that calls the Java
+engine.</li>
+<li>Rewrite three of your Java stream exercises from topic 1.7 in Kotlin
+collection operations.</li>
+<li>Write a Kotlin function
+<code>parseAmount(raw: String?): BigDecimal?</code> that returns null
+for blank or invalid input without ever using <code>!!</code>.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Kotlin, <code>val</code>/<code>var</code>, type inference, null
+safety, nullable type, safe call <code>?.</code>, Elvis <code>?:</code>,
+<code>!!</code>, smart cast, platform type, data class,
+<code>copy</code>, <code>object</code>, companion object, sealed class,
+<code>when</code>, extension function, scope function,
+<code>@JvmStatic</code>, <code>@JvmOverloads</code>, coroutine.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a href="https://kotlinlang.org/docs/basic-syntax.html">Kotlin docs:
+Basic syntax</a></li>
+<li><a href="https://kotlinlang.org/docs/comparison-to-java.html">Kotlin
+docs: Comparison to Java</a></li>
+<li><a href="https://kotlinlang.org/docs/java-interop.html">Kotlin docs:
+Calling Java from Kotlin</a></li>
+<li><a
+href="https://kotlinlang.org/docs/java-to-kotlin-interop.html">Kotlin
+docs: Calling Kotlin from Java</a></li>
+<li><a href="https://kotlinlang.org/docs/maven.html">Kotlin docs:
+Maven</a></li>
+<li><a href="https://kotlinlang.org/docs/null-safety.html">Kotlin docs:
+Null safety</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Kotlin in 100 Seconds</h3><p>Fireship · 2 min. Kotlin in 100 seconds: what it is and why JVM teams adopt it.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/xT8oP0wy-A0" title="Kotlin in 100 Seconds" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Top 5 KEY DIFFERENCES between Java and Kotlin</h3><p>Visual Computer Science · 8 min. The five differences between Java and Kotlin that matter most.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/f-y817B6CUE" title="Top 5 KEY DIFFERENCES between Java and Kotlin" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Java dev tries Kotlin for the first time</h3><p>ForrestKnight · 29 min. A Java developer writing Kotlin for the first time: the surprises and the wins.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/EYUyYu-wuww" title="Java dev tries Kotlin for the first time" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/01-modern-java-oop/1.13-kotlin-for-java-developers/README.md">1.13 Kotlin for Java developers</a></p>

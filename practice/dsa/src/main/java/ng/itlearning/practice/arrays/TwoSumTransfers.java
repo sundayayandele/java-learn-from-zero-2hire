@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Week 2. Pattern: hash map lookup.
+ * Week 3. Pattern: hash map lookup.
  * <p>
  * A reconciliation clerk knows two transfers (amounts in kobo) add up to {@code target}. Return the indices
  * {@code [i, j]} with {@code i < j} of the first such pair found scanning left to right (smallest {@code j}),

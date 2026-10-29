@@ -1,10 +1,10 @@
 ## What this module gives you
 
-Two weeks to secure the APIs you built in Module 5: how Spring Security's filter chain works and how to configure it for a stateless API (week 17), JSON Web Tokens, refresh tokens and OAuth2/OpenID Connect with Keycloak (week 17), role- and object-level authorisation so one customer can never read another's account (week 18), the OWASP Top 10 and API Security Top 10 as they appear in real Spring code (week 18), and password hashing, secrets management and dependency scanning (week 18).
+Two weeks to secure the APIs you built in Module 5: how Spring Security's filter chain works and how to configure it for a stateless API (week 18), JSON Web Tokens, refresh tokens and OAuth2/OpenID Connect with Keycloak (week 18), role- and object-level authorisation so one customer can never read another's account (week 19), the OWASP Top 10 and API Security Top 10 as they appear in real Spring code (week 19), and password hashing, secrets management and dependency scanning (week 19).
 
 Security mistakes in fintech are expensive and public. Every project in this module must include **negative tests**: requests that must be rejected (no token, expired token, wrong role, another customer's resource) are tested as carefully as the happy path.
 
-**Exit check for Module 6:** all five topic CBTs passed; project 6.A completed; 6.B or 6.C optional.
+**Exit check for Module 6:** all five topic CBTs attempted (aim for 70%+); project 6.A completed; 6.B or 6.C optional.
 
 ## Module projects
 

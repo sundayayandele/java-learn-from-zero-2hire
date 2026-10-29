@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Week 3. Pattern: counting plus sorting (or a heap).
+ * Week 4. Pattern: counting plus sorting (or a heap).
  * <p>
  * Return the {@code k} merchants that appear most often in a list of card payments, most frequent first;
  * ties are broken by merchant name ascending. If there are fewer than {@code k} merchants, return them all.

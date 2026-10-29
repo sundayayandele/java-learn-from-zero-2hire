@@ -1,0 +1,109 @@
+{
+  "topic": "1.6",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A test `assertEquals(new BigDecimal(\"10.75\"), fee)` fails with `expected: <10.75> but was: <10.750>`, although the fee is correct.",
+      "question": "What is the best fix?",
+      "options": [
+        "Convert both to `double` before comparing",
+        "Compare the values, for example `assertThat(fee).isEqualByComparingTo(\"10.75\")`, because `BigDecimal.equals` also compares the scale",
+        "Delete the assertion",
+        "Use `assertSame`"
+      ],
+      "answer": 1,
+      "explanation": "10.75 and 10.750 are equal amounts with different scales. `equals` (and therefore `assertEquals`) treats them as different; `compareTo` and AssertJ's `isEqualByComparingTo` compare the value."
+    },
+    {
+      "type": "single",
+      "scenario": "The fee rule is \"₦10 up to and including ₦5,000; ₦25 above\". The tests use amounts of ₦100, ₦2,000 and ₦20,000, and all pass, but production charges ₦25 on exactly ₦5,000.",
+      "question": "Which test cases would have caught it?",
+      "options": [
+        "₦3,000 and ₦4,000",
+        "₦5,000.00 and ₦5,000.01: exactly on and just above the boundary",
+        "A test with a very large amount only",
+        "Running the existing tests twice"
+      ],
+      "answer": 1,
+      "explanation": "A `<` written instead of `<=` only changes behaviour exactly on the boundary. Test just below, on and just above every boundary, ideally in one parameterised test."
+    },
+    {
+      "type": "single",
+      "scenario": "A test class has five copies of the same test method, each with a different amount and expected fee.",
+      "question": "What is the cleaner way to write it?",
+      "options": [
+        "One `@ParameterizedTest` with a `@CsvSource` row per case",
+        "One test with all five assertions and no names",
+        "Five separate test classes",
+        "A `for` loop inside `main`"
+      ],
+      "answer": 0,
+      "explanation": "A parameterised test runs each row as its own test with its own name in the report, so a failure tells you exactly which case broke, without duplicated code."
+    },
+    {
+      "type": "single",
+      "scenario": "A wallet must reject an overdraft by throwing `InsufficientFundsException`, and the balance must stay unchanged.",
+      "question": "Which test checks the rule properly?",
+      "options": [
+        "Call `debit` inside `try`, catch every `Exception`, and do nothing",
+        "`assertThatThrownBy(() -> wallet.debit(tooMuch)).isInstanceOf(InsufficientFundsException.class);` followed by an assertion that the balance is unchanged",
+        "Assert that the balance is negative after the debit",
+        "Only test successful debits"
+      ],
+      "answer": 1,
+      "explanation": "Check the specific exception type and that no partial change happened. Swallowing every exception would let the test pass even when the wrong thing (or nothing) is thrown."
+    },
+    {
+      "type": "single",
+      "scenario": "`./mvnw test` reports: `Tests run: 12, Failures: 0, Errors: 1` for `WalletTest.creditAddsToBalance`, with a `NullPointerException` at `WalletTest.java:31`.",
+      "question": "What does \"error\" (rather than \"failure\") tell you?",
+      "options": [
+        "An assertion compared two different values",
+        "The test threw an unexpected exception before or instead of its assertion; line 31 is where to start, for example a field that was never set up",
+        "Maven couldn't find the test",
+        "The test was skipped"
+      ],
+      "answer": 1,
+      "explanation": "A failure means an assertion didn't hold. An error means an exception escaped the test, often missing set-up such as a `@BeforeEach` that wasn't written."
+    },
+    {
+      "type": "single",
+      "scenario": "Two tests pass when run one at a time but one fails when the whole class runs. Both use a `static List<Transfer> transfers` field that the tests add to.",
+      "question": "What is the problem?",
+      "options": [
+        "JUnit runs tests in parallel by default",
+        "Shared static state lets one test's data leak into another; use an instance field (or `@BeforeEach`) so each test starts fresh",
+        "The list should be a `LinkedList`",
+        "The tests need `@Order` annotations"
+      ],
+      "answer": 1,
+      "explanation": "JUnit creates a new test-class instance per test, so instance fields are fresh, but a static field is shared. Tests must be independent of each other and of their order."
+    },
+    {
+      "type": "single",
+      "scenario": "A new developer names tests `test1`, `test2` and `testFee`. A CI run fails on `test2`.",
+      "question": "Why does this matter, and what's better?",
+      "options": [
+        "It doesn't matter; the stack trace is enough",
+        "The report doesn't say which rule broke; a name like `rejectsTransfersFromFrozenWallets` reads as the business rule that failed",
+        "Test names must start with `test` to run",
+        "Long names slow the tests down"
+      ],
+      "answer": 1,
+      "explanation": "Test names are documentation and the first thing you read in a failure report. JUnit 5 and later don't require a `test` prefix."
+    },
+    {
+      "type": "single",
+      "scenario": "A statement test computes \"yesterday\" with `LocalDate.now().minusDays(1)` and fails every night between midnight and 1 a.m. on the CI server, which runs in UTC.",
+      "question": "What principle does it break?",
+      "options": [
+        "Tests must be fast",
+        "Tests must be repeatable: the result depends on the real clock and time zone, so inject a fixed `Clock` or pass the date in",
+        "Tests must use `@DisplayName`",
+        "Tests must not use dates"
+      ],
+      "answer": 1,
+      "explanation": "Unit tests should give the same result every run. Depending on the current time makes them flaky; topic 7.1 shows how to inject a `Clock`."
+    }
+  ]
+}

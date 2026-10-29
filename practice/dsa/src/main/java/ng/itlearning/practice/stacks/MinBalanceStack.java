@@ -6,7 +6,7 @@ import java.util.Deque;
 import java.util.NoSuchElementException;
 
 /**
- * Week 11. Pattern: auxiliary stack.
+ * Week 12. Pattern: auxiliary stack.
  * <p>
  * A stack of balances (kobo) for an undo feature that also reports the minimum balance currently on the stack.
  * Every operation must be O(1). {@code pop}, {@code peek} and {@code min} on an empty stack throw

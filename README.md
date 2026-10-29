@@ -9,21 +9,22 @@ It implements the [ITLearning Java Backend Engineer Training Program](https://it
 | Stack | Java 21 LTS (Java 25 noted where relevant) · Spring Boot 4.1 · Kotlin 2.4 · Maven · PostgreSQL 17 · Redis · MongoDB · Docker |
 | CI/CD | GitHub Actions (primary) · GitLab CI (secondary) · Azure DevOps · AWS CodeBuild/CodePipeline · Jenkins · Argo CD |
 | Deployment | VPS (e.g. SSDNodes) · AWS · Azure · GCP |
-| Duration | 36 weeks at 10–15 hours per week: junior-ready after Phase 2, intermediate-ready after Phase 3 |
+| Duration | Junior-ready after Phase 2: 26 scheduled weeks at 16–27 hours a week (about 470–565 hours), or about 40–45 weeks at 12–15 hours a week. Phase 3 (intermediate) follows. An optional week-0 on-ramp is there for complete beginners |
 
 ## Status
 
 | Phase | Weeks | Status |
 | --- | --- | --- |
-| [Phase 1: Foundations](phases/01-foundations/README.md) | 1–13 | **Built**: 32 topics, 10 capstones, exam, defence, live coding, Getting Hired |
-| [Phase 2: Professional Backend](phases/02-professional-backend/README.md) | 14–24 | **Built**: 27 topics, 10 capstones, 5 labs, exam, defence, live coding, Getting Hired |
-| [Phase 3: Enterprise & Cloud-Native](phases/03-enterprise-cloud-native/README.md) | 25–36 | Mapped, to be built after the Phase 1 review |
+| [Phase 1: Foundations](phases/01-foundations/README.md) | 0–14 | **Built**: a week-0 on-ramp, 35 topics (4 optional), 10 capstones, exam, defence, live coding, Getting Hired |
+| [Phase 2: Professional Backend](phases/02-professional-backend/README.md) | 15–25 | **Built**: 27 topics, 10 capstones, 5 labs, exam, defence, live coding, Getting Hired |
+| [Phase 3: Enterprise & Cloud-Native](phases/03-enterprise-cloud-native/README.md) | 26–37 | Mapped, to be built after the Phase 1 review |
 
 The [full curriculum](CURRICULUM.md) lists every phase, module and topic.
 
 ## What's in Phase 1
 
-- **32 topics** (the website's topics, plus Kotlin, three topics that complete the Oracle OCP Java SE 21/25 objectives, and three interview essentials: design patterns, debugging and troubleshooting, and Spring under the hood), each with authored reading content, curated and verified YouTube videos (English, captioned, embeddable), practice tasks and a **scenario-based CBT** (6–10 questions, 236 in total).
+- **A week-0 on-ramp** for complete beginners (first programs, loops, arrays, strings and methods), with a 15-question entry check that lets experienced learners skip it.
+- **35 topics** (the website's topics; Git, unit testing and HTTP basics taught early, where the projects first need them; Kotlin, three topics that complete the Oracle OCP Java SE 21/25 objectives, and three interview essentials: design patterns, debugging and troubleshooting, and Spring under the hood). Four are optional: Kotlin, Spring Boot with Kotlin, localization, and modules and `jlink`, each with authored reading content, curated and verified YouTube videos (English, captioned, embeddable), practice tasks and a **scenario-based CBT** (6–10 questions, 281 in total including the on-ramp).
 - **Module projects** from the ITLearning programme (wallet simulator, payroll, parallel transaction processor, ledger schema, query-tuning lab, task API, Spring Boot 3 → 4 upgrade and more), plus three hands-on [labs](labs/).
 - **10 capstones** on financial-institution use cases using public data free for commercial and non-commercial use, each licence recorded in [docs/data-sources.md](docs/data-sources.md). Every capstone has a generated, tested Spring Boot 4 **starter**; Capstones 1 (core banking ledger) and 2 (FX rates) have complete, tested **reference solutions**, which mentors share once a learner's submission has passed.
 - **Deployment and CI/CD guide** with infrastructure sizing and step-by-step setup for a VPS, AWS, Azure and GCP.
@@ -41,13 +42,13 @@ The [full curriculum](CURRICULUM.md) lists every phase, module and topic.
 
 ## Across both phases
 
-- **[Coding-interview practice track](practice/README.md)**: 127 problems over weeks 2–24: 46 auto-graded Java problems, 24 auto-graded PostgreSQL drills (Testcontainers) and 57 mapped classic problems, so learners pass the online assessments that open most hiring loops.
-- **Assessments that test production, not just recognition**: a [capstone defence](docs/assessments/capstone-defence.md) (viva with a live change) and a [timed live-coding assessment](docs/assessments/live-coding.md) each phase, and exams drawn at random from 120-question banks.
+- **[Coding-interview practice track](practice/README.md)**: 127 problems over weeks 3–25: 46 auto-graded Java problems, 24 auto-graded PostgreSQL drills (Testcontainers) and 57 mapped classic problems, so learners pass the online assessments that open most hiring loops.
+- **Assessments that test production, not just recognition**: a [capstone defence](docs/assessments/capstone-defence.md) (viva with a live change) and a [timed live-coding assessment](docs/assessments/live-coding.md) each phase, and exams drawn at random from 200-question banks.
 - **[Java fundamentals revision sheet](docs/interview/java-fundamentals.md)** for interview week.
 
 ## How to study
 
-Start at [Phase 1](phases/01-foundations/README.md). For each topic: read and code along, watch the videos, take the CBT, do the practice tasks. Each module has a project; from week 5 you build capstones. On Moodle the same content appears as pages and graded quizzes, with progress tracking and certificates.
+Start at [Phase 1](phases/01-foundations/README.md). For each topic: read and code along, watch the videos, take the CBT, do the practice tasks. Each module has a project; from week 6 you build capstones. On Moodle the same content appears as pages and graded quizzes, with progress tracking and certificates.
 
 ## Repository layout
 

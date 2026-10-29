@@ -8,7 +8,7 @@ The questions below come up in almost every junior and mid-level Java interview.
 
 - Contract: if `a.equals(b)` then `a.hashCode() == b.hashCode()`. The reverse need not hold (collisions are allowed).
 - Override both, using the same fields. Never use mutable fields in either for objects stored in hash collections.
-- Records generate both from their components; `BigDecimal.equals` compares scale (10.0 ≠ 10.00), so normalise or use `compareTo` (topic 1.6).
+- Records generate both from their components; `BigDecimal.equals` compares scale (10.0 ≠ 10.00), so normalise or use `compareTo` (topic 1.8).
 
 **Say it:** "`HashMap` finds the bucket with `hashCode` and then compares with `equals`. If I override `equals` without `hashCode`, two equal keys can land in different buckets and the map can't find my object. So I always override both, on the same immutable fields."
 
@@ -22,7 +22,7 @@ The questions below come up in almost every junior and mid-level Java interview.
 
 **Say it:** "It's an array of buckets indexed by the key's hash. Collisions chain and turn into a tree when a bucket gets crowded, so lookups stay fast. It resizes at 75% load. It isn't thread-safe; for concurrent use I'd take `ConcurrentHashMap` and its atomic `merge`/`compute`."
 
-**Self-test:** why does a key whose `hashCode` always returns 42 still work, and what does it cost? (Topic 1.4.)
+**Self-test:** why does a key whose `hashCode` always returns 42 still work, and what does it cost? (Topic 1.5.)
 
 ## 3. `ConcurrentHashMap` vs `synchronizedMap` vs `Hashtable`
 
@@ -36,7 +36,7 @@ The questions below come up in almost every junior and mid-level Java interview.
 
 - Immutable and final: safe to share, cache their hash, and use as keys. String literals are interned in the string pool; `new String("x")` creates a new object.
 - `==` compares references; use `equals` (or `equalsIgnoreCase`). Concatenation in a loop creates many objects: use `StringBuilder` (not the synchronised `StringBuffer`).
-- Text blocks (Java 15) for multi-line SQL and JSON; `String.format` and `formatted` use the default locale unless you pass one (topic 1.11).
+- Text blocks (Java 15) for multi-line SQL and JSON; `String.format` and `formatted` use the default locale unless you pass one (topic 1.14).
 
 ## 5. Collections: which one and why
 
@@ -85,8 +85,8 @@ The questions below come up in almost every junior and mid-level Java interview.
 
 ## 11. Modern Java you should be able to write on a whiteboard
 
-- Records with a compact constructor; sealed interfaces with an exhaustive `switch`; pattern matching for `instanceof` and `switch`; text blocks; `var` for local variables where the type is obvious (topics 1.6, 1.8).
-- Streams: `groupingBy` with `counting`/`summingLong`, `flatMap`, `toMap` with a merge function, `Comparator.comparing(...).thenComparing(...)` (topic 1.5).
+- Records with a compact constructor; sealed interfaces with an exhaustive `switch`; pattern matching for `instanceof` and `switch`; text blocks; `var` for local variables where the type is obvious (topics 1.8, 1.12).
+- Streams: `groupingBy` with `counting`/`summingLong`, `flatMap`, `toMap` with a merge function, `Comparator.comparing(...).thenComparing(...)` (topic 1.7).
 - `java.time`: `Instant` for timestamps, `LocalDate` for business dates in a stated zone, `ZonedDateTime` for local times, `Duration` vs `Period`.
 
 ## 12. Money and numbers

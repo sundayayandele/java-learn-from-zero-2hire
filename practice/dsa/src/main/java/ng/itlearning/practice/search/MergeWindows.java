@@ -6,7 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Week 12. Pattern: sort then sweep.
+ * Week 13. Pattern: sort then sweep.
  * <p>
  * Maintenance windows are given as [start, end] minutes (start ≤ end), in any order. Merge overlapping or
  * touching windows ([1,3] and [3,5] become [1,5]) and return them sorted by start.

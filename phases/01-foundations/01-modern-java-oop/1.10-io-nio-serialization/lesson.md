@@ -35,7 +35,7 @@ try (var reader = new BufferedReader(
 }
 ```
 
-Always specify the **charset** (`StandardCharsets.UTF_8`). Since Java 18 the default charset is UTF-8 everywhere (JEP 400), but files from partners can still be ISO-8859-1 or Windows-1252, and naming the charset documents your assumption. Always use **try-with-resources** (topic 1.7) so handles are released even on exceptions.
+Always specify the **charset** (`StandardCharsets.UTF_8`). Since Java 18 the default charset is UTF-8 everywhere (JEP 400), but files from partners can still be ISO-8859-1 or Windows-1252, and naming the charset documents your assumption. Always use **try-with-resources** (topic 1.9) so handles are released even on exceptions.
 
 Key methods to know:
 
@@ -169,7 +169,7 @@ Rules the exam and real code rely on:
 
 Deserialising attacker-controlled bytes has caused many remote-code-execution vulnerabilities (gadget chains in common libraries). In backend services:
 
-- Exchange data as **JSON** (Jackson, topic 4.2), CSV or Protobuf, never Java serialization, across trust boundaries.
+- Exchange data as **JSON** (Jackson, topic 4.3), CSV or Protobuf, never Java serialization, across trust boundaries.
 - If you must deserialise, configure an `ObjectInputFilter` allow-list (JEP 290 / 415).
 - This is listed under "Software and Data Integrity Failures" in the OWASP Top 10; Module 6 returns to it.
 

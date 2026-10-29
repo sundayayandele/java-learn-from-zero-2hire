@@ -5,7 +5,7 @@
 
 ← [3.5 JDBC fundamentals](../3.5-jdbc-fundamentals/README.md) · [Module 3](../README.md) · [Phase 1](../../README.md) · [4.1 Dependency injection, IoC and auto-configuration](../../04-spring-boot-fundamentals/4.1-di-ioc-autoconfiguration/README.md) →
 
-> **Week 9** · Module 3: Databases: SQL & NoSQL · Website topic covered: *Redis for caching and MongoDB for document data*
+> **Week 10** · Module 3: Databases: SQL & NoSQL · Website topic covered: *Redis for caching and MongoDB for document data*
 
 ## What you will be able to do
 
@@ -228,7 +228,7 @@ db.kyc_cases.find({ status: "PENDING_REVIEW", tier: 2 }).explain("executionStats
 
 MongoDB supports multi-document ACID transactions on replica sets, but if your design needs them constantly, the data is probably relational. Schema validation (`$jsonSchema` validators) lets you enforce required fields, which is wise for regulated data.
 
-With Spring Boot, `spring-boot-starter-data-mongodb` gives you `MongoTemplate` and repository interfaces like Spring Data JPA's (topic 4.3). Note that Spring Boot 4 changed how `UUID` and `BigDecimal` are represented in MongoDB by default; check the migration notes before upgrading an existing app.
+With Spring Boot, `spring-boot-starter-data-mongodb` gives you `MongoTemplate` and repository interfaces like Spring Data JPA's (topic 4.4). Note that Spring Boot 4 changed how `UUID` and `BigDecimal` are represented in MongoDB by default; check the migration notes before upgrading an existing app.
 
 ## Worked example: an FX-rate service with a cache
 
@@ -272,7 +272,7 @@ NoSQL, key-value store, document store, Redis, TTL, `NX`, atomic command, cache-
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [Redis in 100 Seconds](https://www.youtube.com/watch?v=G1rOthIU-uo) · Fireship · 2 min. Redis in 100 seconds.
 - [What is Redis Cache?](https://www.youtube.com/watch?v=Tqaqdfxi-J4) · Redis · 6 min. What a cache is and the cache-aside pattern, from Redis.

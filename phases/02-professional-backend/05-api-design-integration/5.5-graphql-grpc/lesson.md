@@ -96,7 +96,7 @@ class CustomerGraphController {
 }
 ```
 
-`@BatchMapping` matters: resolving `recentTransactions` with a plain `@SchemaMapping` would run one query per account, the **N+1 problem** from Phase 1 topic 4.3, now triggered by clients. Batch loading (built on DataLoader) fetches them together.
+`@BatchMapping` matters: resolving `recentTransactions` with a plain `@SchemaMapping` would run one query per account, the **N+1 problem** from Phase 1 topic 4.4, now triggered by clients. Batch loading (built on DataLoader) fetches them together.
 
 ### GraphQL costs and controls
 

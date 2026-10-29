@@ -17,39 +17,49 @@ Every phase, module and topic from the [ITLearning Java Backend Engineer program
 | Containers | Docker, Docker Compose |
 | Ci | GitHub Actions (primary), GitLab CI on gitlab.com (secondary) |
 
-## Phase 1: Foundations (weeks 1-13) · built
+## Phase 1: Foundations (weeks 0-14) · built
 
 Modern Java, concurrency and the JVM, SQL and NoSQL databases, and your first Spring Boot 4 services.
 
-### [Module 1: Modern Java & OOP Foundations](phases/01-foundations/01-modern-java-oop/README.md) (weeks 1-4)
+### [Module 0: Programming On-Ramp](phases/01-foundations/00-programming-on-ramp/README.md) (week 0) (optional)
+
+- [0.1 Your first programs: values, variables, input and reading error messages](phases/01-foundations/00-programming-on-ramp/0.1-first-programs-values-errors/README.md)
+- [0.2 Decisions, loops, arrays and strings](phases/01-foundations/00-programming-on-ramp/0.2-decisions-loops-arrays-strings/README.md)
+- [0.3 Methods and breaking a problem into steps](phases/01-foundations/00-programming-on-ramp/0.3-methods-problem-solving/README.md)
+
+Projects: Market-stall receipt printer; Savings goal planner; Class score report.
+
+### [Module 1: Modern Java & OOP Foundations](phases/01-foundations/01-modern-java-oop/README.md) (weeks 1-5)
 
 - [1.1 Your toolkit: JDK, IntelliJ IDEA, Maven, Gradle and the Linux command line](phases/01-foundations/01-modern-java-oop/1.1-tooling-build-linux/README.md)
-- [1.2 Java syntax, types, control flow and methods](phases/01-foundations/01-modern-java-oop/1.2-syntax-types-control-flow/README.md)
-- [1.3 Object-oriented programming and the SOLID principles](phases/01-foundations/01-modern-java-oop/1.3-oop-and-solid/README.md)
-- [1.4 Collections and generics](phases/01-foundations/01-modern-java-oop/1.4-collections-generics/README.md)
-- [1.5 Lambdas and the Streams API](phases/01-foundations/01-modern-java-oop/1.5-lambdas-streams/README.md)
-- [1.6 Modern Java: records, sealed classes, pattern matching for switch and text blocks](phases/01-foundations/01-modern-java-oop/1.6-modern-java-features/README.md)
-- [1.7 Exceptions, immutability and clean-code habits](phases/01-foundations/01-modern-java-oop/1.7-exceptions-immutability-clean-code/README.md)
-- [1.8 Reading legacy Java 8/11/17 code and migrating it forward](phases/01-foundations/01-modern-java-oop/1.8-legacy-java-migration/README.md)
-- [1.9 Kotlin for Java developers](phases/01-foundations/01-modern-java-oop/1.9-kotlin-for-java-developers/README.md)
+- [1.2 Git and GitHub essentials: commits, branches, pushes and pull requests](phases/01-foundations/01-modern-java-oop/1.2-git-github-essentials/README.md)
+- [1.3 Java syntax, types, control flow and methods](phases/01-foundations/01-modern-java-oop/1.3-syntax-types-control-flow/README.md)
+- [1.4 Object-oriented programming and the SOLID principles](phases/01-foundations/01-modern-java-oop/1.4-oop-and-solid/README.md)
+- [1.5 Collections and generics](phases/01-foundations/01-modern-java-oop/1.5-collections-generics/README.md)
+- [1.6 Unit testing with JUnit: your first tests](phases/01-foundations/01-modern-java-oop/1.6-unit-testing-junit/README.md)
+- [1.7 Lambdas and the Streams API](phases/01-foundations/01-modern-java-oop/1.7-lambdas-streams/README.md)
+- [1.8 Modern Java: records, sealed classes, pattern matching for switch and text blocks](phases/01-foundations/01-modern-java-oop/1.8-modern-java-features/README.md)
+- [1.9 Exceptions, immutability and clean-code habits](phases/01-foundations/01-modern-java-oop/1.9-exceptions-immutability-clean-code/README.md)
 - [1.10 Java I/O, NIO.2 files and serialization](phases/01-foundations/01-modern-java-oop/1.10-io-nio-serialization/README.md)
-- [1.11 Localization: locales, number, currency and date formatting, resource bundles](phases/01-foundations/01-modern-java-oop/1.11-localization-formatting/README.md)
-- [1.12 Design patterns in Java and in Spring](phases/01-foundations/01-modern-java-oop/1.12-design-patterns/README.md)
+- [1.11 Design patterns in Java and in Spring](phases/01-foundations/01-modern-java-oop/1.11-design-patterns/README.md)
+- [1.12 Reading legacy Java 8/11/17 code and migrating it forward](phases/01-foundations/01-modern-java-oop/1.12-legacy-java-migration/README.md)
+- [1.13 Kotlin for Java developers](phases/01-foundations/01-modern-java-oop/1.13-kotlin-for-java-developers/README.md) (optional)
+- [1.14 Localization: locales, number, currency and date formatting, resource bundles](phases/01-foundations/01-modern-java-oop/1.14-localization-formatting/README.md) (optional)
 
 Projects: Wallet & transfers simulator (accounts, transfers, statements); Library management CLI (loans, fines, reports); Payroll calculator with PAYE-style tax rules; Retail inventory manager with reorder alerts.
 
-### [Module 2: Concurrency & the JVM](phases/01-foundations/02-concurrency-jvm/README.md) (weeks 5-6)
+### [Module 2: Concurrency & the JVM](phases/01-foundations/02-concurrency-jvm/README.md) (weeks 6-7)
 
 - [2.1 Threads, ExecutorService and CompletableFuture](phases/01-foundations/02-concurrency-jvm/2.1-threads-executors-completablefuture/README.md)
 - [2.2 Race conditions, locks, atomics and concurrent collections](phases/01-foundations/02-concurrency-jvm/2.2-race-conditions-locks-atomics/README.md)
 - [2.3 Virtual threads (Project Loom) and structured concurrency](phases/01-foundations/02-concurrency-jvm/2.3-virtual-threads-structured-concurrency/README.md)
 - [2.4 The JVM memory model, heap vs stack and garbage collection](phases/01-foundations/02-concurrency-jvm/2.4-jvm-memory-gc/README.md)
-- [2.5 Modules, packaging and runtime images (JPMS, jars, jlink)](phases/01-foundations/02-concurrency-jvm/2.5-modules-packaging-jlink/README.md)
+- [2.5 Modules, packaging and runtime images (JPMS, jars, jlink)](phases/01-foundations/02-concurrency-jvm/2.5-modules-packaging-jlink/README.md) (optional)
 - [2.6 Debugging and troubleshooting: debugger, stack traces, logs, thread and heap dumps](phases/01-foundations/02-concurrency-jvm/2.6-debugging-troubleshooting/README.md)
 
 Projects: Parallel transaction-file processor; Rate-limited API caller using virtual threads; Find-and-fix lab: deadlocks and race conditions.
 
-### [Module 3: Databases: SQL & NoSQL](phases/01-foundations/03-databases-sql-nosql/README.md) (weeks 7-9)
+### [Module 3: Databases: SQL & NoSQL](phases/01-foundations/03-databases-sql-nosql/README.md) (weeks 8-10)
 
 - [3.1 Relational design: normalisation and joins](phases/01-foundations/03-databases-sql-nosql/3.1-relational-design-normalisation-joins/README.md)
 - [3.2 Transactions, isolation levels and locking](phases/01-foundations/03-databases-sql-nosql/3.2-transactions-isolation-locking/README.md)
@@ -60,24 +70,25 @@ Projects: Parallel transaction-file processor; Rate-limited API caller using vir
 
 Projects: E-commerce relational schema with sample dataset; Double-entry ledger schema for a payments app; Hospital management DB (patients, visits, billing); Query-tuning lab: from slow query to indexed query.
 
-### [Module 4: Spring Boot 4 Fundamentals](phases/01-foundations/04-spring-boot-fundamentals/README.md) (weeks 10-13)
+### [Module 4: Spring Boot 4 Fundamentals](phases/01-foundations/04-spring-boot-fundamentals/README.md) (weeks 11-14)
 
 - [4.1 Dependency injection, IoC and auto-configuration](phases/01-foundations/04-spring-boot-fundamentals/4.1-di-ioc-autoconfiguration/README.md)
-- [4.2 Spring MVC controllers, validation and global error handling](phases/01-foundations/04-spring-boot-fundamentals/4.2-spring-mvc-validation-errors/README.md)
-- [4.3 Spring Data JPA and Hibernate: mappings, fetching and avoiding N+1](phases/01-foundations/04-spring-boot-fundamentals/4.3-spring-data-jpa-hibernate/README.md)
-- [4.4 Configuration, profiles and secrets handling](phases/01-foundations/04-spring-boot-fundamentals/4.4-configuration-profiles-secrets/README.md)
-- [4.5 Spring Boot Actuator: health checks and metrics](phases/01-foundations/04-spring-boot-fundamentals/4.5-actuator-health-metrics/README.md)
-- [4.6 What changed from Spring Boot 3 to 4, and how to upgrade](phases/01-foundations/04-spring-boot-fundamentals/4.6-spring-boot-3-to-4-upgrade/README.md)
-- [4.7 Spring Boot with Kotlin](phases/01-foundations/04-spring-boot-fundamentals/4.7-spring-boot-with-kotlin/README.md)
+- [4.2 HTTP and REST basics: requests, responses, methods, status codes and JSON](phases/01-foundations/04-spring-boot-fundamentals/4.2-http-rest-basics/README.md)
+- [4.3 Spring MVC controllers, validation and global error handling](phases/01-foundations/04-spring-boot-fundamentals/4.3-spring-mvc-validation-errors/README.md)
+- [4.4 Spring Data JPA and Hibernate: mappings, fetching and avoiding N+1](phases/01-foundations/04-spring-boot-fundamentals/4.4-spring-data-jpa-hibernate/README.md)
+- [4.5 Configuration, profiles and secrets handling](phases/01-foundations/04-spring-boot-fundamentals/4.5-configuration-profiles-secrets/README.md)
+- [4.6 Spring Boot Actuator: health checks and metrics](phases/01-foundations/04-spring-boot-fundamentals/4.6-actuator-health-metrics/README.md)
+- [4.7 What changed from Spring Boot 3 to 4, and how to upgrade](phases/01-foundations/04-spring-boot-fundamentals/4.7-spring-boot-3-to-4-upgrade/README.md)
 - [4.8 Spring under the hood: proxies, transactions, bean scopes, lifecycle, events and scheduling](phases/01-foundations/04-spring-boot-fundamentals/4.8-spring-under-the-hood/README.md)
+- [4.9 Spring Boot with Kotlin](phases/01-foundations/04-spring-boot-fundamentals/4.9-spring-boot-with-kotlin/README.md) (optional)
 
 Projects: Task manager REST API (CRUD, validation); Blog API with pagination and sorting; Product catalogue API with search and filters; Spring Boot 3 to 4 upgrade exercise.
 
-## Phase 2: Professional Backend (weeks 14-24) · built
+## Phase 2: Professional Backend (weeks 15-25) · built
 
 API design, security, testing, Git, Docker, CI/CD and AI-assisted engineering. Ends with your junior portfolio and interview prep.
 
-### [Module 5: API Design & Integration](phases/02-professional-backend/05-api-design-integration/README.md) (weeks 14-16)
+### [Module 5: API Design & Integration](phases/02-professional-backend/05-api-design-integration/README.md) (weeks 15-17)
 
 - [5.1 Resource design, HTTP semantics and status codes](phases/02-professional-backend/05-api-design-integration/5.1-resource-design-http/README.md)
 - [5.2 OpenAPI/Swagger documentation and API versioning](phases/02-professional-backend/05-api-design-integration/5.2-openapi-versioning/README.md)
@@ -88,7 +99,7 @@ API design, security, testing, Git, Docker, CI/CD and AI-assisted engineering. E
 
 Projects: Payment gateway integration (sandbox) with webhooks; Weather or FX-rate service consuming external APIs; News aggregator from multiple sources; gRPC service for internal account lookups.
 
-### [Module 6: Security Essentials](phases/02-professional-backend/06-security-essentials/README.md) (weeks 17-18)
+### [Module 6: Security Essentials](phases/02-professional-backend/06-security-essentials/README.md) (weeks 18-19)
 
 - [6.1 Spring Security filter chain and configuration](phases/02-professional-backend/06-security-essentials/6.1-spring-security-filter-chain/README.md)
 - [6.2 JWT access and refresh tokens, OAuth2 / OpenID Connect login](phases/02-professional-backend/06-security-essentials/6.2-jwt-oauth2-oidc/README.md)
@@ -98,7 +109,7 @@ Projects: Payment gateway integration (sandbox) with webhooks; Weather or FX-rat
 
 Projects: Secure API with JWT and refresh tokens; Google/GitHub login via OAuth2 / Keycloak; Role-based admin vs customer endpoints.
 
-### [Module 7: Testing & Code Quality](phases/02-professional-backend/07-testing-code-quality/README.md) (weeks 19-20)
+### [Module 7: Testing & Code Quality](phases/02-professional-backend/07-testing-code-quality/README.md) (weeks 20-21)
 
 - [7.1 Unit testing with JUnit and Mockito; test-driven development](phases/02-professional-backend/07-testing-code-quality/7.1-junit-mockito-tdd/README.md)
 - [7.2 Integration tests with Testcontainers (real Postgres, Kafka, Redis)](phases/02-professional-backend/07-testing-code-quality/7.2-testcontainers-integration/README.md)
@@ -108,7 +119,7 @@ Projects: Secure API with JWT and refresh tokens; Google/GitHub login via OAuth2
 
 Projects: Full test suite for the wallet application; TDD kata: tax and fee engine; Integration tests for the e-commerce API.
 
-### [Module 8: Git, Docker & CI/CD](phases/02-professional-backend/08-git-docker-cicd/README.md) (weeks 21-22)
+### [Module 8: Git, Docker & CI/CD](phases/02-professional-backend/08-git-docker-cicd/README.md) (weeks 22-23)
 
 - [8.1 Git branching, pull requests, rebasing and branch-protection rules](phases/02-professional-backend/08-git-docker-cicd/8.1-git-branching-prs/README.md)
 - [8.2 Multi-stage Docker images for Spring Boot; Docker Compose](phases/02-professional-backend/08-git-docker-cicd/8.2-docker-multistage-compose/README.md)
@@ -119,7 +130,7 @@ Projects: Full test suite for the wallet application; TDD kata: tax and fee engi
 
 Projects: Team workflow with peer PR reviews; Dockerised Spring Boot + Postgres stack; GitHub Actions pipeline with quality gates.
 
-### [Module 9: AI-Assisted Engineering & Junior Portfolio](phases/02-professional-backend/09-ai-assisted-engineering-portfolio/README.md) (weeks 23-24)
+### [Module 9: AI-Assisted Engineering & Junior Portfolio](phases/02-professional-backend/09-ai-assisted-engineering-portfolio/README.md) (weeks 24-25)
 
 - [9.1 Daily workflows with AI coding assistants (GitHub Copilot, Claude Code, Cursor and similar)](phases/02-professional-backend/09-ai-assisted-engineering-portfolio/9.1-ai-coding-assistants/README.md)
 - [9.2 Reviewing AI-generated code for bugs, security issues and licence risk](phases/02-professional-backend/09-ai-assisted-engineering-portfolio/9.2-reviewing-ai-generated-code/README.md)
@@ -129,11 +140,11 @@ Projects: Team workflow with peer PR reviews; Dockerised Spring Boot + Postgres 
 
 Projects: Polished junior portfolio (4-5 projects) with READMEs; Mock technical interview with feedback; Tailored CV and application plan.
 
-## Phase 3: Enterprise & Cloud-Native (weeks 25-36) · planned
+## Phase 3: Enterprise & Cloud-Native (weeks 26-37) · planned
 
 Microservices, Kafka, Kubernetes, AWS, observability, reactive Java and Spring AI, delivered through one capstone system.
 
-### Module 10: Microservices & Distributed Systems (weeks 25-26)
+### Module 10: Microservices & Distributed Systems (weeks 26-27)
 
 - 10.1 Domain-driven design and service boundaries
 - 10.2 Spring Cloud Gateway, centralised config and service discovery
@@ -142,7 +153,7 @@ Microservices, Kafka, Kubernetes, AWS, observability, reactive Java and Spring A
 
 Projects: E-commerce services: User, Product, Order, Payment; Banking services: Account, Transaction, Notification.
 
-### Module 11: Event-Driven Architecture with Kafka (weeks 27-28)
+### Module 11: Event-Driven Architecture with Kafka (weeks 28-29)
 
 - 11.1 Apache Kafka: topics, partitions, consumer groups, ordering
 - 11.2 Spring for Apache Kafka; RabbitMQ / AMQP for comparison
@@ -151,7 +162,7 @@ Projects: E-commerce services: User, Product, Order, Payment; Banking services: 
 
 Projects: Event-driven order and payment processing; Real-time transaction notifications; Audit-logging pipeline.
 
-### Module 12: Kubernetes, Helm & Cloud on AWS (weeks 29-30)
+### Module 12: Kubernetes, Helm & Cloud on AWS (weeks 30-31)
 
 - 12.1 Kubernetes objects: Pods, Deployments, Services, Ingress, ConfigMaps, Secrets
 - 12.2 Probes, resource limits and autoscaling for JVM workloads
@@ -161,7 +172,7 @@ Projects: Event-driven order and payment processing; Real-time transaction notif
 
 Projects: Helm chart for your microservices; Deploy the capstone to a managed Kubernetes cluster; Terraform module for database and storage.
 
-### Module 13: Observability, Performance & Production Support (weeks 31-32)
+### Module 13: Observability, Performance & Production Support (weeks 32-33)
 
 - 13.1 Distributed tracing with OpenTelemetry; metrics with Micrometer
 - 13.2 Prometheus and Grafana dashboards; structured logging
@@ -171,7 +182,7 @@ Projects: Helm chart for your microservices; Deploy the capstone to a managed Ku
 
 Projects: End-to-end tracing across your services; Grafana dashboard with alert rules; Memory-leak hunt and latency-reduction lab.
 
-### Module 14: Reactive & High-Throughput Java (weeks 33)
+### Module 14: Reactive & High-Throughput Java (week 34)
 
 - 14.1 Spring WebFlux and Project Reactor basics
 - 14.2 Reactive database access with R2DBC
@@ -179,7 +190,7 @@ Projects: End-to-end tracing across your services; Grafana dashboard with alert 
 
 Projects: Non-blocking rates/quotes streaming endpoint; Benchmark: MVC + virtual threads vs WebFlux.
 
-### Module 15: AI Integration with Spring AI (weeks 34)
+### Module 15: AI Integration with Spring AI (week 35)
 
 - 15.1 Spring AI ChatClient with hosted and open-source models
 - 15.2 Retrieval-augmented generation (RAG) with pgvector
@@ -188,7 +199,7 @@ Projects: Non-blocking rates/quotes streaming endpoint; Benchmark: MVC + virtual
 
 Projects: Customer-support assistant grounded in your API docs; Transaction-query agent that calls your services as tools.
 
-### Module 16: Capstone, System Design & Interview Prep (weeks 35-36)
+### Module 16: Capstone, System Design & Interview Prep (weeks 36-37)
 
 - 16.1 Capstone build: digital wallet, loan origination, marketplace or logistics backend
 - 16.2 Live deployment on Kubernetes with CI/CD; ADRs, runbook and architecture diagrams
@@ -198,4 +209,4 @@ Projects: Customer-support assistant grounded in your API docs; Transaction-quer
 
 Projects: Digital wallet & payments platform; Loan origination system; Marketplace backend; Ride-hailing / logistics backend.
 
-_89 topics in total._
+_95 topics in total, 7 of them optional (the week-0 on-ramp and four specialist topics)._

@@ -1,7 +1,7 @@
 package ng.itlearning.practice.windows;
 
 /**
- * Week 7. Pattern: slow and fast pointers, in place.
+ * Week 8. Pattern: slow and fast pointers, in place.
  * <p>
  * {@code ids} is sorted ascending and may contain repeats. Move the distinct values to the front, in order,
  * without allocating another array, and return how many distinct values there are.

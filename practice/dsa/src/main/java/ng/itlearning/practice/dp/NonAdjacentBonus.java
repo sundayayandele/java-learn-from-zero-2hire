@@ -2,7 +2,7 @@
 package ng.itlearning.practice.dp;
 
 /**
- * Week 21. Pattern: dynamic programming with two states.
+ * Week 22. Pattern: dynamic programming with two states.
  * <p>
  * A promotion pays bonuses on chosen days, but never on two consecutive days. Given the bonus available each
  * day (non-negative), return the largest total you can collect. O(n) time, O(1) space.

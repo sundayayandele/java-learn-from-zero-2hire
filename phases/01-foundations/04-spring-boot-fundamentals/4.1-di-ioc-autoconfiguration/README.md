@@ -3,9 +3,9 @@
 
 # 4.1 Dependency injection, IoC and auto-configuration
 
-← [3.6 Redis for caching and MongoDB for document data](../../03-databases-sql-nosql/3.6-redis-and-mongodb/README.md) · [Module 4](../README.md) · [Phase 1](../../README.md) · [4.2 Spring MVC controllers, validation and global error handling](../4.2-spring-mvc-validation-errors/README.md) →
+← [3.6 Redis for caching and MongoDB for document data](../../03-databases-sql-nosql/3.6-redis-and-mongodb/README.md) · [Module 4](../README.md) · [Phase 1](../../README.md) · [4.2 HTTP and REST basics](../4.2-http-rest-basics/README.md) →
 
-> **Week 10** · Module 4: Spring Boot 4 Fundamentals · Website topic covered: *Dependency injection, IoC and auto-configuration*
+> **Week 11** · Module 4: Spring Boot 4 Fundamentals · Website topic covered: *Dependency injection, IoC and auto-configuration*
 
 ## What you will be able to do
 
@@ -17,7 +17,7 @@
 
 ## Why this matters in a bank or fintech
 
-Almost every Java backend job in Lagos, London or remote-first teams lists Spring Boot. Its core idea is the one you met in topic 1.3: depend on abstractions and let something else wire the concrete objects together. Spring does that wiring for a whole application, consistently, which is what lets a bank's 40 microservices share the same structure, testing approach and operational behaviour. Understanding what Spring does at startup (rather than treating it as magic) is how you debug the "bean not found" and "why is it connecting to the wrong database?" problems that eat new engineers' first weeks.
+Almost every Java backend job in Lagos, London or remote-first teams lists Spring Boot. Its core idea is the one you met in topic 1.4: depend on abstractions and let something else wire the concrete objects together. Spring does that wiring for a whole application, consistently, which is what lets a bank's 40 microservices share the same structure, testing approach and operational behaviour. Understanding what Spring does at startup (rather than treating it as magic) is how you debug the "bean not found" and "why is it connecting to the wrong database?" problems that eat new engineers' first weeks.
 
 ## 1. Inversion of control and dependency injection
 
@@ -55,7 +55,7 @@ Spring's container is the **`ApplicationContext`**. The objects it manages are *
 | Setter | `@Autowired void setRepo(...)` | Only for genuinely optional dependencies |
 | Field | `@Autowired private AccountRepository repo;` | Avoid: hides dependencies, prevents `final`, needs reflection in tests |
 
-With a single constructor, `@Autowired` is unnecessary. If a constructor needs more than about five dependencies, the class probably has too many responsibilities (topic 1.3).
+With a single constructor, `@Autowired` is unnecessary. If a constructor needs more than about five dependencies, the class probably has too many responsibilities (topic 1.4).
 
 ## 2. Creating a Spring Boot 4 project
 
@@ -95,7 +95,7 @@ The generated `pom.xml`:
 ```
 
 - The **parent POM** manages versions of hundreds of libraries that are tested together (Spring Framework 7, Hibernate 7, Jackson 3, HikariCP, the PostgreSQL driver...). You add dependencies without versions.
-- **Starters** are curated dependency bundles plus auto-configuration. Spring Boot 4 made them modular: each technology has its own starter (`spring-boot-starter-webmvc`, `spring-boot-starter-flyway`) and a matching **test starter** (`spring-boot-starter-webmvc-test`). Topic 4.6 explains the change from Boot 3.
+- **Starters** are curated dependency bundles plus auto-configuration. Spring Boot 4 made them modular: each technology has its own starter (`spring-boot-starter-webmvc`, `spring-boot-starter-flyway`) and a matching **test starter** (`spring-boot-starter-webmvc-test`). Topic 4.7 explains the change from Boot 3.
 - The **Spring Boot Maven plugin** packages an executable "fat" jar with everything inside: `java -jar target/app.jar`.
 
 The entry point:
@@ -126,7 +126,7 @@ Run it with `./mvnw spring-boot:run`, or the green arrow in IntelliJ.
 | `@Component` | Generic | None |
 | `@Service` | Business logic | None (documents intent) |
 | `@Repository` | Data access | Translates persistence exceptions to Spring's `DataAccessException` |
-| `@Controller` / `@RestController` | Web | Request mapping (topic 4.2) |
+| `@Controller` / `@RestController` | Web | Request mapping (topic 4.3) |
 | `@Configuration` | Configuration | Holds `@Bean` methods |
 
 ### `@Bean` methods
@@ -167,7 +167,7 @@ class AlertService {
 }
 ```
 
-Injecting a `List<T>` or `Map<String, T>` of all implementations is how you build the "open/closed" rule engines from topic 1.3: add a new `@Component FeeRule` and the engine picks it up without changes.
+Injecting a `List<T>` or `Map<String, T>` of all implementations is how you build the "open/closed" rule engines from topic 1.4: add a new `@Component FeeRule` and the engine picks it up without changes.
 
 If Spring finds no candidate you get `NoSuchBeanDefinitionException`; if it finds several and can't choose, `NoUniqueBeanDefinitionException`. Both messages name the type and the injection point. Read them carefully: they are usually precise.
 
@@ -215,7 +215,7 @@ Common conditions: `@ConditionalOnClass`, `@ConditionalOnMissingBean`, `@Conditi
 Two consequences:
 
 1. **The classpath drives behaviour.** Adding a dependency can switch features on. If an app suddenly tries to connect to Redis, check whether someone added a Redis starter.
-2. **Your beans win.** Define your own `DataSource`, `RestClient.Builder` customiser or `JsonMapper` and the auto-configured one backs off. You customise first through **properties** (topic 4.4), then **customiser beans**, and only then by replacing beans.
+2. **Your beans win.** Define your own `DataSource`, `RestClient.Builder` customiser or `JsonMapper` and the auto-configured one backs off. You customise first through **properties** (topic 4.5), then **customiser beans**, and only then by replacing beans.
 
 ### Seeing what happened
 
@@ -223,7 +223,7 @@ Two consequences:
 java -jar app.jar --debug          # prints the CONDITIONS EVALUATION REPORT at startup
 ```
 
-The report lists *positive matches* (auto-configurations applied and why) and *negative matches* (skipped and why), which answers "why is this bean (not) here?". The Actuator `conditions` and `beans` endpoints (topic 4.5) expose the same information at runtime.
+The report lists *positive matches* (auto-configurations applied and why) and *negative matches* (skipped and why), which answers "why is this bean (not) here?". The Actuator `conditions` and `beans` endpoints (topic 4.6) expose the same information at runtime.
 
 To exclude an auto-configuration explicitly: `@SpringBootApplication(exclude = SomeAutoConfiguration.class)` or the `spring.autoconfigure.exclude` property.
 
@@ -307,7 +307,7 @@ IoC, dependency injection, `ApplicationContext`, bean, constructor injection, st
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [#4  IoC and DI in Spring](https://www.youtube.com/watch?v=5cRaQqQb14Q) · Telusko · 8 min. IoC and dependency injection in Spring, short and current.
 - [Spring Tutorial 01 - Understanding Dependency Injection](https://www.youtube.com/watch?v=GB8k2-Egfv0) · Java Brains · 15 min. The classic Java Brains explanation of why dependency injection exists.
@@ -424,4 +424,4 @@ What is the quickest way to find out?
 
 ---
 
-← [3.6 Redis for caching and MongoDB for document data](../../03-databases-sql-nosql/3.6-redis-and-mongodb/README.md) · [Module 4](../README.md) · [Phase 1](../../README.md) · [4.2 Spring MVC controllers, validation and global error handling](../4.2-spring-mvc-validation-errors/README.md) →
+← [3.6 Redis for caching and MongoDB for document data](../../03-databases-sql-nosql/3.6-redis-and-mongodb/README.md) · [Module 4](../README.md) · [Phase 1](../../README.md) · [4.2 HTTP and REST basics](../4.2-http-rest-basics/README.md) →

@@ -1,370 +1,372 @@
-<p><em>Week 3 · Module 1: Modern Java &amp; OOP Foundations</em></p>
+<p><em>Week 2 · Module 1: Modern Java &amp; OOP Foundations</em></p>
 <h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
 <ul>
-<li>Write lambdas and method references, and explain what a functional
-interface is.</li>
-<li>Use the core functional interfaces in
-<code>java.util.function</code>.</li>
-<li>Build stream pipelines with <code>filter</code>, <code>map</code>,
-<code>flatMap</code>, <code>sorted</code>, <code>distinct</code>,
-<code>limit</code> and terminal operations.</li>
-<li>Aggregate with <code>reduce</code> and with <code>Collectors</code>
-(<code>groupingBy</code>, <code>partitioningBy</code>,
-<code>toMap</code>, <code>summingX</code>, <code>teeing</code>).</li>
-<li>Use <code>Optional</code> correctly, and know when a plain loop is
-the better choice.</li>
+<li>Choose the right collection (<code>List</code>, <code>Set</code>,
+<code>Map</code>, <code>Queue</code>/<code>Deque</code>) and
+implementation for a job, and justify it by its performance.</li>
+<li>Explain how <code>HashMap</code> works and why
+<code>equals</code>/<code>hashCode</code> matter to it.</li>
+<li>Sort with <code>Comparable</code> and <code>Comparator</code>, and
+iterate safely.</li>
+<li>Create immutable collections and avoid accidental shared
+mutation.</li>
+<li>Write and read generic classes and methods, including bounded types
+and wildcards (PECS).</li>
 </ul>
 <h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
 bank or fintech</h2>
-<p>Backend code spends much of its time turning one collection into
-another: filter today's debits, group them by merchant category, sum
-them per customer, find the top ten. Streams express that as a readable
-pipeline that reviewers can check line by line, instead of nested loops
-with temporary maps. Interviewers ask stream questions in nearly every
-Java screening, usually something like "group these transactions by
-account and sum them".</p>
-<h2 id="1-lambdas-and-functional-interfaces">1. Lambdas and functional
-interfaces</h2>
-<p>A <strong>functional interface</strong> has exactly one abstract
-method. A <strong>lambda</strong> is a compact way to implement it
-inline.</p>
-<pre class="java"><code>@FunctionalInterface
-interface FeeRule {
-    BigDecimal fee(BigDecimal amount);
+<p>A statement is a <code>List</code> of transactions in order. A
+sanctions screen is a lookup in a <code>Set</code> of names. A balance
+cache is a <code>Map</code> from account number to balance. A payment
+retry queue is a <code>Queue</code>. Choosing the wrong one is the
+difference between a nightly batch that takes four minutes and one that
+takes four hours: <code>list.contains</code> on a million-entry list is
+a million comparisons, while <code>set.contains</code> is roughly
+one.</p>
+<h2 id="1-the-collections-framework-at-a-glance">1. The Collections
+Framework at a glance</h2>
+<pre class="text"><code>Iterable
+ └── Collection
+      ├── List      ordered, index-based, duplicates allowed     ArrayList, LinkedList
+      ├── Set       no duplicates                                HashSet, LinkedHashSet, TreeSet
+      └── Queue     processing order                             ArrayDeque, PriorityQueue
+           └── Deque  both ends                                  ArrayDeque, LinkedList
+Map (separate hierarchy)  key → value, unique keys               HashMap, LinkedHashMap, TreeMap</code></pre>
+<p>Program to the interface, choose the implementation once:</p>
+<pre class="java"><code>List&lt;Transaction&gt; statement = new ArrayList&lt;&gt;();   // callers see List, not ArrayList
+Map&lt;String, BigDecimal&gt; balances = new HashMap&lt;&gt;();</code></pre>
+<p>Java 21 added <strong>sequenced collections</strong>
+(<code>SequencedCollection</code>, <code>SequencedMap</code>): a uniform
+way to reach the first and last elements of any ordered collection with
+<code>getFirst()</code>, <code>getLast()</code> and
+<code>reversed()</code>.</p>
+<pre class="java"><code>statement.getFirst();          // instead of statement.get(0)
+statement.getLast();           // instead of statement.get(statement.size() - 1)</code></pre>
+<h2 id="2-lists">2. Lists</h2>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th><code>ArrayList</code></th>
+<th><code>LinkedList</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>get(i)</code></td>
+<td>O(1)</td>
+<td>O(<em>n</em>)</td>
+</tr>
+<tr>
+<td>add at end</td>
+<td>O(1) amortised</td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td>insert/remove in the middle</td>
+<td>O(<em>n</em>) (shifts elements)</td>
+<td>O(<em>n</em>) to find, O(1) to relink</td>
+</tr>
+<tr>
+<td>memory per element</td>
+<td>small</td>
+<td>large (node with two pointers)</td>
+</tr>
+<tr>
+<td>CPU cache friendliness</td>
+<td>excellent</td>
+<td>poor</td>
+</tr>
+</tbody>
+</table>
+<p>In practice <strong>use <code>ArrayList</code></strong> almost
+always. <code>LinkedList</code> rarely wins even where theory suggests
+it should, because walking scattered nodes is slow on modern CPUs.</p>
+<pre class="java"><code>List&lt;Transaction&gt; txs = new ArrayList&lt;&gt;();
+txs.add(tx);
+txs.get(0);
+txs.size();
+txs.contains(tx);     // O(n): uses equals on every element
+txs.remove(tx);</code></pre>
+<p><strong>Big-O notation</strong> describes how cost grows with size
+<em>n</em>: O(1) constant, O(log <em>n</em>) grows slowly (sorted
+structures), O(<em>n</em>) linear, O(<em>n</em>²) painful (a loop inside
+a loop over the same data).</p>
+<h2 id="3-sets">3. Sets</h2>
+<p>A <code>Set</code> holds no duplicates, as defined by
+<code>equals</code> (and <code>hashCode</code> for hash sets,
+<code>compareTo</code> for tree sets).</p>
+<table>
+<thead>
+<tr>
+<th>Implementation</th>
+<th>Order</th>
+<th><code>add</code> / <code>contains</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HashSet</code></td>
+<td>none</td>
+<td>O(1) average</td>
+</tr>
+<tr>
+<td><code>LinkedHashSet</code></td>
+<td>insertion order</td>
+<td>O(1) average</td>
+</tr>
+<tr>
+<td><code>TreeSet</code></td>
+<td>sorted</td>
+<td>O(log n)</td>
+</tr>
+</tbody>
+</table>
+<pre class="java"><code>Set&lt;String&gt; sanctioned = new HashSet&lt;&gt;(loadSanctionedNames());
+if (sanctioned.contains(normalise(beneficiaryName))) { block(); }
+
+Set&lt;String&gt; processedReferences = new HashSet&lt;&gt;();
+if (!processedReferences.add(tx.reference())) {   // add returns false if already present
+    log.warn(&quot;Duplicate transaction reference {}&quot;, tx.reference());
+}</code></pre>
+<h2 id="4-maps">4. Maps</h2>
+<pre class="java"><code>Map&lt;String, BigDecimal&gt; balances = new HashMap&lt;&gt;();
+balances.put(&quot;0123456789&quot;, new BigDecimal(&quot;1500.00&quot;));
+balances.get(&quot;0123456789&quot;);                     // 1500.00
+balances.get(&quot;9999999999&quot;);                     // null: key absent
+balances.getOrDefault(&quot;9999999999&quot;, BigDecimal.ZERO);
+balances.containsKey(&quot;0123456789&quot;);
+
+// Update-in-place helpers: no get-then-put dance
+balances.merge(&quot;0123456789&quot;, new BigDecimal(&quot;200.00&quot;), BigDecimal::add);   // add to existing or insert
+Map&lt;String, List&lt;Transaction&gt;&gt; byAccount = new HashMap&lt;&gt;();
+byAccount.computeIfAbsent(tx.account(), k -&gt; new ArrayList&lt;&gt;()).add(tx);   // group
+
+for (Map.Entry&lt;String, BigDecimal&gt; e : balances.entrySet()) {
+    System.out.println(e.getKey() + &quot; = &quot; + e.getValue());
+}</code></pre>
+<table>
+<thead>
+<tr>
+<th>Implementation</th>
+<th>Key order</th>
+<th>Operations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HashMap</code></td>
+<td>none</td>
+<td>O(1) average</td>
+</tr>
+<tr>
+<td><code>LinkedHashMap</code></td>
+<td>insertion (or access) order</td>
+<td>O(1) average; can be a tiny LRU cache</td>
+</tr>
+<tr>
+<td><code>TreeMap</code></td>
+<td>sorted by key</td>
+<td>O(log n); <code>floorKey</code>, <code>headMap</code>, range
+queries</td>
+</tr>
+</tbody>
+</table>
+<p><code>TreeMap</code> is ideal for tiered rules: "which fee band does
+₦73,000 fall into?"</p>
+<pre class="java"><code>NavigableMap&lt;BigDecimal, BigDecimal&gt; feeBands = new TreeMap&lt;&gt;(Map.of(
+        new BigDecimal(&quot;0&quot;), new BigDecimal(&quot;10.00&quot;),
+        new BigDecimal(&quot;5000&quot;), new BigDecimal(&quot;25.00&quot;),
+        new BigDecimal(&quot;50000&quot;), new BigDecimal(&quot;50.00&quot;)));
+feeBands.floorEntry(new BigDecimal(&quot;73000&quot;)).getValue();   // 50.00</code></pre>
+<h3 id="how-hashmap-works">How <code>HashMap</code> works</h3>
+<p>A <code>HashMap</code> is an array of buckets. To store a key it
+computes <code>key.hashCode()</code>, maps that to a bucket index, and
+stores the entry there. To look up a key it goes straight to the bucket
+and uses <code>equals</code> to find the exact entry among any
+collisions. When the map gets too full (load factor 0.75) it doubles the
+array and rehashes. Since Java 8, a bucket with many collisions turns
+into a balanced tree, so worst-case lookups are O(log <em>n</em>)
+instead of O(<em>n</em>).</p>
+<p>Consequences you must remember:</p>
+<ul>
+<li>Keys need a correct <code>equals</code> <strong>and</strong>
+<code>hashCode</code> (topic 1.4).</li>
+<li><strong>Never mutate a key after inserting it.</strong> If its hash
+code changes, the map looks in the wrong bucket and the entry is
+effectively lost.</li>
+<li><code>HashMap</code> is not thread-safe. Use
+<code>ConcurrentHashMap</code> for shared mutable maps (topic 2.2).</li>
+</ul>
+<h2 id="5-queues-and-deques">5. Queues and deques</h2>
+<pre class="java"><code>Deque&lt;PaymentInstruction&gt; retryQueue = new ArrayDeque&lt;&gt;();
+retryQueue.offerLast(instr);          // enqueue
+PaymentInstruction next = retryQueue.pollFirst();   // dequeue, null if empty
+
+Deque&lt;String&gt; undo = new ArrayDeque&lt;&gt;();   // also the right way to build a stack
+undo.push(&quot;step1&quot;); undo.pop();            // don&#39;t use the legacy Stack class
+
+PriorityQueue&lt;Payment&gt; byPriority =
+        new PriorityQueue&lt;&gt;(Comparator.comparing(Payment::dueDate));   // smallest first</code></pre>
+<p><code>ArrayDeque</code> is the default queue and stack.
+<code>PriorityQueue</code> always hands out the smallest element next,
+which suits scheduling payments by due date.</p>
+<h2 id="6-sorting-and-comparing">6. Sorting and comparing</h2>
+<p>A class can define its <strong>natural order</strong> by implementing
+<code>Comparable</code>:</p>
+<pre class="java"><code>public record Money(BigDecimal amount, String currency) implements Comparable&lt;Money&gt; {
+    @Override public int compareTo(Money other) {
+        if (!currency.equals(other.currency)) throw new IllegalArgumentException(&quot;Currency mismatch&quot;);
+        return amount.compareTo(other.amount);
+    }
+}</code></pre>
+<p>For any other order, pass a <code>Comparator</code>, which you build
+fluently:</p>
+<pre class="java"><code>transactions.sort(Comparator.comparing(Transaction::valueDate)
+        .thenComparing(Transaction::amount, Comparator.reverseOrder()));</code></pre>
+<p><code>compareTo</code> returns negative, zero or positive. Never
+implement it as <code>a - b</code> on ints: subtraction can overflow.
+Use <code>Integer.compare(a, b)</code>.</p>
+<h2 id="7-iterating-and-modifying-safely">7. Iterating and modifying
+safely</h2>
+<pre class="java"><code>for (Transaction tx : txs) {
+    if (tx.isReversed()) txs.remove(tx);      // ConcurrentModificationException
+}
+txs.removeIf(Transaction::isReversed);        // correct and clear</code></pre>
+<p>The enhanced <code>for</code> uses an <code>Iterator</code> under the
+hood, and the collection detects that it was changed behind the
+iterator's back. Use <code>removeIf</code>, an explicit
+<code>Iterator.remove()</code>, or build a new list.</p>
+<h2 id="8-immutable-collections">8. Immutable collections</h2>
+<pre class="java"><code>List&lt;String&gt; currencies = List.of(&quot;NGN&quot;, &quot;USD&quot;, &quot;GBP&quot;);     // unmodifiable; add() throws
+Map&lt;String, Integer&gt; decimals = Map.of(&quot;NGN&quot;, 2, &quot;JPY&quot;, 0);
+List&lt;Transaction&gt; copy = List.copyOf(mutableList);         // defensive, unmodifiable copy
+Collections.unmodifiableList(list)                          // a read-only VIEW: still changes if list changes</code></pre>
+<p><code>List.of</code> and friends also reject <code>null</code>
+elements. Returning unmodifiable collections from your classes protects
+their internal state:</p>
+<pre class="java"><code>public List&lt;Transaction&gt; transactions() { return List.copyOf(transactions); }</code></pre>
+<h2 id="9-generics">9. Generics</h2>
+<p>Generics let a class or method work with any type while the compiler
+still checks types. Without them you would cast everything from
+<code>Object</code> and find mistakes at runtime.</p>
+<pre class="java"><code>List&lt;String&gt; names = new ArrayList&lt;&gt;();      // the diamond &lt;&gt; infers &lt;String&gt;
+names.add(42);                               // compile error: caught early
+String first = names.get(0);                 // no cast needed</code></pre>
+<h3 id="writing-generic-types-and-methods">Writing generic types and
+methods</h3>
+<pre class="java"><code>public final class Result&lt;T&gt; {               // T is a type parameter
+    private final T value;
+    private final String error;
+
+    private Result(T value, String error) { this.value = value; this.error = error; }
+    public static &lt;T&gt; Result&lt;T&gt; ok(T value) { return new Result&lt;&gt;(value, null); }
+    public static &lt;T&gt; Result&lt;T&gt; fail(String error) { return new Result&lt;&gt;(null, error); }
+    public boolean isOk() { return error == null; }
+    public T value() { return value; }
 }
 
-FeeRule flat = amount -&gt; new BigDecimal(&quot;10.00&quot;);
-FeeRule percent = amount -&gt; amount.multiply(new BigDecimal(&quot;0.005&quot;));
-FeeRule capped = amount -&gt; {
-    BigDecimal f = amount.multiply(new BigDecimal(&quot;0.005&quot;));
-    return f.min(new BigDecimal(&quot;2000.00&quot;));
-};</code></pre>
-<p>Syntax: <code>(params) -&gt; expression</code> or
-<code>(params) -&gt; { statements; return x; }</code>. Parameter types
-are usually inferred.</p>
-<p>A lambda can use local variables from the enclosing method only if
-they are <strong>effectively final</strong> (never reassigned). That
-rule prevents confusing bugs where the lambda runs later, possibly on
-another thread.</p>
-<h3 id="the-built-in-functional-interfaces">The built-in functional
-interfaces</h3>
-<p>You rarely need to declare your own. <code>java.util.function</code>
-has the common shapes:</p>
-<table>
-<thead>
-<tr>
-<th>Interface</th>
-<th>Method</th>
-<th>Shape</th>
-<th>Example</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>Predicate&lt;T&gt;</code></td>
-<td><code>test(T)</code></td>
-<td>T → boolean</td>
-<td><code>tx -&gt; tx.amount().signum() &lt; 0</code></td>
-</tr>
-<tr>
-<td><code>Function&lt;T,R&gt;</code></td>
-<td><code>apply(T)</code></td>
-<td>T → R</td>
-<td><code>Transaction::amount</code></td>
-</tr>
-<tr>
-<td><code>Consumer&lt;T&gt;</code></td>
-<td><code>accept(T)</code></td>
-<td>T → nothing</td>
-<td><code>tx -&gt; ledger.post(tx)</code></td>
-</tr>
-<tr>
-<td><code>Supplier&lt;T&gt;</code></td>
-<td><code>get()</code></td>
-<td>nothing → T</td>
-<td><code>() -&gt; UUID.randomUUID().toString()</code></td>
-</tr>
-<tr>
-<td><code>UnaryOperator&lt;T&gt;</code></td>
-<td><code>apply(T)</code></td>
-<td>T → T</td>
-<td><code>s -&gt; s.strip().toUpperCase()</code></td>
-</tr>
-<tr>
-<td><code>BinaryOperator&lt;T&gt;</code></td>
-<td><code>apply(T,T)</code></td>
-<td>(T,T) → T</td>
-<td><code>BigDecimal::add</code></td>
-</tr>
-<tr>
-<td><code>BiFunction&lt;T,U,R&gt;</code></td>
-<td><code>apply(T,U)</code></td>
-<td>(T,U) → R</td>
-<td><code>(amount, rate) -&gt; amount.multiply(rate)</code></td>
-</tr>
-</tbody>
-</table>
-<p>Primitive specialisations (<code>IntPredicate</code>,
-<code>ToLongFunction</code>, <code>LongSupplier</code>...) avoid boxing
-costs in hot paths.</p>
-<p>Predicates and functions compose:</p>
-<pre class="java"><code>Predicate&lt;Transaction&gt; isDebit = tx -&gt; tx.type() == Type.DEBIT;
-Predicate&lt;Transaction&gt; isLarge = tx -&gt; tx.amount().compareTo(new BigDecimal(&quot;1000000&quot;)) &gt;= 0;
-Predicate&lt;Transaction&gt; needsReview = isDebit.and(isLarge).and(Predicate.not(Transaction::isInternal));
-
-Function&lt;String, String&gt; normalise = String::strip;
-Function&lt;String, String&gt; normaliseName = normalise.andThen(String::toUpperCase);</code></pre>
-<h3 id="method-references">Method references</h3>
-<p>When a lambda only calls an existing method, a method reference is
-shorter and clearer:</p>
-<table>
-<thead>
-<tr>
-<th>Kind</th>
-<th>Syntax</th>
-<th>Equivalent lambda</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Static method</td>
-<td><code>Integer::parseInt</code></td>
-<td><code>s -&gt; Integer.parseInt(s)</code></td>
-</tr>
-<tr>
-<td>Instance method of a particular object</td>
-<td><code>ledger::post</code></td>
-<td><code>tx -&gt; ledger.post(tx)</code></td>
-</tr>
-<tr>
-<td>Instance method of an arbitrary object</td>
-<td><code>Transaction::amount</code></td>
-<td><code>tx -&gt; tx.amount()</code></td>
-</tr>
-<tr>
-<td>Constructor</td>
-<td><code>ArrayList::new</code></td>
-<td><code>() -&gt; new ArrayList&lt;&gt;()</code></td>
-</tr>
-</tbody>
-</table>
-<h2 id="2-streams-the-pipeline-model">2. Streams: the pipeline
-model</h2>
-<p>A <strong>stream</strong> is a sequence of elements flowing through a
-pipeline. It is not a data structure: it does not store anything, and it
-can be consumed only once.</p>
-<pre class="java"><code>BigDecimal largeDebitsToday = transactions.stream()          // 1. source
-        .filter(tx -&gt; tx.valueDate().equals(today))           // 2. intermediate operations
-        .filter(isDebit.and(isLarge))
-        .map(Transaction::amount)
-        .reduce(BigDecimal.ZERO, BigDecimal::add);           // 3. terminal operation</code></pre>
+Result&lt;Account&gt; r = Result.ok(account);</code></pre>
+<p>A generic method declares its own type parameter before the return
+type:</p>
+<pre class="java"><code>static &lt;K, V&gt; Map&lt;V, K&gt; invert(Map&lt;K, V&gt; map) { ... }</code></pre>
+<h3 id="bounded-types">Bounded types</h3>
+<pre class="java"><code>static &lt;T extends Comparable&lt;T&gt;&gt; T max(List&lt;T&gt; items) { ... }   // T must be comparable
+static BigDecimal total(List&lt;? extends Money&gt; amounts) { ... }</code></pre>
+<h3 id="wildcards-and-pecs">Wildcards and PECS</h3>
+<p><code>List&lt;Integer&gt;</code> is <strong>not</strong> a subtype of
+<code>List&lt;Number&gt;</code>, even though <code>Integer</code> is a
+<code>Number</code>. If it were, you could add a <code>Double</code> to
+a list of integers. Wildcards relax this safely:</p>
 <ul>
-<li><strong>Source</strong>: <code>collection.stream()</code>,
-<code>Stream.of(...)</code>, <code>Arrays.stream(arr)</code>,
-<code>Files.lines(path)</code>, <code>IntStream.range(0, n)</code>.</li>
-<li><strong>Intermediate operations</strong> return a new stream and are
-<strong>lazy</strong>: nothing happens until a terminal operation
-runs.</li>
-<li><strong>Terminal operations</strong> produce a result or side effect
-and close the stream.</li>
+<li><code>? extends T</code>: a <strong>producer</strong> of
+<code>T</code>s. You can read <code>T</code>s out, but not add.</li>
+<li><code>? super T</code>: a <strong>consumer</strong> of
+<code>T</code>s. You can add <code>T</code>s, but only read
+<code>Object</code>s out.</li>
 </ul>
-<p>Laziness means the pipeline processes elements one at a time and can
-stop early: <code>filter(...).findFirst()</code> on a million
-transactions stops at the first match.</p>
-<h3 id="common-intermediate-operations">Common intermediate
-operations</h3>
-<pre class="java"><code>.filter(predicate)                 // keep matching elements
-.map(function)                     // transform each element
-.mapToLong(tx -&gt; tx.amountKobo())  // to a LongStream, for sum/average without boxing
-.flatMap(c -&gt; c.accounts().stream())   // one-to-many, then flatten
-.distinct()                        // remove duplicates (uses equals/hashCode)
-.sorted(Comparator.comparing(Transaction::valueDate))
-.limit(10) / .skip(20)             // paging
-.peek(tx -&gt; log.debug(&quot;{}&quot;, tx))   // debugging only; don&#39;t put logic here
-.takeWhile(p) / .dropWhile(p)      // on ordered streams: stop or start at the first non-match</code></pre>
-<p><code>flatMap</code> is the one beginners find hardest. Picture it as
-"map each element to a stream, then join all those streams into
-one":</p>
-<pre class="java"><code>List&lt;Account&gt; allAccounts = customers.stream()
-        .flatMap(c -&gt; c.accounts().stream())      // Stream&lt;Customer&gt; -&gt; Stream&lt;Account&gt;
-        .toList();</code></pre>
-<h3 id="common-terminal-operations">Common terminal operations</h3>
-<pre class="java"><code>.toList()                          // Java 16+: an unmodifiable List
-.collect(Collectors.toSet())
-.forEach(consumer)                 // side effects; avoid mutating shared state
-.count()
-.anyMatch(p) / .allMatch(p) / .noneMatch(p)    // short-circuit
-.findFirst() / .findAny()          // return Optional
-.min(comparator) / .max(comparator)
-.reduce(identity, accumulator)     // fold to one value
-LongStream: .sum(), .average(), .summaryStatistics()</code></pre>
-<h2 id="3-collectors-grouping-and-aggregating">3. Collectors: grouping
-and aggregating</h2>
-<p><code>Collectors</code> turn a stream into maps and summaries. These
-are the patterns interviews and real code use most.</p>
-<pre class="java"><code>import static java.util.stream.Collectors.*;
+<p>The mnemonic is <strong>PECS: Producer Extends, Consumer
+Super.</strong></p>
+<pre class="java"><code>static void copyAll(List&lt;? extends Transaction&gt; source, List&lt;? super Transaction&gt; target) {
+    for (Transaction t : source) target.add(t);
+}</code></pre>
+<h3 id="type-erasure">Type erasure</h3>
+<p>Generic types exist only at compile time. At runtime
+<code>List&lt;String&gt;</code> and <code>List&lt;Integer&gt;</code> are
+both just <code>List</code>. That is why you cannot write
+<code>new T()</code>, <code>T[]</code> or
+<code>instanceof List&lt;String&gt;</code>, and why frameworks sometimes
+ask you to pass a <code>Class&lt;T&gt;</code> explicitly.</p>
+<h2 id="worked-example-an-end-of-day-summary">Worked example: an
+end-of-day summary</h2>
+<pre class="java"><code>Map&lt;String, BigDecimal&gt; totalsByCurrency = new TreeMap&lt;&gt;();
+Set&lt;String&gt; seenRefs = new HashSet&lt;&gt;();
+List&lt;Transaction&gt; duplicates = new ArrayList&lt;&gt;();
 
-// Total per account
-Map&lt;String, BigDecimal&gt; totalByAccount = txs.stream()
-        .collect(groupingBy(Transaction::account,
-                reducing(BigDecimal.ZERO, Transaction::amount, BigDecimal::add)));
-
-// Count per merchant category, sorted by category
-Map&lt;String, Long&gt; countByMcc = txs.stream()
-        .collect(groupingBy(Transaction::mcc, TreeMap::new, counting()));
-
-// Split into two groups
-Map&lt;Boolean, List&lt;Transaction&gt;&gt; flagged = txs.stream()
-        .collect(partitioningBy(tx -&gt; tx.amount().compareTo(threshold) &gt; 0));
-
-// Build a lookup; the third argument resolves duplicate keys (otherwise IllegalStateException)
-Map&lt;String, Account&gt; byNumber = accounts.stream()
-        .collect(toMap(Account::number, a -&gt; a, (first, second) -&gt; first));
-
-// Several statistics in one pass
-LongSummaryStatistics stats = txs.stream().mapToLong(Transaction::amountKobo).summaryStatistics();
-stats.getMin(); stats.getMax(); stats.getAverage(); stats.getCount();
-
-// Join strings
-String csvHeader = Stream.of(&quot;date&quot;, &quot;reference&quot;, &quot;amount&quot;).collect(joining(&quot;,&quot;));
-
-// Two collectors at once (Java 12+): total and count, combined
-record Summary(BigDecimal total, long count) {}
-Summary s = txs.stream().collect(teeing(
-        reducing(BigDecimal.ZERO, Transaction::amount, BigDecimal::add),
-        counting(),
-        Summary::new));</code></pre>
-<h2 id="4-optional">4. Optional</h2>
-<p><code>Optional&lt;T&gt;</code> is a container that may or may not
-hold a value. It makes "there might be no result" explicit in a method's
-return type instead of returning <code>null</code>.</p>
-<pre class="java"><code>Optional&lt;Account&gt; findByNumber(String number) { ... }
-
-String owner = repo.findByNumber(&quot;0123456789&quot;)
-        .map(Account::ownerName)
-        .orElse(&quot;Unknown&quot;);
-
-Account acc = repo.findByNumber(number)
-        .orElseThrow(() -&gt; new AccountNotFoundException(number));
-
-repo.findByNumber(number).ifPresent(a -&gt; notifier.send(a));</code></pre>
-<p>Rules that reviewers enforce:</p>
-<ul>
-<li>Use <code>Optional</code> as a <strong>return type</strong> for
-lookups. Do not use it for fields, method parameters or collections
-(return an empty list instead).</li>
-<li>Never call <code>get()</code> without checking: prefer
-<code>orElse</code>, <code>orElseGet</code>, <code>orElseThrow</code>,
-<code>map</code>, <code>ifPresent</code>.</li>
-<li><code>orElse(expensiveCall())</code> evaluates the argument even
-when a value is present; use
-<code>orElseGet(() -&gt; expensiveCall())</code> for anything
-costly.</li>
-</ul>
-<h3 id="stream-gatherers-java-24">Stream Gatherers (Java 24+)</h3>
-<p>Java 24 finalised <strong>gatherers</strong> (JEP 485): custom
-intermediate operations, used with <code>stream.gather(...)</code>.
-Built-ins in <code>java.util.stream.Gatherers</code> cover common
-needs:</p>
-<pre class="java"><code>transactions.stream().gather(Gatherers.windowFixed(100)).forEach(this::insertBatch);   // batches of 100
-amounts.stream().gather(Gatherers.windowSliding(7)).map(this::average).toList();       // 7-day moving windows
-amounts.stream().gather(Gatherers.scan(() -&gt; BigDecimal.ZERO, BigDecimal::add)).toList();   // running balance</code></pre>
-<p>The baseline for this programme is Java 21, so gatherers are optional
-here, but the Java 25 OCP exam (1Z0-831) tests them.</p>
-<h2 id="5-streams-versus-loops">5. Streams versus loops</h2>
-<p>Streams are not always better. Prefer a plain loop when:</p>
-<ul>
-<li>you need to break out early with complex conditions, or handle
-checked exceptions;</li>
-<li>the logic mutates several variables at once;</li>
-<li>the stream version needs comments to be understood.</li>
-</ul>
-<p>Prefer streams for filter–map–collect transformations, where they
-read like the business rule. And avoid side effects inside streams:</p>
-<pre class="java"><code>List&lt;Transaction&gt; flagged = new ArrayList&lt;&gt;();
-txs.stream().filter(this::suspicious).forEach(flagged::add);       // works, but fragile
-List&lt;Transaction&gt; flagged = txs.stream().filter(this::suspicious).toList();   // better</code></pre>
-<p><strong>Parallel streams</strong> (<code>parallelStream()</code>)
-split work across the common fork-join pool. They help only for large,
-CPU-heavy, stateless work, and can hurt inside a web server where that
-pool is shared. Measure before using them; Module 2 covers better
-concurrency tools.</p>
-<h2 id="worked-example-a-merchant-spend-report">Worked example: a
-merchant spend report</h2>
-<pre class="java"><code>record Txn(String account, String merchant, String mcc, BigDecimal amount, LocalDate date) {}
-
-Map&lt;String, BigDecimal&gt; top5MerchantsLastMonth = txns.stream()
-        .filter(t -&gt; YearMonth.from(t.date()).equals(YearMonth.now().minusMonths(1)))
-        .collect(groupingBy(Txn::merchant,
-                reducing(BigDecimal.ZERO, Txn::amount, BigDecimal::add)))
-        .entrySet().stream()
-        .sorted(Map.Entry.&lt;String, BigDecimal&gt;comparingByValue().reversed())
-        .limit(5)
-        .collect(toMap(Map.Entry::getKey, Map.Entry::getValue,
-                (a, b) -&gt; a, LinkedHashMap::new));      // LinkedHashMap keeps the sorted order</code></pre>
-<p>Read it top to bottom: last month's transactions, total per merchant,
-largest first, top five, in order. The equivalent loop needs a temporary
-map, a list of entries, a sort and a second loop.</p>
+for (Transaction tx : dayTransactions) {
+    if (!seenRefs.add(tx.reference())) { duplicates.add(tx); continue; }
+    totalsByCurrency.merge(tx.currency(), tx.amount(), BigDecimal::add);
+}
+totalsByCurrency.forEach((ccy, total) -&gt; System.out.println(ccy + &quot; &quot; + total));
+System.out.println(duplicates.size() + &quot; duplicate references&quot;);</code></pre>
+<p>One pass, O(<em>n</em>), sorted output by currency, and duplicates
+detected with a set. The naive version (<code>for</code> over
+transactions with <code>list.contains</code> on the processed list) is
+O(<em>n</em>²) and takes hours on a million rows.</p>
 <h2 id="common-mistakes">Common mistakes</h2>
 <ul>
-<li>Reusing a stream:
-<code>IllegalStateException: stream has already been operated upon or closed</code>.</li>
-<li><code>toMap</code> with duplicate keys and no merge function.</li>
-<li>Calling <code>Optional.get()</code> blindly, or returning
-<code>null</code> from a method declared to return
-<code>Optional</code>.</li>
-<li>Heavy side effects in <code>map</code> or <code>peek</code>.</li>
-<li>Expecting a lazy pipeline with no terminal operation to do
-anything.</li>
-<li>Using <code>parallelStream()</code> by default "for speed".</li>
+<li><code>list.contains</code> or <code>list.remove(Object)</code>
+inside a loop: accidental O(n²).</li>
+<li>Using <code>HashMap</code> keys whose <code>hashCode</code> changes,
+or without <code>equals</code>/<code>hashCode</code>.</li>
+<li>Removing from a collection inside a for-each loop.</li>
+<li>Returning internal mutable lists from a class.</li>
+<li>Raw types (<code>List list = new ArrayList();</code>) that throw
+away type checking.</li>
+<li><code>Collections.unmodifiableList</code> mistaken for a copy.</li>
 </ul>
 <h2 id="practice">Practice</h2>
 <ol type="1">
-<li>From a list of transactions, compute: total credits, total debits,
-and net movement per account, in one <code>groupingBy</code> with a
-downstream collector.</li>
-<li>Find the customer with the highest single debit last month and
-return it as <code>Optional&lt;Customer&gt;</code>.</li>
-<li>Partition transactions into "needs review" and "auto-approved" using
-a composed <code>Predicate</code> built from three smaller ones.</li>
-<li>Rewrite one stream from practice 1 as a loop. Which is easier to
-read? Write two sentences defending your choice in code review.</li>
+<li>Load 100,000 random account numbers into an <code>ArrayList</code>
+and a <code>HashSet</code>. Time 10,000 <code>contains</code> calls on
+each and explain the difference.</li>
+<li>Group a list of transactions by account into
+<code>Map&lt;String, List&lt;Transaction&gt;&gt;</code> with
+<code>computeIfAbsent</code>, then print accounts sorted by total debit,
+largest first.</li>
+<li>Implement fee bands with a <code>TreeMap</code> and
+<code>floorEntry</code>, and test the boundaries (exactly ₦5,000,
+₦4,999.99).</li>
+<li>Write
+<code>static &lt;T&gt; List&lt;List&lt;T&gt;&gt; batches(List&lt;T&gt; items, int size)</code>
+that splits a list into batches for bulk inserts. Test it with an empty
+list and a size that does not divide evenly.</li>
 </ol>
 <h2 id="key-terms">Key terms</h2>
-<p>Functional interface, lambda, effectively final, method reference,
-<code>Predicate</code>, <code>Function</code>, <code>Consumer</code>,
-<code>Supplier</code>, stream, intermediate operation, terminal
-operation, laziness, <code>flatMap</code>, <code>reduce</code>,
-<code>Collectors.groupingBy</code>, <code>partitioningBy</code>,
-<code>toMap</code>, <code>teeing</code>, <code>Optional</code>, parallel
-stream.</p>
+<p>Collection, List, Set, Map, Queue, Deque, sequenced collection,
+Big-O, hash table, bucket, load factor, <code>Comparable</code>,
+<code>Comparator</code>, <code>ConcurrentModificationException</code>,
+unmodifiable collection, generics, type parameter, bounded type,
+wildcard, PECS, type erasure.</p>
 <h2 id="further-reading">Further reading</h2>
 <ul>
 <li><a
-href="https://docs.oracle.com/javase/tutorial/java/javaOO/lambdaexpressions.html">The
-Java Tutorials: Lambda Expressions</a></li>
+href="https://docs.oracle.com/javase/tutorial/collections/index.html">The
+Java Tutorials: Collections</a></li>
+<li><a href="https://openjdk.org/jeps/431">JEP 431: Sequenced
+Collections</a></li>
 <li><a
-href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/stream/package-summary.html"><code>java.util.stream</code>
-package summary (Java 21)</a></li>
+href="https://docs.oracle.com/javase/tutorial/java/generics/index.html">The
+Java Tutorials: Generics</a></li>
 <li><a
-href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/stream/Collectors.html"><code>Collectors</code>
-API (Java 21)</a></li>
-<li><a
-href="https://stuartmarks.wordpress.com/2016/09/27/vjug24-session-on-optional/">Stuart
-Marks: Optional — the mother of all bikesheds (talk slides and
-guidance)</a></li>
-<li><a href="https://dev.java/learn/language/fp/lambdas/">dev.java
-(Oracle): Lambda Expressions</a></li>
-<li><a
-href="https://dev.java/learn/api/collections-and-streams/streams/">dev.java
-(Oracle): The Stream API</a></li>
-<li><a href="https://openjdk.org/jeps/485">JEP 485: Stream
-Gatherers</a></li>
+href="https://dev.java/learn/api/collections-and-streams/collections-framework/">dev.java
+(Oracle): The Collections Framework</a></li>
+<li><a href="https://dev.java/learn/language/fp/generics/">dev.java
+(Oracle): Generics</a></li>
 </ul>
 
 <h2>Watch</h2>
-<h3>Lambda Expressions in Java - Full Simple Tutorial</h3><p>Coding with John · 13 min. Lambdas and functional interfaces from scratch.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/tj5sLSFjVj4" title="Lambda Expressions in Java - Full Simple Tutorial" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
-<h3>Java Streams Crash Course: Everything You Need to Know</h3><p>camelCase · 9 min. A fast tour of filter, map, reduce and collect.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/yv9Q2E39kJM" title="Java Streams Crash Course: Everything You Need to Know" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
-<h3>Java Streams API Explained (with examples)</h3><p>Visual Computer Science · 18 min. Streams in more depth, including intermediate vs terminal operations and laziness.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/2StXP1XaU04" title="Java Streams API Explained (with examples)" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
-<h3>Better Java Streams with Gatherers - Inside Java Newscast #57 (optional, longer)</h3><p>Java · 9 min. Stream Gatherers (Java 24+): custom intermediate operations, tested in the Java 25 OCP exam.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/epgJm2dZTSg" title="Better Java Streams with Gatherers - Inside Java Newscast #57" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
-<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/01-modern-java-oop/1.5-lambdas-streams/README.md">1.5 Lambdas and the Streams API</a></p>
+<h3>Java Collections Explained (with examples)</h3><p>Visual Computer Science · 11 min. A map of the Collections Framework: List, Set, Queue, Map and how they relate.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/viTHc_4XfCA" title="Java Collections Explained (with examples)" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>LinkedList vs ArrayList in Java Tutorial - Which Should You Use?</h3><p>Coding with John · 12 min. ArrayList vs LinkedList, with the performance reasoning interviewers ask about.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/5dscMs2hnDI" title="LinkedList vs ArrayList in Java Tutorial - Which Should You Use?" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Generics In Java - Full Simple Tutorial</h3><p>Coding with John · 18 min. Generic classes, generic methods, bounded types and wildcards.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/K1iu1kXkVoA" title="Generics In Java - Full Simple Tutorial" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/01-modern-java-oop/1.5-collections-generics/README.md">1.5 Collections and generics</a></p>

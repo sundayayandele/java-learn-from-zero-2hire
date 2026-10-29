@@ -1,0 +1,109 @@
+{
+  "topic": "1.2",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A learner runs `git init` and then `git add .` in a Maven project that has already been built. The first commit contains the `target/` folder and IntelliJ's `.idea/` settings.",
+      "question": "What should they have done first?",
+      "options": [
+        "Run `./mvnw clean` before every commit",
+        "Create a `.gitignore` listing `target/`, `.idea/` and similar files before the first `git add`",
+        "Use `git add *.java` only",
+        "Commit everything; GitHub removes build output automatically"
+      ],
+      "answer": 1,
+      "explanation": "`.gitignore` stops build output and personal IDE files from being tracked. Generated files bloat the repository and cause pointless conflicts; the wrapper scripts and sources are what belong in Git."
+    },
+    {
+      "type": "single",
+      "scenario": "A developer commits `application.properties` containing a live payment-provider API key to a private GitHub repository, notices an hour later, and deletes the line in a new commit.",
+      "question": "What must they do now?",
+      "options": [
+        "Nothing more; the latest commit no longer has the key",
+        "Rotate the key with the provider (issue a new one and revoke the old one), then move it to an environment variable",
+        "Make the repository private again",
+        "Rename the property"
+      ],
+      "answer": 1,
+      "explanation": "Git keeps every version, so the key is still in history and must be treated as leaked. Rotating it is the real fix; cleaning history and moving secrets to environment variables come after."
+    },
+    {
+      "type": "single",
+      "scenario": "You edited three files and want to commit only the fix in `FeeCalculator.java`, leaving the other two changes for later.",
+      "question": "Which sequence does that?",
+      "options": [
+        "`git commit -am \"Fix fee rounding\"`",
+        "`git add src/main/java/ng/itlearning/fees/FeeCalculator.java` then `git commit -m \"Fix fee rounding\"`",
+        "`git push` then `git commit`",
+        "`git restore .` then `git commit`"
+      ],
+      "answer": 1,
+      "explanation": "Only staged changes go into a commit. `git commit -am` stages every modified tracked file; `git restore .` would discard all three changes."
+    },
+    {
+      "type": "single",
+      "scenario": "A commit pushed to `main` last week introduced a wrong fee, and other people have pulled `main` since then.",
+      "question": "What is the safest way to undo it?",
+      "options": [
+        "`git revert <hash>`, which adds a new commit that reverses it, then push",
+        "Delete the repository and push a fresh copy",
+        "Edit the old commit's files directly on GitHub's history page",
+        "`git restore` the file and don't commit"
+      ],
+      "answer": 0,
+      "explanation": "Revert adds history instead of rewriting it, so everyone's copies stay consistent and the audit trail shows both the mistake and the fix."
+    },
+    {
+      "type": "single",
+      "scenario": "Which commit message best follows good practice?",
+      "question": "Choose the best message.",
+      "options": [
+        "`update`",
+        "`fixed some stuff in the fee code and also README`",
+        "`Reject transfers from frozen wallets`",
+        "`WIP!!!`"
+      ],
+      "answer": 2,
+      "explanation": "One logical change, described in the imperative mood, short enough for `git log --oneline`. It tells a reader in six months what changed and makes it easy to find."
+    },
+    {
+      "type": "single",
+      "scenario": "After merging a branch, a file contains lines starting with `<<<<<<< HEAD`, `=======` and `>>>>>>> add-pos-fee`.",
+      "question": "What do you do?",
+      "options": [
+        "Commit the file as it is",
+        "Edit it to the correct final code, remove the three marker lines, run the tests, then `git add` and `git commit`",
+        "Delete the file",
+        "Run `git push --force`"
+      ],
+      "answer": 1,
+      "explanation": "This is a merge conflict: both branches changed the same lines. You decide the correct result; the markers must never be committed, and the tests confirm the merge works."
+    },
+    {
+      "type": "single",
+      "scenario": "A project's GitHub Actions run fails at `./mvnw -B verify` with `Permission denied`, although the build works on the learner's Windows laptop.",
+      "question": "What is the likely cause and fix?",
+      "options": [
+        "GitHub doesn't support Maven; switch to Gradle",
+        "The `mvnw` script isn't marked executable in Git; run `git update-index --chmod=+x mvnw` and commit",
+        "The repository must be public for Actions to run",
+        "Java 21 isn't available on GitHub runners"
+      ],
+      "answer": 1,
+      "explanation": "Linux runners need the execute bit, which Windows doesn't record by default. Setting it in Git fixes it for every machine."
+    },
+    {
+      "type": "single",
+      "scenario": "A learner works alone on their capstone and pushes every change straight to `main` without running the tests.",
+      "question": "Which habit should they adopt, even working alone?",
+      "options": [
+        "Push once a week instead",
+        "Work on a branch per change, push it, open a pull request, wait for green CI and review the diff before merging",
+        "Disable CI so `main` never shows red",
+        "Keep a second repository as a backup"
+      ],
+      "answer": 1,
+      "explanation": "Branches and pull requests give a checked, reviewable path into `main`, which is how every team works and what interviewers and capstone assessors look for in your history."
+    }
+  ]
+}

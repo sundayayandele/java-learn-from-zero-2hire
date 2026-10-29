@@ -10,7 +10,7 @@ Each topic page has the same three parts as Phase 1, in this order:
 2. **Watch** the curated videos (checked: real, embeddable, English with captions).
 3. **Check your understanding** with the scenario CBT. On Moodle it is graded (pass mark 70%, unlimited attempts).
 
-Then do the topic's **practice** tasks and, each module, at least one **module project** and its **broken-service lab**. From week 15, start your **Phase 2 capstones**; every capstone is a team-ready service with security, a full test pyramid and a CI/CD pipeline with quality gates. Keep up the weekly [coding-interview practice track](../../practice/README.md) (about 3 hours a week).
+Then do the topic's **practice** tasks and, each module, at least one **module project** and its **broken-service lab**. From week 16, start your **Phase 2 capstones**; every capstone is a team-ready service with security, a full test pyramid and a CI/CD pipeline with quality gates. Keep up the weekly [coding-interview practice track](../../practice/README.md) (about 3 hours a week).
 
 ### How much time this phase takes
 
@@ -32,27 +32,27 @@ That is **22–27 hours a week over the 11 scheduled weeks**. If you can give 12
 
 | Week | Module | Topics | Milestone |
 | --- | --- | --- | --- |
-| 14 | 5 API Design & Integration | 5.1 Resource design and HTTP, 5.2 OpenAPI and versioning | OpenAPI contract for your first capstone |
-| 15 | 5 | 5.3 Problem Details, pagination, idempotency, 5.4 Consuming APIs and resilience | Start Capstone 1 (payment gateway hub) |
-| 16 | 5 | 5.5 GraphQL and gRPC, 5.6 System design basics | Module 5 project, Lab 5.E |
-| 17 | 6 Security Essentials | 6.1 Spring Security filter chain, 6.2 JWT, OAuth2 and OIDC | Keycloak running locally |
-| 18 | 6 | 6.3 RBAC and method security, 6.4 OWASP Top 10, 6.5 Passwords, secrets, dependency scanning | Secured capstone API; Module 6 project, Lab 6.D |
-| 19 | 7 Testing & Code Quality | 7.1 JUnit, Mockito and TDD, 7.2 Testcontainers | |
-| 20 | 7 | 7.3 API tests, 7.4 JaCoCo and SonarQube, 7.5 Code review | Quality gate green on every capstone; Lab 7.D |
-| 21 | 8 Git, Docker & CI/CD | 8.1 Git workflow, 8.2 Docker images and Compose | Team PR workflow with a peer |
-| 22 | 8 | 8.3 GitHub Actions and GitLab CI, 8.4 Jenkins and Azure DevOps, 8.5 Deploying containers, 8.6 Working in an agile team | Capstones deployed from CI; Module 8 mini-sprint; Lab 8.D |
-| 23 | 9 AI-Assisted Engineering | 9.1 AI coding assistants, 9.2 Reviewing AI code, 9.3 AI for tests, docs and refactors | Lab 9.D |
-| 24 | 9 Junior Portfolio | 9.4 CV, GitHub and LinkedIn, 9.5 Junior interview prep | **End-of-phase exam**, **capstone defence**, **live-coding assessment**, **Getting Hired**, junior portfolio review |
+| 15 | 5 API Design & Integration | 5.1 Resource design and HTTP, 5.2 OpenAPI and versioning | OpenAPI contract for your first capstone |
+| 16 | 5 | 5.3 Problem Details, pagination, idempotency, 5.4 Consuming APIs and resilience | Start Capstone 1 (payment gateway hub) |
+| 17 | 5 | 5.5 GraphQL and gRPC, 5.6 System design basics | Module 5 project, Lab 5.E |
+| 18 | 6 Security Essentials | 6.1 Spring Security filter chain, 6.2 JWT, OAuth2 and OIDC | Keycloak running locally |
+| 19 | 6 | 6.3 RBAC and method security, 6.4 OWASP Top 10, 6.5 Passwords, secrets, dependency scanning | Secured capstone API; Module 6 project, Lab 6.D |
+| 20 | 7 Testing & Code Quality | 7.1 JUnit, Mockito and TDD, 7.2 Testcontainers | |
+| 21 | 7 | 7.3 API tests, 7.4 JaCoCo and SonarQube, 7.5 Code review | Quality gate green on every capstone; Lab 7.D |
+| 22 | 8 Git, Docker & CI/CD | 8.1 Git workflow, 8.2 Docker images and Compose | Team PR workflow with a peer |
+| 23 | 8 | 8.3 GitHub Actions and GitLab CI, 8.4 Jenkins and Azure DevOps, 8.5 Deploying containers, 8.6 Working in an agile team | Capstones deployed from CI; Module 8 mini-sprint; Lab 8.D |
+| 24 | 9 AI-Assisted Engineering | 9.1 AI coding assistants, 9.2 Reviewing AI code, 9.3 AI for tests, docs and refactors | Lab 9.D |
+| 25 | 9 Junior Portfolio | 9.4 CV, GitHub and LinkedIn, 9.5 Junior interview prep | **End-of-phase exam**, **capstone defence**, **live-coding assessment**, **Getting Hired**, junior portfolio review |
 
 ## Modules
 
 | Module | Weeks | What you build |
 | --- | --- | --- |
-| [5. API Design & Integration](05-api-design-integration/README.md) | 14–16 | Payment gateway integration with webhooks, FX/weather consumer, news aggregator, gRPC lookup service |
-| [6. Security Essentials](06-security-essentials/README.md) | 17–18 | JWT API with refresh tokens, Keycloak login, role-based admin vs customer endpoints |
-| [7. Testing & Code Quality](07-testing-code-quality/README.md) | 19–20 | Full test suite for the wallet, TDD fee-engine kata, e-commerce integration tests |
-| [8. Git, Docker & CI/CD](08-git-docker-cicd/README.md) | 21–22 | Team PR workflow, Dockerised stack, GitHub Actions pipeline with quality gates |
-| [9. AI-Assisted Engineering & Junior Portfolio](09-ai-assisted-engineering-portfolio/README.md) | 23–24 | Polished 4–5 project portfolio, mock interview, tailored CV and application plan |
+| [5. API Design & Integration](05-api-design-integration/README.md) | 15–17 | Payment gateway integration with webhooks, FX/weather consumer, news aggregator, gRPC lookup service |
+| [6. Security Essentials](06-security-essentials/README.md) | 18–19 | JWT API with refresh tokens, Keycloak login, role-based admin vs customer endpoints |
+| [7. Testing & Code Quality](07-testing-code-quality/README.md) | 20–21 | Full test suite for the wallet, TDD fee-engine kata, e-commerce integration tests |
+| [8. Git, Docker & CI/CD](08-git-docker-cicd/README.md) | 22–23 | Team PR workflow, Dockerised stack, GitHub Actions pipeline with quality gates |
+| [9. AI-Assisted Engineering & Junior Portfolio](09-ai-assisted-engineering-portfolio/README.md) | 24–25 | Polished 4–5 project portfolio, mock interview, tailored CV and application plan |
 
 ## Capstones
 
@@ -72,7 +72,7 @@ Oracle's Java SE exams are fully covered by Phase 1. Phase 2 prepares the ground
 
 ## End-of-phase assessments
 
-- **Exam:** a 2-hour, 60-question scenario-based CBT covering every Phase 2 topic, taken on Moodle in week 24 (questions drawn at random from a larger bank). Pass mark 70%.
+- **Exam:** a 2-hour, 60-question scenario-based CBT covering every Phase 2 topic, taken on Moodle in week 25 (questions drawn at random from a larger bank). Pass mark 70%.
 - **Capstone defence:** a 20-minute recorded viva on your capstones, including a live change ([format and rubric](../../docs/assessments/capstone-defence.md)).
 - **Live-coding assessment:** 90 minutes, one algorithm problem and one secured or integration change to an unfamiliar service ([format and rubric](../../docs/assessments/live-coding.md)).
 - **Coding practice checkpoint:** at least 70% of the [practice track](../../practice/README.md) Java and SQL problems passing.
@@ -81,7 +81,7 @@ Oracle's Java SE exams are fully covered by Phase 1. Phase 2 prepares the ground
 
 ## Getting hired
 
-Week 24 is your junior-role launch: a portfolio of four to five deployed projects, a CV and LinkedIn tuned for Java roles, and mock interviews.
+Week 25 is your junior-role launch: a portfolio of four to five deployed projects, a CV and LinkedIn tuned for Java roles, and mock interviews.
 
 → [Getting hired after Phase 2](getting-hired/README.md)
 

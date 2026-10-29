@@ -5,7 +5,7 @@
 
 ← [2.5 Modules, packaging and runtime images (JPMS, jars, jlink)](../2.5-modules-packaging-jlink/README.md) · [Module 2](../README.md) · [Phase 1](../../README.md) · [3.1 Relational design](../../03-databases-sql-nosql/3.1-relational-design-normalisation-joins/README.md) →
 
-> **Week 6** · Module 2: Concurrency & the JVM · Website topic covered: *Added for the job: IDE debugging, reading stack traces, structured logs with correlation ids, thread dumps, heap dumps, remote debugging a container*
+> **Week 7** · Module 2: Concurrency & the JVM · Website topic covered: *Added for the job: IDE debugging, reading stack traces, structured logs with correlation ids, thread dumps, heap dumps, remote debugging a container*
 
 ## What you will be able to do
 
@@ -53,7 +53,7 @@ How to read it:
 - `... 42 more` means "the remaining frames are the same as in the block above".
 - `Suppressed:` entries appear when a `try`-with-resources `close()` also failed; they explain secondary failures.
 
-Common exceptions and their usual causes: `NullPointerException` (Java 14+ "helpful" messages name the null variable), `ClassCastException`, `ConcurrentModificationException` (modifying a collection while iterating), `LazyInitializationException` (accessing a lazy JPA association after the session closed, topic 4.3), `BeanCreationException`/`UnsatisfiedDependencyException` at start-up (read down to the root cause: usually a missing property or bean), `SocketTimeoutException` (a dependency is slow).
+Common exceptions and their usual causes: `NullPointerException` (Java 14+ "helpful" messages name the null variable), `ClassCastException`, `ConcurrentModificationException` (modifying a collection while iterating), `LazyInitializationException` (accessing a lazy JPA association after the session closed, topic 4.4), `BeanCreationException`/`UnsatisfiedDependencyException` at start-up (read down to the root cause: usually a missing property or bean), `SocketTimeoutException` (a dependency is slow).
 
 Never swallow exceptions (`catch (Exception e) {}`) and never log and rethrow the same exception at every layer: you get the same stack trace five times. Log once, where you handle it.
 
@@ -215,7 +215,7 @@ Reproduce, hypothesis, root cause, stack trace, `Caused by`, `Suppressed`, frame
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [Debugging Java code in IntelliJ IDEA](https://www.youtube.com/watch?v=V5iQ1FyRtBo) · IntelliJ IDEA, a JetBrains IDE · 7 min. JetBrains' own guide to debugging Java in IntelliJ IDEA.
 - [Thread Dump Analysis Fundamentals - Part 1](https://www.youtube.com/watch?v=1qzHSEjU8Hc) · Pierre-Hugues Charbonneau · 13 min. Thread dump analysis fundamentals: states, locks and what to look for.

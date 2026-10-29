@@ -537,3 +537,41 @@ groups:
           - refId: C
             datasourceUid: __expr__
             model: {refId: C, type: threshold, expression: A, conditions: [{evaluator: {type: gt, params: [26]}}]}
+
+      - uid: itl-weekly-plan-failed
+        title: Weekly plan messages failed
+        condition: C
+        for: 0s
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: warning}
+        annotations:
+          summary: "The last weekly plan run failed (exit code {{ $values.A.Value }})."
+          description: "Learners didn't get this week's plan. Check: journalctl -u itl-weekly-plan, then rerun itl-weekly-plan (it skips anyone already sent)."
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange: {from: 300, to: 0}
+            model: {refId: A, expr: 'itl_weekly_plan_last_exit_code', instant: true}
+          - refId: C
+            datasourceUid: __expr__
+            model: {refId: C, type: threshold, expression: A, conditions: [{evaluator: {type: gt, params: [0]}}]}
+
+      - uid: itl-weekly-plan-stale
+        title: Weekly plan messages not sent
+        condition: C
+        for: 1h
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: warning}
+        annotations:
+          summary: "The weekly plan last went out {{ humanize $values.A.Value }} days ago."
+          description: "itl-weekly-plan.timer runs every Monday at 06:00 UTC. Check: systemctl list-timers itl-weekly-plan.timer"
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange: {from: 300, to: 0}
+            model: {refId: A, expr: '(time() - itl_weekly_plan_last_success_timestamp_seconds) / 86400', instant: true}
+          - refId: C
+            datasourceUid: __expr__
+            model: {refId: C, type: threshold, expression: A, conditions: [{evaluator: {type: gt, params: [8]}}]}

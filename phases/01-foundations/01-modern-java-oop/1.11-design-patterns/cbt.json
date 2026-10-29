@@ -1,0 +1,112 @@
+{
+  "topic": "1.11",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A transfer fee method has a `switch` with a case per channel, and product managers add a channel every quarter.",
+      "question": "Which refactoring best fits?",
+      "options": [
+        "Singleton: make the fee method static",
+        "Decorator: wrap the switch in another switch",
+        "Strategy: one FeeRule implementation per channel, collected by a calculator, so a new channel adds a class instead of editing the switch",
+        "Observer: publish an event for every fee"
+      ],
+      "answer": 2,
+      "explanation": "Strategy keeps the calculator closed for modification and open for extension; Spring can inject all FeeRule beans as a list."
+    },
+    {
+      "type": "single",
+      "scenario": "A service has a `@Transactional` method `transferAll()` that loops and calls `this.transferOne()`, also `@Transactional(propagation = REQUIRES_NEW)`. Each transfer was expected to commit separately, but they all roll back together.",
+      "question": "Why?",
+      "options": [
+        "REQUIRES_NEW is not supported by PostgreSQL",
+        "Loops can't run inside transactions",
+        "Calls through `this` bypass the Spring proxy, so `transferOne()`'s transaction settings are never applied",
+        "Spring creates a new proxy for every loop iteration"
+      ],
+      "answer": 2,
+      "explanation": "Spring applies @Transactional through a proxy around the bean. Self-invocation doesn't pass through the proxy; move transferOne() to another bean or use TransactionTemplate."
+    },
+    {
+      "type": "single",
+      "scenario": "A `QuoteService` Spring bean stores `private BigDecimal lastRate` and sets it during each request. Customers occasionally see someone else's rate.",
+      "question": "What is the cause?",
+      "options": [
+        "BigDecimal is not thread-safe for reading",
+        "Spring creates one bean per HTTP session by default",
+        "The JVM caches the field per user",
+        "Beans are singletons by default and shared by all request threads, so the field is shared mutable state"
+      ],
+      "answer": 3,
+      "explanation": "Singleton beans must be stateless or hold only thread-safe, immutable state. Keep per-request values in local variables or parameters."
+    },
+    {
+      "type": "single",
+      "scenario": "After a transfer commits, the bank must send an SMS, update a fraud score and refresh a dashboard, and new reactions are added often.",
+      "question": "Which approach keeps the transfer service decoupled and safe?",
+      "options": [
+        "Use @EventListener so listeners run inside the transaction",
+        "Make the transfer service extend the SMS service",
+        "Publish a TransferCompleted application event and handle it with @TransactionalEventListener, which runs after commit",
+        "Call the three services directly at the start of the method"
+      ],
+      "answer": 2,
+      "explanation": "Observer via events decouples the publisher; the transactional listener avoids notifying about transfers that roll back."
+    },
+    {
+      "type": "single",
+      "scenario": "Your code calls a KYC vendor whose SDK returns `VendorVerificationResponseV3` objects, and these types appear in controllers and repositories.",
+      "question": "What should you introduce?",
+      "options": [
+        "A Builder for the vendor response",
+        "An Adapter implementing your own KycProvider interface that translates the vendor's types into your domain types",
+        "A Singleton wrapper around the SDK",
+        "A Template Method in the controller"
+      ],
+      "answer": 1,
+      "explanation": "Adapters keep third-party types at the edge, so switching vendors touches one class."
+    },
+    {
+      "type": "multi",
+      "scenario": "Which of these are examples of the Template Method idea (a fixed algorithm with variable steps) in Spring? (Choose two.)",
+      "question": "Select two.",
+      "options": [
+        "JdbcTemplate.query(sql, rowMapper)",
+        "@Value(\"${app.limit}\")",
+        "TransactionTemplate.execute(status -> ...)",
+        "A record with a compact constructor"
+      ],
+      "answer": [
+        0,
+        2
+      ],
+      "explanation": "Both templates run fixed steps (resources, exceptions, commit/rollback) and call your callback for the variable part."
+    },
+    {
+      "type": "single",
+      "scenario": "A record `Transfer` has nine components, four of them Strings, and tests keep passing arguments in the wrong order.",
+      "question": "What improves construction most?",
+      "options": [
+        "Use a Map<String, Object> instead of a record",
+        "A Builder (hand-written or generated) or static factory methods with named steps, validating in build()",
+        "Make all fields public and mutable",
+        "Add a no-argument constructor and setters"
+      ],
+      "answer": 1,
+      "explanation": "Builders make many-argument construction readable and checkable while keeping the object immutable."
+    },
+    {
+      "type": "single",
+      "scenario": "A teammate adds an interface plus a factory for a class that has one implementation, no test double and no planned alternatives.",
+      "question": "What is the best review comment?",
+      "options": [
+        "Approve, more interfaces are always better",
+        "Ask them to add an abstract base class as well",
+        "Ask for a Singleton too",
+        "Suggest removing the speculative abstraction until a second implementation or test need appears"
+      ],
+      "answer": 3,
+      "explanation": "Patterns add indirection; introduce them when they solve a present problem."
+    }
+  ]
+}

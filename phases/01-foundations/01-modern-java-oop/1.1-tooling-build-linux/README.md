@@ -3,7 +3,7 @@
 
 # 1.1 Your toolkit: JDK, IntelliJ IDEA, Maven, Gradle and the Linux command line
 
-[Module 1](../README.md) · [Phase 1](../../README.md) · [1.2 Java syntax, types, control flow and methods](../1.2-syntax-types-control-flow/README.md) →
+← [0.3 Methods and breaking a problem into steps](../../00-programming-on-ramp/0.3-methods-problem-solving/README.md) · [Module 1](../README.md) · [Phase 1](../../README.md) · [1.2 Git and GitHub essentials](../1.2-git-github-essentials/README.md) →
 
 > **Week 1** · Module 1: Modern Java & OOP Foundations · Website topic covered: *Maven and Gradle, IntelliJ IDEA, Linux command line basics*
 
@@ -69,7 +69,7 @@ java Interest.java      # since Java 11: compile in memory and run a single file
 jshell                  # an interactive Java shell; try 250_000 * 0.18
 ```
 
-Using `double` for money is a deliberate mistake here. You will see why and fix it with `BigDecimal` in topic 1.2.
+Using `double` for money is a deliberate mistake here. You will see why and fix it with `BigDecimal` in topic 1.3.
 
 ## 2. IntelliJ IDEA
 
@@ -303,7 +303,7 @@ JDK, JRE, JVM, bytecode, LTS, `JAVA_HOME`, GAV coordinates, lifecycle phase, dep
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [Creating your first Java application with IntelliJ IDEA](https://www.youtube.com/watch?v=V_vXRRydnYI) · IntelliJ IDEA, a JetBrains IDE · 11 min. JetBrains' own walkthrough: create, run and debug your first Java project in IntelliJ IDEA.
 - [Maven Tutorial - Crash Course](https://www.youtube.com/watch?v=Xatr8AZLOsE) · Marco Codes · 26 min. Maven from first principles: the pom, coordinates, scopes, lifecycle phases and plugins.
@@ -436,4 +436,4 @@ Which command tells you which process is listening on that port?
 
 ---
 
-[Module 1](../README.md) · [Phase 1](../../README.md) · [1.2 Java syntax, types, control flow and methods](../1.2-syntax-types-control-flow/README.md) →
+← [0.3 Methods and breaking a problem into steps](../../00-programming-on-ramp/0.3-methods-problem-solving/README.md) · [Module 1](../README.md) · [Phase 1](../../README.md) · [1.2 Git and GitHub essentials](../1.2-git-github-essentials/README.md) →

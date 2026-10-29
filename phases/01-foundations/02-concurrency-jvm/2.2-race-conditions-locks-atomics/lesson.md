@@ -158,7 +158,7 @@ For counters updated by many threads at once (requests per second, transactions 
 
 ## 6. Concurrent collections
 
-The ordinary collections from topic 1.4 are not thread-safe. `Collections.synchronizedMap(map)` wraps every method in one lock, which is correct but slow, and compound actions are still racy. Prefer `java.util.concurrent`:
+The ordinary collections from topic 1.5 are not thread-safe. `Collections.synchronizedMap(map)` wraps every method in one lock, which is correct but slow, and compound actions are still racy. Prefer `java.util.concurrent`:
 
 | Need | Use |
 | --- | --- |
@@ -245,7 +245,7 @@ public Response callPartner(Request r) throws InterruptedException {
 
 The most reliable concurrent code avoids shared mutable state:
 
-- **Immutability** (topic 1.7): immutable objects need no locks.
+- **Immutability** (topic 1.9): immutable objects need no locks.
 - **Confinement**: give each thread its own data, then merge results at the end (as the statement generator in topic 2.1 did).
 - **Message passing**: hand data between threads through a queue instead of sharing it.
 - **Let the database do it**: for money, the database transaction and its locks are the source of truth (topic 3.2).

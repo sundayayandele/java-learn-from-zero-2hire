@@ -5,7 +5,7 @@
 
 ← [8.2 Multi-stage Docker images for Spring Boot; Docker Compose](../8.2-docker-multistage-compose/README.md) · [Module 8](../README.md) · [Phase 2](../../README.md) · [8.4 Overview of Jenkins and Azure DevOps pipelines used in enterprises](../8.4-jenkins-azure-devops/README.md) →
 
-> **Week 22** · Module 8: Git, Docker & CI/CD · Website topic covered: *GitHub Actions workflows, caching, matrix builds, image publishing, security scans, GitLab CI*
+> **Week 23** · Module 8: Git, Docker & CI/CD · Website topic covered: *GitHub Actions workflows, caching, matrix builds, image publishing, security scans, GitLab CI*
 
 ## What you will be able to do
 
@@ -284,7 +284,7 @@ Continuous integration, continuous delivery, continuous deployment, pipeline, st
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [How to use GitHub Actions | GitHub for Beginners](https://www.youtube.com/watch?v=BQrohJ3PT7I) · GitHub · 8 min. GitHub Actions from GitHub: workflows, jobs, runners and events.
 - [GitLab YAML pipeline Tutorial for Beginners. Setup Multi Stage, Multi Job Pipeline CI/CD.](https://www.youtube.com/watch?v=dKpCYkcmjXI) · Sumit Raj · 16 min. GitLab CI/CD pipelines: stages, jobs and artefacts.

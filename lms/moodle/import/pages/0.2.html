@@ -1,0 +1,332 @@
+<p><em>Week 0 · Module 0: Programming On-Ramp</em></p>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Make decisions with <code>if</code>, <code>else if</code> and
+<code>else</code>, combining conditions with <code>&amp;&amp;</code>,
+<code>||</code> and <code>!</code>.</li>
+<li>Repeat work with <code>while</code> and <code>for</code> loops, and
+stop them at the right moment.</li>
+<li>Store a list of values in an array, loop over it, and find a total,
+a maximum and a count.</li>
+<li>Work with text: length, characters, comparing strings and building
+output.</li>
+<li>Trace a short program by hand in a table, which is how you find bugs
+before the computer does.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>Most business rules are decisions and loops: "if the account is
+frozen, reject the transfer", "for every transaction today, add it to
+the total", "keep asking for the PIN until it's right or three attempts
+are used". Off-by-one loops and wrong conditions are among the most
+common real bugs in payment code. Tracing by hand is how you catch them
+in a code review.</p>
+<h2 id="1-comparisons-and-decisions">1. Comparisons and decisions</h2>
+<p>A <strong>condition</strong> is an expression that is
+<code>true</code> or <code>false</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Operator</th>
+<th>Meaning</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>==</code></td>
+<td>equal (numbers, <code>boolean</code>)</td>
+<td><code>attempts == 3</code></td>
+</tr>
+<tr>
+<td><code>!=</code></td>
+<td>not equal</td>
+<td><code>status != 0</code></td>
+</tr>
+<tr>
+<td><code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>,
+<code>&gt;=</code></td>
+<td>less, at most, greater, at least</td>
+<td><code>amount &lt;= balance</code></td>
+</tr>
+<tr>
+<td><code>&amp;&amp;</code></td>
+<td>and: both must be true</td>
+<td><code>amount &gt; 0 &amp;&amp; amount &lt;= balance</code></td>
+</tr>
+<tr>
+<td><code>||</code></td>
+<td>or: at least one is true</td>
+<td><code>isFrozen || isClosed</code></td>
+</tr>
+<tr>
+<td><code>!</code></td>
+<td>not</td>
+<td><code>!isFrozen</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>if</code> runs a block only when its condition is true:</p>
+<pre class="java"><code>long balance = 800_000;       // kobo
+long amount = 950_000;
+boolean isFrozen = false;
+
+if (isFrozen) {
+    System.out.println(&quot;Rejected: account frozen&quot;);
+} else if (amount &lt;= 0) {
+    System.out.println(&quot;Rejected: amount must be positive&quot;);
+} else if (amount &gt; balance) {
+    System.out.println(&quot;Rejected: insufficient funds&quot;);
+} else {
+    balance -= amount;
+    System.out.println(&quot;Approved. New balance: &quot; + balance);
+}</code></pre>
+<p>Java checks the conditions <strong>top to bottom and runs only the
+first block that matches</strong>. Order matters: put the most specific
+rules first. Always use braces <code>{ }</code>, even for one line; a
+missing brace is a famous source of bugs.</p>
+<p><strong>Comparing text:</strong> never use <code>==</code> for
+strings. Use <code>.equals</code>:</p>
+<pre class="java"><code>String channel = in.nextLine();
+if (channel.equals(&quot;USSD&quot;)) { ... }           // correct
+if (channel.equalsIgnoreCase(&quot;ussd&quot;)) { ... } // ignores capital letters</code></pre>
+<p><code>==</code> on strings asks "are these the same object in
+memory?", which is sometimes true and sometimes false for equal text.
+Topic 1.3 explains why.</p>
+<p><strong>Try it:</strong> add a rule that transfers over ₦1,000,000
+need approval, and decide where in the chain it belongs.</p>
+<h2 id="2-while-loops-repeat-until-something-changes">2.
+<code>while</code> loops: repeat until something changes</h2>
+<p>A <code>while</code> loop repeats its block <strong>as long
+as</strong> its condition is true:</p>
+<pre class="java"><code>Scanner in = new Scanner(System.in);
+int attempts = 0;
+boolean unlocked = false;
+
+while (!unlocked &amp;&amp; attempts &lt; 3) {
+    System.out.print(&quot;Enter PIN: &quot;);
+    String pin = in.nextLine();
+    attempts++;                          // same as attempts = attempts + 1
+    if (pin.equals(&quot;4321&quot;)) {
+        unlocked = true;
+    } else {
+        System.out.println(&quot;Wrong PIN. &quot; + (3 - attempts) + &quot; attempt(s) left.&quot;);
+    }
+}
+System.out.println(unlocked ? &quot;Welcome&quot; : &quot;Card blocked&quot;);</code></pre>
+<p>Something inside the loop must eventually make the condition false
+(here, <code>attempts++</code> or <code>unlocked = true</code>). If
+nothing does, you have an <strong>infinite loop</strong>: the program
+never stops. Press Ctrl+C to stop it, then find the variable that should
+have changed.</p>
+<h2 id="3-for-loops-repeat-a-known-number-of-times">3. <code>for</code>
+loops: repeat a known number of times</h2>
+<p>When you know how many times to repeat, a <code>for</code> loop keeps
+the counter in one place:</p>
+<pre class="java"><code>long balance = 10_000_000;               // ₦100,000.00 in kobo
+for (int month = 1; month &lt;= 6; month++) {
+    balance += 2_000_000;                // save ₦20,000 a month
+    System.out.println(&quot;Month &quot; + month + &quot;: &quot; + balance);
+}</code></pre>
+<p>The three parts in the brackets are: <strong>start</strong>
+(<code>int month = 1</code>), <strong>keep going while</strong>
+(<code>month &lt;= 6</code>), and <strong>after each round</strong>
+(<code>month++</code>). This loop runs for months 1, 2, 3, 4, 5 and 6:
+six times.</p>
+<p><strong>Off-by-one errors</strong> are the classic loop bug.
+<code>month &lt; 6</code> runs five times; <code>month &lt;= 6</code>
+runs six. When you write a loop, ask: "what is the first value, what is
+the last value, and how many rounds is that?"</p>
+<h2 id="4-arrays-many-values-under-one-name">4. Arrays: many values
+under one name</h2>
+<p>An <strong>array</strong> holds a fixed number of values of the same
+type, numbered from <strong>0</strong>:</p>
+<pre class="java"><code>long[] transfers = {250_000, 1_200_000, 75_000, 980_000};   // kobo
+System.out.println(transfers.length);   // 4
+System.out.println(transfers[0]);       // 250000, the first
+System.out.println(transfers[3]);       // 980000, the last: index length - 1</code></pre>
+<p>The last index is always <code>length - 1</code>. Reading
+<code>transfers[4]</code> stops the program with
+<code>ArrayIndexOutOfBoundsException: Index 4 out of bounds for length 4</code>.</p>
+<p>Loop over every element to total, count or find the largest:</p>
+<pre class="java"><code>long total = 0;
+long largest = transfers[0];
+int over500k = 0;
+for (int i = 0; i &lt; transfers.length; i++) {
+    total += transfers[i];
+    if (transfers[i] &gt; largest) {
+        largest = transfers[i];
+    }
+    if (transfers[i] &gt; 50_000_000) {       // over ₦500,000
+        over500k++;
+    }
+}
+System.out.println(&quot;Total &quot; + total + &quot;, largest &quot; + largest + &quot;, large transfers &quot; + over500k);</code></pre>
+<p>These three patterns, <strong>accumulate</strong> (total),
+<strong>track the best so far</strong> (largest) and <strong>count
+matches</strong>, solve a surprising number of problems. Start
+<code>largest</code> with the first element, not 0, or a list of
+negative numbers gives the wrong answer.</p>
+<p>When you don't need the index, the <strong>enhanced for loop</strong>
+reads better:</p>
+<pre class="java"><code>for (long t : transfers) {
+    total += t;
+}</code></pre>
+<p>To create an empty array of a given size:
+<code>long[] daily = new long[7];</code> (seven zeros), then fill it
+with <code>daily[i] = ...</code>.</p>
+<h2 id="5-strings-working-with-text">5. Strings: working with text</h2>
+<pre class="java"><code>String ref = &quot;TRF-2026-00042&quot;;
+ref.length()              // 14
+ref.charAt(0)             // &#39;T&#39; (a char: one character, in single quotes)
+ref.startsWith(&quot;TRF&quot;)     // true
+ref.substring(4, 8)       // &quot;2026&quot;: from index 4 up to, but not including, 8
+ref.indexOf(&quot;-&quot;)          // 3, the first position of &quot;-&quot;
+ref.toLowerCase()         // &quot;trf-2026-00042&quot;
+ref.contains(&quot;0042&quot;)      // true
+&quot;  ada  &quot;.strip()         // &quot;ada&quot;: spaces removed from both ends</code></pre>
+<p>Strings never change: <code>toLowerCase()</code> returns a
+<strong>new</strong> string and leaves <code>ref</code> as it was. Write
+<code>ref = ref.toLowerCase();</code> if you want to keep the
+result.</p>
+<p>Loop over the characters of a string like an array:</p>
+<pre class="java"><code>String accountNumber = &quot;0123456789&quot;;
+boolean allDigits = accountNumber.length() == 10;
+for (int i = 0; i &lt; accountNumber.length(); i++) {
+    char c = accountNumber.charAt(i);
+    if (c &lt; &#39;0&#39; || c &gt; &#39;9&#39;) {
+        allDigits = false;
+    }
+}
+System.out.println(allDigits ? &quot;Valid format&quot; : &quot;Invalid account number&quot;);</code></pre>
+<h2 id="6-tracing-by-hand">6. Tracing by hand</h2>
+<p>When a loop gives the wrong answer, don't change code at random.
+<strong>Trace it</strong>: write a table with one column per variable
+and one row per round of the loop, and fill it in as the computer
+would.</p>
+<pre class="java"><code>int[] scores = {45, 72, 50};
+int passed = 0;
+for (int i = 0; i &lt; scores.length; i++) {
+    if (scores[i] &gt; 50) {
+        passed++;
+    }
+}</code></pre>
+<table>
+<thead>
+<tr>
+<th><code>i</code></th>
+<th><code>scores[i]</code></th>
+<th><code>scores[i] &gt; 50</code>?</th>
+<th><code>passed</code> after</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>45</td>
+<td>false</td>
+<td>0</td>
+</tr>
+<tr>
+<td>1</td>
+<td>72</td>
+<td>true</td>
+<td>1</td>
+</tr>
+<tr>
+<td>2</td>
+<td>50</td>
+<td>false</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p>The trace shows the bug immediately: a score of exactly 50 should
+pass, so the condition must be <code>&gt;= 50</code>. Tracing takes two
+minutes and finds bugs that staring at code doesn't. Professional
+engineers do the same thing with a debugger (topic 2.6).</p>
+<h2 id="worked-example-a-mini-statement">Worked example: a mini
+statement</h2>
+<pre class="java"><code>public class Main {
+    public static void main(String[] args) {
+        String[] descriptions = {&quot;Salary&quot;, &quot;Airtime&quot;, &quot;Rent&quot;, &quot;Transfer from Bola&quot;};
+        long[] amounts = {45_000_000, -150_000, -18_000_000, 2_500_000};   // kobo; negative = debit
+        long balance = 1_000_000;
+
+        System.out.println(&quot;Opening balance: &quot; + balance);
+        long credits = 0, debits = 0;
+        for (int i = 0; i &lt; amounts.length; i++) {
+            balance += amounts[i];
+            if (amounts[i] &gt;= 0) {
+                credits += amounts[i];
+            } else {
+                debits -= amounts[i];            // store debits as a positive total
+            }
+            System.out.println(descriptions[i] + &quot;: &quot; + amounts[i] + &quot; -&gt; &quot; + balance);
+        }
+        System.out.println(&quot;Credits &quot; + credits + &quot;, debits &quot; + debits + &quot;, closing &quot; + balance);
+        System.out.println(balance == 1_000_000 + credits - debits ? &quot;Reconciled&quot; : &quot;MISMATCH&quot;);
+    }
+}</code></pre>
+<p>The last line is a <strong>reconciliation check</strong>: the closing
+balance must equal the opening balance plus credits minus debits. Banks
+run exactly this check every night on every account.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Comparing strings with <code>==</code> instead of
+<code>.equals</code>.</li>
+<li><code>=</code> (store) where you meant <code>==</code> (compare):
+Java usually refuses to compile <code>if (attempts = 3)</code>, which is
+a gift.</li>
+<li>Off-by-one bounds: <code>i &lt;= array.length</code> reads one
+element too many.</li>
+<li>A <code>while</code> loop whose condition never becomes false.</li>
+<li>Starting a "largest so far" variable at 0 instead of the first
+element.</li>
+<li>Forgetting that strings never change: calling
+<code>name.strip();</code> without storing the result.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Read an amount and a channel (<code>USSD</code>, <code>APP</code> or
+<code>POS</code>) and print the fee: USSD ₦6.98 flat, APP free under
+₦5,000 and ₦10 above, POS 0.5% capped at ₦100.</li>
+<li>Print the 7 times table from 7 × 1 to 7 × 12 with a <code>for</code>
+loop. Then do it with a <code>while</code> loop.</li>
+<li>Given <code>long[] dailySales</code>, print the best day, the worst
+day, the average (whole kobo) and how many days beat the average.</li>
+<li>Mask an account number: <code>"0123456789"</code> becomes
+<code>"******6789"</code>. Use <code>length()</code>,
+<code>substring</code> and a loop or <code>"*".repeat(n)</code>.</li>
+<li>Trace this by hand before running it, then check:
+<code>int n = 5, f = 1; while (n &gt; 1) { f = f * n; n--; }</code>.
+What is <code>f</code>?</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p>Condition, comparison operator, <code>&amp;&amp;</code>,
+<code>||</code>, <code>!</code>,
+<code>if</code>/<code>else if</code>/<code>else</code>,
+<code>while</code>, <code>for</code>, infinite loop, off-by-one error,
+array, index, <code>length</code>, enhanced for, accumulate,
+<code>char</code>, <code>String</code> methods, immutable, tracing.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://dev.java/learn/language-basics/controlling-flow/">dev.java:
+Control Flow Statements</a></li>
+<li><a href="https://dev.java/learn/language-basics/arrays/">dev.java:
+Creating Arrays and Using Them</a></li>
+<li><a
+href="https://docs.oracle.com/javase/tutorial/java/data/strings.html">The
+Java Tutorials: Strings</a></li>
+<li><a
+href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html"><code>String</code>
+API (Java 21)</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Java for loops are easy! 🔂</h3><p>Bro Code · 10 min. for loops from first principles, with the start, condition and update explained.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/vOmZ4JFhRds" title="Java for loops are easy! 🔂" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Learn Java while loops in 12 minutes! ♾️</h3><p>Bro Code · 12 min. while loops, and how to avoid loops that never end.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/ZjHJrmYknrk" title="Learn Java while loops in 12 minutes! ♾️" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Learn Java arrays in 9 minutes! 🍎</h3><p>Bro Code · 9 min. Arrays: creating them, indexes from 0, and looping over every element.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/9dr2mHYYoug" title="Learn Java arrays in 9 minutes! 🍎" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Useful string methods in Java! 🧵</h3><p>Bro Code · 9 min. The String methods you&#x27;ll use most: length, charAt, substring, equals and more.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/Ntl3DxhyrQQ" title="Useful string methods in Java! 🧵" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/00-programming-on-ramp/0.2-decisions-loops-arrays-strings/README.md">0.2 Decisions, loops, arrays and strings</a></p>

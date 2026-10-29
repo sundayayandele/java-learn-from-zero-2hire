@@ -1,0 +1,229 @@
+## What you will be able to do
+
+- Explain what a program is and what happens when you run one.
+- Write, run and change a small Java program that prints output and reads input.
+- Store values in variables of the right type (`int`, `long`, `String`, `boolean`) and change them.
+- Do arithmetic, including whole-number division and remainders, without surprises.
+- Read a compiler error and a runtime error, find the line it points to, and fix it.
+
+## Why this matters in a bank or fintech
+
+Every banking system, from a USSD transfer menu to a card switch, is built from the same small pieces you meet this week: values, variables, decisions and repetition. Engineers who are comfortable with the basics read code faster, and they don't panic when a build fails at 2 a.m. The single most useful habit you can build now is reading the error message before doing anything else.
+
+## 1. What a program is
+
+A program is a list of instructions the computer follows **in order, one at a time, exactly as written**. It doesn't guess what you meant. That is frustrating at first and reassuring later: if the program does something wrong, the reason is in the code, and you can find it.
+
+Java programs go through two steps:
+
+1. **Compile.** The Java compiler reads your source code (`Main.java`) and checks that it follows the language rules. If it doesn't, you get a **compile error** and nothing runs.
+2. **Run.** The Java Virtual Machine (JVM) executes the compiled program. Problems that only appear while it runs (dividing by zero, reading a number that isn't one) are **runtime errors**.
+
+For this week, one command does both: `java Main.java`.
+
+## 2. Your first program
+
+Create a folder `onramp`, and inside it a file called `Main.java`:
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("Welcome to ITLearning Bank");
+        System.out.println("Your balance is being calculated...");
+    }
+}
+```
+
+Run it from a terminal in that folder:
+
+```bash
+java Main.java
+```
+
+```
+Welcome to ITLearning Bank
+Your balance is being calculated...
+```
+
+For now, treat the first two lines and the two closing braces as the frame every program needs. Your instructions go between the inner `{` and `}`. Each instruction (a **statement**) ends with a semicolon. `System.out.println(...)` prints what's in the brackets and moves to a new line; `System.out.print(...)` prints without the new line.
+
+**Try it:** add a third line that prints your name. Then remove one semicolon, run it again, and read the error (section 6 explains it).
+
+## 3. Values and variables
+
+A **variable** is a named box that holds a value. You declare its **type** (what kind of value it may hold) and its name, then give it a value:
+
+```java
+int customers = 120;              // whole numbers up to about 2.1 billion
+long balanceKobo = 1_500_000L;    // bigger whole numbers; ₦15,000.00 stored as kobo
+String accountName = "Ada Obi";   // text, in double quotes
+boolean isFrozen = false;         // true or false
+```
+
+| Type | Holds | Example |
+| --- | --- | --- |
+| `int` | whole numbers, about ±2.1 billion | `42`, `-7` |
+| `long` | larger whole numbers (end literals with `L`) | `9_000_000_000L` |
+| `String` | text | `"NGN"` |
+| `boolean` | `true` or `false` | `false` |
+| `double` | numbers with a fraction | `3.75`, but **never money** (topic 1.3 explains why) |
+
+Money in this on-ramp is a whole number of **kobo** in a `long`: ₦250.75 is `25075`. Integers are exact, which is what a bank needs.
+
+Variables can change. The `=` sign means "store the value on the right in the box on the left", not "is equal to":
+
+```java
+long balanceKobo = 500_000;       // ₦5,000.00
+balanceKobo = balanceKobo + 250_000;   // now 750_000
+balanceKobo += 100_000;                // shorthand: now 850_000
+balanceKobo -= 50_000;                 // now 800_000
+System.out.println("Balance in kobo: " + balanceKobo);
+```
+
+`+` between a `String` and anything else joins them into one string. Names follow a convention reviewers check: `camelCase` for variables, starting with a lower-case letter, and descriptive (`balanceKobo`, not `b`).
+
+## 4. Arithmetic, and the two surprises
+
+```java
+int a = 17, b = 5;
+System.out.println(a + b);   // 22
+System.out.println(a - b);   // 12
+System.out.println(a * b);   // 85
+System.out.println(a / b);   // 3   <- surprise 1
+System.out.println(a % b);   // 2   <- the remainder
+```
+
+**Surprise 1: dividing two whole numbers gives a whole number.** `17 / 5` is `3`; Java throws the fraction away (it doesn't round). That's useful when you mean it: ₦1,000 shared between 3 people is 333 naira each, and `1000 % 3` tells you 1 naira is left over.
+
+**Surprise 2: order of operations.** `*`, `/` and `%` happen before `+` and `-`, as in maths. `2 + 3 * 4` is `14`. Use brackets when in doubt: `(2 + 3) * 4` is `20`.
+
+To print kobo as naira and kobo, use division and remainder:
+
+```java
+long amountKobo = 125_075;
+long naira = amountKobo / 100;     // 1250
+long kobo = amountKobo % 100;      // 75
+System.out.println("₦" + naira + "." + kobo);   // ₦1250.75
+```
+
+**Try it:** what does this print for `amountKobo = 125_005`? (`₦1250.5`, which is wrong.) Fix it with `String.format("₦%d.%02d", naira, kobo)`, where `%02d` means "at least two digits, padded with zeros".
+
+## 5. Reading input
+
+A program that only prints is a poster. `Scanner` reads what the user types:
+
+```java
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner in = new Scanner(System.in);
+        System.out.print("Amount to send in kobo: ");
+        long amount = in.nextLong();
+        System.out.print("Recipient name: ");
+        in.nextLine();                          // finish the line the number was on
+        String name = in.nextLine();
+        long fee = amount < 500_000 ? 1_000 : 2_500;   // ₦10 under ₦5,000, else ₦25
+        System.out.println("Sending " + amount + " kobo to " + name + ", fee " + fee + " kobo");
+    }
+}
+```
+
+The `import` line at the top tells Java where `Scanner` comes from. `nextLong()` reads a whole number, `nextLine()` reads the rest of a line as text. After reading a number, the Enter key is still waiting in the input, so call `nextLine()` once to discard it before reading text. (The `? :` on the fee line is a compact if/else; lesson 0.2 covers decisions properly.)
+
+## 6. Reading error messages
+
+Errors are the computer telling you exactly where it got confused. Read them from the top.
+
+**A compile error** (the program never starts):
+
+```
+Main.java:4: error: ';' expected
+        long balanceKobo = 500_000
+                                  ^
+1 error
+```
+
+It names the **file and line** (`Main.java:4`), the **problem** (`';' expected`), and points with `^` to where it noticed. The real mistake is sometimes on the line before, because Java only notices something's missing when the next thing doesn't fit.
+
+Common compile errors at this stage:
+
+| Message | Usual cause |
+| --- | --- |
+| `';' expected` | a missing semicolon |
+| `cannot find symbol ... variable balence` | a misspelt name, or a variable used before it's declared |
+| `incompatible types: String cannot be converted to int` | putting text into a number variable |
+| `class, interface, enum, or record expected` | a `}` too many, or code outside `main` |
+| `unclosed string literal` | a missing closing `"` |
+
+**A runtime error** (the program started, then stopped):
+
+```
+Exception in thread "main" java.util.InputMismatchException
+	at java.base/java.util.Scanner.throwFor(Scanner.java:947)
+	at java.base/java.util.Scanner.next(Scanner.java:1602)
+	at java.base/java.util.Scanner.nextLong(Scanner.java:2382)
+	at java.base/java.util.Scanner.nextLong(Scanner.java:2337)
+	at Main.main(Main.java:7)
+```
+
+The first line says **what** went wrong (`InputMismatchException`: the user typed `abc` where a number was expected). The lines starting with `at` are the **stack trace**: the route the program took. Find the first line that mentions **your** file (`Main.java:7`): that's where to look. Another one you'll meet: `ArithmeticException: / by zero`.
+
+**The routine that always works:** read the first line of the message, go to the line number in your file, compare what you wrote with what the message expected, change one thing, run again.
+
+## Worked example: a transfer summary
+
+```java
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner in = new Scanner(System.in);
+        System.out.print("Opening balance (kobo): ");
+        long balance = in.nextLong();
+        System.out.print("Transfer amount (kobo): ");
+        long amount = in.nextLong();
+
+        long fee = 1_000;                      // ₦10 flat
+        long vatOnFee = fee * 75 / 1000;       // 7.5% VAT on the fee: 75 kobo
+        long totalDebit = amount + fee + vatOnFee;
+        long closing = balance - totalDebit;
+
+        System.out.println("Amount:      " + String.format("₦%d.%02d", amount / 100, amount % 100));
+        System.out.println("Fee + VAT:   " + String.format("₦%d.%02d", (fee + vatOnFee) / 100, (fee + vatOnFee) % 100));
+        System.out.println("New balance: " + String.format("₦%d.%02d", closing / 100, closing % 100));
+    }
+}
+```
+
+Run it with an opening balance of `2000000` and an amount of `500000`. Work out the answer on paper first (₦20,000.00 − ₦5,000.00 − ₦10.75 = ₦14,989.25), then check the program agrees. Checking against a hand calculation is a habit professional engineers keep for their whole career; topic 1.6 turns it into automated tests.
+
+Notice `fee * 75 / 1000`: multiplying first keeps the result exact. `fee * (75 / 1000)` would be `fee * 0`, because `75 / 1000` is whole-number division.
+
+## Common mistakes
+
+- Using `=` when you mean "compare" (that's `==`, in lesson 0.2).
+- Dividing whole numbers and expecting a fraction (`7 / 2` is `3`).
+- Storing money in a `double`. Use whole kobo in a `long` for now.
+- Forgetting the `nextLine()` after `nextLong()` before reading text.
+- Changing five things at once after an error, so you never learn which one fixed it.
+- Copy-pasting examples instead of typing them: your fingers need the practice.
+
+## Practice
+
+1. Print a three-line bank letterhead: name, address and a line of `=` signs.
+2. Read two amounts in kobo and print their sum, difference and which one is larger (you may use `Math.max`).
+3. Read a number of seconds and print it as hours, minutes and seconds, using `/` and `%` only (`3725` → `1h 2m 5s`).
+4. Deliberately cause four different compile errors from the table and one `ArithmeticException`. For each, write down the message and what fixed it.
+5. Change the worked example so the fee is ₦10 for amounts up to ₦5,000 and ₦25 above (copy the `? :` line from section 5).
+
+## Key terms
+
+Program, statement, compile, compiler, runtime, JVM, variable, type, `int`, `long`, `String`, `boolean`, assignment, integer division, remainder (modulo), `Scanner`, compile error, runtime error, exception, stack trace.
+
+## Further reading
+
+- [dev.java (Oracle): Getting Started with Java](https://dev.java/learn/getting-started/)
+- [dev.java: Creating Variables and Naming Them](https://dev.java/learn/language-basics/variables/)
+- [The Java Tutorials: Primitive Data Types](https://docs.oracle.com/javase/tutorial/java/nutsandbolts/datatypes.html)
+- [JEP 330: Launch Single-File Source-Code Programs](https://openjdk.org/jeps/330) (why `java Main.java` works without `javac`)

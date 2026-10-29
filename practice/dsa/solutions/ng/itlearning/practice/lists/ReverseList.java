@@ -1,7 +1,7 @@
 package ng.itlearning.practice.lists;
 
 /**
- * Week 14. Pattern: pointer manipulation.
+ * Week 15. Pattern: pointer manipulation.
  * <p>
  * Reverse a singly linked list in place and return the new head. O(n) time, O(1) extra space.
  */

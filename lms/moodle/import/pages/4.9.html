@@ -1,0 +1,402 @@
+<p><em>Week 14 · Optional · Module 4: Spring Boot 4 Fundamentals</em></p>
+<blockquote>
+<p><strong>Why this topic is here.</strong> Like topic 1.13, this is an
+addition to the ITLearning programme page. Spring Boot treats Kotlin as
+a first-class language, and many fintechs build new services in it.
+After this topic you can build the same kind of service from topics
+4.1–4.6 in Kotlin, and review a Kotlin Spring pull request with
+confidence.</p>
+</blockquote>
+<h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
+<ul>
+<li>Generate and build a Spring Boot 4 project in Kotlin with Maven, and
+explain the Kotlin-specific compiler plugins it needs.</li>
+<li>Write controllers, services, configuration properties and validation
+in idiomatic Kotlin.</li>
+<li>Map JPA entities from Kotlin safely, and know when to prefer Spring
+Data JDBC or plain SQL.</li>
+<li>Use Spring's Kotlin extensions and null-safety integration, and test
+Kotlin Spring code.</li>
+</ul>
+<h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
+bank or fintech</h2>
+<p>A Kotlin Spring Boot service is still a Spring Boot service: same
+starters, same Actuator, same PostgreSQL, same deployment. Teams choose
+Kotlin for concise, null-safe code; the cost is a few framework details
+you must know, mainly around proxies, JPA and Jackson. Knowing those
+details is the difference between "I've done a Kotlin tutorial" and "I
+can work on our Kotlin services".</p>
+<h2 id="1-creating-the-project">1. Creating the project</h2>
+<p>On <a href="https://start.spring.io">start.spring.io</a> choose
+<strong>Language: Kotlin</strong>, <strong>Project: Maven</strong>,
+Spring Boot 4.1.x, Java 21, and the same dependencies as topic 4.1
+(Spring Web, Validation, Spring Data JPA, Flyway, PostgreSQL,
+Actuator).</p>
+<p>The generated <code>pom.xml</code> adds Kotlin-specific pieces:</p>
+<pre class="xml"><code>&lt;properties&gt;
+  &lt;java.version&gt;21&lt;/java.version&gt;
+  &lt;kotlin.version&gt;2.4.21&lt;/kotlin.version&gt;          &lt;!-- Boot manages a compatible default; override only if needed --&gt;
+&lt;/properties&gt;
+
+&lt;dependencies&gt;
+  &lt;dependency&gt;&lt;groupId&gt;org.jetbrains.kotlin&lt;/groupId&gt;&lt;artifactId&gt;kotlin-reflect&lt;/artifactId&gt;&lt;/dependency&gt;
+  &lt;dependency&gt;&lt;groupId&gt;org.jetbrains.kotlin&lt;/groupId&gt;&lt;artifactId&gt;kotlin-stdlib&lt;/artifactId&gt;&lt;/dependency&gt;
+  &lt;dependency&gt;&lt;groupId&gt;tools.jackson.module&lt;/groupId&gt;&lt;artifactId&gt;jackson-module-kotlin&lt;/artifactId&gt;&lt;/dependency&gt;
+  &lt;!-- ...the usual starters... --&gt;
+&lt;/dependencies&gt;
+
+&lt;build&gt;
+  &lt;sourceDirectory&gt;${project.basedir}/src/main/kotlin&lt;/sourceDirectory&gt;
+  &lt;testSourceDirectory&gt;${project.basedir}/src/test/kotlin&lt;/testSourceDirectory&gt;
+  &lt;plugins&gt;
+    &lt;plugin&gt;
+      &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+      &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+    &lt;/plugin&gt;
+    &lt;plugin&gt;
+      &lt;groupId&gt;org.jetbrains.kotlin&lt;/groupId&gt;
+      &lt;artifactId&gt;kotlin-maven-plugin&lt;/artifactId&gt;
+      &lt;configuration&gt;
+        &lt;args&gt;&lt;arg&gt;-Xjsr305=strict&lt;/arg&gt;&lt;/args&gt;          &lt;!-- trust Java nullability annotations --&gt;
+        &lt;compilerPlugins&gt;
+          &lt;plugin&gt;spring&lt;/plugin&gt;                         &lt;!-- all-open for Spring-annotated classes --&gt;
+          &lt;plugin&gt;jpa&lt;/plugin&gt;                            &lt;!-- no-arg constructors for @Entity --&gt;
+        &lt;/compilerPlugins&gt;
+      &lt;/configuration&gt;
+      &lt;dependencies&gt;
+        &lt;dependency&gt;&lt;groupId&gt;org.jetbrains.kotlin&lt;/groupId&gt;&lt;artifactId&gt;kotlin-maven-allopen&lt;/artifactId&gt;&lt;version&gt;${kotlin.version}&lt;/version&gt;&lt;/dependency&gt;
+        &lt;dependency&gt;&lt;groupId&gt;org.jetbrains.kotlin&lt;/groupId&gt;&lt;artifactId&gt;kotlin-maven-noarg&lt;/artifactId&gt;&lt;version&gt;${kotlin.version}&lt;/version&gt;&lt;/dependency&gt;
+      &lt;/dependencies&gt;
+    &lt;/plugin&gt;
+  &lt;/plugins&gt;
+&lt;/build&gt;</code></pre>
+<p>What each piece is for:</p>
+<ul>
+<li><strong><code>kotlin-reflect</code></strong>: Spring uses Kotlin
+reflection to understand constructors, default values and
+nullability.</li>
+<li><strong><code>jackson-module-kotlin</code></strong> (Jackson 3
+coordinates <code>tools.jackson.module</code>): lets Jackson construct
+Kotlin classes with default and non-null parameters. Spring Boot
+registers it automatically.</li>
+<li><strong><code>spring</code> compiler plugin (all-open)</strong>:
+Kotlin classes are <code>final</code> by default, but Spring creates
+proxies (subclasses) for <code>@Configuration</code>,
+<code>@Transactional</code>, <code>@Async</code> and similar. The plugin
+opens classes annotated with Spring stereotypes automatically, so you
+don't scatter <code>open</code> everywhere.</li>
+<li><strong><code>jpa</code> compiler plugin (no-arg)</strong>:
+generates the no-argument constructor JPA needs for
+<code>@Entity</code>, <code>@Embeddable</code> and
+<code>@MappedSuperclass</code> classes.</li>
+<li><strong><code>-Xjsr305=strict</code></strong>: makes Kotlin treat
+Spring's nullability annotations as real nullability. Spring Framework 7
+annotates its APIs with <strong>JSpecify</strong>, which Kotlin 2.x
+understands, so Spring APIs appear with correct <code>?</code> types in
+Kotlin.</li>
+</ul>
+<p>Spring Boot 4 requires <strong>Kotlin 2.2 or later</strong>. Spring
+Boot also supports Gradle with the Kotlin DSL, which many Kotlin teams
+prefer; the concepts are identical.</p>
+<h2 id="2-the-application-controllers-and-services">2. The application,
+controllers and services</h2>
+<pre class="kotlin"><code>@SpringBootApplication
+@ConfigurationPropertiesScan
+class BankApplication
+
+fun main(args: Array&lt;String&gt;) {
+    runApplication&lt;BankApplication&gt;(*args)          // Kotlin extension from Spring Boot
+}</code></pre>
+<pre class="kotlin"><code>data class TransferRequest(
+    @field:NotBlank @field:Pattern(regexp = &quot;\\d{10}&quot;) val fromAccount: String,
+    @field:NotBlank @field:Pattern(regexp = &quot;\\d{10}&quot;) val toAccount: String,
+    @field:NotNull @field:DecimalMin(&quot;1.00&quot;) @field:Digits(integer = 13, fraction = 2) val amount: BigDecimal,
+    @field:NotBlank @field:Size(max = 100) val narration: String,
+    @field:NotBlank @field:Size(max = 64) val clientReference: String,
+)
+
+data class TransferResponse(val reference: String, val status: String, val postedAt: Instant)
+
+@RestController
+@RequestMapping(&quot;/api/v1/transfers&quot;)
+class TransferController(private val transfers: TransferService) {      // constructor injection, no @Autowired
+
+    @PostMapping
+    fun create(@Valid @RequestBody request: TransferRequest): ResponseEntity&lt;TransferResponse&gt; {
+        val receipt = transfers.transfer(request)
+        return ResponseEntity.created(URI.create(&quot;/api/v1/transfers/${receipt.reference}&quot;))
+            .body(TransferResponse(receipt.reference, &quot;COMPLETED&quot;, receipt.postedAt))
+    }
+
+    @GetMapping(&quot;/{reference}&quot;)
+    fun get(@PathVariable reference: String): TransferResponse =
+        transfers.find(reference) ?: throw TransferNotFoundException(reference)
+}</code></pre>
+<p>Two Kotlin specifics here:</p>
+<ul>
+<li><strong>Annotation use-site targets.</strong> A Kotlin constructor
+property is a parameter, a field and a getter at once. Bean Validation
+annotations must target the <strong>field</strong>
+(<code>@field:NotBlank</code>), or they may be placed on the constructor
+parameter and ignored. (Recent Kotlin versions apply annotations to both
+parameter and field by default, but explicit <code>@field:</code>
+remains the safe, readable choice and you will see it in most
+codebases.)</li>
+<li><strong>Null safety meets HTTP.</strong> A request missing a
+non-null field like <code>narration</code> fails during JSON
+deserialisation (HTTP 400) before validation even runs. Make fields
+nullable (<code>String?</code>) only when they're genuinely
+optional.</li>
+</ul>
+<p>Services look like Java, with less ceremony:</p>
+<pre class="kotlin"><code>@Service
+class TransferService(
+    private val accounts: AccountRepository,
+    private val ledger: LedgerRepository,
+    private val clock: Clock,
+) {
+    @Transactional
+    fun transfer(r: TransferRequest): TransferReceipt {
+        val (first, second) = listOf(r.fromAccount, r.toAccount).sorted()      // consistent lock order
+        val locked = listOf(first, second).associateWith {
+            accounts.findByNumberForUpdate(it) ?: throw AccountNotFoundException(it)
+        }
+        val from = locked.getValue(r.fromAccount)
+        val to = locked.getValue(r.toAccount)
+        from.debit(r.amount)
+        to.credit(r.amount)
+        ledger.saveAll(LedgerEntry.pair(r.clientReference, from, to, r.amount))
+        return TransferReceipt(r.clientReference, Instant.now(clock))
+    }
+
+    @Transactional(readOnly = true)
+    fun find(reference: String): TransferResponse? = ledger.findTransfer(reference)
+}</code></pre>
+<p>Spring Data repositories can return nullable types instead of
+<code>Optional</code>:</p>
+<pre class="kotlin"><code>interface AccountRepository : JpaRepository&lt;Account, Long&gt; {
+    fun findByNumber(number: String): Account?          // null when absent: idiomatic Kotlin
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query(&quot;select a from Account a where a.number = :number&quot;)
+    fun findByNumberForUpdate(number: String): Account?
+}</code></pre>
+<h2 id="3-configuration-properties">3. Configuration properties</h2>
+<p>Kotlin data classes bind naturally with constructor binding:</p>
+<pre class="kotlin"><code>@ConfigurationProperties(prefix = &quot;bank.transfer&quot;)
+@Validated
+data class TransferProperties(
+    @field:DecimalMin(&quot;0.01&quot;) val dailyLimit: BigDecimal,
+    @field:DecimalMin(&quot;0.01&quot;) val singleLimit: BigDecimal,
+    val feeCap: BigDecimal = BigDecimal(&quot;2000.00&quot;),          // Kotlin default values work as property defaults
+    val lockTimeout: Duration = Duration.ofSeconds(2),
+)</code></pre>
+<p>A missing non-null property without a default fails startup, which is
+the behaviour topic 4.5 asked for.</p>
+<h2 id="4-jpa-entities-in-kotlin-be-careful">4. JPA entities in Kotlin:
+be careful</h2>
+<p>JPA's model (mutable objects, no-arg constructors, proxies, identity
+semantics) fits Kotlin less well than plain data. Guidelines that keep
+you out of trouble:</p>
+<pre class="kotlin"><code>@Entity
+@Table(name = &quot;account&quot;)
+class Account(                                             // a regular class, NOT a data class
+    @Column(nullable = false, unique = true, length = 10)
+    val number: String,
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    val product: Product,
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = &quot;customer_id&quot;)
+    val customer: Customer,
+) {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long? = null                                   // null until persisted
+
+    @Column(nullable = false, precision = 19, scale = 2)
+    var balance: BigDecimal = BigDecimal.ZERO
+        protected set                                      // only the entity changes its balance
+
+    @Version
+    var version: Long = 0
+
+    fun debit(amount: BigDecimal) {
+        check(balance &gt;= amount) { &quot;Insufficient funds&quot; }
+        balance -= amount
+    }
+
+    fun credit(amount: BigDecimal) { balance += amount }
+
+    override fun equals(other: Any?) = other is Account &amp;&amp; number == other.number
+    override fun hashCode() = number.hashCode()
+    override fun toString() = &quot;Account(number=$number)&quot;   // never include lazy associations
+}</code></pre>
+<ul>
+<li><strong>Don't use <code>data class</code> for entities.</strong>
+Generated
+<code>equals</code>/<code>hashCode</code>/<code>toString</code> include
+every property, including lazy associations (triggering queries or
+<code>LazyInitializationException</code>) and the mutable
+<code>id</code>.</li>
+<li>Rely on the <strong><code>jpa</code></strong> plugin for the no-arg
+constructor and the <strong>all-open</strong> configuration for
+<code>@Entity</code> classes (start.spring.io configures
+<code>allOpen</code> annotations for
+<code>jakarta.persistence.Entity</code>, <code>Embeddable</code> and
+<code>MappedSuperclass</code> in Gradle; in Maven add them via
+<code>&lt;option&gt;all-open:annotation=jakarta.persistence.Entity&lt;/option&gt;</code>
+if lazy-loading proxies are needed).</li>
+<li>Keep the database ID nullable (<code>Long?</code>) because it is
+assigned on insert.</li>
+</ul>
+<p>Because of this friction, many Kotlin teams use <strong>Spring Data
+JDBC</strong> or Spring's <code>JdbcClient</code> (topic 3.5) with
+immutable data classes for simpler aggregates, and reserve JPA for
+complex domains. Both are valid; be consistent within a service.</p>
+<h2 id="5-kotlin-extensions-in-spring">5. Kotlin extensions in
+Spring</h2>
+<p>Spring ships Kotlin-friendly APIs:</p>
+<ul>
+<li><code>runApplication&lt;App&gt;(*args)</code> instead of
+<code>SpringApplication.run(...)</code>.</li>
+<li><strong>Bean definition DSL</strong>
+(<code>beans { bean&lt;FeeService&gt;() }</code>) as an alternative to
+<code>@Bean</code> methods.</li>
+<li><strong>Router DSL</strong> for functional endpoints:
+<code>router { GET("/health-check") { ok().body("UP") } }</code>.</li>
+<li>Reified generics:
+<code>restClient.get().uri("/rates").retrieve().body&lt;List&lt;Rate&gt;&gt;()</code>
+instead of <code>ParameterizedTypeReference</code>.</li>
+<li><code>JdbcClient</code> and <code>RestClient</code> extensions, and
+coroutine support (<code>suspend</code> controller functions) for
+WebFlux applications.</li>
+</ul>
+<h2 id="6-testing">6. Testing</h2>
+<pre class="kotlin"><code>@WebMvcTest(TransferController::class)
+class TransferControllerTest(@Autowired val mvc: MockMvc) {
+
+    @MockitoBean
+    lateinit var transfers: TransferService
+
+    @Test
+    fun `rejects a negative amount`() {                    // backtick names read like specifications
+        mvc.post(&quot;/api/v1/transfers&quot;) {                    // Spring&#39;s Kotlin MockMvc DSL
+            contentType = MediaType.APPLICATION_JSON
+            content = &quot;&quot;&quot;
+                {&quot;fromAccount&quot;:&quot;0123456789&quot;,&quot;toAccount&quot;:&quot;9876543210&quot;,&quot;amount&quot;:-5,
+                 &quot;narration&quot;:&quot;rent&quot;,&quot;clientReference&quot;:&quot;r-1&quot;}
+            &quot;&quot;&quot;.trimIndent()
+        }.andExpect {
+            status { isBadRequest() }
+        }
+    }
+}</code></pre>
+<p>Many Kotlin teams use <strong>MockK</strong> (a Kotlin-native mocking
+library, with <code>springmockk</code> for Spring integration) instead
+of Mockito, and <strong>Kotest</strong> or JUnit 5 for tests. JUnit 5
+with Mockito, as above, works perfectly well and keeps one toolset
+across Java and Kotlin services.</p>
+<h2 id="worked-example-the-same-service-two-languages">Worked example:
+the same service, two languages</h2>
+<p>Take the transfer service you built in Java in topics 4.1–4.6 and
+port it:</p>
+<table>
+<thead>
+<tr>
+<th>Java</th>
+<th>Kotlin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Record DTOs with Bean Validation</td>
+<td>Data classes with <code>@field:</code> annotations</td>
+</tr>
+<tr>
+<td><code>Optional&lt;Account&gt;</code> from repositories</td>
+<td><code>Account?</code></td>
+</tr>
+<tr>
+<td><code>@ConfigurationProperties</code> record</td>
+<td><code>@ConfigurationProperties</code> data class with defaults</td>
+</tr>
+<tr>
+<td>Entity class with getters</td>
+<td>Class with <code>val</code>/<code>var</code> properties and
+<code>protected set</code></td>
+</tr>
+<tr>
+<td><code>SpringApplication.run</code></td>
+<td><code>runApplication&lt;...&gt;()</code></td>
+</tr>
+<tr>
+<td>MockMvc builder</td>
+<td>MockMvc Kotlin DSL</td>
+</tr>
+</tbody>
+</table>
+<p>Same Flyway migrations, same PostgreSQL, same Actuator endpoints,
+same Docker image and deployment. Usually 30–40% fewer lines. The
+behaviour, and the tests that prove it, should be identical.</p>
+<h2 id="common-mistakes">Common mistakes</h2>
+<ul>
+<li>Forgetting the <code>spring</code> (all-open) plugin, so
+<code>@Transactional</code> or <code>@Configuration</code> proxies fail
+on final classes.</li>
+<li><code>data class</code> JPA entities.</li>
+<li>Validation annotations without <code>@field:</code>, silently not
+validated.</li>
+<li>Using <code>!!</code> on values from Spring APIs instead of handling
+null.</li>
+<li>Missing <code>jackson-module-kotlin</code>, so request bodies fail
+to deserialise.</li>
+<li>Mixing Java and Kotlin styles randomly in one codebase.</li>
+</ul>
+<h2 id="practice">Practice</h2>
+<ol type="1">
+<li>Generate a Kotlin Spring Boot 4.1 project with Maven and build the
+account and transfer endpoints from topic 4.3, including the Problem
+Details advice.</li>
+<li>Remove the <code>spring</code> compiler plugin and observe what
+fails, then restore it. Write two sentences explaining why.</li>
+<li>Map <code>Account</code> as a regular Kotlin class with the
+<code>jpa</code> plugin. Then try it as a <code>data class</code> with a
+lazy <code>customer</code> association, call <code>toString()</code>
+outside a transaction, and explain the error.</li>
+<li>Write <code>@WebMvcTest</code> tests with the Kotlin MockMvc DSL for
+a valid transfer, a validation failure and an insufficient-funds
+error.</li>
+</ol>
+<h2 id="key-terms">Key terms</h2>
+<p><code>kotlin-maven-plugin</code>, all-open (<code>spring</code>)
+plugin, no-arg (<code>jpa</code>) plugin, <code>kotlin-reflect</code>,
+<code>jackson-module-kotlin</code>, <code>-Xjsr305=strict</code>,
+JSpecify, <code>runApplication</code>, annotation use-site target
+(<code>@field:</code>), nullable repository return types, constructor
+binding, data class vs entity class, bean definition DSL, router DSL,
+MockMvc Kotlin DSL, MockK.</p>
+<h2 id="further-reading">Further reading</h2>
+<ul>
+<li><a
+href="https://docs.spring.io/spring-boot/reference/features/kotlin.html">Spring
+Boot reference: Kotlin support</a></li>
+<li><a
+href="https://docs.spring.io/spring-framework/reference/languages/kotlin.html">Spring
+Framework reference: Kotlin</a></li>
+<li><a
+href="https://spring.io/guides/tutorials/spring-boot-kotlin">Spring
+guide: Building web applications with Spring Boot and Kotlin</a></li>
+<li><a href="https://kotlinlang.org/docs/all-open-plugin.html">Kotlin
+docs: Compiler plugins: all-open and no-arg</a></li>
+<li><a href="https://kotlinlang.org/docs/null-safety.html">Kotlin docs:
+Null safety</a></li>
+</ul>
+
+<h2>Watch</h2>
+<h3>Project Creation &amp; First Hello World App - Spring Boot 4 Basics With Kotlin</h3><p>Philipp Lackner · 19 min. Creating a Spring Boot 4 project in Kotlin and running it.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/eRej0b_Bm7A" title="Project Creation &amp; First Hello World App - Spring Boot 4 Basics With Kotlin" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Spring Boot &amp; Kotlin Tutorial - Crash Course (optional, longer)</h3><p>Marco Codes · 32 min. A full Spring Boot + Kotlin REST API crash course.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/yA5_xp2nlgk" title="Spring Boot &amp; Kotlin Tutorial - Crash Course" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Idiomatic Kotlin applications with Spring Boot 4 | Sébastien Deleuze (optional, longer)</h3><p>Kotlin by JetBrains · 42 min. Idiomatic Kotlin with Spring Boot 4, from the Spring team&#x27;s Kotlin lead.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/TxmBk_VhuqY" title="Idiomatic Kotlin applications with Spring Boot 4 | Sébastien Deleuze" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/04-spring-boot-fundamentals/4.9-spring-boot-with-kotlin/README.md">4.9 Spring Boot with Kotlin</a></p>

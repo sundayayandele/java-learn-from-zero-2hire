@@ -5,7 +5,7 @@
 
 [Module 5](../README.md) · [Phase 2](../../README.md) · [5.2 OpenAPI/Swagger documentation and API versioning](../5.2-openapi-versioning/README.md) →
 
-> **Week 14** · Module 5: API Design & Integration · Website topic covered: *REST resource modelling, HTTP methods, safety and idempotency, status codes, caching headers*
+> **Week 15** · Module 5: API Design & Integration · Website topic covered: *REST resource modelling, HTTP methods, safety and idempotency, status codes, caching headers*
 
 ## What you will be able to do
 
@@ -124,7 +124,7 @@ class TransferController {
 
 - `ResponseEntity.created(location)` sets `201` and the `Location` header in one call.
 - A pending transfer returns `202 Accepted` with the same `Location`, so the client polls it or waits for a webhook.
-- Domain exceptions (`TransferNotFoundException`, `InsufficientFundsException`) are mapped to status codes once, in a `@RestControllerAdvice` (Phase 1, topic 4.2, and topic 5.3 here).
+- Domain exceptions (`TransferNotFoundException`, `InsufficientFundsException`) are mapped to status codes once, in a `@RestControllerAdvice` (Phase 1, topic 4.3, and topic 5.3 here).
 
 ## 5. Conditional requests stop lost updates
 
@@ -204,7 +204,7 @@ Resource, representation, REST, RPC, collection, sub-resource, safe method, idem
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [8 Pragmatic REST API Design Tips (From Real Projects)](https://www.youtube.com/watch?v=36--CQc19u4) · Milan Jovanović · 13 min. Pragmatic REST API design: resource naming, nouns over verbs, consistent responses.
 - [HTTP Status Codes Explained In 5 Minutes](https://www.youtube.com/watch?v=qmpUfWN7hh4) · ByteByteGo · 5 min. Which HTTP status code to return and why, in one clear diagram-led summary.

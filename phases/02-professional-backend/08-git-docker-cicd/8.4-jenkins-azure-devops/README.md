@@ -5,7 +5,7 @@
 
 ← [8.3 CI/CD with GitHub Actions (build, test, scan, publish image), plus GitLab CI](../8.3-ci-cd-github-actions-gitlab/README.md) · [Module 8](../README.md) · [Phase 2](../../README.md) · [8.5 Deploying a container to a cloud host](../8.5-deploying-containers-cloud/README.md) →
 
-> **Week 22** · Module 8: Git, Docker & CI/CD · Website topic covered: *Declarative Jenkins pipelines and Azure Pipelines YAML in enterprise settings*
+> **Week 23** · Module 8: Git, Docker & CI/CD · Website topic covered: *Declarative Jenkins pipelines and Azure Pipelines YAML in enterprise settings*
 
 ## What you will be able to do
 
@@ -215,7 +215,7 @@ Jenkins controller, agent, label, `Jenkinsfile`, declarative pipeline, `agent`, 
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [Jenkinsfile Beginner Tutorial 1 | What is Jenkinsfile | How to create jenkinsfile | Step by Step](https://www.youtube.com/watch?v=RsD2nzPY0is) · Automation Step by Step · 12 min. What a Jenkinsfile is and how to create one, step by step.
 - [Jenkinsfile - Jenkins Pipeline Tutorial for Beginners 3/4](https://www.youtube.com/watch?v=MY1w7sWW5ms) · TechWorld with Nana · 10 min. Jenkinsfile structure: stages, steps, post actions and environment.

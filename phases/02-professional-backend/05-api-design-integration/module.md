@@ -1,10 +1,10 @@
 ## What this module gives you
 
-Three weeks on the part of backend work that touches other teams and other companies: designing HTTP APIs that clients can rely on (week 14), documenting and versioning them with OpenAPI (week 14), consistent errors, pagination and idempotency so money is never moved twice (week 15), calling third-party APIs such as payment gateways and KYC providers safely with timeouts, retries, circuit breakers and signed webhooks (week 15), and knowing when GraphQL or gRPC is a better fit than REST (week 16).
+Three weeks on the part of backend work that touches other teams and other companies: designing HTTP APIs that clients can rely on (week 15), documenting and versioning them with OpenAPI (week 15), consistent errors, pagination and idempotency so money is never moved twice (week 16), calling third-party APIs such as payment gateways and KYC providers safely with timeouts, retries, circuit breakers and signed webhooks (week 16), and knowing when GraphQL or gRPC is a better fit than REST (week 17). Phase 1 topic 4.2 covered HTTP and REST basics; this module goes from "it works" to "other teams can depend on it".
 
 Every project uses the Phase 1 baseline (Java 21, Spring Boot 4.1, Maven wrapper, PostgreSQL via Flyway, Problem Details, Actuator, CI) and adds an **OpenAPI contract** checked into the repository and **WireMock** stubs for every external API, so tests never depend on a live third party.
 
-**Exit check for Module 5:** all five topic CBTs passed; project 5.A completed; one of 5.B–5.D optional (or start your capstones).
+**Exit check for Module 5:** all six topic CBTs attempted (aim for 70%+); project 5.A completed; one of 5.B–5.D optional (or start your capstones).
 
 ## Module projects
 

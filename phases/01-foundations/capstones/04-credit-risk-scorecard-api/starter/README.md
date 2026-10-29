@@ -22,9 +22,9 @@ Generated from the [Spring Boot service starter](../../../../../templates/spring
 
 - [ ] Replace `V1__baseline.sql` with your schema (topics 3.1, 3.4) and add constraints for every rule the database can enforce.
 - [ ] Model the domain in plain Java first, with unit tests (records, sealed types, `BigDecimal`).
-- [ ] Add your `@ConfigurationProperties` record for thresholds, limits and URLs (topic 4.4).
-- [ ] Build the API with DTO records, validation and a Problem Detail per domain exception (topic 4.2).
-- [ ] Add at least two business metrics (topic 4.5).
+- [ ] Add your `@ConfigurationProperties` record for thresholds, limits and URLs (topic 4.5).
+- [ ] Build the API with DTO records, validation and a Problem Detail per domain exception (topic 4.3).
+- [ ] Add at least two business metrics (topic 4.6).
 - [ ] Write the acceptance tests listed in the brief, then make them pass.
 - [ ] Deploy with the [deployment guide](../../../deploy/README.md) and put the health URL in your README.
 - [ ] Copy the data source attribution from the brief into your README.

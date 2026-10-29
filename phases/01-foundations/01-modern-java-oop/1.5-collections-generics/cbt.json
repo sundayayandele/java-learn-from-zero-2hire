@@ -1,0 +1,96 @@
+{
+  "topic": "1.5",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A nightly job checks each of 2 million transactions against a list of 300,000 blocked account numbers using `blockedList.contains(acc)`. It takes six hours.",
+      "question": "What single change helps most?",
+      "options": [
+        "Run the job on a bigger server",
+        "Sort the list first, then call contains",
+        "Switch the list to a LinkedList",
+        "Load the blocked numbers into a HashSet and call contains on it"
+      ],
+      "answer": 3,
+      "explanation": "ArrayList.contains is O(*n*), so the job does about 600 billion comparisons. HashSet.contains is O(1) on average, turning it into roughly 2 million lookups."
+    },
+    {
+      "type": "single",
+      "scenario": "A `HashMap<AccountKey, BigDecimal>` cache works at first, but after the code calls `key.setBranch(\"002\")` on a key already in the map, `cache.get(key)` returns null.",
+      "question": "Why?",
+      "options": [
+        "BigDecimal values cannot be cached",
+        "get() requires the same object reference",
+        "HashMap evicts entries automatically",
+        "Mutating the key changed its hashCode, so the lookup goes to a different bucket than the one the entry is stored in"
+      ],
+      "answer": 3,
+      "explanation": "The entry sits in the bucket for the old hash code. Map keys must be effectively immutable. Records or final fields make good keys."
+    },
+    {
+      "type": "single",
+      "scenario": "A loop removes reversed transactions: `for (Transaction t : list) if (t.isReversed()) list.remove(t);` and throws `ConcurrentModificationException`.",
+      "question": "What is the idiomatic fix?",
+      "options": [
+        "Use list.removeIf(Transaction::isReversed)",
+        "Wrap the loop in try/catch",
+        "Use a LinkedList",
+        "Make the list synchronized"
+      ],
+      "answer": 0,
+      "explanation": "Modifying a collection while iterating it with for-each invalidates the iterator. removeIf (or Iterator.remove) is the supported way to remove while iterating."
+    },
+    {
+      "type": "single",
+      "scenario": "Fees are tiered: ₦0–4,999.99 costs ₦10, ₦5,000–49,999.99 costs ₦25, ₦50,000 and above costs ₦50. You need the fee for any amount quickly and clearly.",
+      "question": "Which structure fits best?",
+      "options": [
+        "ArrayList scanned from the start",
+        "PriorityQueue of bands",
+        "TreeMap with floorEntry(amount)",
+        "HashMap<BigDecimal, BigDecimal> with get(amount)"
+      ],
+      "answer": 2,
+      "explanation": "floorEntry returns the greatest key less than or equal to the amount, which is exactly 'which band does this fall into', in O(log n). A HashMap only finds exact keys."
+    },
+    {
+      "type": "single",
+      "scenario": "A method `BigDecimal sum(List<Money> amounts)` will not accept a `List<NairaAmount>` even though `NairaAmount extends Money`.",
+      "question": "How should the signature change?",
+      "options": [
+        "sum(List<? super Money> amounts)",
+        "sum(List<? extends Money> amounts)",
+        "sum(List<Object> amounts)",
+        "sum(List amounts) as a raw type"
+      ],
+      "answer": 1,
+      "explanation": "The list is a producer of Money values (we only read from it), so per PECS it should be `? extends Money`. A raw type would compile but throw away type safety."
+    },
+    {
+      "type": "single",
+      "scenario": "`Account.transactions()` returns its internal `ArrayList`. A reporting module calls `.clear()` on the result to reuse the list, and the account's history disappears.",
+      "question": "What should `transactions()` return?",
+      "options": [
+        "null when empty",
+        "A LinkedList",
+        "List.copyOf(transactions), an unmodifiable copy",
+        "The same list, documented with a comment"
+      ],
+      "answer": 2,
+      "explanation": "Returning internal mutable state lets callers break the object's invariants. An unmodifiable copy protects the account; any attempt to modify it fails fast."
+    },
+    {
+      "type": "single",
+      "scenario": "You need to process payment instructions strictly in the order they arrive, from a single thread, adding at one end and removing from the other.",
+      "question": "Which implementation is the default choice?",
+      "options": [
+        "TreeSet",
+        "Stack",
+        "Vector",
+        "ArrayDeque"
+      ],
+      "answer": 3,
+      "explanation": "ArrayDeque is the recommended general-purpose queue and stack. Stack and Vector are legacy synchronized classes; TreeSet sorts rather than preserving arrival order."
+    }
+  ]
+}

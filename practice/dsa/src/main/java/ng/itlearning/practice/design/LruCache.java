@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Week 22. Pattern: hash map plus access order.
+ * Week 23. Pattern: hash map plus access order.
  * <p>
  * A name-enquiry cache holding at most {@code capacity} entries. {@code get} and {@code put} are O(1); when full,
  * {@code put} of a new key evicts the least recently used entry (a {@code get} or {@code put} counts as a use).

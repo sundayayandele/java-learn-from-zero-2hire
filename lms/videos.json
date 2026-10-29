@@ -1,7 +1,85 @@
 {
   "about": "Curated English YouTube videos for every topic. Source of truth for the Watch section of each topic README and for the Moodle topic pages. Rules: English audio and captions, embeddable, official or well-established channels first, 'optional' for anything over 30 minutes. Checked by lms/check_videos.py; minutes and published are filled from YouTube by `python lms/check_videos.py --fill`.",
-  "checked": "2026-10-24",
+  "checked": "2026-10-29",
   "topics": {
+    "0.1": [
+      {
+        "id": "wAEPokhj5Q4",
+        "title": "How to accept user input in Java ⌨️【8 minutes】",
+        "channel": "Bro Code",
+        "minutes": 8.0,
+        "published": "2020-10-13",
+        "why": "Reading input from the keyboard with Scanner, step by step."
+      },
+      {
+        "id": "QAD5unRlCyo",
+        "title": "Java arithmetic is easy! 🧮",
+        "channel": "Bro Code",
+        "minutes": 8.4,
+        "published": "2024-12-05",
+        "why": "Arithmetic operators, including whole-number division and the remainder."
+      },
+      {
+        "id": "PFSJlZgNJXM",
+        "title": "How to read Java stack traces efficiently - Tips & Tricks #006 | Vlogs",
+        "channel": "Marco Behler",
+        "minutes": 6.3,
+        "published": "2019-03-18",
+        "why": "How to read a Java stack trace: what went wrong and which line to open first."
+      }
+    ],
+    "0.2": [
+      {
+        "id": "vOmZ4JFhRds",
+        "title": "Java for loops are easy! 🔂",
+        "channel": "Bro Code",
+        "minutes": 10.0,
+        "published": "2024-12-05",
+        "why": "for loops from first principles, with the start, condition and update explained."
+      },
+      {
+        "id": "ZjHJrmYknrk",
+        "title": "Learn Java while loops in 12 minutes! ♾️",
+        "channel": "Bro Code",
+        "minutes": 12.4,
+        "published": "2024-12-05",
+        "why": "while loops, and how to avoid loops that never end."
+      },
+      {
+        "id": "9dr2mHYYoug",
+        "title": "Learn Java arrays in 9 minutes! 🍎",
+        "channel": "Bro Code",
+        "minutes": 9.2,
+        "published": "2024-12-05",
+        "why": "Arrays: creating them, indexes from 0, and looping over every element."
+      },
+      {
+        "id": "Ntl3DxhyrQQ",
+        "title": "Useful string methods in Java! 🧵",
+        "channel": "Bro Code",
+        "minutes": 8.6,
+        "published": "2024-12-05",
+        "why": "The String methods you'll use most: length, charAt, substring, equals and more."
+      }
+    ],
+    "0.3": [
+      {
+        "id": "mvFrq4xTRE4",
+        "title": "Planning Your Problem Solving (Think Like a Programmer)",
+        "channel": "V. Anton Spraul",
+        "minutes": 7.3,
+        "published": "2014-08-15",
+        "why": "The author of Think Like a Programmer on planning a solution before writing code."
+      },
+      {
+        "id": "rWMuEIcdJP4",
+        "title": "How to Think Like a Programmer",
+        "channel": "Codecademy",
+        "minutes": 6.3,
+        "published": "2019-05-15",
+        "why": "Breaking a problem into small steps you can solve and check one at a time."
+      }
+    ],
     "1.1": [
       {
         "id": "V_vXRRydnYI",
@@ -38,6 +116,33 @@
     ],
     "1.2": [
       {
+        "id": "hwP7WQkmECE",
+        "title": "Git Explained in 100 Seconds",
+        "channel": "Fireship",
+        "minutes": 1.9,
+        "published": "2020-03-02",
+        "why": "What Git is for, in under two minutes."
+      },
+      {
+        "id": "e9lnsKot_SQ",
+        "title": "How Git Works: Explained in 4 Minutes",
+        "channel": "ByteByteGo",
+        "minutes": 4.3,
+        "published": "2023-11-28",
+        "why": "How Git stores commits, branches and remotes, visually."
+      },
+      {
+        "id": "RGOj5yH7evk",
+        "title": "Git and GitHub for Beginners - Crash Course",
+        "channel": "freeCodeCamp.org",
+        "minutes": 68.5,
+        "published": "2020-05-28",
+        "optional": true,
+        "why": "A full beginner crash course: commits, branches, GitHub, pull requests and merge conflicts."
+      }
+    ],
+    "1.3": [
+      {
         "id": "so1iUWaLmKA",
         "title": "Variables in Java ✘【12 minutes】",
         "channel": "Bro Code",
@@ -70,7 +175,7 @@
         "why": "What every word in `public static void main(String[] args)` actually means."
       }
     ],
-    "1.3": [
+    "1.4": [
       {
         "id": "pTB0EiLXUC8",
         "title": "Object-Oriented Programming, Simplified",
@@ -105,7 +210,7 @@
         "why": "A longer, code-along refactor applying SOLID to a realistic class."
       }
     ],
-    "1.4": [
+    "1.5": [
       {
         "id": "viTHc_4XfCA",
         "title": "Java Collections Explained (with examples)",
@@ -131,7 +236,26 @@
         "why": "Generic classes, generic methods, bounded types and wildcards."
       }
     ],
-    "1.5": [
+    "1.6": [
+      {
+        "id": "vZm0lHciFsQ",
+        "title": "Java Unit Testing with JUnit - Tutorial - How to Create And Use Unit Tests",
+        "channel": "Coding with John",
+        "minutes": 21.6,
+        "published": "2022-01-18",
+        "why": "Writing and running your first JUnit tests in a Java project."
+      },
+      {
+        "id": "6uSnF6IuWIw",
+        "title": "JUnit 5 Tutorial - Crash Course",
+        "channel": "Marco Codes",
+        "minutes": 35.9,
+        "published": "2022-05-11",
+        "optional": true,
+        "why": "A longer JUnit 5 crash course: assertions, lifecycle and parameterised tests."
+      }
+    ],
+    "1.7": [
       {
         "id": "tj5sLSFjVj4",
         "title": "Lambda Expressions in Java - Full Simple Tutorial",
@@ -166,7 +290,7 @@
         "why": "Stream Gatherers (Java 24+): custom intermediate operations, tested in the Java 25 OCP exam."
       }
     ],
-    "1.6": [
+    "1.8": [
       {
         "id": "gJ9DYC-jswo",
         "title": "Records In Java - Full Tutorial - The Best New Java Feature You're Not Using",
@@ -200,7 +324,7 @@
         "why": "Text blocks from the Java team: indentation rules, escapes and formatting."
       }
     ],
-    "1.7": [
+    "1.9": [
       {
         "id": "1XAfapkBQjk",
         "title": "Exception Handling in Java Tutorial",
@@ -234,7 +358,68 @@
         "why": "Ten clean-code habits that make code easier to review and change."
       }
     ],
-    "1.8": [
+    "1.10": [
+      {
+        "id": "ScUJx4aWRi0",
+        "title": "Java File Input/Output - It's Way Easier Than You Think",
+        "channel": "Coding with John",
+        "minutes": 8.3,
+        "published": "2021-04-26",
+        "why": "Reading and writing files with readers and writers."
+      },
+      {
+        "id": "yrMufQdr374",
+        "title": "How To Read/Write Text Files In Java NIO | Full Guide",
+        "channel": "Born To Geek",
+        "minutes": 9.2,
+        "published": "2024-05-20",
+        "why": "Reading and writing text files with java.nio Files and Path."
+      },
+      {
+        "id": "2sxK-z84Oi4",
+        "title": "Java Serialization: Spooky Action at a Distance",
+        "channel": "Java",
+        "minutes": 17.6,
+        "published": "2026-02-21",
+        "why": "The Java team on serialization: how it works and why it's dangerous."
+      },
+      {
+        "id": "DfbFTVNfkeI",
+        "title": "Java serialization is easy! 🥣",
+        "channel": "Bro Code",
+        "minutes": 21.2,
+        "published": "2020-07-28",
+        "optional": true,
+        "why": "Serialization and deserialization step by step."
+      }
+    ],
+    "1.11": [
+      {
+        "id": "Nrwj3gZiuJU",
+        "title": "The Strategy Pattern Explained and Implemented in Java | Behavioral Design Patterns | Geekific",
+        "channel": "Geekific",
+        "minutes": 7.4,
+        "published": "2021-09-25",
+        "why": "The Strategy pattern implemented in Java, step by step."
+      },
+      {
+        "id": "TS5i-uPXLs8",
+        "title": "The Proxy Pattern Explained and Implemented in Java | Structural Design Patterns | Geekific",
+        "channel": "Geekific",
+        "minutes": 5.8,
+        "published": "2022-02-05",
+        "why": "The Proxy pattern in Java: the idea behind Spring's annotations."
+      },
+      {
+        "id": "BJatgOiiht4",
+        "title": "7 Design Patterns EVERY Developer Should Know",
+        "channel": "ForrestKnight",
+        "minutes": 22.0,
+        "published": "2024-12-06",
+        "why": "Seven design patterns every developer should recognise, with examples."
+      }
+    ],
+    "1.12": [
       {
         "id": "RuMogS3ycKs",
         "title": "Ranking Java Features Added from Versions 8 to 21!",
@@ -261,7 +446,7 @@
         "why": "The Java team on what changed after 21, so you know what Java 25 adds."
       }
     ],
-    "1.9": [
+    "1.13": [
       {
         "id": "xT8oP0wy-A0",
         "title": "Kotlin in 100 Seconds",
@@ -285,6 +470,33 @@
         "minutes": 28.7,
         "published": "2025-02-19",
         "why": "A Java developer writing Kotlin for the first time: the surprises and the wins."
+      }
+    ],
+    "1.14": [
+      {
+        "id": "h0educ2nosg",
+        "title": "Localization and Internationalization in Java Tutorial Part 1",
+        "channel": "Telusko",
+        "minutes": 3.6,
+        "published": "2015-03-08",
+        "why": "Localization and internationalization basics: Locale and resource bundles."
+      },
+      {
+        "id": "zaTXwXJW328",
+        "title": "Formatting Money & Percents in Java using the NumberFormat Class",
+        "channel": "Logic Lambda",
+        "minutes": 3.6,
+        "published": "2023-03-03",
+        "why": "Formatting money and percentages with NumberFormat."
+      },
+      {
+        "id": "L8loHaj-Bgo",
+        "title": "Java Currency Formatter Practice Program #97",
+        "channel": "Alex Lee",
+        "minutes": 19.7,
+        "published": "2019-12-26",
+        "optional": true,
+        "why": "A worked currency-formatting exercise across several locales."
       }
     ],
     "2.1": [
@@ -397,6 +609,58 @@
         "minutes": 11.3,
         "published": "2022-11-05",
         "why": "Generational collection and the main collectors: Serial, Parallel, G1, ZGC."
+      }
+    ],
+    "2.5": [
+      {
+        "id": "3KP5YiKLkeo",
+        "title": "Introduction to Java Modules | Java for Beginners",
+        "channel": "Microsoft Developer",
+        "minutes": 12.7,
+        "published": "2022-08-31",
+        "why": "An introduction to Java modules, from Microsoft Developer."
+      },
+      {
+        "id": "fijrwxgnEro",
+        "title": "Java Platform Module System (JPMS) Overview",
+        "channel": "MyExamCloud",
+        "minutes": 13.8,
+        "published": "2023-10-23",
+        "why": "The Java Platform Module System overview: requires, exports, opens, services."
+      },
+      {
+        "id": "mJKlxqQQeyI",
+        "title": "How-to Build Custom Java Runtimes with Jlink",
+        "channel": "Java",
+        "minutes": 10.1,
+        "published": "2024-06-16",
+        "why": "Building custom Java runtimes with jlink, from the Java team."
+      }
+    ],
+    "2.6": [
+      {
+        "id": "V5iQ1FyRtBo",
+        "title": "Debugging Java code in IntelliJ IDEA",
+        "channel": "IntelliJ IDEA, a JetBrains IDE",
+        "minutes": 7.4,
+        "published": "2025-03-20",
+        "why": "JetBrains' own guide to debugging Java in IntelliJ IDEA."
+      },
+      {
+        "id": "1qzHSEjU8Hc",
+        "title": "Thread Dump Analysis Fundamentals - Part 1",
+        "channel": "Pierre-Hugues Charbonneau",
+        "minutes": 13.1,
+        "published": "2015-08-02",
+        "why": "Thread dump analysis fundamentals: states, locks and what to look for."
+      },
+      {
+        "id": "qx64dxxFpSc",
+        "title": "Heap Dump Analysis Using Eclipse MAT",
+        "channel": "Informatica Support",
+        "minutes": 15.5,
+        "published": "2024-10-30",
+        "why": "Heap dump analysis with Eclipse MAT: leak suspects and the dominator tree."
       }
     ],
     "3.1": [
@@ -591,6 +855,33 @@
     ],
     "4.2": [
       {
+        "id": "lsMQRaeKNDk",
+        "title": "What is a REST API?",
+        "channel": "IBM Technology",
+        "minutes": 9.2,
+        "published": "2020-10-23",
+        "why": "What a REST API is: resources, methods and representations."
+      },
+      {
+        "id": "-mN3VyJuCjM",
+        "title": "What Is REST API? Examples And How To Use It: Crash Course System Design #3",
+        "channel": "ByteByteGo",
+        "minutes": 5.3,
+        "published": "2022-08-24",
+        "why": "REST APIs with examples: HTTP methods, status codes and statelessness."
+      },
+      {
+        "id": "iYM2zFP3Zn0",
+        "title": "HTTP Crash Course & Exploration",
+        "channel": "Traversy Media",
+        "minutes": 38.5,
+        "published": "2019-05-03",
+        "optional": true,
+        "why": "HTTP from the ground up: requests, responses, headers, methods and status codes, explored in a browser."
+      }
+    ],
+    "4.3": [
+      {
         "id": "LItERTUC9y4",
         "title": "Spring Boot Validation",
         "channel": "Fast and Simple Development",
@@ -615,7 +906,7 @@
         "why": "@ExceptionHandler and @RestControllerAdvice in depth."
       }
     ],
-    "4.3": [
+    "4.4": [
       {
         "id": "xHminZ9Dxm4",
         "title": "Hibernate & JPA Tutorial - Crash Course",
@@ -641,7 +932,7 @@
         "why": "Fixing N+1 selects with entity graphs."
       }
     ],
-    "4.4": [
+    "4.5": [
       {
         "id": "P91tqdWUHE4",
         "title": "Spring profiles explained -  Microservice configuration with Spring Boot [08]",
@@ -659,7 +950,7 @@
         "why": "Managing dev, staging and production settings cleanly."
       }
     ],
-    "4.5": [
+    "4.6": [
       {
         "id": "4OVe0MWgZ4k",
         "title": "The #1 Spring Boot Starter you should include in every single application",
@@ -677,7 +968,7 @@
         "why": "A five-minute first look at the Actuator endpoints."
       }
     ],
-    "4.6": [
+    "4.7": [
       {
         "id": "kTLuhE7_jGU",
         "title": "Spring Boot 4 Modularization Explained: What you need to know",
@@ -712,7 +1003,33 @@
         "why": "Jackson 3 in Spring Framework 7 and Boot 4: the biggest code-level change."
       }
     ],
-    "4.7": [
+    "4.8": [
+      {
+        "id": "gDpmbUoEpPQ",
+        "title": "[QUESTION] Why doesn't @Transactional work when called within the same class?",
+        "channel": "Laur Spilca",
+        "minutes": 15.6,
+        "published": "2020-02-06",
+        "why": "Why @Transactional doesn't work when called within the same class."
+      },
+      {
+        "id": "LCltftLZ_W0",
+        "title": "Spring Transaction Propagation Explained | Spring Boot Transactions Part 3",
+        "channel": "CodeSnippet by Chetan",
+        "minutes": 28.0,
+        "published": "2024-08-24",
+        "why": "Spring transaction propagation explained with runnable examples."
+      },
+      {
+        "id": "KxWh70Xr35c",
+        "title": "Customizing Bean Nature in Spring | Bean Lifecycle, @PostConstruct & @PreDestroy Explained",
+        "channel": "CodeSnippet by Chetan",
+        "minutes": 18.7,
+        "published": "2024-09-13",
+        "why": "The bean lifecycle: @PostConstruct, @PreDestroy and customising bean nature."
+      }
+    ],
+    "4.9": [
       {
         "id": "eRej0b_Bm7A",
         "title": "Project Creation & First Hello World App - Spring Boot 4 Basics With Kotlin",
@@ -738,257 +1055,6 @@
         "published": "2026-08-13",
         "optional": true,
         "why": "Idiomatic Kotlin with Spring Boot 4, from the Spring team's Kotlin lead."
-      }
-    ],
-    "getting-hired": [
-      {
-        "id": "na3gWTOBJEE",
-        "title": "The Java Developer Roadmap You Need in the AI Era",
-        "channel": "Amigoscode",
-        "minutes": 21.6,
-        "published": "2026-04-20",
-        "why": "What the Java job market asks for now, and where AI fits."
-      },
-      {
-        "id": "eGmZZFJ-8PY",
-        "title": "Ex-Google Recruiter Explains: 6 Résumé Secrets That Get You Hired",
-        "channel": "Farah Sharghi",
-        "minutes": 9.7,
-        "published": "2025-09-16",
-        "why": "Résumé advice from an ex-Google recruiter."
-      },
-      {
-        "id": "9A8sQZDRn5o",
-        "title": "I Made a Custom GitHub Profile README Portfolio (and you can, too)",
-        "channel": "ForrestKnight",
-        "minutes": 9.4,
-        "published": "2022-09-21",
-        "why": "Building a GitHub profile README that works as a portfolio page."
-      },
-      {
-        "id": "cNzFPWuju8k",
-        "title": "Top 10 Spring Boot Interview Questions and Answers [2025]",
-        "channel": "Amigoscode",
-        "minutes": 12.5,
-        "published": "2025-07-28",
-        "why": "Ten Spring Boot interview questions and how to answer them."
-      },
-      {
-        "id": "1t1_a1BZ04o",
-        "title": "How to NOT Fail a Technical Interview",
-        "channel": "Fireship",
-        "minutes": 8.4,
-        "published": "2022-08-01",
-        "why": "How to behave in a technical interview so your thinking is visible."
-      },
-      {
-        "id": "UQrTMxouDUY",
-        "title": "STAR Method - How to Ace Your Amazon Interview",
-        "channel": "Inside Amazon",
-        "minutes": 6.0,
-        "published": "2024-01-25",
-        "why": "The STAR method for behavioural answers, from Amazon."
-      },
-      {
-        "id": "auCdqGdn2as",
-        "title": "MUST KNOW junior role JAVA interview questions",
-        "channel": "Keep On Coding",
-        "minutes": 42.2,
-        "published": "2023-06-30",
-        "optional": true,
-        "why": "Core Java interview questions for junior roles, answered."
-      }
-    ],
-    "deploy": [
-      {
-        "id": "3fALfjlkfuU",
-        "title": "How To Dockerize Spring Boot Application & PostgreSQL Database",
-        "channel": "CodeVice",
-        "minutes": 15.0,
-        "published": "2023-02-13",
-        "why": "Dockerising a Spring Boot app with PostgreSQL."
-      },
-      {
-        "id": "YLtlz88zrLg",
-        "title": "CI/CD Tutorial using GitHub Actions - Automated Testing & Automated Deployments",
-        "channel": "Tom Shaw",
-        "minutes": 6.2,
-        "published": "2024-09-01",
-        "why": "CI/CD with GitHub Actions in six minutes."
-      },
-      {
-        "id": "z7nLsJvEyMY",
-        "title": "GitLab CI/CD Pipeline Tutorial for Beginners",
-        "channel": "Valentin Despa",
-        "minutes": 19.5,
-        "published": "2024-08-14",
-        "why": "GitLab CI/CD pipelines for beginners."
-      },
-      {
-        "id": "8X6uvKymTkM",
-        "title": "Full Guide to Auto-Deploy a Spring Boot Backend (VPS Server, GitHub Actions, HTTPS, Security)",
-        "channel": "Philipp Lackner",
-        "minutes": 94.8,
-        "published": "2025-04-09",
-        "optional": true,
-        "why": "Auto-deploying a Spring Boot backend to a VPS with GitHub Actions and HTTPS."
-      }
-    ],
-    "cicd": [
-      {
-        "id": "Nc_jITa2qYE",
-        "title": "Create Your First Azure Pipeline using YAML | Azure DevOps Tutorial | An IT Professional",
-        "channel": "An IT Professional",
-        "minutes": 12.2,
-        "published": "2023-08-14",
-        "why": "Your first Azure DevOps YAML pipeline, step by step."
-      },
-      {
-        "id": "e0bF1LlclEs",
-        "title": "(Simple?) Real World Azure Pipelines YAML Walkthrough",
-        "channel": "Julie Ng",
-        "minutes": 22.1,
-        "published": "2021-04-18",
-        "why": "A real-world Azure Pipelines YAML file walked through stage by stage."
-      },
-      {
-        "id": "E-YanBx38Cs",
-        "title": "Build a CI/CD Pipeline with AWS CodePipeline | Training and Demo",
-        "channel": "Digital Cloud Training",
-        "minutes": 14.7,
-        "published": "2025-03-04",
-        "why": "AWS CodePipeline with CodeBuild: how the pieces connect."
-      },
-      {
-        "id": "TiTrcFEsj7A",
-        "title": "How to Write a Pipeline Script in Jenkins",
-        "channel": "CloudBeesTV",
-        "minutes": 8.9,
-        "published": "2021-04-29",
-        "why": "Writing a Jenkins pipeline script, from CloudBees (the company behind Jenkins' enterprise edition)."
-      },
-      {
-        "id": "Yb3_4PZX0B0",
-        "title": "Let's do GitOps in Kubernetes! ArgoCD Tutorial",
-        "channel": "Christian Lempa",
-        "minutes": 18.0,
-        "published": "2022-08-30",
-        "why": "GitOps on Kubernetes with Argo CD, hands-on."
-      },
-      {
-        "id": "4BibQ69MD8c",
-        "title": "Azure DevOps Tutorial for Beginners | CI/CD with Azure Pipelines",
-        "channel": "TechWorld with Nana",
-        "minutes": 36.5,
-        "published": "2022-07-19",
-        "optional": true,
-        "why": "Azure DevOps and Azure Pipelines end to end."
-      },
-      {
-        "id": "7KCS70sCoK0",
-        "title": "Complete Jenkins Pipeline Tutorial | Jenkinsfile explained",
-        "channel": "TechWorld with Nana",
-        "minutes": 35.1,
-        "published": "2020-03-07",
-        "optional": true,
-        "why": "The complete Jenkinsfile explained."
-      },
-      {
-        "id": "MeU5_k9ssrs",
-        "title": "ArgoCD Tutorial for Beginners | GitOps CD for Kubernetes",
-        "channel": "TechWorld with Nana",
-        "minutes": 47.9,
-        "published": "2021-10-21",
-        "optional": true,
-        "why": "Argo CD in depth: applications, sync and GitOps workflows."
-      }
-    ],
-    "1.10": [
-      {
-        "id": "ScUJx4aWRi0",
-        "title": "Java File Input/Output - It's Way Easier Than You Think",
-        "channel": "Coding with John",
-        "minutes": 8.3,
-        "published": "2021-04-26",
-        "why": "Reading and writing files with readers and writers."
-      },
-      {
-        "id": "yrMufQdr374",
-        "title": "How To Read/Write Text Files In Java NIO | Full Guide",
-        "channel": "Born To Geek",
-        "minutes": 9.2,
-        "published": "2024-05-20",
-        "why": "Reading and writing text files with java.nio Files and Path."
-      },
-      {
-        "id": "2sxK-z84Oi4",
-        "title": "Java Serialization: Spooky Action at a Distance",
-        "channel": "Java",
-        "minutes": 17.6,
-        "published": "2026-02-21",
-        "why": "The Java team on serialization: how it works and why it's dangerous."
-      },
-      {
-        "id": "DfbFTVNfkeI",
-        "title": "Java serialization is easy! 🥣",
-        "channel": "Bro Code",
-        "minutes": 21.2,
-        "published": "2020-07-28",
-        "optional": true,
-        "why": "Serialization and deserialization step by step."
-      }
-    ],
-    "1.11": [
-      {
-        "id": "h0educ2nosg",
-        "title": "Localization and Internationalization in Java Tutorial Part 1",
-        "channel": "Telusko",
-        "minutes": 3.6,
-        "published": "2015-03-08",
-        "why": "Localization and internationalization basics: Locale and resource bundles."
-      },
-      {
-        "id": "zaTXwXJW328",
-        "title": "Formatting Money & Percents in Java using the NumberFormat Class",
-        "channel": "Logic Lambda",
-        "minutes": 3.6,
-        "published": "2023-03-03",
-        "why": "Formatting money and percentages with NumberFormat."
-      },
-      {
-        "id": "L8loHaj-Bgo",
-        "title": "Java Currency Formatter Practice Program #97",
-        "channel": "Alex Lee",
-        "minutes": 19.7,
-        "published": "2019-12-26",
-        "optional": true,
-        "why": "A worked currency-formatting exercise across several locales."
-      }
-    ],
-    "2.5": [
-      {
-        "id": "3KP5YiKLkeo",
-        "title": "Introduction to Java Modules | Java for Beginners",
-        "channel": "Microsoft Developer",
-        "minutes": 12.7,
-        "published": "2022-08-31",
-        "why": "An introduction to Java modules, from Microsoft Developer."
-      },
-      {
-        "id": "fijrwxgnEro",
-        "title": "Java Platform Module System (JPMS) Overview",
-        "channel": "MyExamCloud",
-        "minutes": 13.8,
-        "published": "2023-10-23",
-        "why": "The Java Platform Module System overview: requires, exports, opens, services."
-      },
-      {
-        "id": "mJKlxqQQeyI",
-        "title": "How-to Build Custom Java Runtimes with Jlink",
-        "channel": "Java",
-        "minutes": 10.1,
-        "published": "2024-06-16",
-        "why": "Building custom Java runtimes with jlink, from the Java team."
       }
     ],
     "5.1": [
@@ -1127,6 +1193,32 @@
         "minutes": 6.2,
         "published": "2022-12-01",
         "why": "What gRPC is, how Protocol Buffers and HTTP/2 make it fast, and when to use it."
+      }
+    ],
+    "5.6": [
+      {
+        "id": "i7twT3x5yv8",
+        "title": "System Design Interview: A Step-By-Step Guide",
+        "channel": "ByteByteGo",
+        "minutes": 9.9,
+        "published": "2023-02-09",
+        "why": "A step-by-step framework for system design interviews, from ByteByteGo."
+      },
+      {
+        "id": "dGAgxozNWFE",
+        "title": "Cache Systems Every Developer Should Know",
+        "channel": "ByteByteGo",
+        "minutes": 5.8,
+        "published": "2023-04-04",
+        "why": "Cache systems every developer should know: where caches sit and why."
+      },
+      {
+        "id": "i53Gi_K3o7I",
+        "title": "20 System Design Concepts Explained in 10 Minutes",
+        "channel": "NeetCode",
+        "minutes": 11.7,
+        "published": "2023-03-11",
+        "why": "Twenty system design concepts in ten minutes: a fast vocabulary refresher."
       }
     ],
     "6.1": [
@@ -1549,6 +1641,32 @@
         "why": "Zero-downtime database migrations with expand and contract."
       }
     ],
+    "8.6": [
+      {
+        "id": "RtQ3tpq-RuE",
+        "title": "Scrum Essentials in Under 10 Minutes",
+        "channel": "Scrum Alliance",
+        "minutes": 10.3,
+        "published": "2023-01-31",
+        "why": "Scrum essentials in under ten minutes, from the Scrum Alliance."
+      },
+      {
+        "id": "7hoGqhb6qAs",
+        "title": "How to write good User Stories in Agile",
+        "channel": "The Agile Shop",
+        "minutes": 3.8,
+        "published": "2022-01-17",
+        "why": "How to write good user stories."
+      },
+      {
+        "id": "ogV2r9579WI",
+        "title": "What are Agile Epics, User Stories, and Story Points?",
+        "channel": "Online PM Courses - Mike Clayton",
+        "minutes": 6.8,
+        "published": "2021-07-21",
+        "why": "Epics, user stories and story points explained."
+      }
+    ],
     "9.1": [
       {
         "id": "2q0BoioYSxQ",
@@ -1689,6 +1807,169 @@
         "why": "Behavioural interviews made simple: structure and practice (optional)."
       }
     ],
+    "getting-hired": [
+      {
+        "id": "na3gWTOBJEE",
+        "title": "The Java Developer Roadmap You Need in the AI Era",
+        "channel": "Amigoscode",
+        "minutes": 21.6,
+        "published": "2026-04-20",
+        "why": "What the Java job market asks for now, and where AI fits."
+      },
+      {
+        "id": "eGmZZFJ-8PY",
+        "title": "Ex-Google Recruiter Explains: 6 Résumé Secrets That Get You Hired",
+        "channel": "Farah Sharghi",
+        "minutes": 9.7,
+        "published": "2025-09-16",
+        "why": "Résumé advice from an ex-Google recruiter."
+      },
+      {
+        "id": "9A8sQZDRn5o",
+        "title": "I Made a Custom GitHub Profile README Portfolio (and you can, too)",
+        "channel": "ForrestKnight",
+        "minutes": 9.4,
+        "published": "2022-09-21",
+        "why": "Building a GitHub profile README that works as a portfolio page."
+      },
+      {
+        "id": "cNzFPWuju8k",
+        "title": "Top 10 Spring Boot Interview Questions and Answers [2025]",
+        "channel": "Amigoscode",
+        "minutes": 12.5,
+        "published": "2025-07-28",
+        "why": "Ten Spring Boot interview questions and how to answer them."
+      },
+      {
+        "id": "1t1_a1BZ04o",
+        "title": "How to NOT Fail a Technical Interview",
+        "channel": "Fireship",
+        "minutes": 8.4,
+        "published": "2022-08-01",
+        "why": "How to behave in a technical interview so your thinking is visible."
+      },
+      {
+        "id": "UQrTMxouDUY",
+        "title": "STAR Method - How to Ace Your Amazon Interview",
+        "channel": "Inside Amazon",
+        "minutes": 6.0,
+        "published": "2024-01-25",
+        "why": "The STAR method for behavioural answers, from Amazon."
+      },
+      {
+        "id": "auCdqGdn2as",
+        "title": "MUST KNOW junior role JAVA interview questions",
+        "channel": "Keep On Coding",
+        "minutes": 42.2,
+        "published": "2023-06-30",
+        "optional": true,
+        "why": "Core Java interview questions for junior roles, answered."
+      }
+    ],
+    "deploy": [
+      {
+        "id": "3fALfjlkfuU",
+        "title": "How To Dockerize Spring Boot Application & PostgreSQL Database",
+        "channel": "CodeVice",
+        "minutes": 15.0,
+        "published": "2023-02-13",
+        "why": "Dockerising a Spring Boot app with PostgreSQL."
+      },
+      {
+        "id": "YLtlz88zrLg",
+        "title": "CI/CD Tutorial using GitHub Actions - Automated Testing & Automated Deployments",
+        "channel": "Tom Shaw",
+        "minutes": 6.2,
+        "published": "2024-09-01",
+        "why": "CI/CD with GitHub Actions in six minutes."
+      },
+      {
+        "id": "z7nLsJvEyMY",
+        "title": "GitLab CI/CD Pipeline Tutorial for Beginners",
+        "channel": "Valentin Despa",
+        "minutes": 19.5,
+        "published": "2024-08-14",
+        "why": "GitLab CI/CD pipelines for beginners."
+      },
+      {
+        "id": "8X6uvKymTkM",
+        "title": "Full Guide to Auto-Deploy a Spring Boot Backend (VPS Server, GitHub Actions, HTTPS, Security)",
+        "channel": "Philipp Lackner",
+        "minutes": 94.8,
+        "published": "2025-04-09",
+        "optional": true,
+        "why": "Auto-deploying a Spring Boot backend to a VPS with GitHub Actions and HTTPS."
+      }
+    ],
+    "cicd": [
+      {
+        "id": "Nc_jITa2qYE",
+        "title": "Create Your First Azure Pipeline using YAML | Azure DevOps Tutorial | An IT Professional",
+        "channel": "An IT Professional",
+        "minutes": 12.2,
+        "published": "2023-08-14",
+        "why": "Your first Azure DevOps YAML pipeline, step by step."
+      },
+      {
+        "id": "e0bF1LlclEs",
+        "title": "(Simple?) Real World Azure Pipelines YAML Walkthrough",
+        "channel": "Julie Ng",
+        "minutes": 22.1,
+        "published": "2021-04-18",
+        "why": "A real-world Azure Pipelines YAML file walked through stage by stage."
+      },
+      {
+        "id": "E-YanBx38Cs",
+        "title": "Build a CI/CD Pipeline with AWS CodePipeline | Training and Demo",
+        "channel": "Digital Cloud Training",
+        "minutes": 14.7,
+        "published": "2025-03-04",
+        "why": "AWS CodePipeline with CodeBuild: how the pieces connect."
+      },
+      {
+        "id": "TiTrcFEsj7A",
+        "title": "How to Write a Pipeline Script in Jenkins",
+        "channel": "CloudBeesTV",
+        "minutes": 8.9,
+        "published": "2021-04-29",
+        "why": "Writing a Jenkins pipeline script, from CloudBees (the company behind Jenkins' enterprise edition)."
+      },
+      {
+        "id": "Yb3_4PZX0B0",
+        "title": "Let's do GitOps in Kubernetes! ArgoCD Tutorial",
+        "channel": "Christian Lempa",
+        "minutes": 18.0,
+        "published": "2022-08-30",
+        "why": "GitOps on Kubernetes with Argo CD, hands-on."
+      },
+      {
+        "id": "4BibQ69MD8c",
+        "title": "Azure DevOps Tutorial for Beginners | CI/CD with Azure Pipelines",
+        "channel": "TechWorld with Nana",
+        "minutes": 36.5,
+        "published": "2022-07-19",
+        "optional": true,
+        "why": "Azure DevOps and Azure Pipelines end to end."
+      },
+      {
+        "id": "7KCS70sCoK0",
+        "title": "Complete Jenkins Pipeline Tutorial | Jenkinsfile explained",
+        "channel": "TechWorld with Nana",
+        "minutes": 35.1,
+        "published": "2020-03-07",
+        "optional": true,
+        "why": "The complete Jenkinsfile explained."
+      },
+      {
+        "id": "MeU5_k9ssrs",
+        "title": "ArgoCD Tutorial for Beginners | GitOps CD for Kubernetes",
+        "channel": "TechWorld with Nana",
+        "minutes": 47.9,
+        "published": "2021-10-21",
+        "optional": true,
+        "why": "Argo CD in depth: applications, sync and GitOps workflows."
+      }
+    ],
     "p2-getting-hired": [
       {
         "id": "tQnkO-QpBQo",
@@ -1757,136 +2038,6 @@
         "minutes": 6.0,
         "published": "2022-10-20",
         "why": "Scanning container images with Trivy, from Aqua Security."
-      }
-    ],
-    "1.12": [
-      {
-        "id": "Nrwj3gZiuJU",
-        "title": "The Strategy Pattern Explained and Implemented in Java | Behavioral Design Patterns | Geekific",
-        "channel": "Geekific",
-        "minutes": 7.4,
-        "published": "2021-09-25",
-        "why": "The Strategy pattern implemented in Java, step by step."
-      },
-      {
-        "id": "TS5i-uPXLs8",
-        "title": "The Proxy Pattern Explained and Implemented in Java | Structural Design Patterns | Geekific",
-        "channel": "Geekific",
-        "minutes": 5.8,
-        "published": "2022-02-05",
-        "why": "The Proxy pattern in Java: the idea behind Spring's annotations."
-      },
-      {
-        "id": "BJatgOiiht4",
-        "title": "7 Design Patterns EVERY Developer Should Know",
-        "channel": "ForrestKnight",
-        "minutes": 22.0,
-        "published": "2024-12-06",
-        "why": "Seven design patterns every developer should recognise, with examples."
-      }
-    ],
-    "2.6": [
-      {
-        "id": "V5iQ1FyRtBo",
-        "title": "Debugging Java code in IntelliJ IDEA",
-        "channel": "IntelliJ IDEA, a JetBrains IDE",
-        "minutes": 7.4,
-        "published": "2025-03-20",
-        "why": "JetBrains' own guide to debugging Java in IntelliJ IDEA."
-      },
-      {
-        "id": "1qzHSEjU8Hc",
-        "title": "Thread Dump Analysis Fundamentals - Part 1",
-        "channel": "Pierre-Hugues Charbonneau",
-        "minutes": 13.1,
-        "published": "2015-08-02",
-        "why": "Thread dump analysis fundamentals: states, locks and what to look for."
-      },
-      {
-        "id": "qx64dxxFpSc",
-        "title": "Heap Dump Analysis Using Eclipse MAT",
-        "channel": "Informatica Support",
-        "minutes": 15.5,
-        "published": "2024-10-30",
-        "why": "Heap dump analysis with Eclipse MAT: leak suspects and the dominator tree."
-      }
-    ],
-    "4.8": [
-      {
-        "id": "gDpmbUoEpPQ",
-        "title": "[QUESTION] Why doesn't @Transactional work when called within the same class?",
-        "channel": "Laur Spilca",
-        "minutes": 15.6,
-        "published": "2020-02-06",
-        "why": "Why @Transactional doesn't work when called within the same class."
-      },
-      {
-        "id": "LCltftLZ_W0",
-        "title": "Spring Transaction Propagation Explained | Spring Boot Transactions Part 3",
-        "channel": "CodeSnippet by Chetan",
-        "minutes": 28.0,
-        "published": "2024-08-24",
-        "why": "Spring transaction propagation explained with runnable examples."
-      },
-      {
-        "id": "KxWh70Xr35c",
-        "title": "Customizing Bean Nature in Spring | Bean Lifecycle, @PostConstruct & @PreDestroy Explained",
-        "channel": "CodeSnippet by Chetan",
-        "minutes": 18.7,
-        "published": "2024-09-13",
-        "why": "The bean lifecycle: @PostConstruct, @PreDestroy and customising bean nature."
-      }
-    ],
-    "5.6": [
-      {
-        "id": "i7twT3x5yv8",
-        "title": "System Design Interview: A Step-By-Step Guide",
-        "channel": "ByteByteGo",
-        "minutes": 9.9,
-        "published": "2023-02-09",
-        "why": "A step-by-step framework for system design interviews, from ByteByteGo."
-      },
-      {
-        "id": "dGAgxozNWFE",
-        "title": "Cache Systems Every Developer Should Know",
-        "channel": "ByteByteGo",
-        "minutes": 5.8,
-        "published": "2023-04-04",
-        "why": "Cache systems every developer should know: where caches sit and why."
-      },
-      {
-        "id": "i53Gi_K3o7I",
-        "title": "20 System Design Concepts Explained in 10 Minutes",
-        "channel": "NeetCode",
-        "minutes": 11.7,
-        "published": "2023-03-11",
-        "why": "Twenty system design concepts in ten minutes: a fast vocabulary refresher."
-      }
-    ],
-    "8.6": [
-      {
-        "id": "RtQ3tpq-RuE",
-        "title": "Scrum Essentials in Under 10 Minutes",
-        "channel": "Scrum Alliance",
-        "minutes": 10.3,
-        "published": "2023-01-31",
-        "why": "Scrum essentials in under ten minutes, from the Scrum Alliance."
-      },
-      {
-        "id": "7hoGqhb6qAs",
-        "title": "How to write good User Stories in Agile",
-        "channel": "The Agile Shop",
-        "minutes": 3.8,
-        "published": "2022-01-17",
-        "why": "How to write good user stories."
-      },
-      {
-        "id": "ogV2r9579WI",
-        "title": "What are Agile Epics, User Stories, and Story Points?",
-        "channel": "Online PM Courses - Mike Clayton",
-        "minutes": 6.8,
-        "published": "2021-07-21",
-        "why": "Epics, user stories and story points explained."
       }
     ]
   }

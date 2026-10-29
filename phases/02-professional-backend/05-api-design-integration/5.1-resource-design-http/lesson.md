@@ -115,7 +115,7 @@ class TransferController {
 
 - `ResponseEntity.created(location)` sets `201` and the `Location` header in one call.
 - A pending transfer returns `202 Accepted` with the same `Location`, so the client polls it or waits for a webhook.
-- Domain exceptions (`TransferNotFoundException`, `InsufficientFundsException`) are mapped to status codes once, in a `@RestControllerAdvice` (Phase 1, topic 4.2, and topic 5.3 here).
+- Domain exceptions (`TransferNotFoundException`, `InsufficientFundsException`) are mapped to status codes once, in a `@RestControllerAdvice` (Phase 1, topic 4.3, and topic 5.3 here).
 
 ## 5. Conditional requests stop lost updates
 

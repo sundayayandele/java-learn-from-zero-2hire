@@ -58,7 +58,7 @@ Sources: [Mermaid](architecture/cloud.mmd) · [draw.io](architecture/cloud.drawi
 
 <!-- ARCHITECTURE:END -->
 
-Weeks 7–12. Modules used: 1, 3, 4.
+Weeks 8–13. Modules used: 1, 3, 4.
 
 ## Business context
 

@@ -5,7 +5,7 @@
 
 ← [3.2 Transactions, isolation levels and locking](../3.2-transactions-isolation-locking/README.md) · [Module 3](../README.md) · [Phase 1](../../README.md) · [3.4 Schema migrations with Flyway and Liquibase](../3.4-schema-migrations-flyway-liquibase/README.md) →
 
-> **Week 8** · Module 3: Databases: SQL & NoSQL · Website topic covered: *Indexing and reading query plans in PostgreSQL and MySQL*
+> **Week 9** · Module 3: Databases: SQL & NoSQL · Website topic covered: *Indexing and reading query plans in PostgreSQL and MySQL*
 
 ## What you will be able to do
 
@@ -236,7 +236,7 @@ Sequential scan, B-tree, index scan, index-only scan, bitmap scan, selectivity, 
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [what is a database index?](https://www.youtube.com/watch?v=Jemuod4wKWo) · Hussein Nasser · 5 min. What a database index physically is, from Hussein Nasser.
 - [Postgres Explain Explained - How Databases Prepare Optimal Query Plans to Execute SQL](https://www.youtube.com/watch?v=P7EUFtjeAmI) · Hussein Nasser · 10 min. How PostgreSQL chooses a plan, and how to read EXPLAIN output.

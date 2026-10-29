@@ -1,4 +1,4 @@
-<p><em>Week 7 · Module 3: Databases: SQL &amp; NoSQL</em></p>
+<p><em>Week 8 · Module 3: Databases: SQL &amp; NoSQL</em></p>
 <h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
 <ul>
 <li>Explain ACID and use
@@ -219,7 +219,7 @@ WHERE id = :id AND version = 7;                                 -- 0 rows → so
 <p>No locks are held between read and write; conflicts are detected at
 write time. It suits low-contention data and long user think-time
 (editing a customer profile). JPA's <code>@Version</code> does exactly
-this (topic 4.3). Under high contention (a hot merchant settlement
+this (topic 4.4). Under high contention (a hot merchant settlement
 account), many retries make pessimistic locking or Option A better.</p>
 <h3 id="option-d-let-the-database-prove-it-with-serializable">Option D:
 let the database prove it with Serializable</h3>

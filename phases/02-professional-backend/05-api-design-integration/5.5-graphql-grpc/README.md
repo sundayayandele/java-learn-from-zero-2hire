@@ -5,7 +5,7 @@
 
 ← [5.4 Consuming third-party APIs](../5.4-consuming-apis-resilience/README.md) · [Module 5](../README.md) · [Phase 2](../../README.md) · [5.6 System design basics for junior interviews](../5.6-system-design-basics/README.md) →
 
-> **Week 16** · Module 5: API Design & Integration · Website topic covered: *Spring for GraphQL, gRPC with Protocol Buffers, choosing REST vs GraphQL vs gRPC*
+> **Week 17** · Module 5: API Design & Integration · Website topic covered: *Spring for GraphQL, gRPC with Protocol Buffers, choosing REST vs GraphQL vs gRPC*
 
 ## What you will be able to do
 
@@ -105,7 +105,7 @@ class CustomerGraphController {
 }
 ```
 
-`@BatchMapping` matters: resolving `recentTransactions` with a plain `@SchemaMapping` would run one query per account, the **N+1 problem** from Phase 1 topic 4.3, now triggered by clients. Batch loading (built on DataLoader) fetches them together.
+`@BatchMapping` matters: resolving `recentTransactions` with a plain `@SchemaMapping` would run one query per account, the **N+1 problem** from Phase 1 topic 4.4, now triggered by clients. Batch loading (built on DataLoader) fetches them together.
 
 ### GraphQL costs and controls
 
@@ -238,7 +238,7 @@ Over-fetching, under-fetching, GraphQL schema, query, mutation, resolver, `@Quer
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [GraphQL Explained in 100 Seconds](https://www.youtube.com/watch?v=eIQh02xuVw4) · Fireship · 2 min. GraphQL in 100 seconds: queries, schema and the problem it solves.
 - [🍃 Introduction to Spring GraphQL with Spring Boot](https://www.youtube.com/watch?v=atA2OovQBic) · Maciej Walkowiak 🍃 Spring Academy · 19 min. Spring for GraphQL: schema-first controllers in Spring Boot.

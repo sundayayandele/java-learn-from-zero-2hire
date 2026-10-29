@@ -44,7 +44,7 @@ How to read it:
 - `... 42 more` means "the remaining frames are the same as in the block above".
 - `Suppressed:` entries appear when a `try`-with-resources `close()` also failed; they explain secondary failures.
 
-Common exceptions and their usual causes: `NullPointerException` (Java 14+ "helpful" messages name the null variable), `ClassCastException`, `ConcurrentModificationException` (modifying a collection while iterating), `LazyInitializationException` (accessing a lazy JPA association after the session closed, topic 4.3), `BeanCreationException`/`UnsatisfiedDependencyException` at start-up (read down to the root cause: usually a missing property or bean), `SocketTimeoutException` (a dependency is slow).
+Common exceptions and their usual causes: `NullPointerException` (Java 14+ "helpful" messages name the null variable), `ClassCastException`, `ConcurrentModificationException` (modifying a collection while iterating), `LazyInitializationException` (accessing a lazy JPA association after the session closed, topic 4.4), `BeanCreationException`/`UnsatisfiedDependencyException` at start-up (read down to the root cause: usually a missing property or bean), `SocketTimeoutException` (a dependency is slow).
 
 Never swallow exceptions (`catch (Exception e) {}`) and never log and rethrow the same exception at every layer: you get the same stack trace five times. Log once, where you handle it.
 

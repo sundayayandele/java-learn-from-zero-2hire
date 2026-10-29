@@ -5,7 +5,7 @@
 
 ← [9.4 CV, GitHub profile and LinkedIn optimisation for Java roles](../9.4-cv-github-linkedin/README.md) · [Module 9](../README.md) · [Phase 2](../../README.md)
 
-> **Week 24** · Module 9: AI-Assisted Engineering & Junior Portfolio · Website topic covered: *Core Java, Spring and SQL interview questions and live-coding practice*
+> **Week 25** · Module 9: AI-Assisted Engineering & Junior Portfolio · Website topic covered: *Core Java, Spring and SQL interview questions and live-coding practice*
 
 ## What you will be able to do
 
@@ -38,7 +38,7 @@ Practise saying these answers aloud, each in under two minutes, with a code exam
 
 1. **`equals` and `hashCode`**: the contract, why both must be overridden together, and what happens in a `HashMap` when they are not.
 2. **`String` immutability** and the string pool; why `StringBuilder` in loops.
-3. **`BigDecimal` for money**: why not `double`; `setScale` with `RoundingMode.HALF_EVEN`; `compareTo` versus `equals` (Phase 1 topic 1.2).
+3. **`BigDecimal` for money**: why not `double`; `setScale` with `RoundingMode.HALF_EVEN`; `compareTo` versus `equals` (Phase 1 topic 1.3).
 4. **Collections**: `ArrayList` vs `LinkedList`; `HashMap` internals (buckets, hashing, resize, tree bins); `HashMap` vs `ConcurrentHashMap`; iteration order guarantees.
 5. **Generics**: type erasure; `List<? extends Number>` vs `List<? super Integer>` (PECS).
 6. **Streams**: lazy evaluation; `map` vs `flatMap`; `groupingBy` with downstream collectors; when a loop is clearer.
@@ -58,7 +58,7 @@ Practise saying these answers aloud, each in under two minutes, with a code exam
 7. **Security**: filter chain; authentication vs authorisation; JWT resource server; object-level authorisation (topics 6.1–6.3).
 8. **Testing**: `@WebMvcTest` vs `@SpringBootTest`; Testcontainers; `@MockitoBean`.
 9. **Actuator**: health, readiness and liveness; metrics.
-10. **What changed in Spring Boot 4** (topic 4.6) and why you would upgrade.
+10. **What changed in Spring Boot 4** (topic 4.7) and why you would upgrade.
 
 ## 4. SQL and databases
 
@@ -160,7 +160,7 @@ Interview loop, recruiter screen, online assessment, take-home, live coding, tim
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [Top 50 Java Interview Questions and Answers | Ace Your Java Programming Interviews #java #interview](https://www.youtube.com/watch?v=YlcvaqyD7Qs) · ArcCode · 21 min. Common Java interview questions with concise answers.
 - [STAR INTERVIEW QUESTIONS & ANSWERS! (The STAR TECHNIQUE for Behavioural Interview Questions!)](https://www.youtube.com/watch?v=uQEuo7woEEk) · CareerVidz · 11 min. The STAR technique for behavioural questions, with examples.

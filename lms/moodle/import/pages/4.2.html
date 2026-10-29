@@ -1,523 +1,523 @@
-<p><em>Week 10 · Module 4: Spring Boot 4 Fundamentals</em></p>
+<p><em>Week 11 · Module 4: Spring Boot 4 Fundamentals</em></p>
 <h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
 <ul>
-<li>Build REST endpoints with <code>@RestController</code>, request
-mappings, path variables, query parameters, request bodies and
-<code>ResponseEntity</code>.</li>
-<li>Separate API DTOs (records) from domain and persistence
-objects.</li>
-<li>Validate input with Jakarta Bean Validation, including custom
-constraints and validation groups.</li>
-<li>Return consistent, standards-based errors (RFC 9457 Problem Details)
-from one global handler.</li>
-<li>Test controllers with <code>@WebMvcTest</code> and MockMvc.</li>
+<li>Describe what happens in an HTTP request and response: method, URL,
+headers, body and status code.</li>
+<li>Choose the right HTTP method for reading, creating, replacing,
+updating and deleting.</li>
+<li>Read the common status codes and say who is at fault: client or
+server.</li>
+<li>Read and write JSON, and map it to Java records.</li>
+<li>Call APIs from the terminal with <code>curl</code> and from Java
+with <code>HttpClient</code>.</li>
+<li>Explain what makes an API "RESTful", well enough to design your
+first endpoints in topic 4.3.</li>
 </ul>
 <h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
 bank or fintech</h2>
-<p>The API is the bank's contract with mobile apps, partner fintechs and
-internal teams. A transfer endpoint that accepts a negative amount, a
-malformed account number or a missing narration, or one that answers
-every failure with "500 Internal Server Error" and a stack trace, is
-both a defect and a security finding. Good controllers are thin: they
-validate input at the boundary, call one service method, and translate
-outcomes into precise HTTP responses that client developers can rely
-on.</p>
-<h2 id="1-how-a-request-flows-through-spring-mvc">1. How a request flows
-through Spring MVC</h2>
-<pre class="text"><code>HTTP request → Tomcat → DispatcherServlet → HandlerMapping (which method?)
-             → argument resolution &amp; validation → your @RestController method
-             → return value → HttpMessageConverter (Jackson 3 → JSON) → HTTP response
-             (exceptions → @RestControllerAdvice → Problem Details response)</code></pre>
-<p><code>DispatcherServlet</code> is the front controller that Spring
-Boot registers for you. Jackson converts Java objects to and from JSON.
-Spring Boot 4 uses <strong>Jackson 3</strong>, whose packages are
-<code>tools.jackson.*</code> (the annotations remain
-<code>com.fasterxml.jackson.annotation</code>).</p>
-<h2 id="2-controllers">2. Controllers</h2>
-<pre class="java"><code>@RestController
-@RequestMapping(&quot;/api/v1/accounts&quot;)
-public class AccountController {
+<p>Almost everything a modern bank does crosses HTTP: the mobile app
+calls the bank's APIs, the bank calls payment switches, card networks,
+KYC providers and credit bureaux, and fintechs call the bank through
+open-banking APIs. Every backend engineer reads raw requests and
+responses when something breaks ("we sent 201, why did the app show an
+error?"). This topic gives you that vocabulary before you build
+endpoints with Spring MVC in topic 4.3. Phase 2 (topic 5.1) goes deeper
+into API design.</p>
+<h2 id="1-clients-servers-and-the-requestresponse-cycle">1. Clients,
+servers and the request–response cycle</h2>
+<p>HTTP is a <strong>request–response</strong> protocol. A
+<strong>client</strong> (a browser, a mobile app, <code>curl</code>,
+another service) sends a <strong>request</strong>; a
+<strong>server</strong> sends back exactly one
+<strong>response</strong>. The server doesn't remember the previous
+request unless the client sends something that identifies it (a token, a
+cookie): HTTP is <strong>stateless</strong>.</p>
+<p>A raw request and response look like this (they're plain text; HTTPS
+encrypts them on the wire):</p>
+<pre><code>GET /accounts/0123456789/balance HTTP/1.1
+Host: api.examplebank.ng
+Accept: application/json
+Authorization: Bearer eyJhbGciOi...</code></pre>
+<pre><code>HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: no-store
 
-    private final AccountService accounts;
-
-    public AccountController(AccountService accounts) { this.accounts = accounts; }
-
-    @GetMapping(&quot;/{number}&quot;)
-    public AccountResponse get(@PathVariable String number) {
-        return accounts.find(number);                         // 200 OK with JSON body
-    }
-
-    @GetMapping(&quot;/{number}/transactions&quot;)
-    public List&lt;TransactionResponse&gt; transactions(
-            @PathVariable String number,
-            @RequestParam(defaultValue = &quot;20&quot;) @Max(100) int limit,
-            @RequestParam(required = false) LocalDate from) {
-        return accounts.transactions(number, from, limit);
-    }
-
-    @PostMapping
-    public ResponseEntity&lt;AccountResponse&gt; open(@Valid @RequestBody OpenAccountRequest request) {
-        AccountResponse created = accounts.open(request);
-        URI location = URI.create(&quot;/api/v1/accounts/&quot; + created.number());
-        return ResponseEntity.created(location).body(created);   // 201 Created + Location header
-    }
-
-    @PostMapping(&quot;/{number}/freeze&quot;)
-    @ResponseStatus(HttpStatus.NO_CONTENT)                       // 204
-    public void freeze(@PathVariable String number, @RequestHeader(&quot;X-Officer-Id&quot;) String officer) {
-        accounts.freeze(number, officer);
-    }
-}</code></pre>
+{&quot;accountNumber&quot;:&quot;0123456789&quot;,&quot;currency&quot;:&quot;NGN&quot;,&quot;available&quot;:&quot;152340.50&quot;}</code></pre>
 <table>
 <thead>
 <tr>
-<th>Annotation</th>
-<th>Binds</th>
+<th>Part</th>
+<th>Request</th>
+<th>Response</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>@GetMapping</code>, <code>@PostMapping</code>,
-<code>@PutMapping</code>, <code>@PatchMapping</code>,
-<code>@DeleteMapping</code></td>
-<td>HTTP method + path</td>
+<td>First line</td>
+<td><strong>method</strong>, <strong>path</strong>, version</td>
+<td>version, <strong>status code</strong>, reason</td>
 </tr>
 <tr>
-<td><code>@PathVariable</code></td>
-<td><code>/accounts/{number}</code></td>
+<td>Headers</td>
+<td><code>Host</code>, <code>Accept</code>, <code>Authorization</code>,
+<code>Content-Type</code>…</td>
+<td><code>Content-Type</code>, <code>Location</code>,
+<code>Cache-Control</code>…</td>
 </tr>
 <tr>
-<td><code>@RequestParam</code></td>
-<td><code>?limit=20&amp;from=2026-10-01</code></td>
-</tr>
-<tr>
-<td><code>@RequestBody</code></td>
-<td>JSON body → object</td>
-</tr>
-<tr>
-<td><code>@RequestHeader</code></td>
-<td>A header such as <code>Idempotency-Key</code></td>
-</tr>
-<tr>
-<td><code>ResponseEntity&lt;T&gt;</code></td>
-<td>Full control of status, headers and body</td>
-</tr>
-<tr>
-<td><code>@ResponseStatus</code></td>
-<td>Fixed status for a method or exception class</td>
+<td>Body (optional)</td>
+<td>data you send, such as a new transfer</td>
+<td>data you get back, or an error description</td>
 </tr>
 </tbody>
 </table>
-<p><code>@RestController</code> = <code>@Controller</code> +
-<code>@ResponseBody</code>: return values are written to the response
-body as JSON.</p>
-<h3 id="http-status-codes-you-will-use-constantly">HTTP status codes you
-will use constantly</h3>
+<h2 id="2-anatomy-of-a-url">2. Anatomy of a URL</h2>
+<pre><code>https://api.examplebank.ng:443/v1/accounts/0123456789/transactions?from=2026-10-01&amp;limit=50
+\___/   \________________/\__/\_______________________________/\_______________________/
+scheme        host        port               path                       query string</code></pre>
+<ul>
+<li>The <strong>path</strong> identifies a resource:
+<code>/accounts/0123456789/transactions</code> reads as "the
+transactions of account 0123456789".</li>
+<li>The <strong>query string</strong> filters, sorts or pages it:
+<code>?from=2026-10-01&amp;limit=50</code>. Parameters are
+<code>name=value</code> pairs joined with <code>&amp;</code>.</li>
+<li>Spaces and special characters are <strong>percent-encoded</strong>:
+a space is <code>%20</code>, <code>[</code> is <code>%5B</code>.</li>
+<li>Always use <code>https</code> outside your own laptop. Plain
+<code>http</code> sends tokens and account data readable by anyone on
+the network.</li>
+</ul>
+<h2 id="3-methods-what-you-want-to-do">3. Methods: what you want to
+do</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Meaning</th>
+<th>Body?</th>
+<th>Safe?</th>
+<th>Idempotent?</th>
+<th>Banking example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET</code></td>
+<td>Read a resource</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Get a balance, list transactions</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td>Create something, or start a process</td>
+<td>Yes</td>
+<td>No</td>
+<td><strong>No</strong></td>
+<td>Create a transfer</td>
+</tr>
+<tr>
+<td><code>PUT</code></td>
+<td>Replace a resource completely</td>
+<td>Yes</td>
+<td>No</td>
+<td>Yes</td>
+<td>Replace a beneficiary's details</td>
+</tr>
+<tr>
+<td><code>PATCH</code></td>
+<td>Change part of a resource</td>
+<td>Yes</td>
+<td>No</td>
+<td>Usually not</td>
+<td>Change a card's daily limit</td>
+</tr>
+<tr>
+<td><code>DELETE</code></td>
+<td>Remove a resource</td>
+<td>Rarely</td>
+<td>No</td>
+<td>Yes</td>
+<td>Remove a saved beneficiary</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Safe</strong> means the request doesn't change anything on
+the server. A <code>GET</code> must never move money: browsers, proxies
+and crawlers repeat <code>GET</code>s freely.</li>
+<li><strong>Idempotent</strong> means sending the same request twice has
+the same effect as sending it once. That matters because networks fail:
+if a mobile app times out after sending <code>POST /transfers</code>, it
+doesn't know whether the transfer happened. Retrying a non-idempotent
+<code>POST</code> could pay twice. Topic 5.3 covers <strong>idempotency
+keys</strong>, the standard fix; for now, remember that
+<code>POST</code> needs care.</li>
+</ul>
+<h2 id="4-status-codes-what-happened">4. Status codes: what
+happened</h2>
+<p>The first digit tells you the family; learn these by heart:</p>
 <table>
 <thead>
 <tr>
 <th>Code</th>
-<th>When</th>
+<th>Name</th>
+<th>Meaning</th>
+<th>Whose problem</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>200 OK</td>
-<td>Successful read or update returning a body</td>
+<td><code>200</code></td>
+<td>OK</td>
+<td>Success, with a body</td>
+<td>—</td>
 </tr>
 <tr>
-<td>201 Created</td>
-<td>Resource created; include <code>Location</code></td>
+<td><code>201</code></td>
+<td>Created</td>
+<td>A new resource exists; <code>Location</code> header says where</td>
+<td>—</td>
 </tr>
 <tr>
-<td>202 Accepted</td>
-<td>Accepted for asynchronous processing (e.g. a transfer queued for
-NIP)</td>
+<td><code>204</code></td>
+<td>No Content</td>
+<td>Success, nothing to return (common for <code>DELETE</code>)</td>
+<td>—</td>
 </tr>
 <tr>
-<td>204 No Content</td>
-<td>Success with no body</td>
+<td><code>400</code></td>
+<td>Bad Request</td>
+<td>The request is malformed or invalid (negative amount, bad JSON)</td>
+<td>Client</td>
 </tr>
 <tr>
-<td>400 Bad Request</td>
-<td>Malformed input, validation failure</td>
+<td><code>401</code></td>
+<td>Unauthorized</td>
+<td>No valid credentials: log in first</td>
+<td>Client</td>
 </tr>
 <tr>
-<td>401 Unauthorized / 403 Forbidden</td>
-<td>Not authenticated / not allowed (Module 6)</td>
+<td><code>403</code></td>
+<td>Forbidden</td>
+<td>Authenticated, but not allowed (someone else's account)</td>
+<td>Client</td>
 </tr>
 <tr>
-<td>404 Not Found</td>
-<td>Resource doesn't exist</td>
+<td><code>404</code></td>
+<td>Not Found</td>
+<td>No such resource</td>
+<td>Client</td>
 </tr>
 <tr>
-<td>409 Conflict</td>
-<td>State conflict, duplicate request, optimistic-lock failure</td>
+<td><code>409</code></td>
+<td>Conflict</td>
+<td>Clashes with the current state (duplicate reference)</td>
+<td>Client</td>
 </tr>
 <tr>
-<td>422 Unprocessable Content</td>
-<td>Valid input that breaks a business rule (insufficient funds, limit
-exceeded)</td>
+<td><code>422</code></td>
+<td>Unprocessable Content</td>
+<td>Well-formed but breaks a business rule (insufficient funds)</td>
+<td>Client</td>
 </tr>
 <tr>
-<td>500 Internal Server Error</td>
-<td>A bug. Never intentionally.</td>
+<td><code>429</code></td>
+<td>Too Many Requests</td>
+<td>Rate limit hit; slow down and retry later</td>
+<td>Client</td>
 </tr>
 <tr>
-<td>503 Service Unavailable</td>
-<td>A dependency is down; retry later</td>
+<td><code>500</code></td>
+<td>Internal Server Error</td>
+<td>A bug or unexpected failure on the server</td>
+<td>Server</td>
+</tr>
+<tr>
+<td><code>502</code> / <code>503</code> / <code>504</code></td>
+<td>Bad Gateway / Unavailable / Gateway Timeout</td>
+<td>A dependency or the server is down or slow</td>
+<td>Server</td>
 </tr>
 </tbody>
 </table>
-<p>Module 5 goes deeper on API design; this topic gives you the
-essentials.</p>
-<h2 id="3-dtos-dont-expose-your-entities">3. DTOs: don't expose your
-entities</h2>
-<p>Use dedicated request and response types, usually records:</p>
-<pre class="java"><code>public record OpenAccountRequest(
-        @NotBlank @Pattern(regexp = &quot;\\d{11}&quot;, message = &quot;BVN must be 11 digits&quot;) String bvn,
-        @NotNull Product product,
-        @Size(max = 3) @Pattern(regexp = &quot;[A-Z]{3}&quot;) String currency) { }
-
-public record AccountResponse(String number, String product, String currency, BigDecimal balance,
-                              String status, LocalDate openedOn) {
-    static AccountResponse from(Account a) {
-        return new AccountResponse(a.getNumber(), a.getProduct().name(), a.getCurrency(),
-                a.getBalance(), a.getStatus().name(), a.getOpenedOn());
-    }
-}</code></pre>
-<p>Why not return the JPA entity directly?</p>
-<ul>
-<li><strong>Security</strong>: entities contain fields clients must
-never see (internal IDs, flags, PINs' hashes) or set (<strong>mass
-assignment</strong>: a client sends <code>"balance": 1000000</code> and
-it binds).</li>
-<li><strong>Stability</strong>: the API contract shouldn't change when
-you rename a column.</li>
-<li><strong>Performance and correctness</strong>: serialising entities
-can trigger lazy loading and N+1 queries (topic 4.3), or infinite
-recursion through bidirectional relationships.</li>
-</ul>
-<h3 id="json-details-that-matter-for-money">JSON details that matter for
-money</h3>
-<ul>
-<li>Serialise <code>BigDecimal</code> as a JSON <strong>number</strong>
-with its scale (<code>1500.00</code>) or, for maximum safety with
-JavaScript clients, as a <strong>string</strong>
-(<code>"1500.00"</code>). Decide once, document it.</li>
-<li>Dates as ISO-8601 strings (<code>2026-10-21</code>,
-<code>2026-10-21T09:15:00Z</code>), which is the Boot default.</li>
-</ul>
-<h3
-id="mapping-between-entities-and-dtos-by-hand-or-with-mapstruct">Mapping
-between entities and DTOs: by hand or with MapStruct</h3>
-<p>Small services map by hand with a static method or a constructor on
-the DTO record: explicit, easy to debug and fine for a handful of
-types.</p>
-<pre class="java"><code>public record AccountResponse(String number, String holder, BigDecimal balance, String currency) {
-    static AccountResponse from(Account a) {
-        return new AccountResponse(a.getNumber(), a.getHolderName(), a.getBalance(), a.getCurrency().getCurrencyCode());
-    }
-}</code></pre>
-<p>Larger codebases often use <strong>MapStruct</strong>, an annotation
-processor that generates the mapping code at compile time (no reflection
-at run time):</p>
-<pre class="java"><code>@Mapper(componentModel = &quot;spring&quot;)
-public interface AccountMapper {
-    @Mapping(target = &quot;holder&quot;, source = &quot;holderName&quot;)
-    @Mapping(target = &quot;currency&quot;, expression = &quot;java(account.getCurrency().getCurrencyCode())&quot;)
-    AccountResponse toResponse(Account account);
-}</code></pre>
-<p>Add <code>org.mapstruct:mapstruct</code> (1.6.3) and configure
-<code>mapstruct-processor</code> as an annotation processor (alongside
-Lombok's if you use both). Set
-<code>unmappedTargetPolicy = ReportingPolicy.ERROR</code> so a new DTO
-field that nobody maps fails the build instead of silently being
-<code>null</code>. Whichever approach you use, test the mapping of money
-and dates explicitly.</p>
-<h2 id="4-validation">4. Validation</h2>
-<p>Add <code>spring-boot-starter-validation</code> (Hibernate Validator,
-the Jakarta Bean Validation reference implementation). Annotate DTO
-fields, then put <code>@Valid</code> on the parameter:</p>
+<p><strong>4xx: the client must change something before retrying. 5xx:
+the server failed; retrying later may work.</strong> Returning
+<code>200 OK</code> with <code>{"error": "insufficient funds"}</code> in
+the body is a classic anti-pattern: monitoring, client libraries and
+other engineers all trust the status code.</p>
+<h2 id="5-headers-youll-meet-first">5. Headers you'll meet first</h2>
 <table>
 <thead>
 <tr>
-<th>Constraint</th>
-<th>Example</th>
+<th>Header</th>
+<th>Direction</th>
+<th>Purpose</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>@NotNull</code>, <code>@NotBlank</code>,
-<code>@NotEmpty</code></td>
-<td>Required values</td>
+<td><code>Content-Type: application/json</code></td>
+<td>both</td>
+<td>What format the body is in</td>
 </tr>
 <tr>
-<td><code>@Size(min, max)</code></td>
-<td>Lengths of strings and collections</td>
+<td><code>Accept: application/json</code></td>
+<td>request</td>
+<td>What format the client wants back</td>
 </tr>
 <tr>
-<td><code>@Pattern(regexp)</code></td>
-<td>Account numbers, codes</td>
+<td><code>Authorization: Bearer &lt;token&gt;</code></td>
+<td>request</td>
+<td>Who is calling (Phase 2, topic 6.2)</td>
 </tr>
 <tr>
-<td><code>@Positive</code>, <code>@PositiveOrZero</code>,
-<code>@Min</code>, <code>@Max</code></td>
-<td>Numeric ranges</td>
+<td><code>Location: /transfers/TRF-2026-00042</code></td>
+<td>response</td>
+<td>Where a newly created resource lives (with <code>201</code>)</td>
 </tr>
 <tr>
-<td><code>@DecimalMin("0.01")</code>,
-<code>@Digits(integer = 15, fraction = 2)</code></td>
-<td>Money amounts</td>
+<td><code>Cache-Control: no-store</code></td>
+<td>response</td>
+<td>Don't cache this (always for account data)</td>
 </tr>
 <tr>
-<td><code>@Email</code>, <code>@Past</code>, <code>@Future</code></td>
-<td>Formats and dates</td>
+<td><code>X-Request-Id</code> / <code>traceparent</code></td>
+<td>both</td>
+<td>Correlates logs across services (topic 2.6)</td>
 </tr>
 </tbody>
 </table>
-<pre class="java"><code>public record TransferRequest(
-        @NotBlank @Pattern(regexp = &quot;\\d{10}&quot;) String fromAccount,
-        @NotBlank @Pattern(regexp = &quot;\\d{10}&quot;) String toAccount,
-        @NotBlank @Pattern(regexp = &quot;\\d{3,6}&quot;) String destinationBankCode,
-        @NotNull @DecimalMin(&quot;1.00&quot;) @Digits(integer = 13, fraction = 2) BigDecimal amount,
-        @NotBlank @Size(max = 100) String narration,
-        @NotBlank @Size(max = 64) String clientReference) { }</code></pre>
-<p><code>@Digits(fraction = 2)</code> rejects ₦10.555 at the boundary
-instead of letting rounding happen somewhere unexpected.</p>
-<p>Validating path variables and request parameters (like
-<code>@Max(100) int limit</code> above) is built into Spring Framework
-6.1+ method validation for controllers; failures produce a
-<code>HandlerMethodValidationException</code>.</p>
-<h3 id="custom-constraints">Custom constraints</h3>
-<pre class="java"><code>@Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.RECORD_COMPONENT})
-@Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = NubanValidator.class)
-public @interface ValidNuban {
-    String message() default &quot;Invalid account number&quot;;
-    Class&lt;?&gt;[] groups() default {};
-    Class&lt;? extends Payload&gt;[] payload() default {};
-}
-
-public class NubanValidator implements ConstraintValidator&lt;ValidNuban, String&gt; {
-    @Override
-    public boolean isValid(String value, ConstraintValidatorContext ctx) {
-        return value == null || (value.matches(&quot;\\d{10}&quot;) &amp;&amp; checkDigitOk(value));   // null handled by @NotNull
-    }
-}</code></pre>
-<p><strong>Class-level constraints</strong> validate several fields
-together, for example "<code>toAccount</code> must differ from
-<code>fromAccount</code>".</p>
-<p>Validation at the edge checks <strong>shape</strong>.
-<strong>Business rules</strong> that depend on state (balance, limits,
-account status) belong in the service, and failures are domain
-exceptions (topic 1.7).</p>
-<h2 id="5-global-error-handling-with-problem-details">5. Global error
-handling with Problem Details</h2>
-<p>Clients need one predictable error format. <strong>RFC 9457 Problem
-Details</strong> (<code>application/problem+json</code>) is the
-standard, and Spring supports it natively with the
-<code>ProblemDetail</code> class:</p>
+<h2 id="6-json-the-format-of-almost-every-api">6. JSON: the format of
+almost every API</h2>
+<p>JSON (JavaScript Object Notation) is text with a handful of
+types:</p>
 <pre class="json"><code>{
-  &quot;type&quot;: &quot;https://api.itlearning-bank.ng/problems/insufficient-funds&quot;,
-  &quot;title&quot;: &quot;Insufficient funds&quot;,
-  &quot;status&quot;: 422,
-  &quot;detail&quot;: &quot;Account ******6789 has insufficient funds for this transfer&quot;,
-  &quot;instance&quot;: &quot;/api/v1/transfers&quot;,
-  &quot;available&quot;: &quot;1500.00&quot;,
-  &quot;requested&quot;: &quot;5000.00&quot;,
-  &quot;traceId&quot;: &quot;4bf92f3577b34da6&quot;
+  &quot;reference&quot;: &quot;TRF-2026-00042&quot;,
+  &quot;amount&quot;: &quot;25000.00&quot;,
+  &quot;currency&quot;: &quot;NGN&quot;,
+  &quot;instant&quot;: true,
+  &quot;fees&quot;: [{&quot;type&quot;: &quot;TRANSFER&quot;, &quot;amount&quot;: &quot;26.88&quot;}],
+  &quot;narration&quot;: null
 }</code></pre>
-<p>Enable it for Spring's own exceptions:</p>
-<pre class="properties"><code>spring.mvc.problemdetails.enabled=true</code></pre>
-<p>Then map your domain exceptions in one
-<code>@RestControllerAdvice</code>:</p>
-<pre class="java"><code>@RestControllerAdvice
-public class ApiExceptionHandler extends ResponseEntityExceptionHandler {   // handles Spring MVC&#39;s exceptions as ProblemDetail
+<p>Objects <code>{ }</code> with <code>"name": value</code> pairs,
+arrays <code>[ ]</code>, strings in <strong>double</strong> quotes,
+numbers, <code>true</code>/<code>false</code> and <code>null</code>. No
+comments, no trailing commas.</p>
+<p><strong>Money in JSON:</strong> send amounts as
+<strong>strings</strong> (<code>"25000.00"</code>) or as integers in
+minor units (<code>2500000</code> kobo). JSON numbers are often parsed
+as binary floating point by clients in other languages, which
+reintroduces the <code>double</code> rounding problem from topic
+1.3.</p>
+<p>In Spring Boot, the <strong>Jackson</strong> library converts between
+JSON and Java objects automatically. Records map naturally:</p>
+<pre class="java"><code>public record Fee(String type, BigDecimal amount) { }
+public record TransferResponse(String reference, BigDecimal amount, String currency,
+                               boolean instant, List&lt;Fee&gt; fees, String narration) { }</code></pre>
+<p>Jackson reads <code>"25000.00"</code> into a <code>BigDecimal</code>
+without loss.</p>
+<h2 id="7-calling-apis-with-curl">7. Calling APIs with
+<code>curl</code></h2>
+<p><code>curl</code> is the engineer's universal HTTP client. Try a
+real, free API: the US Treasury's reporting rate for the naira (the same
+dataset Capstone 2 uses):</p>
+<pre class="bash"><code>curl -g -i &#39;https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/od/rates_of_exchange?filter=country_currency_desc:eq:Nigeria-Naira&amp;sort=-record_date&amp;page[size]=1&amp;fields=record_date,country_currency_desc,exchange_rate&#39;</code></pre>
+<pre><code>HTTP/1.1 200 OK
+Content-Type: application/json
+...
 
-    private static final URI BASE = URI.create(&quot;https://api.itlearning-bank.ng/problems/&quot;);
-
-    @ExceptionHandler(AccountNotFoundException.class)
-    ProblemDetail notFound(AccountNotFoundException e) {
-        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
-        pd.setType(BASE.resolve(&quot;account-not-found&quot;));
-        pd.setTitle(&quot;Account not found&quot;);
-        return pd;
-    }
-
-    @ExceptionHandler(InsufficientFundsException.class)
-    ProblemDetail insufficientFunds(InsufficientFundsException e) {
-        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, e.getMessage());
-        pd.setType(BASE.resolve(&quot;insufficient-funds&quot;));
-        pd.setTitle(&quot;Insufficient funds&quot;);
-        pd.setProperty(&quot;available&quot;, e.available().toPlainString());
-        pd.setProperty(&quot;requested&quot;, e.requested().toPlainString());
-        return pd;
-    }
-
-    @ExceptionHandler(DuplicateTransferException.class)
-    ProblemDetail duplicate(DuplicateTransferException e) {
-        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
-        pd.setType(BASE.resolve(&quot;duplicate-request&quot;));
-        return pd;
-    }
-
-    @ExceptionHandler(Exception.class)
-    ProblemDetail unexpected(Exception e) {
-        log.error(&quot;Unhandled error&quot;, e);                            // log once, with the stack trace
-        return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR,
-                &quot;An unexpected error occurred. Quote the trace ID when contacting support.&quot;);
-    }
-}</code></pre>
-<p><code>ResponseEntityExceptionHandler</code> already turns validation
-failures (<code>MethodArgumentNotValidException</code>), malformed JSON,
-unsupported media types and wrong methods into Problem Details. Override
-<code>handleMethodArgumentNotValid</code> to add a list of field
-errors:</p>
-<pre class="java"><code>@Override
-protected ResponseEntity&lt;Object&gt; handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
-        HttpHeaders headers, HttpStatusCode status, WebRequest request) {
-    ProblemDetail pd = ex.getBody();
-    pd.setTitle(&quot;Validation failed&quot;);
-    pd.setProperty(&quot;errors&quot;, ex.getBindingResult().getFieldErrors().stream()
-            .map(fe -&gt; Map.of(&quot;field&quot;, fe.getField(), &quot;message&quot;, String.valueOf(fe.getDefaultMessage())))
-            .toList());
-    return ResponseEntity.status(status).body(pd);
-}</code></pre>
-<p>Rules for error responses in finance:</p>
+{&quot;data&quot;:[{&quot;record_date&quot;:&quot;2026-09-30&quot;,&quot;country_currency_desc&quot;:&quot;Nigeria-Naira&quot;,&quot;exchange_rate&quot;:&quot;1326.78&quot;}],&quot;meta&quot;:{...},&quot;links&quot;:{...}}</code></pre>
 <ul>
-<li><strong>Never</strong> return stack traces, SQL, class names or
-internal hostnames. Set
-<code>server.error.include-stacktrace=never</code> (the default) and
-don't put <code>e.toString()</code> in <code>detail</code>.</li>
-<li>Mask account numbers and never echo secrets.</li>
-<li>Include a correlation/trace ID so support can find the logs (Module
-13 automates this).</li>
-<li>Keep <code>type</code> URIs stable: client apps switch on them.</li>
+<li><code>-i</code> shows the status line and headers; always use it
+when debugging.</li>
+<li><code>-g</code> stops curl treating <code>[</code> and
+<code>]</code> as patterns.</li>
+<li>Quote the URL so the shell doesn't interpret
+<code>&amp;</code>.</li>
+<li>Break the filter (<code>filter=nonsense</code>) and you get
+<code>400</code>: the server tells you the request is wrong.</li>
 </ul>
-<h2 id="6-testing-controllers">6. Testing controllers</h2>
-<p><code>@WebMvcTest</code> starts only the web layer (controllers,
-advice, converters, validation), not services or the database. Mock the
-service:</p>
-<pre class="java"><code>@WebMvcTest(AccountController.class)
-class AccountControllerTest {
+<p>Sending data:</p>
+<pre class="bash"><code>curl -i -X POST http://localhost:8080/transfers \
+  -H &#39;Content-Type: application/json&#39; \
+  -d &#39;{&quot;from&quot;:&quot;0123456789&quot;,&quot;to&quot;:&quot;9876543210&quot;,&quot;amount&quot;:&quot;25000.00&quot;}&#39;</code></pre>
+<p><code>-X</code> sets the method, <code>-H</code> adds a header,
+<code>-d</code> sends a body. Add <code>| jq</code> (a JSON
+pretty-printer) to read large responses. IntelliJ's HTTP Client
+(<code>.http</code> files) and Postman do the same with a UI;
+<code>curl</code> works everywhere, including on a production server
+over SSH.</p>
+<h2 id="8-calling-apis-from-java">8. Calling APIs from Java</h2>
+<p>Java has an HTTP client in the standard library
+(<code>java.net.http</code>):</p>
+<pre class="java"><code>HttpClient client = HttpClient.newBuilder()
+        .connectTimeout(Duration.ofSeconds(5))
+        .build();
 
-    @Autowired MockMvc mvc;
-    @MockitoBean AccountService accounts;                // Spring Framework&#39;s Mockito integration
+HttpRequest request = HttpRequest.newBuilder(URI.create(
+                &quot;https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/od/rates_of_exchange&quot;
+                + &quot;?filter=country_currency_desc:eq:Nigeria-Naira&amp;sort=-record_date&amp;page%5Bsize%5D=1&quot;
+                + &quot;&amp;fields=record_date,exchange_rate&quot;))
+        .timeout(Duration.ofSeconds(10))
+        .header(&quot;Accept&quot;, &quot;application/json&quot;)
+        .GET()
+        .build();
 
-    @Test
-    void rejectsInvalidBvn() throws Exception {
-        mvc.perform(post(&quot;/api/v1/accounts&quot;)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(&quot;&quot;&quot;
-                                {&quot;bvn&quot;: &quot;123&quot;, &quot;product&quot;: &quot;SAVINGS&quot;, &quot;currency&quot;: &quot;NGN&quot;}
-                                &quot;&quot;&quot;))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
-                .andExpect(jsonPath(&quot;$.errors[0].field&quot;).value(&quot;bvn&quot;));
-    }
-
-    @Test
-    void returns404ProblemForUnknownAccount() throws Exception {
-        when(accounts.find(&quot;0000000000&quot;)).thenThrow(new AccountNotFoundException(&quot;0000000000&quot;));
-        mvc.perform(get(&quot;/api/v1/accounts/0000000000&quot;))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath(&quot;$.title&quot;).value(&quot;Account not found&quot;));
-    }
-}</code></pre>
-<p>In Spring Boot 4, <code>@WebMvcTest</code> comes from the
-<code>spring-boot-starter-webmvc-test</code> starter, and
-<code>@MockitoBean</code> replaces the removed <code>@MockBean</code>.
-Module 7 covers testing in depth (including the AssertJ-style
-<code>MockMvcTester</code> and full integration tests with
-Testcontainers).</p>
-<h2 id="worked-example-a-transfer-endpoint-end-to-end">Worked example: a
-transfer endpoint, end to end</h2>
+HttpResponse&lt;String&gt; response = client.send(request, HttpResponse.BodyHandlers.ofString());
+if (response.statusCode() != 200) {
+    throw new IllegalStateException(&quot;Rate service answered &quot; + response.statusCode());
+}
+System.out.println(response.body());</code></pre>
+<p>Two habits to start now: <strong>always set timeouts</strong> (a call
+with no timeout can hang a thread forever when a partner is down) and
+<strong>always check the status code</strong> before trusting the body.
+In Spring Boot you'll use <code>RestClient</code>, which adds JSON
+mapping; topic 5.4 adds retries and circuit breakers.</p>
+<h2 id="9-what-rest-means">9. What "REST" means</h2>
+<p>REST is a style for designing HTTP APIs. In practice, a "RESTful" API
+means:</p>
+<ul>
+<li><strong>Resources are nouns</strong> in the path:
+<code>/accounts/{id}</code>, <code>/transfers</code>,
+<code>/accounts/{id}/transactions</code>. Not verbs:
+<code>/getBalance</code>, <code>/doTransfer</code>.</li>
+<li><strong>The method carries the action</strong>:
+<code>GET /transfers/{ref}</code> reads one,
+<code>POST /transfers</code> creates one.</li>
+<li><strong>Status codes mean what they say</strong>: <code>201</code>
+with <code>Location</code> after a create, <code>404</code> for a
+missing account, <code>422</code> for insufficient funds.</li>
+<li><strong>Representations are JSON</strong> (usually), with consistent
+field names and money as strings or minor units.</li>
+<li><strong>Stateless</strong>: every request carries what the server
+needs (for example a token); no hidden server-side session.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Not RESTful</th>
+<th>RESTful</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>POST /getAccountBalance</code></td>
+<td><code>GET /accounts/0123456789/balance</code></td>
+</tr>
+<tr>
+<td><code>GET /transfer?from=..&amp;to=..&amp;amount=..</code></td>
+<td><code>POST /transfers</code> with a JSON body, answered with
+<code>201 Created</code></td>
+</tr>
+<tr>
+<td><code>200 OK</code> with <code>{"status":"FAILED"}</code></td>
+<td><code>422</code> with an error body (Problem Details, topic
+4.3)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="worked-example-your-first-endpoint-seen-from-the-outside">Worked
+example: your first endpoint, seen from the outside</h2>
+<p>In topic 4.1 you created a Spring Boot application. Add this class
+next to it:</p>
 <pre class="java"><code>@RestController
-@RequestMapping(&quot;/api/v1/transfers&quot;)
-public class TransferController {
-    private final TransferService transfers;
-    public TransferController(TransferService transfers) { this.transfers = transfers; }
+class BalanceController {
 
-    @PostMapping
-    public ResponseEntity&lt;TransferResponse&gt; create(@Valid @RequestBody TransferRequest request) {
-        TransferReceipt receipt = transfers.transfer(request);       // throws domain exceptions
-        return ResponseEntity
-                .created(URI.create(&quot;/api/v1/transfers/&quot; + receipt.reference()))
-                .body(TransferResponse.from(receipt));
+    record Balance(String accountNumber, String currency, BigDecimal available) { }
+
+    @GetMapping(&quot;/accounts/{accountNumber}/balance&quot;)
+    Balance balance(@PathVariable String accountNumber) {
+        return new Balance(accountNumber, &quot;NGN&quot;, new BigDecimal(&quot;152340.50&quot;));
     }
 }</code></pre>
-<p>The controller does three things: validate (annotations), delegate
-(one service call), respond (status + DTO). Insufficient funds becomes a
-422 Problem Detail, a duplicate <code>clientReference</code> becomes a
-409, and an unknown account a 404, all in the advice class. No
-<code>try/catch</code> in the controller at all.</p>
+<p>Run the application and call it:</p>
+<pre class="bash"><code>curl -i http://localhost:8080/accounts/0123456789/balance</code></pre>
+<pre><code>HTTP/1.1 200
+Content-Type: application/json
+...
+
+{&quot;accountNumber&quot;:&quot;0123456789&quot;,&quot;currency&quot;:&quot;NGN&quot;,&quot;available&quot;:152340.50}</code></pre>
+<p>Read it like a reviewer: the method is <code>GET</code>, the path
+names a resource, the status is <code>200</code>, the
+<code>Content-Type</code> is JSON, and Jackson turned the record into
+JSON. Notice that <code>available</code> came out as a JSON
+<strong>number</strong>; for a real API you'd configure it as a string
+(topic 4.3). Now try <code>curl -i http://localhost:8080/accounts</code>
+(no such mapping): Spring answers <code>404</code>. Try
+<code>curl -i -X POST http://localhost:8080/accounts/0123456789/balance</code>:
+<code>405 Method Not Allowed</code>, because only <code>GET</code> is
+mapped. Topic 4.3 builds real endpoints with validation and proper error
+responses.</p>
 <h2 id="common-mistakes">Common mistakes</h2>
 <ul>
-<li>Returning JPA entities from controllers.</li>
-<li>Business logic in controllers.</li>
-<li>Forgetting <code>@Valid</code>, so annotations on the DTO are never
-checked.</li>
-<li><code>200 OK</code> with <code>{"success": false}</code> bodies
-instead of proper status codes.</li>
-<li>Leaking exception messages or stack traces to clients.</li>
-<li>Catching exceptions in every controller instead of one advice
-class.</li>
-<li><code>double</code> amounts in request DTOs.</li>
+<li>Using <code>GET</code> for anything that changes data, or putting
+account numbers and amounts for a payment in a query string.</li>
+<li>Returning <code>200</code> for every outcome and hiding errors in
+the body.</li>
+<li>Confusing <code>401</code> (who are you?) with <code>403</code> (you
+can't do that).</li>
+<li>Sending money as a JSON number that clients parse as floating
+point.</li>
+<li>Calling another service with no timeout.</li>
+<li>Reading the response body without checking the status code
+first.</li>
+<li>Debugging an API without <code>curl -i</code>, so you never see the
+status and headers.</li>
 </ul>
 <h2 id="practice">Practice</h2>
 <ol type="1">
-<li>Build <code>AccountController</code> and
-<code>TransferController</code> as above, backed by an in-memory
-service, with validation and the Problem Details advice.</li>
-<li>Write a custom <code>@ValidNuban</code> constraint and a class-level
-<code>@DifferentAccounts</code> constraint, with unit tests for the
-validators.</li>
-<li>Write <code>@WebMvcTest</code> tests for: a valid transfer (201 with
-<code>Location</code>), a validation failure (400 with field errors),
-insufficient funds (422), unknown account (404) and malformed JSON
-(400).</li>
-<li>Call your API with <code>curl -i</code> and check every response's
-status, headers and <code>Content-Type</code>.</li>
-<li>Write the same entity-to-DTO mapping by hand and with MapStruct,
-open the generated <code>AccountMapperImpl</code> in
-<code>target/generated-sources</code>, and decide which you would use
-for your capstone.</li>
+<li>Call the Treasury rate API with <code>curl -g -i</code>. Change
+<code>page[size]</code> to 5, then sort ascending. Break the filter and
+note the status code and error body.</li>
+<li>Write a small Java program with <code>HttpClient</code> that prints
+the latest naira rate and its date, with timeouts, and fails clearly on
+a non-200 status.</li>
+<li>For a wallet app, write the method, path and success status code
+for: list my wallets, see one wallet, create a transfer, cancel a
+scheduled transfer, change my daily limit.</li>
+<li>For each situation, choose the status code: malformed JSON; valid
+request but insufficient funds; account doesn't exist; another
+customer's account; the database is down; too many requests in a
+minute.</li>
+<li>Add the <code>BalanceController</code> to your topic 4.1
+application, call it with <code>curl -i</code>, and produce a
+<code>404</code> and a <code>405</code> on purpose.</li>
 </ol>
 <h2 id="key-terms">Key terms</h2>
-<p><code>DispatcherServlet</code>, <code>@RestController</code>,
-<code>@RequestMapping</code>, <code>@PathVariable</code>,
-<code>@RequestParam</code>, <code>@RequestBody</code>,
-<code>ResponseEntity</code>, status code, DTO, mass assignment, Jakarta
-Bean Validation, <code>@Valid</code>, constraint, custom validator,
-method validation, Problem Details (RFC 9457),
-<code>ProblemDetail</code>, <code>@RestControllerAdvice</code>,
-<code>@ExceptionHandler</code>,
-<code>ResponseEntityExceptionHandler</code>, <code>@WebMvcTest</code>,
-MockMvc, <code>@MockitoBean</code>, DTO mapping, MapStruct,
-<code>@Mapper</code>, unmapped target policy.</p>
+<p>HTTP, HTTPS, client, server, request, response, stateless, method,
+URL, path, query string, percent-encoding, header, body, status code,
+<code>GET</code>, <code>POST</code>, <code>PUT</code>,
+<code>PATCH</code>, <code>DELETE</code>, safe, idempotent,
+<code>Content-Type</code>, <code>Accept</code>, <code>Location</code>,
+JSON, Jackson, <code>curl</code>, <code>HttpClient</code>, timeout,
+REST, resource.</p>
 <h2 id="further-reading">Further reading</h2>
 <ul>
 <li><a
-href="https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller.html">Spring
-Framework reference: Annotated Controllers</a></li>
+href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview">MDN:
+An overview of HTTP</a></li>
 <li><a
-href="https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-ann-rest-exceptions.html">Spring
-Framework reference: Error Responses (Problem Details)</a></li>
+href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status">MDN:
+HTTP response status codes</a></li>
 <li><a
-href="https://docs.spring.io/spring-framework/reference/core/validation/beanvalidation.html">Spring
-Framework reference: Validation</a></li>
-<li><a href="https://www.rfc-editor.org/rfc/rfc9457">RFC 9457: Problem
-Details for HTTP APIs</a></li>
+href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods">MDN:
+HTTP request methods</a></li>
 <li><a
-href="https://docs.jboss.org/hibernate/stable/validator/reference/en-US/html_single/">Hibernate
-Validator reference</a></li>
+href="https://docs.oracle.com/en/java/javase/21/docs/api/java.net.http/java/net/http/package-summary.html">Java
+21 <code>java.net.http</code> API</a></li>
+<li><a href="https://curl.se/docs/manpage.html">curl: the man
+page</a></li>
 <li><a href="https://spring.io/guides/gs/rest-service">Spring guide:
 Building a RESTful Web Service</a></li>
+<li><a href="https://fiscaldata.treasury.gov/api-documentation/">US
+Treasury Fiscal Data API documentation</a></li>
 </ul>
 
 <h2>Watch</h2>
-<h3>Spring Boot Validation</h3><p>Fast and Simple Development · 12 min. Bean Validation on request bodies with @Valid and constraint annotations.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/LItERTUC9y4" title="Spring Boot Validation" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
-<h3>Spring Boot Tutorial | How To Handle Exceptions</h3><p>Amigoscode · 14 min. Turning exceptions into clean HTTP responses.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/PzK4ZXa2Tbc" title="Spring Boot Tutorial | How To Handle Exceptions" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
-<h3>Master Exception Handling in Spring Boot: @ExceptionHandler &amp; @ControllerAdvice Explained</h3><p>CodeSnippet by Chetan · 28 min. @ExceptionHandler and @RestControllerAdvice in depth.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/IdHHwZg3v58" title="Master Exception Handling in Spring Boot: @ExceptionHandler &amp; @ControllerAdvice Explained" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
-<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/04-spring-boot-fundamentals/4.2-spring-mvc-validation-errors/README.md">4.2 Spring MVC controllers, validation and global error handling</a></p>
+<h3>What is a REST API?</h3><p>IBM Technology · 9 min. What a REST API is: resources, methods and representations.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/lsMQRaeKNDk" title="What is a REST API?" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>What Is REST API? Examples And How To Use It: Crash Course System Design #3</h3><p>ByteByteGo · 5 min. REST APIs with examples: HTTP methods, status codes and statelessness.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/-mN3VyJuCjM" title="What Is REST API? Examples And How To Use It: Crash Course System Design #3" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>HTTP Crash Course &amp; Exploration (optional, longer)</h3><p>Traversy Media · 38 min. HTTP from the ground up: requests, responses, headers, methods and status codes, explored in a browser.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/iYM2zFP3Zn0" title="HTTP Crash Course &amp; Exploration" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/04-spring-boot-fundamentals/4.2-http-rest-basics/README.md">4.2 HTTP and REST basics: requests, responses, methods, status codes and JSON</a></p>

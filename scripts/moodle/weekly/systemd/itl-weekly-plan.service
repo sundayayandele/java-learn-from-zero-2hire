@@ -1,0 +1,7 @@
+[Unit]
+Description=Send the weekly plan to itlearning.tech learners
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/itl-weekly-plan

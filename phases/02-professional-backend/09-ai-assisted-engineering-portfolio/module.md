@@ -1,10 +1,10 @@
 ## What this module gives you
 
-Two weeks that make you faster and more employable. Week 23 is about **AI-assisted engineering**: using coding assistants such as GitHub Copilot, Claude Code and Cursor for real work, reviewing their output for bugs, security problems and licence risk, and using them for tests, documentation and refactoring without handing over your understanding. Week 24 turns everything you have built into a **junior portfolio**: a CV, GitHub profile and LinkedIn tuned for Java roles, and structured interview preparation covering core Java, Spring, SQL and live coding.
+Two weeks that make you faster and more employable. Week 24 is about **AI-assisted engineering**: using coding assistants such as GitHub Copilot, Claude Code and Cursor for real work, reviewing their output for bugs, security problems and licence risk, and using them for tests, documentation and refactoring without handing over your understanding. Week 25 turns everything you have built into a **junior portfolio**: a CV, GitHub profile and LinkedIn tuned for Java roles, and structured interview preparation covering core Java, Spring, SQL and live coding.
 
 Employers increasingly expect engineers to use AI tools well. They also test, in interviews and on the job, whether you understand the code you ship. This module teaches both.
 
-**Exit check for Module 9:** all five topic CBTs passed; projects 9.A and 9.C completed; 9.B booked.
+**Exit check for Module 9:** all five topic CBTs attempted (aim for 70%+); projects 9.A and 9.C completed; 9.B booked.
 
 ## Module projects
 

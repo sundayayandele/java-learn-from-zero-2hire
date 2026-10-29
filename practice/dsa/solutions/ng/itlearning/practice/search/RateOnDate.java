@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Week 12. Pattern: binary search (floor).
+ * Week 13. Pattern: binary search (floor).
  * <p>
  * {@code publications} is sorted by date ascending with no duplicate dates. Return the rate in force on
  * {@code day}: the one with the latest date on or before it (reference rates aren't published at weekends),

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Week 5. Pattern: two pointers.
+ * Week 6. Pattern: two pointers.
  * <p>
  * Two statement extracts are each sorted by booking time (epoch seconds). Merge them into one sorted list in
  * O(n + m). When times are equal, the entry from {@code a} comes first (a stable merge).

@@ -5,7 +5,7 @@
 
 ← [6.4 OWASP Top 10 and how they show up in Java APIs](../6.4-owasp-top10-java/README.md) · [Module 6](../README.md) · [Phase 2](../../README.md) · [7.1 Unit testing with JUnit and Mockito; test-driven development](../../07-testing-code-quality/7.1-junit-mockito-tdd/README.md) →
 
-> **Week 18** · Module 6: Security Essentials · Website topic covered: *Password hashing with Argon2/BCrypt, secrets managers, SBOMs, OWASP Dependency-Check, Dependabot*
+> **Week 19** · Module 6: Security Essentials · Website topic covered: *Password hashing with Argon2/BCrypt, secrets managers, SBOMs, OWASP Dependency-Check, Dependabot*
 
 ## What you will be able to do
 
@@ -182,7 +182,7 @@ Hash, salt, work factor, BCrypt, Argon2id, PBKDF2, `PasswordEncoder`, `Delegatin
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [Password Storage Tier List: encryption, hashing, salting, bcrypt, and beyond](https://www.youtube.com/watch?v=qgpsIBLvrGY) · Studying With Alex · 10 min. Password storage ranked: plaintext to Argon2 and bcrypt, and why.
 - [HashiCorp Vault Explained in 180 seconds](https://www.youtube.com/watch?v=nG8fCdWkLzc) · Cybr · 4 min. HashiCorp Vault in 180 seconds: secrets as a service.

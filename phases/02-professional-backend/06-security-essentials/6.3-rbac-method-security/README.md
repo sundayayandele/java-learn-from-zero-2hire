@@ -5,7 +5,7 @@
 
 ← [6.2 JWT access and refresh tokens, OAuth2 / OpenID Connect login](../6.2-jwt-oauth2-oidc/README.md) · [Module 6](../README.md) · [Phase 2](../../README.md) · [6.4 OWASP Top 10 and how they show up in Java APIs](../6.4-owasp-top10-java/README.md) →
 
-> **Week 18** · Module 6: Security Essentials · Website topic covered: *Roles vs authorities vs scopes, @PreAuthorize, object-level authorisation, multi-tenant checks*
+> **Week 19** · Module 6: Security Essentials · Website topic covered: *Roles vs authorities vs scopes, @PreAuthorize, object-level authorisation, multi-tenant checks*
 
 ## What you will be able to do
 
@@ -194,7 +194,7 @@ Role, authority, permission, scope, RBAC, ABAC, least privilege, `@EnableMethodS
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [🔐 Spring Security - Method Security Explained | @PreAuthorize, @PostAuthorize](https://www.youtube.com/watch?v=e5585jgfTU8) · CodeSnippet by Chetan · 22 min. Method security with @PreAuthorize and role/authority checks.
 - [Broken Object Level Authorization (BOLA) Explained](https://www.youtube.com/watch?v=YciLnEY1AN0) · The Cyber Mentors · 8 min. Broken object level authorisation (BOLA), the top API risk, explained.

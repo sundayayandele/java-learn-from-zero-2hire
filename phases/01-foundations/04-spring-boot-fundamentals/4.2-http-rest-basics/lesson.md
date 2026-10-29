@@ -1,0 +1,265 @@
+## What you will be able to do
+
+- Describe what happens in an HTTP request and response: method, URL, headers, body and status code.
+- Choose the right HTTP method for reading, creating, replacing, updating and deleting.
+- Read the common status codes and say who is at fault: client or server.
+- Read and write JSON, and map it to Java records.
+- Call APIs from the terminal with `curl` and from Java with `HttpClient`.
+- Explain what makes an API "RESTful", well enough to design your first endpoints in topic 4.3.
+
+## Why this matters in a bank or fintech
+
+Almost everything a modern bank does crosses HTTP: the mobile app calls the bank's APIs, the bank calls payment switches, card networks, KYC providers and credit bureaux, and fintechs call the bank through open-banking APIs. Every backend engineer reads raw requests and responses when something breaks ("we sent 201, why did the app show an error?"). This topic gives you that vocabulary before you build endpoints with Spring MVC in topic 4.3. Phase 2 (topic 5.1) goes deeper into API design.
+
+## 1. Clients, servers and the request–response cycle
+
+HTTP is a **request–response** protocol. A **client** (a browser, a mobile app, `curl`, another service) sends a **request**; a **server** sends back exactly one **response**. The server doesn't remember the previous request unless the client sends something that identifies it (a token, a cookie): HTTP is **stateless**.
+
+A raw request and response look like this (they're plain text; HTTPS encrypts them on the wire):
+
+```
+GET /accounts/0123456789/balance HTTP/1.1
+Host: api.examplebank.ng
+Accept: application/json
+Authorization: Bearer eyJhbGciOi...
+```
+
+```
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: no-store
+
+{"accountNumber":"0123456789","currency":"NGN","available":"152340.50"}
+```
+
+| Part | Request | Response |
+| --- | --- | --- |
+| First line | **method**, **path**, version | version, **status code**, reason |
+| Headers | `Host`, `Accept`, `Authorization`, `Content-Type`… | `Content-Type`, `Location`, `Cache-Control`… |
+| Body (optional) | data you send, such as a new transfer | data you get back, or an error description |
+
+## 2. Anatomy of a URL
+
+```
+https://api.examplebank.ng:443/v1/accounts/0123456789/transactions?from=2026-10-01&limit=50
+\___/   \________________/\__/\_______________________________/\_______________________/
+scheme        host        port               path                       query string
+```
+
+- The **path** identifies a resource: `/accounts/0123456789/transactions` reads as "the transactions of account 0123456789".
+- The **query string** filters, sorts or pages it: `?from=2026-10-01&limit=50`. Parameters are `name=value` pairs joined with `&`.
+- Spaces and special characters are **percent-encoded**: a space is `%20`, `[` is `%5B`.
+- Always use `https` outside your own laptop. Plain `http` sends tokens and account data readable by anyone on the network.
+
+## 3. Methods: what you want to do
+
+| Method | Meaning | Body? | Safe? | Idempotent? | Banking example |
+| --- | --- | --- | --- | --- | --- |
+| `GET` | Read a resource | No | Yes | Yes | Get a balance, list transactions |
+| `POST` | Create something, or start a process | Yes | No | **No** | Create a transfer |
+| `PUT` | Replace a resource completely | Yes | No | Yes | Replace a beneficiary's details |
+| `PATCH` | Change part of a resource | Yes | No | Usually not | Change a card's daily limit |
+| `DELETE` | Remove a resource | Rarely | No | Yes | Remove a saved beneficiary |
+
+- **Safe** means the request doesn't change anything on the server. A `GET` must never move money: browsers, proxies and crawlers repeat `GET`s freely.
+- **Idempotent** means sending the same request twice has the same effect as sending it once. That matters because networks fail: if a mobile app times out after sending `POST /transfers`, it doesn't know whether the transfer happened. Retrying a non-idempotent `POST` could pay twice. Topic 5.3 covers **idempotency keys**, the standard fix; for now, remember that `POST` needs care.
+
+## 4. Status codes: what happened
+
+The first digit tells you the family; learn these by heart:
+
+| Code | Name | Meaning | Whose problem |
+| --- | --- | --- | --- |
+| `200` | OK | Success, with a body | — |
+| `201` | Created | A new resource exists; `Location` header says where | — |
+| `204` | No Content | Success, nothing to return (common for `DELETE`) | — |
+| `400` | Bad Request | The request is malformed or invalid (negative amount, bad JSON) | Client |
+| `401` | Unauthorized | No valid credentials: log in first | Client |
+| `403` | Forbidden | Authenticated, but not allowed (someone else's account) | Client |
+| `404` | Not Found | No such resource | Client |
+| `409` | Conflict | Clashes with the current state (duplicate reference) | Client |
+| `422` | Unprocessable Content | Well-formed but breaks a business rule (insufficient funds) | Client |
+| `429` | Too Many Requests | Rate limit hit; slow down and retry later | Client |
+| `500` | Internal Server Error | A bug or unexpected failure on the server | Server |
+| `502` / `503` / `504` | Bad Gateway / Unavailable / Gateway Timeout | A dependency or the server is down or slow | Server |
+
+**4xx: the client must change something before retrying. 5xx: the server failed; retrying later may work.** Returning `200 OK` with `{"error": "insufficient funds"}` in the body is a classic anti-pattern: monitoring, client libraries and other engineers all trust the status code.
+
+## 5. Headers you'll meet first
+
+| Header | Direction | Purpose |
+| --- | --- | --- |
+| `Content-Type: application/json` | both | What format the body is in |
+| `Accept: application/json` | request | What format the client wants back |
+| `Authorization: Bearer <token>` | request | Who is calling (Phase 2, topic 6.2) |
+| `Location: /transfers/TRF-2026-00042` | response | Where a newly created resource lives (with `201`) |
+| `Cache-Control: no-store` | response | Don't cache this (always for account data) |
+| `X-Request-Id` / `traceparent` | both | Correlates logs across services (topic 2.6) |
+
+## 6. JSON: the format of almost every API
+
+JSON (JavaScript Object Notation) is text with a handful of types:
+
+```json
+{
+  "reference": "TRF-2026-00042",
+  "amount": "25000.00",
+  "currency": "NGN",
+  "instant": true,
+  "fees": [{"type": "TRANSFER", "amount": "26.88"}],
+  "narration": null
+}
+```
+
+Objects `{ }` with `"name": value` pairs, arrays `[ ]`, strings in **double** quotes, numbers, `true`/`false` and `null`. No comments, no trailing commas.
+
+**Money in JSON:** send amounts as **strings** (`"25000.00"`) or as integers in minor units (`2500000` kobo). JSON numbers are often parsed as binary floating point by clients in other languages, which reintroduces the `double` rounding problem from topic 1.3.
+
+In Spring Boot, the **Jackson** library converts between JSON and Java objects automatically. Records map naturally:
+
+```java
+public record Fee(String type, BigDecimal amount) { }
+public record TransferResponse(String reference, BigDecimal amount, String currency,
+                               boolean instant, List<Fee> fees, String narration) { }
+```
+
+Jackson reads `"25000.00"` into a `BigDecimal` without loss.
+
+## 7. Calling APIs with `curl`
+
+`curl` is the engineer's universal HTTP client. Try a real, free API: the US Treasury's reporting rate for the naira (the same dataset Capstone 2 uses):
+
+```bash
+curl -g -i 'https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/od/rates_of_exchange?filter=country_currency_desc:eq:Nigeria-Naira&sort=-record_date&page[size]=1&fields=record_date,country_currency_desc,exchange_rate'
+```
+
+```
+HTTP/1.1 200 OK
+Content-Type: application/json
+...
+
+{"data":[{"record_date":"2026-09-30","country_currency_desc":"Nigeria-Naira","exchange_rate":"1326.78"}],"meta":{...},"links":{...}}
+```
+
+- `-i` shows the status line and headers; always use it when debugging.
+- `-g` stops curl treating `[` and `]` as patterns.
+- Quote the URL so the shell doesn't interpret `&`.
+- Break the filter (`filter=nonsense`) and you get `400`: the server tells you the request is wrong.
+
+Sending data:
+
+```bash
+curl -i -X POST http://localhost:8080/transfers \
+  -H 'Content-Type: application/json' \
+  -d '{"from":"0123456789","to":"9876543210","amount":"25000.00"}'
+```
+
+`-X` sets the method, `-H` adds a header, `-d` sends a body. Add `| jq` (a JSON pretty-printer) to read large responses. IntelliJ's HTTP Client (`.http` files) and Postman do the same with a UI; `curl` works everywhere, including on a production server over SSH.
+
+## 8. Calling APIs from Java
+
+Java has an HTTP client in the standard library (`java.net.http`):
+
+```java
+HttpClient client = HttpClient.newBuilder()
+        .connectTimeout(Duration.ofSeconds(5))
+        .build();
+
+HttpRequest request = HttpRequest.newBuilder(URI.create(
+                "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/od/rates_of_exchange"
+                + "?filter=country_currency_desc:eq:Nigeria-Naira&sort=-record_date&page%5Bsize%5D=1"
+                + "&fields=record_date,exchange_rate"))
+        .timeout(Duration.ofSeconds(10))
+        .header("Accept", "application/json")
+        .GET()
+        .build();
+
+HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+if (response.statusCode() != 200) {
+    throw new IllegalStateException("Rate service answered " + response.statusCode());
+}
+System.out.println(response.body());
+```
+
+Two habits to start now: **always set timeouts** (a call with no timeout can hang a thread forever when a partner is down) and **always check the status code** before trusting the body. In Spring Boot you'll use `RestClient`, which adds JSON mapping; topic 5.4 adds retries and circuit breakers.
+
+## 9. What "REST" means
+
+REST is a style for designing HTTP APIs. In practice, a "RESTful" API means:
+
+- **Resources are nouns** in the path: `/accounts/{id}`, `/transfers`, `/accounts/{id}/transactions`. Not verbs: `/getBalance`, `/doTransfer`.
+- **The method carries the action**: `GET /transfers/{ref}` reads one, `POST /transfers` creates one.
+- **Status codes mean what they say**: `201` with `Location` after a create, `404` for a missing account, `422` for insufficient funds.
+- **Representations are JSON** (usually), with consistent field names and money as strings or minor units.
+- **Stateless**: every request carries what the server needs (for example a token); no hidden server-side session.
+
+| Not RESTful | RESTful |
+| --- | --- |
+| `POST /getAccountBalance` | `GET /accounts/0123456789/balance` |
+| `GET /transfer?from=..&to=..&amount=..` | `POST /transfers` with a JSON body, answered with `201 Created` |
+| `200 OK` with `{"status":"FAILED"}` | `422` with an error body (Problem Details, topic 4.3) |
+
+## Worked example: your first endpoint, seen from the outside
+
+In topic 4.1 you created a Spring Boot application. Add this class next to it:
+
+```java
+@RestController
+class BalanceController {
+
+    record Balance(String accountNumber, String currency, BigDecimal available) { }
+
+    @GetMapping("/accounts/{accountNumber}/balance")
+    Balance balance(@PathVariable String accountNumber) {
+        return new Balance(accountNumber, "NGN", new BigDecimal("152340.50"));
+    }
+}
+```
+
+Run the application and call it:
+
+```bash
+curl -i http://localhost:8080/accounts/0123456789/balance
+```
+
+```
+HTTP/1.1 200
+Content-Type: application/json
+...
+
+{"accountNumber":"0123456789","currency":"NGN","available":152340.50}
+```
+
+Read it like a reviewer: the method is `GET`, the path names a resource, the status is `200`, the `Content-Type` is JSON, and Jackson turned the record into JSON. Notice that `available` came out as a JSON **number**; for a real API you'd configure it as a string (topic 4.3). Now try `curl -i http://localhost:8080/accounts` (no such mapping): Spring answers `404`. Try `curl -i -X POST http://localhost:8080/accounts/0123456789/balance`: `405 Method Not Allowed`, because only `GET` is mapped. Topic 4.3 builds real endpoints with validation and proper error responses.
+
+## Common mistakes
+
+- Using `GET` for anything that changes data, or putting account numbers and amounts for a payment in a query string.
+- Returning `200` for every outcome and hiding errors in the body.
+- Confusing `401` (who are you?) with `403` (you can't do that).
+- Sending money as a JSON number that clients parse as floating point.
+- Calling another service with no timeout.
+- Reading the response body without checking the status code first.
+- Debugging an API without `curl -i`, so you never see the status and headers.
+
+## Practice
+
+1. Call the Treasury rate API with `curl -g -i`. Change `page[size]` to 5, then sort ascending. Break the filter and note the status code and error body.
+2. Write a small Java program with `HttpClient` that prints the latest naira rate and its date, with timeouts, and fails clearly on a non-200 status.
+3. For a wallet app, write the method, path and success status code for: list my wallets, see one wallet, create a transfer, cancel a scheduled transfer, change my daily limit.
+4. For each situation, choose the status code: malformed JSON; valid request but insufficient funds; account doesn't exist; another customer's account; the database is down; too many requests in a minute.
+5. Add the `BalanceController` to your topic 4.1 application, call it with `curl -i`, and produce a `404` and a `405` on purpose.
+
+## Key terms
+
+HTTP, HTTPS, client, server, request, response, stateless, method, URL, path, query string, percent-encoding, header, body, status code, `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, safe, idempotent, `Content-Type`, `Accept`, `Location`, JSON, Jackson, `curl`, `HttpClient`, timeout, REST, resource.
+
+## Further reading
+
+- [MDN: An overview of HTTP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview)
+- [MDN: HTTP response status codes](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status)
+- [MDN: HTTP request methods](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods)
+- [Java 21 `java.net.http` API](https://docs.oracle.com/en/java/javase/21/docs/api/java.net.http/java/net/http/package-summary.html)
+- [curl: the man page](https://curl.se/docs/manpage.html)
+- [Spring guide: Building a RESTful Web Service](https://spring.io/guides/gs/rest-service)
+- [US Treasury Fiscal Data API documentation](https://fiscaldata.treasury.gov/api-documentation/)

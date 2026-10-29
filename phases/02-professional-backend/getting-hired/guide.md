@@ -1,8 +1,8 @@
-# Getting hired after Phase 2 (week 24, then ongoing)
+# Getting hired after Phase 2 (week 25, then ongoing)
 
 ← [Phase 2](../README.md) · [Capstones](../capstones/README.md) · [Phase 1 getting-hired guide](../../01-foundations/getting-hired/README.md) · [Home](../../../README.md)
 
-Phase 2 is the junior launch point. After week 24 you can compete for **junior Java backend engineer** roles at Nigerian fintechs and banks, for graduate and associate roles at consultancies, and for remote junior roles that ask for Java, Spring Boot, REST, security and CI/CD. Phase 1's advice still holds (read it if you skipped it); this page adds what changes now that you have integration, security, testing and delivery skills.
+Phase 2 is the junior launch point. After week 25 you can compete for **junior Java backend engineer** roles at Nigerian fintechs and banks, for graduate and associate roles at consultancies, and for remote junior roles that ask for Java, Spring Boot, REST, security and CI/CD. Phase 1's advice still holds (read it if you skipped it); this page adds what changes now that you have integration, security, testing and delivery skills.
 
 ## What you can honestly claim after Phase 2
 
@@ -77,7 +77,7 @@ The five from Phase 1, plus:
 - Re-map your shortlist to evidence (60%+ match rule from Phase 1). Phase 2 widens it: junior backend engineer, integration engineer, API developer, payments engineer, junior DevSecOps.
 - Lead with referrals: share your capstone write-ups on LinkedIn and in meetups, and ask for feedback rather than jobs.
 - Prepare for the first 90 days in a job, a common interview question: "learn the codebase and on-call runbooks, ship a small fix in week two, write tests where you touch code, ask good questions in reviews."
-- Phase 3 (Kafka, microservices, Kubernetes, cloud) continues in week 25; each module adds a line to your CV.
+- Phase 3 (Kafka, microservices, Kubernetes, cloud) continues in week 26; each module adds a line to your CV.
 
 ## Phase 2 Getting Hired checklist
 

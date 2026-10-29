@@ -5,7 +5,7 @@
 
 ← [3.4 Schema migrations with Flyway and Liquibase](../3.4-schema-migrations-flyway-liquibase/README.md) · [Module 3](../README.md) · [Phase 1](../../README.md) · [3.6 Redis for caching and MongoDB for document data](../3.6-redis-and-mongodb/README.md) →
 
-> **Week 8** · Module 3: Databases: SQL & NoSQL · Website topic covered: *JDBC fundamentals before moving to JPA*
+> **Week 9** · Module 3: Databases: SQL & NoSQL · Website topic covered: *JDBC fundamentals before moving to JPA*
 
 ## What you will be able to do
 
@@ -63,7 +63,7 @@ public Optional<AccountRow> findByNumber(String number) throws SQLException {
 
 The essentials:
 
-- **try-with-resources** for `Connection`, `PreparedStatement` and `ResultSet` (topic 1.7). With a pool, `close()` returns the connection to the pool rather than closing it, and forgetting it leaks a pooled connection.
+- **try-with-resources** for `Connection`, `PreparedStatement` and `ResultSet` (topic 1.9). With a pool, `close()` returns the connection to the pool rather than closing it, and forgetting it leaks a pooled connection.
 - `executeQuery()` for `SELECT`; `executeUpdate()` for `INSERT`/`UPDATE`/`DELETE`, returning the **affected row count**; `execute()` for anything.
 - `rs.next()` moves to the next row and returns `false` at the end.
 - `getLong`/`getInt` return `0` for SQL `NULL`; check `rs.wasNull()` or use `rs.getObject("col", Long.class)`, which returns `null`.
@@ -227,7 +227,7 @@ Opening a PostgreSQL connection takes several milliseconds and creates a server 
 HikariConfig cfg = new HikariConfig();
 cfg.setJdbcUrl("jdbc:postgresql://localhost:5432/bank?reWriteBatchedInserts=true");
 cfg.setUsername("bank_app");
-cfg.setPassword(System.getenv("DB_PASSWORD"));     // never hard-code secrets (topic 4.4)
+cfg.setPassword(System.getenv("DB_PASSWORD"));     // never hard-code secrets (topic 4.5)
 cfg.setMaximumPoolSize(10);
 cfg.setConnectionTimeout(3_000);                   // ms to wait for a free connection before failing
 cfg.setLeakDetectionThreshold(20_000);             // log a stack trace if a connection is held > 20 s
@@ -252,7 +252,7 @@ Plain JDBC is verbose. You will use higher-level tools, all built on it:
           .optional();
   ```
 
-- **Spring Data JDBC / JPA with Hibernate** (topic 4.3): map objects to tables.
+- **Spring Data JDBC / JPA with Hibernate** (topic 4.4): map objects to tables.
 - **jOOQ**: type-safe SQL generated from your schema.
 - **MyBatis**: SQL in XML or annotations, common in some banks.
 
@@ -328,7 +328,7 @@ JDBC, driver, `DataSource`, `DriverManager`, `Connection`, `PreparedStatement`, 
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [JDBC Tutorial - Crash Course](https://www.youtube.com/watch?v=KgXq2UBNEhA) · Marco Codes · 24 min. JDBC end to end: connections, statements, result sets and transactions.
 - [Java Database Connectivity | JDBC](https://www.youtube.com/watch?v=7v2OnUti2eM) · Telusko · 21 min. A second walkthrough of the JDBC steps, slower and beginner-friendly.

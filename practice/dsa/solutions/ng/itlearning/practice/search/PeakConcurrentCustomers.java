@@ -3,7 +3,7 @@ package ng.itlearning.practice.search;
 import java.util.Arrays;
 
 /**
- * Week 13. Pattern: sweep line over sorted events.
+ * Week 14. Pattern: sweep line over sorted events.
  * <p>
  * A branch records each customer's arrival and departure minute ({@code arrivals[i]} ≤ {@code departures[i]}).
  * A customer leaving at minute t frees a teller for one arriving at t. Return the maximum number of customers

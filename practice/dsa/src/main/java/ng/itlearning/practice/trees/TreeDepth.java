@@ -2,7 +2,7 @@
 package ng.itlearning.practice.trees;
 
 /**
- * Week 16. Pattern: recursion on trees.
+ * Week 17. Pattern: recursion on trees.
  * <p>
  * Return the number of levels in a reporting hierarchy (an empty tree has depth 0).
  */

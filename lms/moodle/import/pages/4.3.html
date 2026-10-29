@@ -1,443 +1,523 @@
-<p><em>Week 11 · Module 4: Spring Boot 4 Fundamentals</em></p>
+<p><em>Week 12 · Module 4: Spring Boot 4 Fundamentals</em></p>
 <h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
 <ul>
-<li>Map entities, IDs, columns, enums, embedded values and relationships
-with Jakarta Persistence (JPA) annotations.</li>
-<li>Explain the persistence context, entity states and dirty checking,
-and how they produce SQL.</li>
-<li>Use Spring Data JPA repositories: derived queries,
-<code>@Query</code>, projections, pagination and sorting.</li>
-<li>Detect and fix the N+1 select problem with fetch joins, entity
-graphs and DTO projections.</li>
-<li>Use <code>@Transactional</code> correctly, and add optimistic
-locking with <code>@Version</code>.</li>
+<li>Build REST endpoints with <code>@RestController</code>, request
+mappings, path variables, query parameters, request bodies and
+<code>ResponseEntity</code>.</li>
+<li>Separate API DTOs (records) from domain and persistence
+objects.</li>
+<li>Validate input with Jakarta Bean Validation, including custom
+constraints and validation groups.</li>
+<li>Return consistent, standards-based errors (RFC 9457 Problem Details)
+from one global handler.</li>
+<li>Test controllers with <code>@WebMvcTest</code> and MockMvc.</li>
 </ul>
 <h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
 bank or fintech</h2>
-<p>JPA with Hibernate is the default persistence stack in enterprise
-Java, and also the most common source of performance incidents in it. A
-statement page that silently runs 501 queries, a "harmless"
-<code>toString()</code> that loads a customer's entire transaction
-history, or a <code>@Transactional</code> annotation that never applied,
-all pass tests on a laptop and fall over in production. This topic
-teaches you to use JPA productively <em>and</em> to see the SQL it
-generates, which is exactly what interviewers probe with "what's the N+1
-problem?".</p>
-<h2 id="1-jpa-hibernate-and-spring-data">1. JPA, Hibernate and Spring
-Data</h2>
-<ul>
-<li><strong>Jakarta Persistence (JPA)</strong> is a specification:
-annotations and the <code>EntityManager</code> API
-(<code>jakarta.persistence</code>). Spring Boot 4 uses Jakarta
-Persistence 3.2.</li>
-<li><strong>Hibernate</strong> (version 7 in Boot 4) is the
-implementation that turns entity operations into SQL.</li>
-<li><strong>Spring Data JPA</strong> adds repository interfaces on top,
-generating common queries for you.</li>
-</ul>
-<p>All three sit on JDBC and the HikariCP pool from topic 3.5.</p>
-<pre class="properties"><code>spring.datasource.url=jdbc:postgresql://localhost:5432/bank
-spring.datasource.username=bank_app
-spring.datasource.password=${DB_PASSWORD}
-spring.jpa.hibernate.ddl-auto=validate        # Flyway owns the schema; Hibernate only checks it
-spring.jpa.open-in-view=false                  # see section 7
-spring.jpa.show-sql=false                      # use logging instead (below)
-logging.level.org.hibernate.SQL=debug          # print every SQL statement during development
-logging.level.org.hibernate.orm.jdbc.bind=trace   # and the bound parameter values</code></pre>
-<p><strong>Never use <code>ddl-auto=update</code> or <code>create</code>
-against a shared database.</strong> Schemas are managed by Flyway
-migrations (topic 3.4); <code>validate</code> makes startup fail if
-entities and schema disagree.</p>
-<h2 id="2-mapping-entities">2. Mapping entities</h2>
-<pre class="java"><code>@Entity
-@Table(name = &quot;account&quot;)
-public class Account {
+<p>The API is the bank's contract with mobile apps, partner fintechs and
+internal teams. A transfer endpoint that accepts a negative amount, a
+malformed account number or a missing narration, or one that answers
+every failure with "500 Internal Server Error" and a stack trace, is
+both a defect and a security finding. Good controllers are thin: they
+validate input at the boundary, call one service method, and translate
+outcomes into precise HTTP responses that client developers can rely
+on.</p>
+<h2 id="1-how-a-request-flows-through-spring-mvc">1. How a request flows
+through Spring MVC</h2>
+<pre class="text"><code>HTTP request → Tomcat → DispatcherServlet → HandlerMapping (which method?)
+             → argument resolution &amp; validation → your @RestController method
+             → return value → HttpMessageConverter (Jackson 3 → JSON) → HTTP response
+             (exceptions → @RestControllerAdvice → Problem Details response)</code></pre>
+<p><code>DispatcherServlet</code> is the front controller that Spring
+Boot registers for you. Jackson converts Java objects to and from JSON.
+Spring Boot 4 uses <strong>Jackson 3</strong>, whose packages are
+<code>tools.jackson.*</code> (the annotations remain
+<code>com.fasterxml.jackson.annotation</code>).</p>
+<h2 id="2-controllers">2. Controllers</h2>
+<pre class="java"><code>@RestController
+@RequestMapping(&quot;/api/v1/accounts&quot;)
+public class AccountController {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)     // matches GENERATED ALWAYS AS IDENTITY
-    private Long id;
+    private final AccountService accounts;
 
-    @Column(nullable = false, unique = true, length = 10)
-    private String number;
+    public AccountController(AccountService accounts) { this.accounts = accounts; }
 
-    @Enumerated(EnumType.STRING)                            // store &#39;SAVINGS&#39;, never the ordinal 0/1/2
-    @Column(nullable = false)
-    private Product product;
-
-    @Column(nullable = false, precision = 19, scale = 2)
-    private BigDecimal balance = BigDecimal.ZERO;
-
-    @Column(nullable = false, length = 3)
-    private String currency;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = &quot;customer_id&quot;)
-    private Customer customer;
-
-    @Version
-    private long version;                                    // optimistic locking (section 6)
-
-    protected Account() { }                                  // JPA needs a no-arg constructor
-
-    public Account(String number, Product product, String currency, Customer customer) {
-        this.number = number; this.product = product; this.currency = currency; this.customer = customer;
+    @GetMapping(&quot;/{number}&quot;)
+    public AccountResponse get(@PathVariable String number) {
+        return accounts.find(number);                         // 200 OK with JSON body
     }
 
-    public void debit(BigDecimal amount) {                   // behaviour, not just setters (topic 1.3)
-        if (balance.compareTo(amount) &lt; 0) throw new InsufficientFundsException(number, amount, balance);
-        balance = balance.subtract(amount);
+    @GetMapping(&quot;/{number}/transactions&quot;)
+    public List&lt;TransactionResponse&gt; transactions(
+            @PathVariable String number,
+            @RequestParam(defaultValue = &quot;20&quot;) @Max(100) int limit,
+            @RequestParam(required = false) LocalDate from) {
+        return accounts.transactions(number, from, limit);
     }
 
-    public void credit(BigDecimal amount) { balance = balance.add(amount); }
+    @PostMapping
+    public ResponseEntity&lt;AccountResponse&gt; open(@Valid @RequestBody OpenAccountRequest request) {
+        AccountResponse created = accounts.open(request);
+        URI location = URI.create(&quot;/api/v1/accounts/&quot; + created.number());
+        return ResponseEntity.created(location).body(created);   // 201 Created + Location header
+    }
 
-    public Long getId() { return id; }
-    public String getNumber() { return number; }
-    public BigDecimal getBalance() { return balance; }
-    // ...
+    @PostMapping(&quot;/{number}/freeze&quot;)
+    @ResponseStatus(HttpStatus.NO_CONTENT)                       // 204
+    public void freeze(@PathVariable String number, @RequestHeader(&quot;X-Officer-Id&quot;) String officer) {
+        accounts.freeze(number, officer);
+    }
 }</code></pre>
-<p>Rules for entities:</p>
-<ul>
-<li>They need a no-arg constructor (it can be <code>protected</code>)
-and must not be <code>final</code>, because Hibernate creates proxies
-(subclasses) for lazy loading. <strong>That is why records are not
-entities</strong> (topic 1.6).</li>
-<li>Map enums with <code>EnumType.STRING</code>. The default
-<code>ORDINAL</code> stores 0, 1, 2 and corrupts data the day someone
-reorders the enum.</li>
-<li>Keep <code>equals</code>/<code>hashCode</code> simple: base them on
-a business key (<code>number</code>) or on <code>id</code> with care for
-unsaved entities. Never include lazy associations.</li>
-<li><strong>Don't put associations in <code>toString()</code></strong>:
-printing an account would load its customer, and printing a customer
-could load every account.</li>
-</ul>
-<h3 id="value-objects-with-embeddable">Value objects with
-<code>@Embeddable</code></h3>
-<pre class="java"><code>@Embeddable
-public record Money(@Column(name = &quot;amount&quot;, precision = 19, scale = 2) BigDecimal amount,
-                    @Column(name = &quot;currency&quot;, length = 3) String currency) { }
-
-@Entity
-public class LedgerPosting {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
-    @Embedded private Money money;          // stored as two columns in the posting table
-}</code></pre>
-<p>Records <em>can</em> be <code>@Embeddable</code> (Hibernate 6.2+),
-which is a neat way to keep <code>Money</code> immutable inside a
-mutable entity.</p>
-<h3 id="relationships">Relationships</h3>
 <table>
 <thead>
 <tr>
 <th>Annotation</th>
-<th>Example</th>
-<th>Default fetch</th>
+<th>Binds</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>@ManyToOne</code></td>
-<td>many transactions → one account</td>
-<td><strong>EAGER</strong> (change it to LAZY)</td>
+<td><code>@GetMapping</code>, <code>@PostMapping</code>,
+<code>@PutMapping</code>, <code>@PatchMapping</code>,
+<code>@DeleteMapping</code></td>
+<td>HTTP method + path</td>
 </tr>
 <tr>
-<td><code>@OneToMany(mappedBy = ...)</code></td>
-<td>one account → many transactions</td>
-<td>LAZY</td>
+<td><code>@PathVariable</code></td>
+<td><code>/accounts/{number}</code></td>
 </tr>
 <tr>
-<td><code>@OneToOne</code></td>
-<td>customer → KYC profile</td>
-<td>EAGER (change it to LAZY)</td>
+<td><code>@RequestParam</code></td>
+<td><code>?limit=20&amp;from=2026-10-01</code></td>
 </tr>
 <tr>
-<td><code>@ManyToMany</code></td>
-<td>customers ↔︎ joint accounts</td>
-<td>LAZY (often better as an explicit join entity)</td>
+<td><code>@RequestBody</code></td>
+<td>JSON body → object</td>
+</tr>
+<tr>
+<td><code>@RequestHeader</code></td>
+<td>A header such as <code>Idempotency-Key</code></td>
+</tr>
+<tr>
+<td><code>ResponseEntity&lt;T&gt;</code></td>
+<td>Full control of status, headers and body</td>
+</tr>
+<tr>
+<td><code>@ResponseStatus</code></td>
+<td>Fixed status for a method or exception class</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Make every association <code>LAZY</code>.</strong> EAGER is a
-performance trap: it loads related data on every query, whether you need
-it or not, and cannot be switched off per query.</p>
-<p>Bidirectional relationships have an <strong>owning side</strong> (the
-side with the foreign key,
-<code>@ManyToOne</code>/<code>@JoinColumn</code>) and an <strong>inverse
-side</strong> (<code>mappedBy</code>). Only the owning side's changes
-are written to the database. Think twice before mapping
-<code>@OneToMany</code> collections that can be huge: an account's
-transactions should be <strong>queried</strong> (paged), not loaded as a
-collection.</p>
-<h2 id="3-the-persistence-context">3. The persistence context</h2>
-<p>The <code>EntityManager</code> (and the Hibernate
-<code>Session</code> underneath) keeps a <strong>persistence
-context</strong>: a first-level cache of the entities loaded in the
-current transaction.</p>
-<p>Entity states:</p>
+<p><code>@RestController</code> = <code>@Controller</code> +
+<code>@ResponseBody</code>: return values are written to the response
+body as JSON.</p>
+<h3 id="http-status-codes-you-will-use-constantly">HTTP status codes you
+will use constantly</h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>When</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>200 OK</td>
+<td>Successful read or update returning a body</td>
+</tr>
+<tr>
+<td>201 Created</td>
+<td>Resource created; include <code>Location</code></td>
+</tr>
+<tr>
+<td>202 Accepted</td>
+<td>Accepted for asynchronous processing (e.g. a transfer queued for
+NIP)</td>
+</tr>
+<tr>
+<td>204 No Content</td>
+<td>Success with no body</td>
+</tr>
+<tr>
+<td>400 Bad Request</td>
+<td>Malformed input, validation failure</td>
+</tr>
+<tr>
+<td>401 Unauthorized / 403 Forbidden</td>
+<td>Not authenticated / not allowed (Module 6)</td>
+</tr>
+<tr>
+<td>404 Not Found</td>
+<td>Resource doesn't exist</td>
+</tr>
+<tr>
+<td>409 Conflict</td>
+<td>State conflict, duplicate request, optimistic-lock failure</td>
+</tr>
+<tr>
+<td>422 Unprocessable Content</td>
+<td>Valid input that breaks a business rule (insufficient funds, limit
+exceeded)</td>
+</tr>
+<tr>
+<td>500 Internal Server Error</td>
+<td>A bug. Never intentionally.</td>
+</tr>
+<tr>
+<td>503 Service Unavailable</td>
+<td>A dependency is down; retry later</td>
+</tr>
+</tbody>
+</table>
+<p>Module 5 goes deeper on API design; this topic gives you the
+essentials.</p>
+<h2 id="3-dtos-dont-expose-your-entities">3. DTOs: don't expose your
+entities</h2>
+<p>Use dedicated request and response types, usually records:</p>
+<pre class="java"><code>public record OpenAccountRequest(
+        @NotBlank @Pattern(regexp = &quot;\\d{11}&quot;, message = &quot;BVN must be 11 digits&quot;) String bvn,
+        @NotNull Product product,
+        @Size(max = 3) @Pattern(regexp = &quot;[A-Z]{3}&quot;) String currency) { }
+
+public record AccountResponse(String number, String product, String currency, BigDecimal balance,
+                              String status, LocalDate openedOn) {
+    static AccountResponse from(Account a) {
+        return new AccountResponse(a.getNumber(), a.getProduct().name(), a.getCurrency(),
+                a.getBalance(), a.getStatus().name(), a.getOpenedOn());
+    }
+}</code></pre>
+<p>Why not return the JPA entity directly?</p>
 <ul>
-<li><strong>Transient</strong>: <code>new Account(...)</code>, not known
-to JPA.</li>
-<li><strong>Managed</strong>: loaded or saved in the current persistence
-context. Changes are tracked.</li>
-<li><strong>Detached</strong>: was managed, but the context closed (e.g.
-after the transaction).</li>
-<li><strong>Removed</strong>: scheduled for deletion.</li>
+<li><strong>Security</strong>: entities contain fields clients must
+never see (internal IDs, flags, PINs' hashes) or set (<strong>mass
+assignment</strong>: a client sends <code>"balance": 1000000</code> and
+it binds).</li>
+<li><strong>Stability</strong>: the API contract shouldn't change when
+you rename a column.</li>
+<li><strong>Performance and correctness</strong>: serialising entities
+can trigger lazy loading and N+1 queries (topic 4.4), or infinite
+recursion through bidirectional relationships.</li>
 </ul>
-<p><strong>Dirty checking</strong>: at flush time (usually commit),
-Hibernate compares each managed entity with its snapshot and issues
-<code>UPDATE</code>s for whatever changed. You don't call
-<code>save()</code> after modifying a managed entity:</p>
-<pre class="java"><code>@Transactional
-public void applyMonthlyFee(String number) {
-    Account acc = accounts.findByNumber(number).orElseThrow();
-    acc.debit(new BigDecimal(&quot;50.00&quot;));      // no save() needed: UPDATE is issued at commit
-}</code></pre>
-<p>The persistence context also guarantees one Java object per row per
-transaction: loading the same account twice returns the same instance
-and runs one query.</p>
-<h2 id="4-spring-data-jpa-repositories">4. Spring Data JPA
-repositories</h2>
-<pre class="java"><code>public interface AccountRepository extends JpaRepository&lt;Account, Long&gt; {
-
-    Optional&lt;Account&gt; findByNumber(String number);                     // derived query
-
-    List&lt;Account&gt; findByCustomerIdAndStatus(Long customerId, Status status);
-
-    boolean existsByNumber(String number);
-
-    @Query(&quot;&quot;&quot;
-           select a from Account a
-           where a.status = :status and a.balance &lt; :threshold
-           &quot;&quot;&quot;)
-    Page&lt;Account&gt; findLowBalance(@Param(&quot;status&quot;) Status status,
-                                 @Param(&quot;threshold&quot;) BigDecimal threshold,
-                                 Pageable pageable);                   // pagination + sorting
-
-    @Query(value = &quot;select * from account where lower(number) = lower(:n)&quot;, nativeQuery = true)
-    Optional&lt;Account&gt; findByNumberNative(@Param(&quot;n&quot;) String n);       // plain SQL when you need it
-}</code></pre>
+<h3 id="json-details-that-matter-for-money">JSON details that matter for
+money</h3>
 <ul>
-<li><code>JpaRepository</code> gives you <code>save</code>,
-<code>findById</code>, <code>findAll</code>, <code>deleteById</code>,
-<code>count</code>, paging and more.</li>
-<li><strong>Derived queries</strong> parse the method name:
-<code>findBy...And...OrderBy...Desc</code>. Great for simple lookups;
-switch to <code>@Query</code> when names get long.</li>
-<li><code>@Query</code> uses <strong>JPQL</strong>, which queries
-entities and fields (<code>Account</code>, <code>a.balance</code>), not
-tables and columns. <code>nativeQuery = true</code> runs plain SQL.</li>
-<li><strong>Pagination</strong>:
-<code>PageRequest.of(page, size, Sort.by("postedAt").descending())</code>.
-<code>Page</code> also runs a <code>count</code> query;
-<code>Slice</code> skips it when you only need "is there a next
-page?".</li>
+<li>Serialise <code>BigDecimal</code> as a JSON <strong>number</strong>
+with its scale (<code>1500.00</code>) or, for maximum safety with
+JavaScript clients, as a <strong>string</strong>
+(<code>"1500.00"</code>). Decide once, document it.</li>
+<li>Dates as ISO-8601 strings (<code>2026-10-21</code>,
+<code>2026-10-21T09:15:00Z</code>), which is the Boot default.</li>
 </ul>
-<h3 id="projections-read-only-what-you-need">Projections: read only what
-you need</h3>
-<p>For read-only screens, don't load full entities. Project straight
-into a DTO:</p>
-<pre class="java"><code>public record StatementLine(LocalDate valueDate, String reference, String direction,
-                            BigDecimal amount, String narration) { }
-
-@Query(&quot;&quot;&quot;
-       select new ng.itlearning.bank.statement.StatementLine(t.valueDate, t.reference, t.direction, t.amount, t.narration)
-       from Txn t
-       where t.account.number = :number and t.valueDate between :from and :to
-       order by t.postedAt
-       &quot;&quot;&quot;)
-List&lt;StatementLine&gt; statement(String number, LocalDate from, LocalDate to);</code></pre>
-<p>Projections select only the needed columns, never trigger lazy
-loading, and produce no managed entities (no dirty-checking overhead).
-Interface-based and record-based projections in derived queries work
-too.</p>
-<h2 id="5-the-n1-select-problem">5. The N+1 select problem</h2>
-<pre class="java"><code>List&lt;Account&gt; accounts = accountRepository.findByStatus(Status.ACTIVE);   // 1 query: 500 accounts
-for (Account a : accounts) {
-    System.out.println(a.getCustomer().getFullName());                     // +1 query per account
+<h3
+id="mapping-between-entities-and-dtos-by-hand-or-with-mapstruct">Mapping
+between entities and DTOs: by hand or with MapStruct</h3>
+<p>Small services map by hand with a static method or a constructor on
+the DTO record: explicit, easy to debug and fine for a handful of
+types.</p>
+<pre class="java"><code>public record AccountResponse(String number, String holder, BigDecimal balance, String currency) {
+    static AccountResponse from(Account a) {
+        return new AccountResponse(a.getNumber(), a.getHolderName(), a.getBalance(), a.getCurrency().getCurrencyCode());
+    }
 }</code></pre>
-<p>With <code>customer</code> mapped <code>LAZY</code>, each
-<code>getCustomer().getFullName()</code> triggers a separate
-<code>SELECT</code> from <code>customer</code>: <strong>1 + 500
-queries</strong>. With <code>EAGER</code> it's no better: Hibernate
-often loads each customer with its own query anyway. Each query is fast;
-501 round trips are not. In logs it looks like the same
-<code>select ... from customer where id=?</code> repeated hundreds of
-times.</p>
-<p><strong>Fixes:</strong></p>
-<ol type="1">
-<li><p><strong>Fetch join</strong> in JPQL: load accounts and their
-customers in one query.</p>
-<pre class="java"><code>@Query(&quot;select a from Account a join fetch a.customer where a.status = :status&quot;)
-List&lt;Account&gt; findActiveWithCustomer(Status status);</code></pre></li>
-<li><p><strong>Entity graph</strong> on a repository method:</p>
-<pre class="java"><code>@EntityGraph(attributePaths = &quot;customer&quot;)
-List&lt;Account&gt; findByStatus(Status status);</code></pre></li>
-<li><p><strong>DTO projection</strong> (section 4): select exactly the
-columns needed, joined in SQL.</p></li>
-<li><p><strong>Batch fetching</strong> as a safety net:
-<code>spring.jpa.properties.hibernate.default_batch_fetch_size=50</code>
-makes Hibernate load lazy associations in batches
-(<code>where id in (?, ?, ...)</code>), turning N+1 into 1 +
-N/50.</p></li>
-</ol>
-<p>Caveat: fetch-joining a <strong>collection</strong>
-(<code>join fetch c.accounts</code>) together with pagination makes
-Hibernate paginate in memory (it warns:
-<code>HHH90003004: firstResult/maxResults specified with collection fetch</code>).
-Page the parent IDs first, then fetch their children in a second
-query.</p>
-<p><strong>How to catch N+1 before production:</strong> enable SQL
-logging in development, look at the statement count per request
-(Hibernate statistics:
-<code>spring.jpa.properties.hibernate.generate_statistics=true</code>),
-and write tests that assert the number of queries for key endpoints.</p>
-<h2 id="6-transactions-with-transactional">6. Transactions with
-<code>@Transactional</code></h2>
-<pre class="java"><code>@Service
-public class TransferService {
-    private final AccountRepository accounts;
-    private final LedgerRepository ledger;
-
-    @Transactional
-    public TransferReceipt transfer(TransferRequest r) {
-        Account from = accounts.findByNumberForUpdate(r.fromAccount()).orElseThrow(...);
-        Account to = accounts.findByNumberForUpdate(r.toAccount()).orElseThrow(...);
-        from.debit(r.amount());
-        to.credit(r.amount());
-        ledger.save(LedgerEntry.debit(r.clientReference(), from, r.amount()));
-        ledger.save(LedgerEntry.credit(r.clientReference(), to, r.amount()));
-        return new TransferReceipt(r.clientReference(), Instant.now());
-    }   // commit: dirty checking flushes the two balance UPDATEs and the INSERTs
+<p>Larger codebases often use <strong>MapStruct</strong>, an annotation
+processor that generates the mapping code at compile time (no reflection
+at run time):</p>
+<pre class="java"><code>@Mapper(componentModel = &quot;spring&quot;)
+public interface AccountMapper {
+    @Mapping(target = &quot;holder&quot;, source = &quot;holderName&quot;)
+    @Mapping(target = &quot;currency&quot;, expression = &quot;java(account.getCurrency().getCurrencyCode())&quot;)
+    AccountResponse toResponse(Account account);
 }</code></pre>
-<p>Spring wraps the bean in a <strong>proxy</strong> that begins a
-transaction before the method, commits after it, and <strong>rolls back
-on unchecked exceptions</strong> (<code>RuntimeException</code>,
-<code>Error</code>). The JDBC code from topic 3.5 is what it does
-underneath.</p>
-<p>What trips people up:</p>
+<p>Add <code>org.mapstruct:mapstruct</code> (1.6.3) and configure
+<code>mapstruct-processor</code> as an annotation processor (alongside
+Lombok's if you use both). Set
+<code>unmappedTargetPolicy = ReportingPolicy.ERROR</code> so a new DTO
+field that nobody maps fails the build instead of silently being
+<code>null</code>. Whichever approach you use, test the mapping of money
+and dates explicitly.</p>
+<h2 id="4-validation">4. Validation</h2>
+<p>Add <code>spring-boot-starter-validation</code> (Hibernate Validator,
+the Jakarta Bean Validation reference implementation). Annotate DTO
+fields, then put <code>@Valid</code> on the parameter:</p>
+<table>
+<thead>
+<tr>
+<th>Constraint</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>@NotNull</code>, <code>@NotBlank</code>,
+<code>@NotEmpty</code></td>
+<td>Required values</td>
+</tr>
+<tr>
+<td><code>@Size(min, max)</code></td>
+<td>Lengths of strings and collections</td>
+</tr>
+<tr>
+<td><code>@Pattern(regexp)</code></td>
+<td>Account numbers, codes</td>
+</tr>
+<tr>
+<td><code>@Positive</code>, <code>@PositiveOrZero</code>,
+<code>@Min</code>, <code>@Max</code></td>
+<td>Numeric ranges</td>
+</tr>
+<tr>
+<td><code>@DecimalMin("0.01")</code>,
+<code>@Digits(integer = 15, fraction = 2)</code></td>
+<td>Money amounts</td>
+</tr>
+<tr>
+<td><code>@Email</code>, <code>@Past</code>, <code>@Future</code></td>
+<td>Formats and dates</td>
+</tr>
+</tbody>
+</table>
+<pre class="java"><code>public record TransferRequest(
+        @NotBlank @Pattern(regexp = &quot;\\d{10}&quot;) String fromAccount,
+        @NotBlank @Pattern(regexp = &quot;\\d{10}&quot;) String toAccount,
+        @NotBlank @Pattern(regexp = &quot;\\d{3,6}&quot;) String destinationBankCode,
+        @NotNull @DecimalMin(&quot;1.00&quot;) @Digits(integer = 13, fraction = 2) BigDecimal amount,
+        @NotBlank @Size(max = 100) String narration,
+        @NotBlank @Size(max = 64) String clientReference) { }</code></pre>
+<p><code>@Digits(fraction = 2)</code> rejects ₦10.555 at the boundary
+instead of letting rounding happen somewhere unexpected.</p>
+<p>Validating path variables and request parameters (like
+<code>@Max(100) int limit</code> above) is built into Spring Framework
+6.1+ method validation for controllers; failures produce a
+<code>HandlerMethodValidationException</code>.</p>
+<h3 id="custom-constraints">Custom constraints</h3>
+<pre class="java"><code>@Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.RECORD_COMPONENT})
+@Retention(RetentionPolicy.RUNTIME)
+@Constraint(validatedBy = NubanValidator.class)
+public @interface ValidNuban {
+    String message() default &quot;Invalid account number&quot;;
+    Class&lt;?&gt;[] groups() default {};
+    Class&lt;? extends Payload&gt;[] payload() default {};
+}
+
+public class NubanValidator implements ConstraintValidator&lt;ValidNuban, String&gt; {
+    @Override
+    public boolean isValid(String value, ConstraintValidatorContext ctx) {
+        return value == null || (value.matches(&quot;\\d{10}&quot;) &amp;&amp; checkDigitOk(value));   // null handled by @NotNull
+    }
+}</code></pre>
+<p><strong>Class-level constraints</strong> validate several fields
+together, for example "<code>toAccount</code> must differ from
+<code>fromAccount</code>".</p>
+<p>Validation at the edge checks <strong>shape</strong>.
+<strong>Business rules</strong> that depend on state (balance, limits,
+account status) belong in the service, and failures are domain
+exceptions (topic 1.9).</p>
+<h2 id="5-global-error-handling-with-problem-details">5. Global error
+handling with Problem Details</h2>
+<p>Clients need one predictable error format. <strong>RFC 9457 Problem
+Details</strong> (<code>application/problem+json</code>) is the
+standard, and Spring supports it natively with the
+<code>ProblemDetail</code> class:</p>
+<pre class="json"><code>{
+  &quot;type&quot;: &quot;https://api.itlearning-bank.ng/problems/insufficient-funds&quot;,
+  &quot;title&quot;: &quot;Insufficient funds&quot;,
+  &quot;status&quot;: 422,
+  &quot;detail&quot;: &quot;Account ******6789 has insufficient funds for this transfer&quot;,
+  &quot;instance&quot;: &quot;/api/v1/transfers&quot;,
+  &quot;available&quot;: &quot;1500.00&quot;,
+  &quot;requested&quot;: &quot;5000.00&quot;,
+  &quot;traceId&quot;: &quot;4bf92f3577b34da6&quot;
+}</code></pre>
+<p>Enable it for Spring's own exceptions:</p>
+<pre class="properties"><code>spring.mvc.problemdetails.enabled=true</code></pre>
+<p>Then map your domain exceptions in one
+<code>@RestControllerAdvice</code>:</p>
+<pre class="java"><code>@RestControllerAdvice
+public class ApiExceptionHandler extends ResponseEntityExceptionHandler {   // handles Spring MVC&#39;s exceptions as ProblemDetail
+
+    private static final URI BASE = URI.create(&quot;https://api.itlearning-bank.ng/problems/&quot;);
+
+    @ExceptionHandler(AccountNotFoundException.class)
+    ProblemDetail notFound(AccountNotFoundException e) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+        pd.setType(BASE.resolve(&quot;account-not-found&quot;));
+        pd.setTitle(&quot;Account not found&quot;);
+        return pd;
+    }
+
+    @ExceptionHandler(InsufficientFundsException.class)
+    ProblemDetail insufficientFunds(InsufficientFundsException e) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, e.getMessage());
+        pd.setType(BASE.resolve(&quot;insufficient-funds&quot;));
+        pd.setTitle(&quot;Insufficient funds&quot;);
+        pd.setProperty(&quot;available&quot;, e.available().toPlainString());
+        pd.setProperty(&quot;requested&quot;, e.requested().toPlainString());
+        return pd;
+    }
+
+    @ExceptionHandler(DuplicateTransferException.class)
+    ProblemDetail duplicate(DuplicateTransferException e) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
+        pd.setType(BASE.resolve(&quot;duplicate-request&quot;));
+        return pd;
+    }
+
+    @ExceptionHandler(Exception.class)
+    ProblemDetail unexpected(Exception e) {
+        log.error(&quot;Unhandled error&quot;, e);                            // log once, with the stack trace
+        return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR,
+                &quot;An unexpected error occurred. Quote the trace ID when contacting support.&quot;);
+    }
+}</code></pre>
+<p><code>ResponseEntityExceptionHandler</code> already turns validation
+failures (<code>MethodArgumentNotValidException</code>), malformed JSON,
+unsupported media types and wrong methods into Problem Details. Override
+<code>handleMethodArgumentNotValid</code> to add a list of field
+errors:</p>
+<pre class="java"><code>@Override
+protected ResponseEntity&lt;Object&gt; handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
+        HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+    ProblemDetail pd = ex.getBody();
+    pd.setTitle(&quot;Validation failed&quot;);
+    pd.setProperty(&quot;errors&quot;, ex.getBindingResult().getFieldErrors().stream()
+            .map(fe -&gt; Map.of(&quot;field&quot;, fe.getField(), &quot;message&quot;, String.valueOf(fe.getDefaultMessage())))
+            .toList());
+    return ResponseEntity.status(status).body(pd);
+}</code></pre>
+<p>Rules for error responses in finance:</p>
 <ul>
-<li><strong>Self-invocation</strong>: calling a
-<code>@Transactional</code> method from another method <em>in the same
-class</em> bypasses the proxy, so no transaction starts. Put it in a
-separate bean, or make the outer method transactional.</li>
-<li><strong>Checked exceptions don't roll back</strong> by default. Use
-unchecked domain exceptions, or
-<code>@Transactional(rollbackFor = Exception.class)</code>.</li>
-<li><strong>Only public methods</strong> called through the proxy are
-transactional.</li>
-<li><code>@Transactional(readOnly = true)</code> on read methods lets
-Hibernate skip dirty checking and may route to a read replica.</li>
-<li><strong>Keep transactions short</strong>: no HTTP calls to partners
-inside them (topic 3.2).</li>
-<li>Use <code>jakarta.transaction.Transactional</code> or
-<code>org.springframework.transaction.annotation.Transactional</code>;
-prefer Spring's, which has more options.</li>
+<li><strong>Never</strong> return stack traces, SQL, class names or
+internal hostnames. Set
+<code>server.error.include-stacktrace=never</code> (the default) and
+don't put <code>e.toString()</code> in <code>detail</code>.</li>
+<li>Mask account numbers and never echo secrets.</li>
+<li>Include a correlation/trace ID so support can find the logs (Module
+13 automates this).</li>
+<li>Keep <code>type</code> URIs stable: client apps switch on them.</li>
 </ul>
-<h3 id="locking-with-jpa">Locking with JPA</h3>
-<p><strong>Optimistic</strong>: the <code>@Version</code> field above.
-Every update runs
-<code>UPDATE ... SET ..., version = version + 1 WHERE id = ? AND version = ?</code>;
-if another transaction changed the row first, Hibernate throws
-<code>ObjectOptimisticLockingFailureException</code>, which you map to
-HTTP 409 or retry.</p>
-<p><strong>Pessimistic</strong>: lock the row for the rest of the
-transaction (<code>SELECT ... FOR UPDATE</code>), matching topic
-3.2:</p>
-<pre class="java"><code>@Lock(LockModeType.PESSIMISTIC_WRITE)
-@Query(&quot;select a from Account a where a.number = :number&quot;)
-Optional&lt;Account&gt; findByNumberForUpdate(String number);</code></pre>
-<p>For transfers, lock both accounts in a consistent order (by number or
-id) to avoid deadlocks.</p>
-<h2 id="7-open-session-in-view-switch-it-off">7. Open Session in View:
-switch it off</h2>
-<p>By default Spring Boot keeps the persistence context open for the
-whole web request (<code>spring.jpa.open-in-view=true</code>, with a
-startup warning), so lazy loading works even in controllers and JSON
-serialisation. That hides N+1 problems and holds database connections
-for the entire request, including JSON writing. Set it to
-<code>false</code>, load what each use case needs in the service (fetch
-joins, projections), and return DTOs. A
-<code>LazyInitializationException</code> after that change tells you
-exactly where data was being loaded by accident.</p>
-<h2
-id="worked-example-a-statement-endpoint-that-runs-two-queries-not-500">Worked
-example: a statement endpoint that runs two queries, not 500</h2>
-<pre class="java"><code>@Transactional(readOnly = true)
-public StatementResponse statement(String number, LocalDate from, LocalDate to, int page) {
-    AccountHeader header = accounts.findHeader(number)                         // 1: projection with customer name
-            .orElseThrow(() -&gt; new AccountNotFoundException(number));
-    Slice&lt;StatementLine&gt; lines = txns.statementPage(number, from, to,
-            PageRequest.of(page, 50, Sort.by(&quot;postedAt&quot;, &quot;id&quot;)));             // 2: projection, paged
-    return new StatementResponse(header, lines.getContent(), lines.hasNext());
+<h2 id="6-testing-controllers">6. Testing controllers</h2>
+<p><code>@WebMvcTest</code> starts only the web layer (controllers,
+advice, converters, validation), not services or the database. Mock the
+service:</p>
+<pre class="java"><code>@WebMvcTest(AccountController.class)
+class AccountControllerTest {
+
+    @Autowired MockMvc mvc;
+    @MockitoBean AccountService accounts;                // Spring Framework&#39;s Mockito integration
+
+    @Test
+    void rejectsInvalidBvn() throws Exception {
+        mvc.perform(post(&quot;/api/v1/accounts&quot;)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(&quot;&quot;&quot;
+                                {&quot;bvn&quot;: &quot;123&quot;, &quot;product&quot;: &quot;SAVINGS&quot;, &quot;currency&quot;: &quot;NGN&quot;}
+                                &quot;&quot;&quot;))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath(&quot;$.errors[0].field&quot;).value(&quot;bvn&quot;));
+    }
+
+    @Test
+    void returns404ProblemForUnknownAccount() throws Exception {
+        when(accounts.find(&quot;0000000000&quot;)).thenThrow(new AccountNotFoundException(&quot;0000000000&quot;));
+        mvc.perform(get(&quot;/api/v1/accounts/0000000000&quot;))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath(&quot;$.title&quot;).value(&quot;Account not found&quot;));
+    }
 }</code></pre>
-<p>Two SQL statements regardless of statement length, no entities
-loaded, no lazy-loading surprises, and the transaction is read-only.
-Compare that with returning <code>account.getTransactions()</code> from
-the entity: one query for the account, one for the customer, and a
-collection load of <em>every</em> transaction the account ever had.</p>
+<p>In Spring Boot 4, <code>@WebMvcTest</code> comes from the
+<code>spring-boot-starter-webmvc-test</code> starter, and
+<code>@MockitoBean</code> replaces the removed <code>@MockBean</code>.
+Module 7 covers testing in depth (including the AssertJ-style
+<code>MockMvcTester</code> and full integration tests with
+Testcontainers).</p>
+<h2 id="worked-example-a-transfer-endpoint-end-to-end">Worked example: a
+transfer endpoint, end to end</h2>
+<pre class="java"><code>@RestController
+@RequestMapping(&quot;/api/v1/transfers&quot;)
+public class TransferController {
+    private final TransferService transfers;
+    public TransferController(TransferService transfers) { this.transfers = transfers; }
+
+    @PostMapping
+    public ResponseEntity&lt;TransferResponse&gt; create(@Valid @RequestBody TransferRequest request) {
+        TransferReceipt receipt = transfers.transfer(request);       // throws domain exceptions
+        return ResponseEntity
+                .created(URI.create(&quot;/api/v1/transfers/&quot; + receipt.reference()))
+                .body(TransferResponse.from(receipt));
+    }
+}</code></pre>
+<p>The controller does three things: validate (annotations), delegate
+(one service call), respond (status + DTO). Insufficient funds becomes a
+422 Problem Detail, a duplicate <code>clientReference</code> becomes a
+409, and an unknown account a 404, all in the advice class. No
+<code>try/catch</code> in the controller at all.</p>
 <h2 id="common-mistakes">Common mistakes</h2>
 <ul>
-<li><code>ddl-auto=update</code> in shared environments.</li>
-<li><code>EnumType.ORDINAL</code>.</li>
-<li>EAGER associations, or entities in
-<code>toString()</code>/JSON.</li>
-<li>Mapping unbounded <code>@OneToMany</code> collections and loading
-them.</li>
-<li>N+1 queries hidden by Open Session in View.</li>
-<li>Calling a <code>@Transactional</code> method from the same
+<li>Returning JPA entities from controllers.</li>
+<li>Business logic in controllers.</li>
+<li>Forgetting <code>@Valid</code>, so annotations on the DTO are never
+checked.</li>
+<li><code>200 OK</code> with <code>{"success": false}</code> bodies
+instead of proper status codes.</li>
+<li>Leaking exception messages or stack traces to clients.</li>
+<li>Catching exceptions in every controller instead of one advice
 class.</li>
-<li>Expecting checked exceptions to roll back.</li>
-<li><code>save()</code> calls everywhere "just in case", or
-<code>saveAll</code> in loops without batching
-(<code>hibernate.jdbc.batch_size</code>).</li>
+<li><code>double</code> amounts in request DTOs.</li>
 </ul>
 <h2 id="practice">Practice</h2>
 <ol type="1">
-<li>Map <code>Customer</code>, <code>Account</code> and <code>Txn</code>
-to your Flyway schema from topic 3.4 with
-<code>ddl-auto=validate</code>. Make startup fail by renaming a column
-in a migration, read the error, and fix it.</li>
-<li>Write an endpoint listing 200 active accounts with customer names.
-Turn on SQL logging, count the queries, then fix the N+1 three ways
-(fetch join, entity graph, projection) and compare the SQL.</li>
-<li>Implement <code>transfer</code> with <code>@Transactional</code> and
-pessimistic locking. Write a test that runs 20 concurrent transfers and
-asserts the total balance is unchanged.</li>
-<li>Add <code>@Version</code> to <code>Customer</code>, update the same
-customer from two threads, and map the resulting exception to a 409
-Problem Detail.</li>
+<li>Build <code>AccountController</code> and
+<code>TransferController</code> as above, backed by an in-memory
+service, with validation and the Problem Details advice.</li>
+<li>Write a custom <code>@ValidNuban</code> constraint and a class-level
+<code>@DifferentAccounts</code> constraint, with unit tests for the
+validators.</li>
+<li>Write <code>@WebMvcTest</code> tests for: a valid transfer (201 with
+<code>Location</code>), a validation failure (400 with field errors),
+insufficient funds (422), unknown account (404) and malformed JSON
+(400).</li>
+<li>Call your API with <code>curl -i</code> and check every response's
+status, headers and <code>Content-Type</code>.</li>
+<li>Write the same entity-to-DTO mapping by hand and with MapStruct,
+open the generated <code>AccountMapperImpl</code> in
+<code>target/generated-sources</code>, and decide which you would use
+for your capstone.</li>
 </ol>
 <h2 id="key-terms">Key terms</h2>
-<p>JPA, Hibernate, Spring Data JPA, entity, <code>@Id</code>,
-<code>@GeneratedValue</code>, <code>@Enumerated(STRING)</code>,
-<code>@Embeddable</code>, association, owning side,
-<code>mappedBy</code>, LAZY/EAGER, proxy, persistence context, entity
-states, dirty checking, flush, derived query, JPQL, native query,
-<code>Page</code>/<code>Slice</code>, projection, N+1, fetch join,
-entity graph, batch fetching, <code>@Transactional</code>,
-self-invocation, <code>@Version</code>, optimistic/pessimistic locking,
-Open Session in View, <code>ddl-auto</code>.</p>
+<p><code>DispatcherServlet</code>, <code>@RestController</code>,
+<code>@RequestMapping</code>, <code>@PathVariable</code>,
+<code>@RequestParam</code>, <code>@RequestBody</code>,
+<code>ResponseEntity</code>, status code, DTO, mass assignment, Jakarta
+Bean Validation, <code>@Valid</code>, constraint, custom validator,
+method validation, Problem Details (RFC 9457),
+<code>ProblemDetail</code>, <code>@RestControllerAdvice</code>,
+<code>@ExceptionHandler</code>,
+<code>ResponseEntityExceptionHandler</code>, <code>@WebMvcTest</code>,
+MockMvc, <code>@MockitoBean</code>, DTO mapping, MapStruct,
+<code>@Mapper</code>, unmapped target policy.</p>
 <h2 id="further-reading">Further reading</h2>
 <ul>
-<li><a href="https://docs.spring.io/spring-data/jpa/reference/">Spring
-Data JPA reference</a></li>
 <li><a
-href="https://docs.spring.io/spring-boot/reference/data/sql.html">Spring
-Boot reference: SQL databases and JPA</a></li>
+href="https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller.html">Spring
+Framework reference: Annotated Controllers</a></li>
 <li><a
-href="https://docs.hibernate.org/orm/7.0/userguide/html_single/">Hibernate
-ORM User Guide</a></li>
+href="https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-ann-rest-exceptions.html">Spring
+Framework reference: Error Responses (Problem Details)</a></li>
 <li><a
-href="https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative.html">Spring
-Framework reference: Declarative transaction management</a></li>
-<li><a href="https://vladmihalcea.com/n-plus-1-query-problem/">Vlad
-Mihalcea: N+1 query problem with JPA and Hibernate</a></li>
-<li><a href="https://jakarta.ee/specifications/persistence/3.2/">Jakarta
-Persistence 3.2 specification</a></li>
+href="https://docs.spring.io/spring-framework/reference/core/validation/beanvalidation.html">Spring
+Framework reference: Validation</a></li>
+<li><a href="https://www.rfc-editor.org/rfc/rfc9457">RFC 9457: Problem
+Details for HTTP APIs</a></li>
+<li><a
+href="https://docs.jboss.org/hibernate/stable/validator/reference/en-US/html_single/">Hibernate
+Validator reference</a></li>
+<li><a href="https://spring.io/guides/gs/rest-service">Spring guide:
+Building a RESTful Web Service</a></li>
 </ul>
 
 <h2>Watch</h2>
-<h3>Hibernate &amp; JPA Tutorial - Crash Course</h3><p>Marco Codes · 24 min. JPA and Hibernate from the ground up: entities, mappings and the persistence context.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/xHminZ9Dxm4" title="Hibernate &amp; JPA Tutorial - Crash Course" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
-<h3>JOIN FETCH with Hibernate - The end of n+1 select issues</h3><p>Thorben Janssen · 6 min. Fixing N+1 selects with JOIN FETCH, from Thorben Janssen.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/QAaTLLYdHJ0" title="JOIN FETCH with Hibernate - The end of n+1 select issues" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
-<h3>Fix N+1 Select Issues with Hibernate’s EntityGraphs</h3><p>Thorben Janssen · 7 min. Fixing N+1 selects with entity graphs.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/7gm30iX3Nfw" title="Fix N+1 Select Issues with Hibernate’s EntityGraphs" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
-<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/04-spring-boot-fundamentals/4.3-spring-data-jpa-hibernate/README.md">4.3 Spring Data JPA and Hibernate: mappings, fetching and avoiding N+1</a></p>
+<h3>Spring Boot Validation</h3><p>Fast and Simple Development · 12 min. Bean Validation on request bodies with @Valid and constraint annotations.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/LItERTUC9y4" title="Spring Boot Validation" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Spring Boot Tutorial | How To Handle Exceptions</h3><p>Amigoscode · 14 min. Turning exceptions into clean HTTP responses.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/PzK4ZXa2Tbc" title="Spring Boot Tutorial | How To Handle Exceptions" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Master Exception Handling in Spring Boot: @ExceptionHandler &amp; @ControllerAdvice Explained</h3><p>CodeSnippet by Chetan · 28 min. @ExceptionHandler and @RestControllerAdvice in depth.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/IdHHwZg3v58" title="Master Exception Handling in Spring Boot: @ExceptionHandler &amp; @ControllerAdvice Explained" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/04-spring-boot-fundamentals/4.3-spring-mvc-validation-errors/README.md">4.3 Spring MVC controllers, validation and global error handling</a></p>

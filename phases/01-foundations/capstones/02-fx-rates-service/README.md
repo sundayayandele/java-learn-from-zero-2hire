@@ -58,7 +58,7 @@ Sources: [Mermaid](architecture/cloud.mmd) · [draw.io](architecture/cloud.drawi
 
 <!-- ARCHITECTURE:END -->
 
-Weeks 8–12. Modules used: 1, 2, 3, 4.
+Weeks 9–13. Modules used: 1, 2, 3, 4.
 
 ## Business context
 
@@ -153,7 +153,7 @@ Commit only a **small unmodified sample** of the ECB file for tests (a few dates
 - Add the US Treasury dataset for NGN and other currencies, and choose sources per currency with a priority order.
 - Serve `GET /rates/latest` as a compact JSON object for a mobile app, with `ETag`/`If-None-Match` support.
 - A volatility report: the 30-day rolling standard deviation per currency, computed with a SQL window function.
-- Rewrite the service in Kotlin (topic 4.7) and compare.
+- Rewrite the service in Kotlin (topic 4.9) and compare.
 
 ## Interview talking points
 

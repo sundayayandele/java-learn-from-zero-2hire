@@ -5,7 +5,7 @@
 
 ← [3.3 Indexing and reading query plans in PostgreSQL and MySQL](../3.3-indexing-query-plans/README.md) · [Module 3](../README.md) · [Phase 1](../../README.md) · [3.5 JDBC fundamentals](../3.5-jdbc-fundamentals/README.md) →
 
-> **Week 8** · Module 3: Databases: SQL & NoSQL · Website topic covered: *Schema migrations with Flyway or Liquibase*
+> **Week 9** · Module 3: Databases: SQL & NoSQL · Website topic covered: *Schema migrations with Flyway or Liquibase*
 
 ## What you will be able to do
 
@@ -225,7 +225,7 @@ Run `flyway info` before and after `migrate`, commit both files with the code th
 - Huge data updates inside a schema migration.
 - `CREATE INDEX` without `CONCURRENTLY` on a hot table.
 - Version-number collisions between feature branches.
-- Using Hibernate's `ddl-auto=update` instead of migrations (topic 4.3 explains why).
+- Using Hibernate's `ddl-auto=update` instead of migrations (topic 4.4 explains why).
 
 ## Practice
 
@@ -248,7 +248,7 @@ Migration, schema version, history table, versioned migration, repeatable migrat
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [Database Migrations for Beginners | Flyway Tutorial](https://www.youtube.com/watch?v=dJDBP7pPA-o) · Redhwan Nacef · 18 min. Why migrations exist and how Flyway versions a schema.
 - [Working with Flyway Migrations in a Spring Boot Application](https://www.youtube.com/watch?v=AMopB9C2bH8) · IntelliJ IDEA, a JetBrains IDE · 8 min. Flyway inside a Spring Boot project, from JetBrains.

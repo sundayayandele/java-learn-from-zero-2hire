@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Week 6. Pattern: variable sliding window with a map.
+ * Week 7. Pattern: variable sliding window with a map.
  * <p>
  * Return the length of the longest substring without repeating characters. O(n).
  */

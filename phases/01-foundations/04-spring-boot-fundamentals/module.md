@@ -1,10 +1,10 @@
 ## What this module gives you
 
-Four weeks to build real Spring Boot 4 services: how Spring wires an application (week 10), REST endpoints with validation and clean errors (week 10), persistence with JPA without the classic performance traps (week 11), configuration, secrets and production health/metrics (week 12), and the Boot 3 → 4 upgrade plus Kotlin (week 13). Week 13 also hosts the end-of-phase exam and the Getting Hired session.
+Four weeks to build real Spring Boot 4 services: how Spring wires an application and how HTTP and REST work (week 11), REST endpoints with validation and clean errors, and persistence with JPA without the classic performance traps (week 12), configuration, secrets and production health/metrics (week 13), and the Boot 3 → 4 upgrade and what Spring does under the hood (week 14). Topic 4.9 (Spring Boot with Kotlin) is **optional**. Week 14 also hosts the end-of-phase exam and the Getting Hired session.
 
 Every project in this module uses the same baseline: Java 21, Spring Boot 4.1.x, Maven wrapper, PostgreSQL 17 via Docker Compose, Flyway migrations, `ddl-auto=validate`, Problem Details errors, Actuator, and a GitHub Actions workflow (plus the optional GitLab CI file). The [Spring Boot service starter](../../../templates/spring-boot-service-starter/README.md) has all of that ready.
 
-**Exit check for Module 4:** all seven topic CBTs passed; projects 4.A and 4.D completed; 4.B or 4.C optional (or start your capstones instead).
+**Exit check for Module 4:** the eight core topic CBTs attempted (aim for 70%+); projects 4.A and 4.D completed; 4.B or 4.C optional (or start your capstones instead).
 
 ## Module projects
 
@@ -30,8 +30,8 @@ A catalogue of banking products (savings, current, fixed deposit, loan products)
 
 - Search by text (name/description), filter by product type, currency, minimum balance range, channel and active flag; combine any filters.
 - Implement filtering with Spring Data JPA **Specifications** or a JPQL query built safely from optional parameters; never by concatenating input into SQL.
-- Cache the "active products" list in Redis with a TTL and evict on update (topic 3.6), and expose a cache hit/miss metric (topic 4.5).
-- Externalise rate-change approval limits with `@ConfigurationProperties` (topic 4.4).
+- Cache the "active products" list in Redis with a TTL and evict on update (topic 3.6), and expose a cache hit/miss metric (topic 4.6).
+- Externalise rate-change approval limits with `@ConfigurationProperties` (topic 4.5).
 
 ### Project 4.D: Spring Boot 3 → 4 upgrade exercise
 
@@ -39,7 +39,7 @@ Upgrade the provided Spring Boot 3.5 service in [`labs/04-boot3-to-4-upgrade`](.
 
 1. Run its tests on Boot 3.5 and record the baseline.
 2. Add safety nets first: a JSON contract test for the account response, and a test that asserts Flyway applied every migration.
-3. Upgrade by hand following topic 4.6: parent version, modular starters (`webmvc`, `flyway`), test starters, `@MockBean` → `@MockitoBean`, `@AutoConfigureMockMvc`, Jackson customiser, and renamed properties (use the properties migrator, then remove it).
+3. Upgrade by hand following topic 4.7: parent version, modular starters (`webmvc`, `flyway`), test starters, `@MockBean` → `@MockitoBean`, `@AutoConfigureMockMvc`, Jackson customiser, and renamed properties (use the properties migrator, then remove it).
 4. Get every test green, start the app, and check `/actuator/health/readiness` and the Flyway history table.
 5. Write `UPGRADE.md`: every change you made, why, and anything you'd check before doing this on a production service.
 

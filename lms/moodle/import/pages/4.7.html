@@ -1,402 +1,421 @@
-<p><em>Week 13 · Module 4: Spring Boot 4 Fundamentals</em></p>
-<blockquote>
-<p><strong>Why this topic is here.</strong> Like topic 1.9, this is an
-addition to the ITLearning programme page. Spring Boot treats Kotlin as
-a first-class language, and many fintechs build new services in it.
-After this topic you can build the same kind of service from topics
-4.1–4.5 in Kotlin, and review a Kotlin Spring pull request with
-confidence.</p>
-</blockquote>
+<p><em>Week 14 · Module 4: Spring Boot 4 Fundamentals</em></p>
 <h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
 <ul>
-<li>Generate and build a Spring Boot 4 project in Kotlin with Maven, and
-explain the Kotlin-specific compiler plugins it needs.</li>
-<li>Write controllers, services, configuration properties and validation
-in idiomatic Kotlin.</li>
-<li>Map JPA entities from Kotlin safely, and know when to prefer Spring
-Data JDBC or plain SQL.</li>
-<li>Use Spring's Kotlin extensions and null-safety integration, and test
-Kotlin Spring code.</li>
+<li>Explain what Spring Boot 4 and Spring Framework 7 changed, and why
+teams must move off Spring Boot 3.x.</li>
+<li>Recognise Boot 3 code and configuration that breaks or is deprecated
+on Boot 4.</li>
+<li>Migrate a Boot 3.5 application to Boot 4.x step by step:
+dependencies and modular starters, Jackson 3, test changes, removed
+features and renamed properties.</li>
+<li>Use the properties migrator and OpenRewrite to automate the
+mechanical parts, and verify the result.</li>
 </ul>
 <h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
 bank or fintech</h2>
-<p>A Kotlin Spring Boot service is still a Spring Boot service: same
-starters, same Actuator, same PostgreSQL, same deployment. Teams choose
-Kotlin for concise, null-safe code; the cost is a few framework details
-you must know, mainly around proxies, JPA and Jackson. Knowing those
-details is the difference between "I've done a Kotlin tutorial" and "I
-can work on our Kotlin services".</p>
-<h2 id="1-creating-the-project">1. Creating the project</h2>
-<p>On <a href="https://start.spring.io">start.spring.io</a> choose
-<strong>Language: Kotlin</strong>, <strong>Project: Maven</strong>,
-Spring Boot 4.1.x, Java 21, and the same dependencies as topic 4.1
-(Spring Web, Validation, Spring Data JPA, Flyway, PostgreSQL,
-Actuator).</p>
-<p>The generated <code>pom.xml</code> adds Kotlin-specific pieces:</p>
-<pre class="xml"><code>&lt;properties&gt;
-  &lt;java.version&gt;21&lt;/java.version&gt;
-  &lt;kotlin.version&gt;2.4.21&lt;/kotlin.version&gt;          &lt;!-- Boot manages a compatible default; override only if needed --&gt;
-&lt;/properties&gt;
-
-&lt;dependencies&gt;
-  &lt;dependency&gt;&lt;groupId&gt;org.jetbrains.kotlin&lt;/groupId&gt;&lt;artifactId&gt;kotlin-reflect&lt;/artifactId&gt;&lt;/dependency&gt;
-  &lt;dependency&gt;&lt;groupId&gt;org.jetbrains.kotlin&lt;/groupId&gt;&lt;artifactId&gt;kotlin-stdlib&lt;/artifactId&gt;&lt;/dependency&gt;
-  &lt;dependency&gt;&lt;groupId&gt;tools.jackson.module&lt;/groupId&gt;&lt;artifactId&gt;jackson-module-kotlin&lt;/artifactId&gt;&lt;/dependency&gt;
-  &lt;!-- ...the usual starters... --&gt;
-&lt;/dependencies&gt;
-
-&lt;build&gt;
-  &lt;sourceDirectory&gt;${project.basedir}/src/main/kotlin&lt;/sourceDirectory&gt;
-  &lt;testSourceDirectory&gt;${project.basedir}/src/test/kotlin&lt;/testSourceDirectory&gt;
-  &lt;plugins&gt;
-    &lt;plugin&gt;
-      &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
-      &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
-    &lt;/plugin&gt;
-    &lt;plugin&gt;
-      &lt;groupId&gt;org.jetbrains.kotlin&lt;/groupId&gt;
-      &lt;artifactId&gt;kotlin-maven-plugin&lt;/artifactId&gt;
-      &lt;configuration&gt;
-        &lt;args&gt;&lt;arg&gt;-Xjsr305=strict&lt;/arg&gt;&lt;/args&gt;          &lt;!-- trust Java nullability annotations --&gt;
-        &lt;compilerPlugins&gt;
-          &lt;plugin&gt;spring&lt;/plugin&gt;                         &lt;!-- all-open for Spring-annotated classes --&gt;
-          &lt;plugin&gt;jpa&lt;/plugin&gt;                            &lt;!-- no-arg constructors for @Entity --&gt;
-        &lt;/compilerPlugins&gt;
-      &lt;/configuration&gt;
-      &lt;dependencies&gt;
-        &lt;dependency&gt;&lt;groupId&gt;org.jetbrains.kotlin&lt;/groupId&gt;&lt;artifactId&gt;kotlin-maven-allopen&lt;/artifactId&gt;&lt;version&gt;${kotlin.version}&lt;/version&gt;&lt;/dependency&gt;
-        &lt;dependency&gt;&lt;groupId&gt;org.jetbrains.kotlin&lt;/groupId&gt;&lt;artifactId&gt;kotlin-maven-noarg&lt;/artifactId&gt;&lt;version&gt;${kotlin.version}&lt;/version&gt;&lt;/dependency&gt;
-      &lt;/dependencies&gt;
-    &lt;/plugin&gt;
-  &lt;/plugins&gt;
-&lt;/build&gt;</code></pre>
-<p>What each piece is for:</p>
-<ul>
-<li><strong><code>kotlin-reflect</code></strong>: Spring uses Kotlin
-reflection to understand constructors, default values and
-nullability.</li>
-<li><strong><code>jackson-module-kotlin</code></strong> (Jackson 3
-coordinates <code>tools.jackson.module</code>): lets Jackson construct
-Kotlin classes with default and non-null parameters. Spring Boot
-registers it automatically.</li>
-<li><strong><code>spring</code> compiler plugin (all-open)</strong>:
-Kotlin classes are <code>final</code> by default, but Spring creates
-proxies (subclasses) for <code>@Configuration</code>,
-<code>@Transactional</code>, <code>@Async</code> and similar. The plugin
-opens classes annotated with Spring stereotypes automatically, so you
-don't scatter <code>open</code> everywhere.</li>
-<li><strong><code>jpa</code> compiler plugin (no-arg)</strong>:
-generates the no-argument constructor JPA needs for
-<code>@Entity</code>, <code>@Embeddable</code> and
-<code>@MappedSuperclass</code> classes.</li>
-<li><strong><code>-Xjsr305=strict</code></strong>: makes Kotlin treat
-Spring's nullability annotations as real nullability. Spring Framework 7
-annotates its APIs with <strong>JSpecify</strong>, which Kotlin 2.x
-understands, so Spring APIs appear with correct <code>?</code> types in
-Kotlin.</li>
-</ul>
-<p>Spring Boot 4 requires <strong>Kotlin 2.2 or later</strong>. Spring
-Boot also supports Gradle with the Kotlin DSL, which many Kotlin teams
-prefer; the concepts are identical.</p>
-<h2 id="2-the-application-controllers-and-services">2. The application,
-controllers and services</h2>
-<pre class="kotlin"><code>@SpringBootApplication
-@ConfigurationPropertiesScan
-class BankApplication
-
-fun main(args: Array&lt;String&gt;) {
-    runApplication&lt;BankApplication&gt;(*args)          // Kotlin extension from Spring Boot
-}</code></pre>
-<pre class="kotlin"><code>data class TransferRequest(
-    @field:NotBlank @field:Pattern(regexp = &quot;\\d{10}&quot;) val fromAccount: String,
-    @field:NotBlank @field:Pattern(regexp = &quot;\\d{10}&quot;) val toAccount: String,
-    @field:NotNull @field:DecimalMin(&quot;1.00&quot;) @field:Digits(integer = 13, fraction = 2) val amount: BigDecimal,
-    @field:NotBlank @field:Size(max = 100) val narration: String,
-    @field:NotBlank @field:Size(max = 64) val clientReference: String,
-)
-
-data class TransferResponse(val reference: String, val status: String, val postedAt: Instant)
-
-@RestController
-@RequestMapping(&quot;/api/v1/transfers&quot;)
-class TransferController(private val transfers: TransferService) {      // constructor injection, no @Autowired
-
-    @PostMapping
-    fun create(@Valid @RequestBody request: TransferRequest): ResponseEntity&lt;TransferResponse&gt; {
-        val receipt = transfers.transfer(request)
-        return ResponseEntity.created(URI.create(&quot;/api/v1/transfers/${receipt.reference}&quot;))
-            .body(TransferResponse(receipt.reference, &quot;COMPLETED&quot;, receipt.postedAt))
-    }
-
-    @GetMapping(&quot;/{reference}&quot;)
-    fun get(@PathVariable reference: String): TransferResponse =
-        transfers.find(reference) ?: throw TransferNotFoundException(reference)
-}</code></pre>
-<p>Two Kotlin specifics here:</p>
-<ul>
-<li><strong>Annotation use-site targets.</strong> A Kotlin constructor
-property is a parameter, a field and a getter at once. Bean Validation
-annotations must target the <strong>field</strong>
-(<code>@field:NotBlank</code>), or they may be placed on the constructor
-parameter and ignored. (Recent Kotlin versions apply annotations to both
-parameter and field by default, but explicit <code>@field:</code>
-remains the safe, readable choice and you will see it in most
-codebases.)</li>
-<li><strong>Null safety meets HTTP.</strong> A request missing a
-non-null field like <code>narration</code> fails during JSON
-deserialisation (HTTP 400) before validation even runs. Make fields
-nullable (<code>String?</code>) only when they're genuinely
-optional.</li>
-</ul>
-<p>Services look like Java, with less ceremony:</p>
-<pre class="kotlin"><code>@Service
-class TransferService(
-    private val accounts: AccountRepository,
-    private val ledger: LedgerRepository,
-    private val clock: Clock,
-) {
-    @Transactional
-    fun transfer(r: TransferRequest): TransferReceipt {
-        val (first, second) = listOf(r.fromAccount, r.toAccount).sorted()      // consistent lock order
-        val locked = listOf(first, second).associateWith {
-            accounts.findByNumberForUpdate(it) ?: throw AccountNotFoundException(it)
-        }
-        val from = locked.getValue(r.fromAccount)
-        val to = locked.getValue(r.toAccount)
-        from.debit(r.amount)
-        to.credit(r.amount)
-        ledger.saveAll(LedgerEntry.pair(r.clientReference, from, to, r.amount))
-        return TransferReceipt(r.clientReference, Instant.now(clock))
-    }
-
-    @Transactional(readOnly = true)
-    fun find(reference: String): TransferResponse? = ledger.findTransfer(reference)
-}</code></pre>
-<p>Spring Data repositories can return nullable types instead of
-<code>Optional</code>:</p>
-<pre class="kotlin"><code>interface AccountRepository : JpaRepository&lt;Account, Long&gt; {
-    fun findByNumber(number: String): Account?          // null when absent: idiomatic Kotlin
-
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query(&quot;select a from Account a where a.number = :number&quot;)
-    fun findByNumberForUpdate(number: String): Account?
-}</code></pre>
-<h2 id="3-configuration-properties">3. Configuration properties</h2>
-<p>Kotlin data classes bind naturally with constructor binding:</p>
-<pre class="kotlin"><code>@ConfigurationProperties(prefix = &quot;bank.transfer&quot;)
-@Validated
-data class TransferProperties(
-    @field:DecimalMin(&quot;0.01&quot;) val dailyLimit: BigDecimal,
-    @field:DecimalMin(&quot;0.01&quot;) val singleLimit: BigDecimal,
-    val feeCap: BigDecimal = BigDecimal(&quot;2000.00&quot;),          // Kotlin default values work as property defaults
-    val lockTimeout: Duration = Duration.ofSeconds(2),
-)</code></pre>
-<p>A missing non-null property without a default fails startup, which is
-the behaviour topic 4.4 asked for.</p>
-<h2 id="4-jpa-entities-in-kotlin-be-careful">4. JPA entities in Kotlin:
-be careful</h2>
-<p>JPA's model (mutable objects, no-arg constructors, proxies, identity
-semantics) fits Kotlin less well than plain data. Guidelines that keep
-you out of trouble:</p>
-<pre class="kotlin"><code>@Entity
-@Table(name = &quot;account&quot;)
-class Account(                                             // a regular class, NOT a data class
-    @Column(nullable = false, unique = true, length = 10)
-    val number: String,
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    val product: Product,
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = &quot;customer_id&quot;)
-    val customer: Customer,
-) {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null                                   // null until persisted
-
-    @Column(nullable = false, precision = 19, scale = 2)
-    var balance: BigDecimal = BigDecimal.ZERO
-        protected set                                      // only the entity changes its balance
-
-    @Version
-    var version: Long = 0
-
-    fun debit(amount: BigDecimal) {
-        check(balance &gt;= amount) { &quot;Insufficient funds&quot; }
-        balance -= amount
-    }
-
-    fun credit(amount: BigDecimal) { balance += amount }
-
-    override fun equals(other: Any?) = other is Account &amp;&amp; number == other.number
-    override fun hashCode() = number.hashCode()
-    override fun toString() = &quot;Account(number=$number)&quot;   // never include lazy associations
-}</code></pre>
-<ul>
-<li><strong>Don't use <code>data class</code> for entities.</strong>
-Generated
-<code>equals</code>/<code>hashCode</code>/<code>toString</code> include
-every property, including lazy associations (triggering queries or
-<code>LazyInitializationException</code>) and the mutable
-<code>id</code>.</li>
-<li>Rely on the <strong><code>jpa</code></strong> plugin for the no-arg
-constructor and the <strong>all-open</strong> configuration for
-<code>@Entity</code> classes (start.spring.io configures
-<code>allOpen</code> annotations for
-<code>jakarta.persistence.Entity</code>, <code>Embeddable</code> and
-<code>MappedSuperclass</code> in Gradle; in Maven add them via
-<code>&lt;option&gt;all-open:annotation=jakarta.persistence.Entity&lt;/option&gt;</code>
-if lazy-loading proxies are needed).</li>
-<li>Keep the database ID nullable (<code>Long?</code>) because it is
-assigned on insert.</li>
-</ul>
-<p>Because of this friction, many Kotlin teams use <strong>Spring Data
-JDBC</strong> or Spring's <code>JdbcClient</code> (topic 3.5) with
-immutable data classes for simpler aggregates, and reserve JPA for
-complex domains. Both are valid; be consistent within a service.</p>
-<h2 id="5-kotlin-extensions-in-spring">5. Kotlin extensions in
-Spring</h2>
-<p>Spring ships Kotlin-friendly APIs:</p>
-<ul>
-<li><code>runApplication&lt;App&gt;(*args)</code> instead of
-<code>SpringApplication.run(...)</code>.</li>
-<li><strong>Bean definition DSL</strong>
-(<code>beans { bean&lt;FeeService&gt;() }</code>) as an alternative to
-<code>@Bean</code> methods.</li>
-<li><strong>Router DSL</strong> for functional endpoints:
-<code>router { GET("/health-check") { ok().body("UP") } }</code>.</li>
-<li>Reified generics:
-<code>restClient.get().uri("/rates").retrieve().body&lt;List&lt;Rate&gt;&gt;()</code>
-instead of <code>ParameterizedTypeReference</code>.</li>
-<li><code>JdbcClient</code> and <code>RestClient</code> extensions, and
-coroutine support (<code>suspend</code> controller functions) for
-WebFlux applications.</li>
-</ul>
-<h2 id="6-testing">6. Testing</h2>
-<pre class="kotlin"><code>@WebMvcTest(TransferController::class)
-class TransferControllerTest(@Autowired val mvc: MockMvc) {
-
-    @MockitoBean
-    lateinit var transfers: TransferService
-
-    @Test
-    fun `rejects a negative amount`() {                    // backtick names read like specifications
-        mvc.post(&quot;/api/v1/transfers&quot;) {                    // Spring&#39;s Kotlin MockMvc DSL
-            contentType = MediaType.APPLICATION_JSON
-            content = &quot;&quot;&quot;
-                {&quot;fromAccount&quot;:&quot;0123456789&quot;,&quot;toAccount&quot;:&quot;9876543210&quot;,&quot;amount&quot;:-5,
-                 &quot;narration&quot;:&quot;rent&quot;,&quot;clientReference&quot;:&quot;r-1&quot;}
-            &quot;&quot;&quot;.trimIndent()
-        }.andExpect {
-            status { isBadRequest() }
-        }
-    }
-}</code></pre>
-<p>Many Kotlin teams use <strong>MockK</strong> (a Kotlin-native mocking
-library, with <code>springmockk</code> for Spring integration) instead
-of Mockito, and <strong>Kotest</strong> or JUnit 5 for tests. JUnit 5
-with Mockito, as above, works perfectly well and keeps one toolset
-across Java and Kotlin services.</p>
-<h2 id="worked-example-the-same-service-two-languages">Worked example:
-the same service, two languages</h2>
-<p>Take the transfer service you built in Java in topics 4.1–4.5 and
-port it:</p>
+<p>The ITLearning programme notes it plainly: Spring Boot 3.x reached
+the end of open-source support in mid-2026, and new projects start on
+Spring Boot 4. Banks cannot run unsupported frameworks in production for
+long, so through 2026 and 2027 almost every Spring team has a "Boot 4
+upgrade" on its roadmap. Engineers who have done one, and can explain
+the trade-offs, are exactly who those teams want. Interviewers ask "what
+changed in Spring Boot 4?" as a quick check of whether a candidate's
+knowledge is current.</p>
+<h2 id="1-the-big-picture">1. The big picture</h2>
 <table>
 <thead>
 <tr>
-<th>Java</th>
-<th>Kotlin</th>
+<th></th>
+<th>Spring Boot 3.x</th>
+<th>Spring Boot 4.x</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Record DTOs with Bean Validation</td>
-<td>Data classes with <code>@field:</code> annotations</td>
+<td>Released</td>
+<td>Nov 2022 (3.0) – 2025 (3.5)</td>
+<td>Nov 2025 (4.0), 4.1 in 2026</td>
 </tr>
 <tr>
-<td><code>Optional&lt;Account&gt;</code> from repositories</td>
-<td><code>Account?</code></td>
+<td>Spring Framework</td>
+<td>6.x</td>
+<td><strong>7.x</strong></td>
 </tr>
 <tr>
-<td><code>@ConfigurationProperties</code> record</td>
-<td><code>@ConfigurationProperties</code> data class with defaults</td>
+<td>Jakarta EE</td>
+<td>9/10</td>
+<td><strong>11</strong> (Servlet 6.1, Persistence 3.2, Validation
+3.1)</td>
 </tr>
 <tr>
-<td>Entity class with getters</td>
-<td>Class with <code>val</code>/<code>var</code> properties and
-<code>protected set</code></td>
+<td>Minimum Java</td>
+<td>17</td>
+<td>17 (Java 21 or 25 recommended)</td>
 </tr>
 <tr>
-<td><code>SpringApplication.run</code></td>
-<td><code>runApplication&lt;...&gt;()</code></td>
+<td>JSON</td>
+<td>Jackson 2 (<code>com.fasterxml.jackson</code>)</td>
+<td><strong>Jackson 3</strong> (<code>tools.jackson</code>)</td>
 </tr>
 <tr>
-<td>MockMvc builder</td>
-<td>MockMvc Kotlin DSL</td>
+<td>Hibernate</td>
+<td>6.x</td>
+<td><strong>7.x</strong></td>
+</tr>
+<tr>
+<td>Starters</td>
+<td>Few large starters</td>
+<td><strong>Modular</strong>: one starter (and one test starter) per
+technology</td>
+</tr>
+<tr>
+<td>Null safety</td>
+<td><code>org.springframework.lang</code> annotations</td>
+<td><strong>JSpecify</strong> annotations across the portfolio</td>
+</tr>
+<tr>
+<td>Kotlin</td>
+<td>1.7+</td>
+<td>2.2+</td>
+</tr>
+<tr>
+<td>Embedded servers</td>
+<td>Tomcat, Jetty, Undertow</td>
+<td>Tomcat, Jetty (<strong>Undertow removed</strong>)</td>
+</tr>
+<tr>
+<td>Testing</td>
+<td><code>@MockBean</code>, <code>@SpyBean</code></td>
+<td>Removed: use <code>@MockitoBean</code>,
+<code>@MockitoSpyBean</code>; new <code>RestTestClient</code></td>
 </tr>
 </tbody>
 </table>
-<p>Same Flyway migrations, same PostgreSQL, same Actuator endpoints,
-same Docker image and deployment. Usually 30–40% fewer lines. The
-behaviour, and the tests that prove it, should be identical.</p>
+<p>New capabilities you can use straight away:</p>
+<ul>
+<li><strong>API versioning</strong> built into Spring MVC and WebFlux
+(<code>spring.mvc.apiversion.*</code>,
+<code>@GetMapping(path = "/accounts", version = "2")</code>), covered in
+Module 5.</li>
+<li><strong>HTTP service clients</strong>: declare a Java interface with
+<code>@HttpExchange</code> methods and Spring generates the client; Boot
+4 auto-configures them.</li>
+<li><strong>Resilience in the core framework</strong>:
+<code>@Retryable</code> and <code>@ConcurrencyLimit</code> in Spring
+Framework 7 (enable with <code>@EnableResilientMethods</code>), so
+simple retries no longer need Spring Retry.</li>
+<li><strong>OpenTelemetry starter</strong>
+(<code>spring-boot-starter-opentelemetry</code>) for metrics and traces
+export (Module 13).</li>
+<li>In <strong>4.1</strong>: Spring gRPC support, more observability
+conventions, HTTP client SSRF protection with
+<code>InetAddressFilter</code>, and more.</li>
+</ul>
+<h2 id="2-modular-starters-the-change-youll-hit-first">2. Modular
+starters: the change you'll hit first</h2>
+<p>Spring Boot 4 split its large <code>spring-boot-autoconfigure</code>
+jar into focused modules (<code>spring-boot-webmvc</code>,
+<code>spring-boot-jdbc</code>, <code>spring-boot-flyway</code>, ...),
+each with a starter and a test starter.</p>
+<p><strong>What breaks:</strong></p>
+<ol type="1">
+<li><p><strong>Technologies that used to work with just the library now
+need their starter.</strong> The classic example is Flyway and
+Liquibase:</p>
+<pre class="xml"><code>&lt;!-- Boot 3: the library alone was enough --&gt;
+&lt;dependency&gt;&lt;groupId&gt;org.flywaydb&lt;/groupId&gt;&lt;artifactId&gt;flyway-core&lt;/artifactId&gt;&lt;/dependency&gt;
+
+&lt;!-- Boot 4: use the starter, or migrations silently stop running at startup --&gt;
+&lt;dependency&gt;&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;&lt;artifactId&gt;spring-boot-starter-flyway&lt;/artifactId&gt;&lt;/dependency&gt;
+&lt;dependency&gt;&lt;groupId&gt;org.flywaydb&lt;/groupId&gt;&lt;artifactId&gt;flyway-database-postgresql&lt;/artifactId&gt;&lt;/dependency&gt;</code></pre>
+<p>That "silently" is why you must test the upgrade properly: the app
+starts, but the schema isn't migrated.</p></li>
+<li><p><strong>Renamed starters</strong> (old names still work but are
+deprecated):</p>
+<table>
+<thead>
+<tr>
+<th>Boot 3</th>
+<th>Boot 4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>spring-boot-starter-web</code></td>
+<td><code>spring-boot-starter-webmvc</code></td>
+</tr>
+<tr>
+<td><code>spring-boot-starter-web-services</code></td>
+<td><code>spring-boot-starter-webservices</code></td>
+</tr>
+<tr>
+<td><code>spring-boot-starter-oauth2-client</code></td>
+<td><code>spring-boot-starter-security-oauth2-client</code></td>
+</tr>
+<tr>
+<td><code>spring-boot-starter-oauth2-resource-server</code></td>
+<td><code>spring-boot-starter-security-oauth2-resource-server</code></td>
+</tr>
+<tr>
+<td><code>spring-boot-starter-oauth2-authorization-server</code></td>
+<td><code>spring-boot-starter-security-oauth2-authorization-server</code></td>
+</tr>
+</tbody>
+</table></li>
+<li><p><strong>Test starters per technology.</strong> Instead of one
+<code>spring-boot-starter-test</code>, add the test starter for each
+technology you test: <code>spring-boot-starter-webmvc-test</code>,
+<code>spring-boot-starter-data-jpa-test</code>,
+<code>spring-boot-starter-security-test</code> and so on (each brings
+<code>spring-boot-starter-test</code> transitively). Some test
+annotations moved with them; for example <code>@WithMockUser</code>
+needs <code>spring-boot-starter-security-test</code>.</p></li>
+<li><p><strong>Package moves.</strong> Auto-configuration classes and
+some APIs moved to <code>org.springframework.boot.&lt;module&gt;</code>
+packages. Application code rarely imports them, but custom
+auto-configurations, test slices and <code>TestRestTemplate</code> users
+will see import errors
+(<code>org.springframework.boot.resttestclient.TestRestTemplate</code>).</p></li>
+</ol>
+<p><strong>Shortcut for large apps:</strong> the <strong>classic
+starters</strong> (<code>spring-boot-starter-classic</code>,
+<code>spring-boot-starter-test-classic</code>) bring back the
+"everything on the classpath" behaviour of Boot 3 so you can upgrade in
+two steps. The Spring team recommends moving off them afterwards.</p>
+<h2 id="3-jackson-3">3. Jackson 3</h2>
+<p>Spring Boot 4 prefers Jackson 3:</p>
+<ul>
+<li>Group IDs and packages change from
+<code>com.fasterxml.jackson</code> to
+<strong><code>tools.jackson</code></strong> (for example
+<code>tools.jackson.databind.json.JsonMapper</code>). The
+<strong>annotations</strong> (<code>@JsonProperty</code>,
+<code>@JsonIgnore</code>, ...) stay in
+<code>com.fasterxml.jackson.annotation</code>, so most DTOs compile
+unchanged.</li>
+<li>Boot auto-configures a <code>JsonMapper</code> (and an
+<code>XmlMapper</code> if XML is present). To customise, define a
+<code>JsonMapperBuilderCustomizer</code> (formerly
+<code>Jackson2ObjectMapperBuilderCustomizer</code>) or a
+<code>JsonMapper</code> bean; defining an <code>ObjectMapper</code> bean
+is no longer enough to replace it.</li>
+<li><code>@JsonComponent</code> became <code>@JacksonComponent</code>;
+<code>@JsonMixin</code> became <code>@JacksonMixin</code>.</li>
+<li>Properties moved:
+<code>spring.jackson.read.*</code>/<code>write.*</code> became
+<code>spring.jackson.json.read.*</code>/<code>write.*</code>.</li>
+<li>Jackson 3 registers every module found on the classpath and has
+different defaults in places.
+<code>spring.jackson.use-jackson2-defaults=true</code> keeps Boot 3-like
+behaviour while you migrate.</li>
+<li>If a library still needs Jackson 2, a deprecated
+<code>spring-boot-jackson2</code> module exists as a stop-gap.</li>
+</ul>
+<p>Write a <strong>JSON contract test</strong> for every public response
+before upgrading (serialise a known object, compare with a stored JSON
+file), so any change in dates, nulls, enums or number formatting shows
+up immediately.</p>
+<h2 id="4-other-changes-to-check">4. Other changes to check</h2>
+<p><strong>Testing</strong></p>
+<ul>
+<li><code>@MockBean</code>/<code>@SpyBean</code> →
+<code>@MockitoBean</code>/<code>@MockitoSpyBean</code> (Spring
+Framework). They are not 100% identical: for example they can't be
+declared on <code>@Configuration</code> classes; put them on test
+classes.</li>
+<li><code>@SpringBootTest</code> no longer configures MockMvc
+automatically: add <code>@AutoConfigureMockMvc</code>. It no longer
+provides <code>TestRestTemplate</code> or <code>WebTestClient</code>
+automatically either: add
+<code>@AutoConfigureTestRestTemplate</code>/<code>@AutoConfigureRestTestClient</code>,
+or switch to the new <code>RestTestClient</code>.</li>
+<li>If <code>@Mock</code>/<code>@Captor</code> fields stopped working,
+use Mockito's own <code>MockitoExtension</code> (the Boot listener that
+used to handle them was removed).</li>
+<li>Testcontainers 2.0: module artifact names changed
+(<code>org.testcontainers:testcontainers-postgresql</code>).</li>
+</ul>
+<p><strong>Web and data</strong></p>
+<ul>
+<li>Undertow is gone: switch to Tomcat (default) or Jetty.</li>
+<li><code>HttpMessageConverters</code> is deprecated in favour of the
+framework's converter configuration.</li>
+<li>Hibernate 7 / Jakarta Persistence 3.2: review deprecated APIs and
+any Hibernate-specific annotations; <code>hibernate-jpamodelgen</code>
+became <code>hibernate-processor</code>.</li>
+<li>MongoDB: changed default representations for <code>UUID</code> and
+<code>BigDecimal</code>. Configure them explicitly before upgrading a
+database with existing data.</li>
+<li>Property renames, for example
+<code>spring.dao.exceptiontranslation.enabled</code> →
+<code>spring.persistence.exceptiontranslation.enabled</code> and
+<code>management.tracing.enabled</code> →
+<code>management.tracing.export.enabled</code>.</li>
+</ul>
+<p><strong>Actuator</strong></p>
+<ul>
+<li>Liveness and readiness probes are on by default (topic 4.6).</li>
+<li>Null-safety annotations moved to JSpecify;
+<code>javax.annotation.NonNull</code> and
+<code>org.springframework.lang.Nullable</code> aren't supported on
+endpoint parameters any more.</li>
+</ul>
+<p><strong>Removed</strong>: Undertow, Pulsar Reactive, embedded launch
+scripts for "fully executable" jars, Spring Session for Hazelcast and
+MongoDB (now community projects), and Spock integration in 4.0 (restored
+in 4.1). Everything deprecated in 3.x was removed.</p>
+<p><strong>Dependencies you manage yourself</strong> (not by Boot), such
+as Spring Cloud, springdoc-openapi, Resilience4j, MapStruct and Lombok,
+need versions that support Boot 4. Check each project's compatibility
+table <em>before</em> you start.</p>
+<h2 id="5-a-migration-plan">5. A migration plan</h2>
+<ol type="1">
+<li><p><strong>Upgrade to the latest Boot 3.5.x first</strong>, fix
+every deprecation warning (<code>-Xlint:deprecation</code>), and get a
+green build. Deprecated APIs in 3.x are removed in 4.0.</p></li>
+<li><p><strong>Check third-party compatibility</strong>: Spring Cloud
+release train, springdoc, Testcontainers, Lombok/MapStruct, internal
+shared libraries.</p></li>
+<li><p><strong>Add safety nets</strong>: JSON contract tests, a test
+that asserts Flyway migrations ran (e.g. checks
+<code>flyway_schema_history</code>), Actuator smoke tests, and
+integration tests against a real PostgreSQL via Testcontainers.</p></li>
+<li><p><strong>Run OpenRewrite</strong> on a branch:</p>
+<pre class="bash"><code>./mvnw -U org.openrewrite.maven:rewrite-maven-plugin:run \
+  -Drewrite.recipeArtifactCoordinates=org.openrewrite.recipe:rewrite-spring:RELEASE \
+  -Drewrite.activeRecipes=org.openrewrite.java.spring.boot4.UpgradeSpringBoot_4_0</code></pre>
+<p>(Check the OpenRewrite docs for the current recipe name; it handles
+versions, starters, many imports and properties.) Review the entire
+diff.</p></li>
+<li><p><strong>Add the properties migrator temporarily</strong> to find
+renamed or removed properties at startup:</p>
+<pre class="xml"><code>&lt;dependency&gt;
+  &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+  &lt;artifactId&gt;spring-boot-properties-migrator&lt;/artifactId&gt;
+  &lt;scope&gt;runtime&lt;/scope&gt;
+&lt;/dependency&gt;</code></pre>
+<p>It logs every property that changed and temporarily maps it for you.
+Fix them in your config files, then <strong>remove the
+dependency</strong>.</p></li>
+<li><p><strong>Fix compilation</strong> (packages, removed APIs), then
+<strong>tests</strong> (test starters, <code>@MockitoBean</code>,
+<code>@AutoConfigureMockMvc</code>), then <strong>runtime</strong>
+(start the app, check <code>/actuator/health</code>,
+<code>/actuator/conditions</code>, Flyway history, JSON
+output).</p></li>
+<li><p><strong>Upgrade to the latest 4.x maintenance release</strong>
+(4.1.x at the time of writing), and run the full suite again.</p></li>
+<li><p><strong>Deploy to a test environment, compare behaviour</strong>,
+and roll out gradually with the previous version ready.</p></li>
+</ol>
+<h2 id="worked-example-upgrading-a-small-boot-35-service">Worked
+example: upgrading a small Boot 3.5 service</h2>
+<p>Before (<code>pom.xml</code> excerpt):</p>
+<pre class="xml"><code>&lt;parent&gt;&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;&lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;&lt;version&gt;3.5.7&lt;/version&gt;&lt;/parent&gt;
+&lt;dependencies&gt;
+  &lt;dependency&gt;&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;&lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;&lt;/dependency&gt;
+  &lt;dependency&gt;&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;&lt;artifactId&gt;spring-boot-starter-data-jpa&lt;/artifactId&gt;&lt;/dependency&gt;
+  &lt;dependency&gt;&lt;groupId&gt;org.flywaydb&lt;/groupId&gt;&lt;artifactId&gt;flyway-core&lt;/artifactId&gt;&lt;/dependency&gt;
+  &lt;dependency&gt;&lt;groupId&gt;org.flywaydb&lt;/groupId&gt;&lt;artifactId&gt;flyway-database-postgresql&lt;/artifactId&gt;&lt;/dependency&gt;
+  &lt;dependency&gt;&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;&lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;&lt;scope&gt;test&lt;/scope&gt;&lt;/dependency&gt;
+&lt;/dependencies&gt;</code></pre>
+<pre class="java"><code>@SpringBootTest
+class TransferApiTest {
+    @Autowired MockMvc mvc;                        // relies on MockMvc support that Boot 4&#39;s @SpringBootTest no longer adds
+    @MockBean FraudClient fraud;                   // removed in Boot 4
+}
+
+@Configuration
+class JsonConfig {
+    @Bean Jackson2ObjectMapperBuilderCustomizer money() {
+        return b -&gt; b.featuresToEnable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
+    }
+}</code></pre>
+<p>After:</p>
+<pre class="xml"><code>&lt;parent&gt;&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;&lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;&lt;version&gt;4.1.2&lt;/version&gt;&lt;/parent&gt;
+&lt;dependencies&gt;
+  &lt;dependency&gt;&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;&lt;artifactId&gt;spring-boot-starter-webmvc&lt;/artifactId&gt;&lt;/dependency&gt;
+  &lt;dependency&gt;&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;&lt;artifactId&gt;spring-boot-starter-data-jpa&lt;/artifactId&gt;&lt;/dependency&gt;
+  &lt;dependency&gt;&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;&lt;artifactId&gt;spring-boot-starter-flyway&lt;/artifactId&gt;&lt;/dependency&gt;
+  &lt;dependency&gt;&lt;groupId&gt;org.flywaydb&lt;/groupId&gt;&lt;artifactId&gt;flyway-database-postgresql&lt;/artifactId&gt;&lt;/dependency&gt;
+  &lt;dependency&gt;&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;&lt;artifactId&gt;spring-boot-starter-webmvc-test&lt;/artifactId&gt;&lt;scope&gt;test&lt;/scope&gt;&lt;/dependency&gt;
+  &lt;dependency&gt;&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;&lt;artifactId&gt;spring-boot-starter-data-jpa-test&lt;/artifactId&gt;&lt;scope&gt;test&lt;/scope&gt;&lt;/dependency&gt;
+&lt;/dependencies&gt;</code></pre>
+<pre class="java"><code>@SpringBootTest
+@AutoConfigureMockMvc
+class TransferApiTest {
+    @Autowired MockMvc mvc;
+    @MockitoBean FraudClient fraud;
+}
+
+@Configuration
+class JsonConfig {
+    @Bean JsonMapperBuilderCustomizer money() {
+        return b -&gt; b.enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);   // tools.jackson.databind.DeserializationFeature
+    }
+}</code></pre>
+<p>Then: run the properties migrator, start the app, confirm
+<code>flyway_schema_history</code> advanced, compare JSON contract
+snapshots, and check <code>/actuator/health/readiness</code>. The
+project for this module (4.D) asks you to do exactly this on a provided
+Boot 3.5 application.</p>
 <h2 id="common-mistakes">Common mistakes</h2>
 <ul>
-<li>Forgetting the <code>spring</code> (all-open) plugin, so
-<code>@Transactional</code> or <code>@Configuration</code> proxies fail
-on final classes.</li>
-<li><code>data class</code> JPA entities.</li>
-<li>Validation annotations without <code>@field:</code>, silently not
-validated.</li>
-<li>Using <code>!!</code> on values from Spring APIs instead of handling
-null.</li>
-<li>Missing <code>jackson-module-kotlin</code>, so request bodies fail
-to deserialise.</li>
-<li>Mixing Java and Kotlin styles randomly in one codebase.</li>
+<li>Jumping straight from an old 3.x to 4.x without passing through 3.5
+and fixing deprecations.</li>
+<li>Forgetting the Flyway/Liquibase starter, so migrations stop running
+with no error.</li>
+<li>Leaving the properties migrator in production.</li>
+<li>Assuming JSON output is unchanged after the Jackson 3 switch.</li>
+<li>Upgrading Boot without checking Spring Cloud and other third-party
+versions.</li>
+<li>Staying on the classic starters indefinitely.</li>
 </ul>
 <h2 id="practice">Practice</h2>
 <ol type="1">
-<li>Generate a Kotlin Spring Boot 4.1 project with Maven and build the
-account and transfer endpoints from topic 4.2, including the Problem
-Details advice.</li>
-<li>Remove the <code>spring</code> compiler plugin and observe what
-fails, then restore it. Write two sentences explaining why.</li>
-<li>Map <code>Account</code> as a regular Kotlin class with the
-<code>jpa</code> plugin. Then try it as a <code>data class</code> with a
-lazy <code>customer</code> association, call <code>toString()</code>
-outside a transaction, and explain the error.</li>
-<li>Write <code>@WebMvcTest</code> tests with the Kotlin MockMvc DSL for
-a valid transfer, a validation failure and an insufficient-funds
-error.</li>
+<li>Read the official migration guide end to end and write a one-page
+checklist for your team.</li>
+<li>Take a Spring Boot 3.5 sample (the module project 4.D repository, or
+generate one at start.spring.io with Boot 3.5), add a JSON contract test
+and a Flyway assertion test, then upgrade it to 4.1 manually. Record
+every error and its fix.</li>
+<li>Repeat on a fresh copy using OpenRewrite. Compare the automated diff
+with your manual one.</li>
+<li>Add the properties migrator, list every property it reports, and fix
+them.</li>
 </ol>
 <h2 id="key-terms">Key terms</h2>
-<p><code>kotlin-maven-plugin</code>, all-open (<code>spring</code>)
-plugin, no-arg (<code>jpa</code>) plugin, <code>kotlin-reflect</code>,
-<code>jackson-module-kotlin</code>, <code>-Xjsr305=strict</code>,
-JSpecify, <code>runApplication</code>, annotation use-site target
-(<code>@field:</code>), nullable repository return types, constructor
-binding, data class vs entity class, bean definition DSL, router DSL,
-MockMvc Kotlin DSL, MockK.</p>
+<p>Spring Framework 7, Jakarta EE 11, modular starters, test starters,
+classic starters, Jackson 3, <code>tools.jackson</code>,
+<code>JsonMapper</code>, <code>JsonMapperBuilderCustomizer</code>,
+JSpecify, <code>@MockitoBean</code>, <code>RestTestClient</code>,
+<code>@AutoConfigureMockMvc</code>, properties migrator, OpenRewrite
+recipe, API versioning, HTTP service client,
+<code>@Retryable</code>/<code>@ConcurrencyLimit</code>.</p>
 <h2 id="further-reading">Further reading</h2>
 <ul>
 <li><a
-href="https://docs.spring.io/spring-boot/reference/features/kotlin.html">Spring
-Boot reference: Kotlin support</a></li>
+href="https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide">Spring
+Boot 4.0 Migration Guide (official wiki)</a></li>
 <li><a
-href="https://docs.spring.io/spring-framework/reference/languages/kotlin.html">Spring
-Framework reference: Kotlin</a></li>
+href="https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Release-Notes">Spring
+Boot 4.0 Release Notes</a></li>
 <li><a
-href="https://spring.io/guides/tutorials/spring-boot-kotlin">Spring
-guide: Building web applications with Spring Boot and Kotlin</a></li>
-<li><a href="https://kotlinlang.org/docs/all-open-plugin.html">Kotlin
-docs: Compiler plugins: all-open and no-arg</a></li>
-<li><a href="https://kotlinlang.org/docs/null-safety.html">Kotlin docs:
-Null safety</a></li>
+href="https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.1-Release-Notes">Spring
+Boot 4.1 Release Notes</a></li>
+<li><a
+href="https://github.com/spring-projects/spring-framework/wiki/What%27s-New-in-Spring-Framework-7.x">Spring
+Framework 7: What's New</a></li>
+<li><a
+href="https://docs.openrewrite.org/recipes/java/spring">OpenRewrite:
+Spring Boot migration recipes</a></li>
+<li><a href="https://spring.io/projects/spring-boot#support">Spring
+Boot: Supported versions and support timeline</a></li>
 </ul>
 
 <h2>Watch</h2>
-<h3>Project Creation &amp; First Hello World App - Spring Boot 4 Basics With Kotlin</h3><p>Philipp Lackner · 19 min. Creating a Spring Boot 4 project in Kotlin and running it.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/eRej0b_Bm7A" title="Project Creation &amp; First Hello World App - Spring Boot 4 Basics With Kotlin" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
-<h3>Spring Boot &amp; Kotlin Tutorial - Crash Course (optional, longer)</h3><p>Marco Codes · 32 min. A full Spring Boot + Kotlin REST API crash course.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/yA5_xp2nlgk" title="Spring Boot &amp; Kotlin Tutorial - Crash Course" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
-<h3>Idiomatic Kotlin applications with Spring Boot 4 | Sébastien Deleuze (optional, longer)</h3><p>Kotlin by JetBrains · 42 min. Idiomatic Kotlin with Spring Boot 4, from the Spring team&#x27;s Kotlin lead.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/TxmBk_VhuqY" title="Idiomatic Kotlin applications with Spring Boot 4 | Sébastien Deleuze" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
-<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/04-spring-boot-fundamentals/4.7-spring-boot-with-kotlin/README.md">4.7 Spring Boot with Kotlin</a></p>
+<h3>Spring Boot 4 Modularization Explained: What you need to know</h3><p>Dan Vega · 11 min. Spring Boot 4&#x27;s modular starters explained by Dan Vega.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/kTLuhE7_jGU" title="Spring Boot 4 Modularization Explained: What you need to know" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Migrating To Spring Boot 4</h3><p>SivaLabs · 21 min. A step-by-step migration to Spring Boot 4, from SivaLabs.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/ENpq2J5yQ8Y" title="Migrating To Spring Boot 4" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Spring Boot 3 to 4 Migration: A Real App, Migrated Live</h3><p>Dan Vega · 30 min. A real application migrated from Boot 3 to 4, live, including what broke.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/HiPkoGTeNJc" title="Spring Boot 3 to 4 Migration: A Real App, Migrated Live" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<h3>Jackson 3 Support is HERE: What&#x27;s New in Spring Framework 7 &amp; Spring Boot 4 (optional, longer)</h3><p>Dan Vega · 34 min. Jackson 3 in Spring Framework 7 and Boot 4: the biggest code-level change.</p><div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:960px"><iframe src="https://www.youtube-nocookie.com/embed/4cvP_qroLH4" title="Jackson 3 Support is HERE: What&#x27;s New in Spring Framework 7 &amp; Spring Boot 4" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+<p>Source on GitHub: <a href="https://github.com/sundayayandele/java-zero-hire/blob/main/phases/01-foundations/04-spring-boot-fundamentals/4.7-spring-boot-3-to-4-upgrade/README.md">4.7 What changed from Spring Boot 3 to 4, and how to upgrade</a></p>

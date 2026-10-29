@@ -1,7 +1,7 @@
 package ng.itlearning.practice.arrays;
 
 /**
- * Week 4. Pattern: frequency counting.
+ * Week 5. Pattern: frequency counting.
  * <p>
  * Two customer-entered names are treated as the same set of letters if one is an anagram of the other,
  * ignoring case, spaces and hyphens ("Ade-Ola" and "Aloe Ad"). Return whether they are.

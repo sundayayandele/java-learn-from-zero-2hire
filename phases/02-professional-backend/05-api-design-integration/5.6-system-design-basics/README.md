@@ -5,7 +5,7 @@
 
 ← [5.5 Introduction to GraphQL and gRPC, and when to use each](../5.5-graphql-grpc/README.md) · [Module 5](../README.md) · [Phase 2](../../README.md) · [6.1 Spring Security filter chain and configuration](../../06-security-essentials/6.1-spring-security-filter-chain/README.md) →
 
-> **Week 16** · Module 5: API Design & Integration · Website topic covered: *Added for interviews: requirements, capacity estimates, load balancers, caching, queues, replicas, consistency trade-offs, and talking through a design*
+> **Week 17** · Module 5: API Design & Integration · Website topic covered: *Added for interviews: requirements, capacity estimates, load balancers, caching, queues, replicas, consistency trade-offs, and talking through a design*
 
 ## What you will be able to do
 
@@ -117,7 +117,7 @@ Functional and non-functional requirements, back-of-the-envelope estimate, reque
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [System Design Interview: A Step-By-Step Guide](https://www.youtube.com/watch?v=i7twT3x5yv8) · ByteByteGo · 10 min. A step-by-step framework for system design interviews, from ByteByteGo.
 - [Cache Systems Every Developer Should Know](https://www.youtube.com/watch?v=dGAgxozNWFE) · ByteByteGo · 6 min. Cache systems every developer should know: where caches sit and why.

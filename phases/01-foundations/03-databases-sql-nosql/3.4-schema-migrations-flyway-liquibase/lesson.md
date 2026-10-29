@@ -216,7 +216,7 @@ Run `flyway info` before and after `migrate`, commit both files with the code th
 - Huge data updates inside a schema migration.
 - `CREATE INDEX` without `CONCURRENTLY` on a hot table.
 - Version-number collisions between feature branches.
-- Using Hibernate's `ddl-auto=update` instead of migrations (topic 4.3 explains why).
+- Using Hibernate's `ddl-auto=update` instead of migrations (topic 4.4 explains why).
 
 ## Practice
 

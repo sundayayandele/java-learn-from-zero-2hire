@@ -7,7 +7,7 @@ import java.util.Deque;
 import java.util.List;
 
 /**
- * Week 17. Pattern: breadth-first search with a queue.
+ * Week 18. Pattern: breadth-first search with a queue.
  * <p>
  * Return the names in an org chart level by level, left to right.
  */

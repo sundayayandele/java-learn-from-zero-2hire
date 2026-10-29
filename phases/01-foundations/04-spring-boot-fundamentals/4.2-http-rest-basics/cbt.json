@@ -1,0 +1,109 @@
+{
+  "topic": "4.2",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A mobile app moves money with `GET /transfer?from=0123456789&to=9876543210&amount=25000`. Some customers are debited twice after their browser preloads links.",
+      "question": "What is the root problem?",
+      "options": [
+        "The amount should be in kobo",
+        "`GET` must be safe: it may be repeated or prefetched freely, so creating a transfer must use `POST /transfers` with a JSON body",
+        "The query string is too long",
+        "The server should cache the response"
+      ],
+      "answer": 1,
+      "explanation": "Clients, proxies and browsers assume `GET` changes nothing and repeat it. Actions that move money use `POST`; payment details also don't belong in URLs, which end up in logs."
+    },
+    {
+      "type": "single",
+      "scenario": "A transfer API answers every request with `200 OK`, including `{\"status\":\"FAILED\",\"reason\":\"INSUFFICIENT_FUNDS\"}`. The operations dashboard shows a 0% error rate during an incident.",
+      "question": "What should the API do instead?",
+      "options": [
+        "Keep 200 and add a header",
+        "Use status codes that mean what happened, for example `201` for a created transfer and `422` for insufficient funds, with an error body",
+        "Return 500 for every failure",
+        "Return 204 with no body"
+      ],
+      "answer": 1,
+      "explanation": "Monitoring, client libraries and other engineers rely on the status code. Business-rule rejections are client errors (4xx); 500 is for server failures."
+    },
+    {
+      "type": "single",
+      "scenario": "A request without a token gets one status code; a logged-in customer asking for someone else's account gets another.",
+      "question": "Which pair is correct?",
+      "options": [
+        "403, then 401",
+        "401 (not authenticated), then 403 (authenticated but not allowed)",
+        "404, then 400",
+        "400, then 401"
+      ],
+      "answer": 1,
+      "explanation": "401 means \"we don't know who you are\"; 403 means \"we know who you are, and you can't do this\". Some banks return 404 for others' accounts so they don't reveal that the account exists."
+    },
+    {
+      "type": "single",
+      "scenario": "A JavaScript client reads `\"amount\": 0.1` and `\"fee\": 0.2` from your JSON and shows a total of 0.30000000000000004.",
+      "question": "How should the API represent money?",
+      "options": [
+        "As JSON numbers with more decimal places",
+        "As strings such as `\"25000.00\"`, or as integer minor units such as `2500000` kobo",
+        "As booleans",
+        "Rounded to whole naira"
+      ],
+      "answer": 1,
+      "explanation": "Many clients parse JSON numbers as binary floating point. Strings or integer minor units keep amounts exact; Jackson reads either into a `BigDecimal` or `long`."
+    },
+    {
+      "type": "single",
+      "scenario": "A service calls a KYC provider with Java's `HttpClient`. During the provider's outage, all of the service's threads hang and it stops answering.",
+      "question": "What was missing?",
+      "options": [
+        "HTTPS",
+        "Timeouts: a connect timeout on the client and a request timeout, so a slow partner fails fast",
+        "An `Accept` header",
+        "A bigger thread pool"
+      ],
+      "answer": 1,
+      "explanation": "Without timeouts a call can wait forever. Fail fast, check the status code, and (topic 5.4) add retries and circuit breakers on top."
+    },
+    {
+      "type": "single",
+      "scenario": "`curl -i -X POST http://localhost:8080/accounts/0123456789/balance` returns `405`. The same URL works with `GET`.",
+      "question": "What does 405 mean here?",
+      "options": [
+        "The account doesn't exist",
+        "The path exists but doesn't support the `POST` method",
+        "The server crashed",
+        "The request needs a token"
+      ],
+      "answer": 1,
+      "explanation": "405 Method Not Allowed: the resource is there, but only the mapped methods (here `GET`) are accepted. A path with no mapping at all gives 404."
+    },
+    {
+      "type": "single",
+      "scenario": "A client successfully creates a transfer with `POST /transfers`.",
+      "question": "Which response is most RESTful?",
+      "options": [
+        "`200 OK` with the text \"done\"",
+        "`201 Created` with a `Location: /transfers/TRF-2026-00042` header and the new transfer as JSON",
+        "`204 No Content`",
+        "`302 Found` redirecting to the home page"
+      ],
+      "answer": 1,
+      "explanation": "201 tells the client a new resource exists, and `Location` says where to read it later with `GET`."
+    },
+    {
+      "type": "single",
+      "scenario": "A mobile app sends `POST /transfers`, then its connection drops before the response arrives. It can't tell whether the transfer was made.",
+      "question": "Why is blindly retrying risky, and what's the standard fix?",
+      "options": [
+        "It isn't risky; POST is idempotent",
+        "POST isn't idempotent, so a retry may create a second transfer; APIs use an idempotency key so the server recognises the repeat (topic 5.3)",
+        "Switch to GET so retries are safe",
+        "Wait 24 hours before retrying"
+      ],
+      "answer": 1,
+      "explanation": "GET, PUT and DELETE are idempotent by definition; POST is not. An idempotency key lets the server return the original result for a repeated request instead of paying twice."
+    }
+  ]
+}

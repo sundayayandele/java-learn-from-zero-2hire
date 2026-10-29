@@ -5,7 +5,7 @@
 
 ← [5.3 Standard error responses (Problem Details), pagination, idempotency keys](../5.3-errors-pagination-idempotency/README.md) · [Module 5](../README.md) · [Phase 2](../../README.md) · [5.5 Introduction to GraphQL and gRPC, and when to use each](../5.5-graphql-grpc/README.md) →
 
-> **Week 15** · Module 5: API Design & Integration · Website topic covered: *RestClient and HTTP interfaces, timeouts, retries with backoff, circuit breakers, webhooks and signatures*
+> **Week 16** · Module 5: API Design & Integration · Website topic covered: *RestClient and HTTP interfaces, timeouts, retries with backoff, circuit breakers, webhooks and signatures*
 
 ## What you will be able to do
 
@@ -249,7 +249,7 @@ class PaymentGatewayClientTest {
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [Creating REST Clients in Spring Boot 4 Just Got EASIER!](https://www.youtube.com/watch?v=TEd5e4Thu7M) · Dan Vega · 18 min. RestClient, HTTP interface clients and timeouts in Spring Boot 4.
 - [11 Understanding the circuit breaker pattern - Spring Boot Microservices Level 2](https://www.youtube.com/watch?v=mJ8JSach2P4) · Java Brains · 7 min. The circuit breaker pattern: closed, open and half-open states.

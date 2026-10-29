@@ -1,10 +1,10 @@
 ## What this module gives you
 
-Two weeks on how code gets from your laptop to production in a professional team: Git branching, pull requests, rebasing and branch protection (week 21), small, secure, multi-stage Docker images and Docker Compose stacks (week 21), CI/CD with GitHub Actions and GitLab CI including build, test, scan and publish stages (week 22), the Jenkins and Azure DevOps pipelines that many banks still run (week 22), and deploying containers to a VPS and the major clouds with safe rollbacks (week 22).
+Two weeks on how code gets from your laptop to production in a professional team: Git branching, pull requests, rebasing and branch protection (week 22), small, secure, multi-stage Docker images and Docker Compose stacks (week 22), CI/CD with GitHub Actions and GitLab CI including build, test, scan and publish stages (week 23), the Jenkins and Azure DevOps pipelines that many banks still run (week 23), and deploying containers to a VPS and the major clouds with safe rollbacks (week 23). It builds on the Git and GitHub essentials from Phase 1 topic 1.2.
 
 This module extends the six-platform CI/CD material from Phase 1 with **quality gates**: no merge to `main` unless tests, coverage, static analysis, dependency, secret and image scans all pass.
 
-**Exit check for Module 8:** all five topic CBTs passed; projects 8.B and 8.C completed; 8.A with a peer if you can find one (the Moodle forum pairs learners).
+**Exit check for Module 8:** all six topic CBTs attempted (aim for 70%+); projects 8.B and 8.C completed; 8.A with a peer if you can find one (the Moodle forum pairs learners).
 
 ## Module projects
 

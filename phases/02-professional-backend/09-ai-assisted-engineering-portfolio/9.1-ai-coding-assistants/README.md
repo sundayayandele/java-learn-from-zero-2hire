@@ -5,7 +5,7 @@
 
 ← [8.6 Working in an agile team](../../08-git-docker-cicd/8.6-agile-teamwork/README.md) · [Module 9](../README.md) · [Phase 2](../../README.md) · [9.2 Reviewing AI-generated code for bugs, security issues and licence risk](../9.2-reviewing-ai-generated-code/README.md) →
 
-> **Week 23** · Module 9: AI-Assisted Engineering & Junior Portfolio · Website topic covered: *Working effectively with GitHub Copilot, Claude Code, Cursor and similar tools*
+> **Week 24** · Module 9: AI-Assisted Engineering & Junior Portfolio · Website topic covered: *Working effectively with GitHub Copilot, Claude Code, Cursor and similar tools*
 
 ## What you will be able to do
 
@@ -145,7 +145,7 @@ Large language model, inline completion, chat assistant, agentic coding assistan
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [Copilot Best Practices (What Not To Do)](https://www.youtube.com/watch?v=2q0BoioYSxQ) · Visual Studio Code · 9 min. Copilot best practices: what not to do, from the VS Code team.
 - [Claude Code best practices | Code w/ Claude](https://www.youtube.com/watch?v=gv0WHhKelSE) · Anthropic · 26 min. Claude Code best practices from Anthropic: context, plans, verification.

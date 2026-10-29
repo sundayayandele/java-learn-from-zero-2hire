@@ -1,10 +1,10 @@
 ## What this module gives you
 
-Two weeks to turn "it works on my machine" into "I can prove it works, and keep proving it": unit tests and test-driven development with JUnit 5, AssertJ and Mockito (week 19), integration tests against real PostgreSQL, Redis and Kafka with Testcontainers (week 19), API tests with MockMvc, `RestTestClient` and REST Assured (week 20), coverage and mutation testing plus SonarQube quality gates (week 20), and how professional teams review pull requests (week 20).
+Two weeks to turn "it works on my machine" into "I can prove it works, and keep proving it": unit tests and test-driven development with JUnit 5, AssertJ and Mockito (week 20), integration tests against real PostgreSQL, Redis and Kafka with Testcontainers (week 20), API tests with MockMvc, `RestTestClient` and REST Assured (week 21), coverage and mutation testing plus SonarQube quality gates (week 21), and how professional teams review pull requests (week 21). It builds on your first JUnit 5 tests from Phase 1 topic 1.6.
 
 From this module on, every repository you push must have a **test pyramid** (many fast unit tests, fewer integration tests, a handful of end-to-end API tests) and a CI job that fails when coverage or static-analysis thresholds drop.
 
-**Exit check for Module 7:** all five topic CBTs passed; project 7.A or 7.B completed; quality gate configured on at least one capstone.
+**Exit check for Module 7:** all five topic CBTs attempted (aim for 70%+); project 7.A or 7.B completed; quality gate configured on at least one capstone.
 
 ## Module projects
 

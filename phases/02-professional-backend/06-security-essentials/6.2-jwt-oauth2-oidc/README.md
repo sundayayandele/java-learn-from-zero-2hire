@@ -5,7 +5,7 @@
 
 ← [6.1 Spring Security filter chain and configuration](../6.1-spring-security-filter-chain/README.md) · [Module 6](../README.md) · [Phase 2](../../README.md) · [6.3 Role-based access control and method security](../6.3-rbac-method-security/README.md) →
 
-> **Week 17** · Module 6: Security Essentials · Website topic covered: *JWT structure and validation, access and refresh tokens, OAuth2 resource server, OIDC login with Keycloak*
+> **Week 18** · Module 6: Security Essentials · Website topic covered: *JWT structure and validation, access and refresh tokens, OAuth2 resource server, OIDC login with Keycloak*
 
 ## What you will be able to do
 
@@ -216,7 +216,7 @@ JWT, JWS, header, claims, `iss`, `sub`, `aud`, `exp`, `kid`, JWKS, RS256, HS256,
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [JWT Explained In Under 10 Minutes (JSON Web Tokens)](https://www.youtube.com/watch?v=Y2H3DXDeS3Q) · Ariel Weinberger · 9 min. What a JWT is: header, claims, signature, and what it does not protect.
 - [An Illustrated Guide to OAuth and OpenID Connect](https://www.youtube.com/watch?v=t18YB3xDfXI) · OktaDev · 17 min. OAuth 2.0 and OpenID Connect in plain English, from Okta.

@@ -1,0 +1,500 @@
+{
+  "generated_from": "curriculum.json and phases/<phase>/phase.md",
+  "phases": {
+    "1": {
+      "title": "Foundations",
+      "first_week": 0,
+      "last_week": 14,
+      "weeks": [
+        {
+          "week": 0,
+          "topics": [
+            {
+              "id": "0.1",
+              "title": "Your first programs",
+              "optional": true
+            },
+            {
+              "id": "0.2",
+              "title": "Decisions, loops, arrays and strings",
+              "optional": true
+            },
+            {
+              "id": "0.3",
+              "title": "Methods and breaking a problem into steps",
+              "optional": true
+            }
+          ],
+          "milestone": "On-ramp project; JDK and IntelliJ installed"
+        },
+        {
+          "week": 1,
+          "topics": [
+            {
+              "id": "1.1",
+              "title": "Your toolkit",
+              "optional": false
+            },
+            {
+              "id": "1.2",
+              "title": "Git and GitHub essentials",
+              "optional": false
+            },
+            {
+              "id": "1.3",
+              "title": "Java syntax, types, control flow and methods",
+              "optional": false
+            }
+          ],
+          "milestone": "First Maven build pushed to GitHub with a green Actions run"
+        },
+        {
+          "week": 2,
+          "topics": [
+            {
+              "id": "1.4",
+              "title": "Object-oriented programming and the SOLID principles",
+              "optional": false
+            },
+            {
+              "id": "1.5",
+              "title": "Collections and generics",
+              "optional": false
+            }
+          ],
+          "milestone": ""
+        },
+        {
+          "week": 3,
+          "topics": [
+            {
+              "id": "1.6",
+              "title": "Unit testing with JUnit",
+              "optional": false
+            },
+            {
+              "id": "1.7",
+              "title": "Lambdas and the Streams API",
+              "optional": false
+            }
+          ],
+          "milestone": "Practice track starts"
+        },
+        {
+          "week": 4,
+          "topics": [
+            {
+              "id": "1.8",
+              "title": "Modern Java",
+              "optional": false
+            },
+            {
+              "id": "1.9",
+              "title": "Exceptions, immutability and clean-code habits",
+              "optional": false
+            },
+            {
+              "id": "1.10",
+              "title": "Java I/O, NIO.2 files and serialization",
+              "optional": false
+            }
+          ],
+          "milestone": ""
+        },
+        {
+          "week": 5,
+          "topics": [
+            {
+              "id": "1.11",
+              "title": "Design patterns in Java and in Spring",
+              "optional": false
+            },
+            {
+              "id": "1.12",
+              "title": "Reading legacy Java 8/11/17 code and migrating it forward",
+              "optional": false
+            },
+            {
+              "id": "1.13",
+              "title": "Kotlin for Java developers",
+              "optional": true
+            },
+            {
+              "id": "1.14",
+              "title": "Localization",
+              "optional": true
+            }
+          ],
+          "milestone": "Module 1 project pushed with tests and green CI"
+        },
+        {
+          "week": 6,
+          "topics": [
+            {
+              "id": "2.1",
+              "title": "Threads, ExecutorService and CompletableFuture",
+              "optional": false
+            },
+            {
+              "id": "2.2",
+              "title": "Race conditions, locks, atomics and concurrent collections",
+              "optional": false
+            }
+          ],
+          "milestone": "Start Capstone 1 design"
+        },
+        {
+          "week": 7,
+          "topics": [
+            {
+              "id": "2.3",
+              "title": "Virtual threads (Project Loom) and structured concurrency",
+              "optional": false
+            },
+            {
+              "id": "2.4",
+              "title": "The JVM memory model, heap vs stack and garbage collection",
+              "optional": false
+            },
+            {
+              "id": "2.5",
+              "title": "Modules, packaging and runtime images (JPMS, jars, jlink)",
+              "optional": true
+            },
+            {
+              "id": "2.6",
+              "title": "Debugging and troubleshooting",
+              "optional": false
+            }
+          ],
+          "milestone": "Module 2 find-and-fix lab"
+        },
+        {
+          "week": 8,
+          "topics": [
+            {
+              "id": "3.1",
+              "title": "Relational design",
+              "optional": false
+            },
+            {
+              "id": "3.2",
+              "title": "Transactions, isolation levels and locking",
+              "optional": false
+            }
+          ],
+          "milestone": "Ledger schema (project 3.B)"
+        },
+        {
+          "week": 9,
+          "topics": [
+            {
+              "id": "3.3",
+              "title": "Indexing and reading query plans in PostgreSQL and MySQL",
+              "optional": false
+            },
+            {
+              "id": "3.4",
+              "title": "Schema migrations with Flyway and Liquibase",
+              "optional": false
+            },
+            {
+              "id": "3.5",
+              "title": "JDBC fundamentals",
+              "optional": false
+            }
+          ],
+          "milestone": "Query-tuning lab (project 3.D)"
+        },
+        {
+          "week": 10,
+          "topics": [
+            {
+              "id": "3.6",
+              "title": "Redis for caching and MongoDB for document data",
+              "optional": false
+            }
+          ],
+          "milestone": "Capstone 1 core logic complete"
+        },
+        {
+          "week": 11,
+          "topics": [
+            {
+              "id": "4.1",
+              "title": "Dependency injection, IoC and auto-configuration",
+              "optional": false
+            },
+            {
+              "id": "4.2",
+              "title": "HTTP and REST basics",
+              "optional": false
+            }
+          ],
+          "milestone": ""
+        },
+        {
+          "week": 12,
+          "topics": [
+            {
+              "id": "4.3",
+              "title": "Spring MVC controllers, validation and global error handling",
+              "optional": false
+            },
+            {
+              "id": "4.4",
+              "title": "Spring Data JPA and Hibernate",
+              "optional": false
+            }
+          ],
+          "milestone": "Capstone 2 started"
+        },
+        {
+          "week": 13,
+          "topics": [
+            {
+              "id": "4.5",
+              "title": "Configuration, profiles and secrets handling",
+              "optional": false
+            },
+            {
+              "id": "4.6",
+              "title": "Spring Boot Actuator",
+              "optional": false
+            }
+          ],
+          "milestone": "Capstones deployed to a VPS or cloud"
+        },
+        {
+          "week": 14,
+          "topics": [
+            {
+              "id": "4.7",
+              "title": "What changed from Spring Boot 3 to 4, and how to upgrade",
+              "optional": false
+            },
+            {
+              "id": "4.8",
+              "title": "Spring under the hood",
+              "optional": false
+            },
+            {
+              "id": "4.9",
+              "title": "Spring Boot with Kotlin",
+              "optional": true
+            }
+          ],
+          "milestone": "End-of-phase exam, capstone defence, live-coding assessment, Getting Hired session, portfolio checkpoint"
+        }
+      ]
+    },
+    "2": {
+      "title": "Professional Backend",
+      "first_week": 15,
+      "last_week": 25,
+      "weeks": [
+        {
+          "week": 15,
+          "topics": [
+            {
+              "id": "5.1",
+              "title": "Resource design, HTTP semantics and status codes",
+              "optional": false
+            },
+            {
+              "id": "5.2",
+              "title": "OpenAPI/Swagger documentation and API versioning",
+              "optional": false
+            }
+          ],
+          "milestone": "OpenAPI contract for your first capstone"
+        },
+        {
+          "week": 16,
+          "topics": [
+            {
+              "id": "5.3",
+              "title": "Standard error responses (Problem Details), pagination, idempotency keys",
+              "optional": false
+            },
+            {
+              "id": "5.4",
+              "title": "Consuming third-party APIs",
+              "optional": false
+            }
+          ],
+          "milestone": "Start Capstone 1 (payment gateway hub)"
+        },
+        {
+          "week": 17,
+          "topics": [
+            {
+              "id": "5.5",
+              "title": "Introduction to GraphQL and gRPC, and when to use each",
+              "optional": false
+            },
+            {
+              "id": "5.6",
+              "title": "System design basics for junior interviews",
+              "optional": false
+            }
+          ],
+          "milestone": "Module 5 project, Lab 5.E"
+        },
+        {
+          "week": 18,
+          "topics": [
+            {
+              "id": "6.1",
+              "title": "Spring Security filter chain and configuration",
+              "optional": false
+            },
+            {
+              "id": "6.2",
+              "title": "JWT access and refresh tokens, OAuth2 / OpenID Connect login",
+              "optional": false
+            }
+          ],
+          "milestone": "Keycloak running locally"
+        },
+        {
+          "week": 19,
+          "topics": [
+            {
+              "id": "6.3",
+              "title": "Role-based access control and method security",
+              "optional": false
+            },
+            {
+              "id": "6.4",
+              "title": "OWASP Top 10 and how they show up in Java APIs",
+              "optional": false
+            },
+            {
+              "id": "6.5",
+              "title": "Password hashing, secrets management, dependency scanning",
+              "optional": false
+            }
+          ],
+          "milestone": "Secured capstone API; Module 6 project, Lab 6.D"
+        },
+        {
+          "week": 20,
+          "topics": [
+            {
+              "id": "7.1",
+              "title": "Unit testing with JUnit and Mockito; test-driven development",
+              "optional": false
+            },
+            {
+              "id": "7.2",
+              "title": "Integration tests with Testcontainers (real Postgres, Kafka, Redis)",
+              "optional": false
+            }
+          ],
+          "milestone": ""
+        },
+        {
+          "week": 21,
+          "topics": [
+            {
+              "id": "7.3",
+              "title": "API tests with MockMvc and REST Assured",
+              "optional": false
+            },
+            {
+              "id": "7.4",
+              "title": "Coverage with JaCoCo and static analysis with SonarQube",
+              "optional": false
+            },
+            {
+              "id": "7.5",
+              "title": "Code review etiquette and pull-request standards",
+              "optional": false
+            }
+          ],
+          "milestone": "Quality gate green on every capstone; Lab 7.D"
+        },
+        {
+          "week": 22,
+          "topics": [
+            {
+              "id": "8.1",
+              "title": "Git branching, pull requests, rebasing and branch-protection rules",
+              "optional": false
+            },
+            {
+              "id": "8.2",
+              "title": "Multi-stage Docker images for Spring Boot; Docker Compose",
+              "optional": false
+            }
+          ],
+          "milestone": "Team PR workflow with a peer"
+        },
+        {
+          "week": 23,
+          "topics": [
+            {
+              "id": "8.3",
+              "title": "CI/CD with GitHub Actions (build, test, scan, publish image), plus GitLab CI",
+              "optional": false
+            },
+            {
+              "id": "8.4",
+              "title": "Overview of Jenkins and Azure DevOps pipelines used in enterprises",
+              "optional": false
+            },
+            {
+              "id": "8.5",
+              "title": "Deploying a container to a cloud host",
+              "optional": false
+            },
+            {
+              "id": "8.6",
+              "title": "Working in an agile team",
+              "optional": false
+            }
+          ],
+          "milestone": "Capstones deployed from CI; Module 8 mini-sprint; Lab 8.D"
+        },
+        {
+          "week": 24,
+          "topics": [
+            {
+              "id": "9.1",
+              "title": "Daily workflows with AI coding assistants (GitHub Copilot, Claude Code, Cursor and similar)",
+              "optional": false
+            },
+            {
+              "id": "9.2",
+              "title": "Reviewing AI-generated code for bugs, security issues and licence risk",
+              "optional": false
+            },
+            {
+              "id": "9.3",
+              "title": "Using AI to write tests, docs and refactors without losing understanding",
+              "optional": false
+            }
+          ],
+          "milestone": "Lab 9.D"
+        },
+        {
+          "week": 25,
+          "topics": [
+            {
+              "id": "9.4",
+              "title": "CV, GitHub profile and LinkedIn optimisation for Java roles",
+              "optional": false
+            },
+            {
+              "id": "9.5",
+              "title": "Junior interview prep",
+              "optional": false
+            }
+          ],
+          "milestone": "End-of-phase exam, capstone defence, live-coding assessment, Getting Hired, junior portfolio review"
+        }
+      ]
+    }
+  }
+}

@@ -58,7 +58,7 @@ Sources: [Mermaid](architecture/cloud.mmd) · [draw.io](architecture/cloud.drawi
 
 <!-- ARCHITECTURE:END -->
 
-**Required for every learner.** Weeks 5–12. Modules used: 1, 2, 3, 4.
+**Required for every learner.** Weeks 6–13. Modules used: 1, 2, 3, 4.
 
 ## Business context
 

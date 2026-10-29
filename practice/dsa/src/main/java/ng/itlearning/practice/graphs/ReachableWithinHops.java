@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * Week 19. Pattern: bounded BFS.
+ * Week 20. Pattern: bounded BFS.
  * <p>
  * For an AML investigation, return (sorted) every account that {@code start} could have moved money to within
  * at most {@code maxHops} transfers, excluding {@code start} itself.

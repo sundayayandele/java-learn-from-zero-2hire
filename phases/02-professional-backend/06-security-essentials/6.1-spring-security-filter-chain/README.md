@@ -5,7 +5,7 @@
 
 ← [5.6 System design basics for junior interviews](../../05-api-design-integration/5.6-system-design-basics/README.md) · [Module 6](../README.md) · [Phase 2](../../README.md) · [6.2 JWT access and refresh tokens, OAuth2 / OpenID Connect login](../6.2-jwt-oauth2-oidc/README.md) →
 
-> **Week 17** · Module 6: Security Essentials · Website topic covered: *SecurityFilterChain, authentication vs authorisation, stateless APIs, CORS and CSRF*
+> **Week 18** · Module 6: Security Essentials · Website topic covered: *SecurityFilterChain, authentication vs authorisation, stateless APIs, CORS and CSRF*
 
 ## What you will be able to do
 
@@ -251,7 +251,7 @@ Authentication, authorisation, principal, credentials, `Authentication`, `Grante
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [Spring Security Architecture Explained](https://www.youtube.com/watch?v=h-9vhFeM3MY) · Amigoscode · 15 min. Spring Security architecture: filters, authentication manager and providers.
 - [Spring Security Filter Chain Explained in 3 Minutes](https://www.youtube.com/watch?v=lRQTqKSSiFs) · Sergey Tech · 3 min. The security filter chain in three minutes.

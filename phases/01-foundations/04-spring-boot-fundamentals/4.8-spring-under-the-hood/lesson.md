@@ -12,7 +12,7 @@ The bugs that reach production in Spring applications are rarely syntax errors. 
 
 ## 1. Proxies: how annotations get their behaviour
 
-When a bean has methods annotated with `@Transactional`, `@Cacheable`, `@PreAuthorize`, `@Async`, `@Retryable` or similar, Spring doesn't change your class. At start-up, a `BeanPostProcessor` replaces the bean with a **proxy** that wraps calls to it (topic 1.12). Other beans receive the proxy. Spring Boot uses **class-based (CGLIB) proxies** by default: a generated subclass of your class.
+When a bean has methods annotated with `@Transactional`, `@Cacheable`, `@PreAuthorize`, `@Async`, `@Retryable` or similar, Spring doesn't change your class. At start-up, a `BeanPostProcessor` replaces the bean with a **proxy** that wraps calls to it (topic 1.11). Other beans receive the proxy. Spring Boot uses **class-based (CGLIB) proxies** by default: a generated subclass of your class.
 
 ```text
 Controller ──calls──> [Proxy: start tx] ──> TransferService.transfer() ──> [Proxy: commit/rollback]
@@ -93,7 +93,7 @@ Never call a slow external API (a payment provider, an email server) inside a da
 
 | Scope | One instance per | Notes |
 | --- | --- | --- |
-| `singleton` (default) | Application context | Must be stateless or thread-safe (topic 1.12) |
+| `singleton` (default) | Application context | Must be stateless or thread-safe (topic 1.11) |
 | `prototype` | Each injection or `getBean` call | Spring doesn't call destroy callbacks |
 | `request` | HTTP request | Web only; injected through a scoped proxy |
 | `session` | HTTP session | Avoid in stateless APIs |
@@ -115,7 +115,7 @@ Prefer **constructor injection**: dependencies are explicit, objects are immutab
 
 ## 4. Application events
 
-`ApplicationEventPublisher.publishEvent(...)` sends any object to listeners in the same application (the Observer pattern, topic 1.12).
+`ApplicationEventPublisher.publishEvent(...)` sends any object to listeners in the same application (the Observer pattern, topic 1.11).
 
 ```java
 @Component
@@ -162,7 +162,7 @@ Auto-configuration classes are ordinary `@Configuration` classes guarded by **co
 - `@ConditionalOnMissingBean`: only if you haven't defined your own bean, which is how you override defaults.
 - `@ConditionalOnProperty("app.feature.enabled")`: only if a property is set.
 
-To see what was applied and why, start the application with `--debug` (or `debug=true`) to print the **conditions evaluation report**, or call the Actuator `conditions` endpoint (restricted to operators). Spring Boot 4 splits auto-configuration into many modules, so a missing starter means the condition never matches (topic 4.6).
+To see what was applied and why, start the application with `--debug` (or `debug=true`) to print the **conditions evaluation report**, or call the Actuator `conditions` endpoint (restricted to operators). Spring Boot 4 splits auto-configuration into many modules, so a missing starter means the condition never matches (topic 4.7).
 
 ## Common mistakes
 

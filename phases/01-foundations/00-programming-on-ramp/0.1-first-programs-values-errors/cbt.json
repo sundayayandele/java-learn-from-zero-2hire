@@ -1,0 +1,96 @@
+{
+  "topic": "0.1",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A learner's program runs `int shares = 1000 / 3;` to split ₦1,000 between three people, then prints `shares`.",
+      "question": "What is printed?",
+      "options": [
+        "333.33",
+        "333",
+        "334",
+        "An error, because 1000 isn't divisible by 3"
+      ],
+      "answer": 1,
+      "explanation": "Dividing two whole numbers in Java gives a whole number and throws the fraction away (it doesn't round). `1000 % 3` gives the 1 left over."
+    },
+    {
+      "type": "single",
+      "scenario": "Running `java Main.java` prints: `Main.java:6: error: cannot find symbol` ... `symbol: variable balence`.",
+      "question": "What is the most likely fix?",
+      "options": [
+        "Reinstall the JDK",
+        "Correct the spelling of `balence` on line 6 to match the declared variable, for example `balance`",
+        "Add a semicolon to the end of line 5",
+        "Change the variable's type from `long` to `int`"
+      ],
+      "answer": 1,
+      "explanation": "\"cannot find symbol\" means Java doesn't know that name: usually a typo or a variable used before it is declared. The message names the line and the unknown symbol."
+    },
+    {
+      "type": "single",
+      "scenario": "A wallet app must store balances exactly, such as ₦250.75, and add thousands of them without errors.",
+      "question": "In this on-ramp, which representation is correct?",
+      "options": [
+        "`double balance = 250.75;`",
+        "`String balance = \"250.75\";` and add the strings",
+        "`long balanceKobo = 25075;` (whole kobo)",
+        "`int balanceNaira = 250;` and ignore the kobo"
+      ],
+      "answer": 2,
+      "explanation": "Whole numbers are exact, so counting kobo in a `long` never drifts. `double` can't represent most decimal fractions exactly; topic 1.3 introduces `BigDecimal` as the other correct choice."
+    },
+    {
+      "type": "single",
+      "scenario": "A program reads an amount with `in.nextLong()` and then the recipient's name with `in.nextLine()`. When run, the name is always empty.",
+      "question": "Why?",
+      "options": [
+        "`nextLine()` only works before `nextLong()`",
+        "The Enter key after the number is still in the input, so `nextLine()` reads the empty rest of that line",
+        "Names can't contain spaces",
+        "`Scanner` must be created twice"
+      ],
+      "answer": 1,
+      "explanation": "`nextLong()` reads the digits but leaves the line break. Call `nextLine()` once to discard it, then call it again to read the name."
+    },
+    {
+      "type": "single",
+      "scenario": "A program stops with: `Exception in thread \"main\" java.lang.ArithmeticException: / by zero` ... `at Main.main(Main.java:12)`.",
+      "question": "What kind of error is this, and where should you look first?",
+      "options": [
+        "A compile error; look at line 1",
+        "A runtime error; look at line 12 of Main.java, where a whole number was divided by zero",
+        "A JVM bug; report it to Oracle",
+        "A compile error caused by a missing import"
+      ],
+      "answer": 1,
+      "explanation": "The program compiled and started, then failed while running. The first `at` line that names your file points at the statement to inspect: something there divided by a zero value."
+    },
+    {
+      "type": "single",
+      "scenario": "`long fee = 1000;` holds ₦10 in kobo. A learner writes `long vat = fee * (75 / 1000);` to get 7.5% VAT and gets 0.",
+      "question": "Which line gives the correct VAT for any fee in kobo?",
+      "options": [
+        "`long vat = fee * 75 / 1000;`",
+        "`long vat = fee * (75 / 1000.0);`",
+        "`long vat = (fee / 1000) * 75;`",
+        "`long vat = fee * 0;`"
+      ],
+      "answer": 0,
+      "explanation": "`75 / 1000` is whole-number division, which is 0. Multiplying first and dividing last keeps the result exact. Option C divides first: it happens to give 75 for a fee of 1000, but for a fee of 1500 it gives 75 instead of 112, losing the 500."
+    },
+    {
+      "type": "single",
+      "scenario": "`long amountKobo = 125005;` and the program prints `\"₦\" + amountKobo / 100 + \".\" + amountKobo % 100`.",
+      "question": "What does it print, and is it right?",
+      "options": [
+        "`₦1250.05`, which is right",
+        "`₦1250.5`, which is wrong: the remainder 5 needs to print as 05",
+        "`₦1250.005`, which is right",
+        "`₦125005`, because + joins the numbers"
+      ],
+      "answer": 1,
+      "explanation": "125005 / 100 is 1250 and 125005 % 100 is 5, so the string is `₦1250.5`. `String.format(\"₦%d.%02d\", naira, kobo)` pads the kobo to two digits."
+    }
+  ]
+}

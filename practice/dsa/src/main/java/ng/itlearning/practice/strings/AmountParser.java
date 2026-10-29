@@ -2,7 +2,7 @@
 package ng.itlearning.practice.strings;
 
 /**
- * Week 9. Pattern: careful parsing and validation.
+ * Week 10. Pattern: careful parsing and validation.
  * <p>
  * Parse a naira amount typed by a user into kobo. Accept an optional leading "₦" or "NGN " prefix, comma
  * thousands separators in the right places, and at most two decimal places: "₦1,250.5" is 125050 kobo,

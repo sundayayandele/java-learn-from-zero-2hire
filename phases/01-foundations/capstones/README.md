@@ -8,7 +8,7 @@ Ten capstones built on the problems Nigerian and international financial institu
 
 **Every capstone has a step-by-step build guide** (`GUIDE.md`, linked at the top of each brief): setup from the starter, data download commands, build steps that each end with a "done when" check, then CI, deployment, architecture pack, README and submission.
 
-**Complete at least three by the end of week 13: Capstone 1 plus any two others**, then defend them in a 20-minute [capstone defence](../../../docs/assessments/capstone-defence.md) (demo, code questions and a live change). Pick the two that best match the jobs you will apply for (see "Good for" below). Capstones 1 and 2 have complete reference solutions; your mentor shares each one once your submission has passed.
+**Complete at least three by the end of week 14: Capstone 1 plus any two others**, then defend them in a 20-minute [capstone defence](../../../docs/assessments/capstone-defence.md) (demo, code questions and a live change). Pick the two that best match the jobs you will apply for (see "Good for" below). Capstones 1 and 2 have complete reference solutions; your mentor shares each one once your submission has passed.
 
 | # | Capstone | Core skills | Data (licence) | Good for | Reference solution |
 | --- | --- | --- | --- | --- | --- |

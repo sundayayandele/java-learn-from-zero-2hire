@@ -1,0 +1,96 @@
+{
+  "topic": "4.6",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "During a 10-minute PostgreSQL outage, Kubernetes restarted every instance of the payments API repeatedly, and recovery took longer than the outage. The `db` health indicator was in the liveness group.",
+      "question": "What should the probe configuration be?",
+      "options": [
+        "Make liveness call the database twice",
+        "Keep external dependencies like the database out of liveness; include them in readiness so instances stop receiving traffic but aren't restarted",
+        "Put the database in both groups",
+        "Remove all health checks"
+      ],
+      "answer": 1,
+      "explanation": "Restarting can't fix a database outage. Readiness takes instances out of rotation; liveness should reflect only the process's own health."
+    },
+    {
+      "type": "single",
+      "scenario": "A security scan finds `https://api.bank.example/actuator/heapdump` publicly downloadable.",
+      "question": "Why is this critical, and what's the fix?",
+      "options": [
+        "It's harmless; heap dumps only contain class names",
+        "A heap dump contains everything in memory (tokens, passwords, customer data); expose only needed endpoints, move management to an internal port, secure it, and disable heapdump in production",
+        "Add rate limiting",
+        "Rename the endpoint"
+      ],
+      "answer": 1,
+      "explanation": "Exposed actuator endpoints are a known attack path. Minimise exposure (health, info, prometheus), restrict network access and require authentication for the rest."
+    },
+    {
+      "type": "single",
+      "scenario": "A developer adds a metric `bank.transfers` tagged with `account` (the account number) and `reference`. Prometheus memory usage explodes within a day.",
+      "question": "What went wrong?",
+      "options": [
+        "High-cardinality tags: every unique account/reference creates a new time series; tag only with small fixed sets such as outcome and channel",
+        "Counters can't have tags",
+        "Prometheus doesn't support Micrometer",
+        "The metric name contains a dot"
+      ],
+      "answer": 0,
+      "explanation": "Each unique tag combination is a separate series. Per-account or per-reference data belongs in logs, traces or the database, not metric tags."
+    },
+    {
+      "type": "single",
+      "scenario": "You need to measure how long calls to the card switch take, including p95 and p99 across all instances.",
+      "question": "Which Micrometer meter fits?",
+      "options": [
+        "Gauge",
+        "Timer with a percentile histogram published",
+        "DistributionSummary of booleans",
+        "Counter"
+      ],
+      "answer": 1,
+      "explanation": "A Timer records counts and durations; publishing a histogram lets Prometheus aggregate percentiles across instances correctly."
+    },
+    {
+      "type": "single",
+      "scenario": "During an incident you need DEBUG logs for `ng.itlearning.bank.transfer` for 10 minutes without redeploying.",
+      "question": "Which Actuator endpoint helps?",
+      "options": [
+        "/actuator/env",
+        "/actuator/health",
+        "/actuator/mappings",
+        "/actuator/loggers (POST a configuredLevel for that logger)"
+      ],
+      "answer": 3,
+      "explanation": "The loggers endpoint reads and changes log levels at runtime. Because it changes behaviour, it must be secured."
+    },
+    {
+      "type": "single",
+      "scenario": "The operations team wants to see how many payment jobs are waiting in an in-memory queue at any moment.",
+      "question": "Which meter type represents that?",
+      "options": [
+        "Gauge",
+        "Counter",
+        "Timer",
+        "LongTaskTimer only"
+      ],
+      "answer": 0,
+      "explanation": "A gauge reports a current value that can go up and down, such as queue size. Counters only increase."
+    },
+    {
+      "type": "single",
+      "scenario": "Support often asks 'which version and commit is running in UAT?' and nobody knows without checking the CI logs.",
+      "question": "What's the simplest fix?",
+      "options": [
+        "Generate build-info (and git properties) with the Maven plugins and expose the info endpoint internally",
+        "Add the version to every log line manually",
+        "Name the jar after the commit",
+        "Ask the release manager each time"
+      ],
+      "answer": 0,
+      "explanation": "Spring Boot reads META-INF/build-info.properties and git.properties and shows them on /actuator/info, giving an instant answer."
+    }
+  ]
+}

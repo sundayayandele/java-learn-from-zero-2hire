@@ -1,0 +1,96 @@
+{
+  "topic": "0.3",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "`static long fee(long amount) { if (amount > 500_000) { return 2_500; } }` fails to compile with `missing return statement`.",
+      "question": "Why?",
+      "options": [
+        "`long` methods can't use `if`",
+        "When `amount` is 500,000 or less, no `return` is reached, and every path of a non-void method must return a value",
+        "The method must be named `getFee`",
+        "`return` can only appear once in a method"
+      ],
+      "answer": 1,
+      "explanation": "Java checks every path through the method. Add a final `return 1_000;` (or an `else`) so the small-amount path also returns."
+    },
+    {
+      "type": "single",
+      "scenario": "A learner writes `static void total(long[] a) { long sum = 0; for (long x : a) sum += x; System.out.println(sum); }` and then can't use the total to work out the average in `main`.",
+      "question": "What is the best change?",
+      "options": [
+        "Make `sum` a variable in `main` with the same name",
+        "Change the method to `static long total(long[] a)` and `return sum;`, then use the returned value in `main`",
+        "Call `total` twice",
+        "Print the average inside `total` as well"
+      ],
+      "answer": 1,
+      "explanation": "Variables inside a method exist only there. Returning the value lets the caller use it for anything: printing, averaging or checking."
+    },
+    {
+      "type": "single",
+      "scenario": "The fee rule is \"₦10 for transfers up to and including ₦5,000; ₦25 above\". A learner checks `transferFee` with ₦1,000 and ₦20,000 only, and both look right.",
+      "question": "Which extra checks are most valuable?",
+      "options": [
+        "₦2,000 and ₦3,000",
+        "Exactly ₦5,000 and ₦5,000.01 (500,000 and 500,001 kobo), because bugs cluster at boundaries",
+        "₦1,000,000,000 only",
+        "No more checks are needed"
+      ],
+      "answer": 1,
+      "explanation": "A wrong `<` instead of `<=` only shows up exactly on the boundary. Check on it, just over it, and the impossible or extreme cases."
+    },
+    {
+      "type": "single",
+      "scenario": "A requirement says: \"Show customers how many months until they reach their savings goal.\" It doesn't say whether interest is added before or after each month's deposit.",
+      "question": "What should a junior engineer do?",
+      "options": [
+        "Pick one silently; nobody will notice",
+        "Ask the product owner which rule applies, and write the decision down in the code or ticket",
+        "Implement both and let the customer choose",
+        "Leave interest out"
+      ],
+      "answer": 1,
+      "explanation": "The two orders give different answers, and money rules are decided by the business, not the developer. Asking early is cheaper than fixing it after release."
+    },
+    {
+      "type": "single",
+      "scenario": "A 60-line method called `process` reads input, validates the account number, calculates the fee and VAT, and prints a receipt.",
+      "question": "Which refactoring helps most?",
+      "options": [
+        "Rename it to `processEverything`",
+        "Split it into methods that each do one named job, such as `isValidAccountNumber`, `transferFee`, `vat` and `printReceipt`",
+        "Add more comments inside it",
+        "Move it to a new file unchanged"
+      ],
+      "answer": 1,
+      "explanation": "Small methods with descriptive names can each be read and checked on their own, and a fee change touches only `transferFee`."
+    },
+    {
+      "type": "single",
+      "scenario": "`monthsToGoal(start, deposit, goal)` loops `while (balance < goal)`, adding interest and the deposit each month. A customer enters a deposit of 0 and a balance of ₦50 that earns no interest.",
+      "question": "What will happen without a special check?",
+      "options": [
+        "It returns 0",
+        "It loops forever, because the balance never changes",
+        "It throws ArithmeticException",
+        "It returns -1 automatically"
+      ],
+      "answer": 1,
+      "explanation": "If nothing in the loop changes `balance`, the condition stays true forever. Detect the impossible case before the loop and return a value (or a message) that says \"never\"."
+    },
+    {
+      "type": "single",
+      "scenario": "You've been stuck on an `ArrayIndexOutOfBoundsException` for 30 minutes.",
+      "question": "Which forum post is most likely to get a quick, useful answer?",
+      "options": [
+        "\"My code doesn't work, please help\"",
+        "\"Topic 0.2 practice 3: I loop over dailySales to find the best day. Here's the code and the full error (Index 7 out of bounds for length 7, line 14). I traced it and i reaches 7; I tried changing the start value.\"",
+        "A screenshot of the whole screen",
+        "\"Can someone send me the answer?\""
+      ],
+      "answer": 1,
+      "explanation": "Say what you're doing, paste the code and the full error, and say what you've tried. That lets a mentor or classmate answer in minutes, and writing it often reveals the bug (here, `i <= length` instead of `i < length`)."
+    }
+  ]
+}

@@ -5,7 +5,7 @@
 
 ← [5.2 OpenAPI/Swagger documentation and API versioning](../5.2-openapi-versioning/README.md) · [Module 5](../README.md) · [Phase 2](../../README.md) · [5.4 Consuming third-party APIs](../5.4-consuming-apis-resilience/README.md) →
 
-> **Week 15** · Module 5: API Design & Integration · Website topic covered: *RFC 9457 Problem Details catalogues, offset and cursor pagination, Idempotency-Key handling*
+> **Week 16** · Module 5: API Design & Integration · Website topic covered: *RFC 9457 Problem Details catalogues, offset and cursor pagination, Idempotency-Key handling*
 
 ## What you will be able to do
 
@@ -237,7 +237,7 @@ RFC 9457, Problem Details, `application/problem+json`, problem `type`, extension
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [Build a robust Payments service using Idempotency Keys](https://www.youtube.com/watch?v=m6DtqSb1BDM) · Arpit Bhayani · 17 min. Idempotency keys for payment APIs: why retries must not charge twice.
 - [Pagination in MySQL - offset vs. cursor](https://www.youtube.com/watch?v=zwDIN04lIpc) · PlanetScale · 13 min. Offset versus cursor pagination and why deep offsets get slow.

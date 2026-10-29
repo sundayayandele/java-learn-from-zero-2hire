@@ -3,7 +3,7 @@ package ng.itlearning.practice.search;
 import java.util.PriorityQueue;
 
 /**
- * Week 13. Pattern: min-heap of size k.
+ * Week 14. Pattern: min-heap of size k.
  * <p>
  * Return the k-th largest amount (k = 1 is the largest) from a large array of transfers, in O(n log k) time
  * and O(k) extra space. Throw {@link IllegalArgumentException} if k is out of range.

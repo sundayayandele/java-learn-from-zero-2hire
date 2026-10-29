@@ -52,7 +52,7 @@ Every starter already contains both pipelines. You don't need to write them, but
 Recommended repository settings:
 
 - **Branch protection on `main`**: require the `build` check to pass and require pull requests.
-- **Secret scanning and push protection** (Settings → Code security), so committed secrets are blocked (topic 4.4).
+- **Secret scanning and push protection** (Settings → Code security), so committed secrets are blocked (topic 4.5).
 - **Package visibility:** make the GHCR package public (Package settings → Change visibility) if your deployment target should pull without credentials, or create a read-only token for the target.
 
 **Continuous deployment (optional):** add a third job that deploys after `image`, for example SSH to your VPS and run `docker compose pull && docker compose up -d` (section 3.7), or call your cloud's CLI (sections 4–6). Store credentials as **GitHub Actions secrets**, never in the workflow file. For AWS, Azure and GCP prefer **OIDC federation** (`aws-actions/configure-aws-credentials`, `azure/login`, `google-github-actions/auth`) over long-lived keys.
@@ -501,7 +501,7 @@ Before you call a capstone "deployed":
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [How To Dockerize Spring Boot Application & PostgreSQL Database](https://www.youtube.com/watch?v=3fALfjlkfuU) · CodeVice · 15 min. Dockerising a Spring Boot app with PostgreSQL.
 - [CI/CD Tutorial using GitHub Actions - Automated Testing & Automated Deployments](https://www.youtube.com/watch?v=YLtlz88zrLg) · Tom Shaw · 6 min. CI/CD with GitHub Actions in six minutes.

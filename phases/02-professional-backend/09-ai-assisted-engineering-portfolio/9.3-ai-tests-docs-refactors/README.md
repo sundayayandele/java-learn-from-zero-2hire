@@ -5,7 +5,7 @@
 
 ← [9.2 Reviewing AI-generated code for bugs, security issues and licence risk](../9.2-reviewing-ai-generated-code/README.md) · [Module 9](../README.md) · [Phase 2](../../README.md) · [9.4 CV, GitHub profile and LinkedIn optimisation for Java roles](../9.4-cv-github-linkedin/README.md) →
 
-> **Week 23** · Module 9: AI-Assisted Engineering & Junior Portfolio · Website topic covered: *Using AI for tests, documentation and refactoring while keeping understanding*
+> **Week 24** · Module 9: AI-Assisted Engineering & Junior Portfolio · Website topic covered: *Using AI for tests, documentation and refactoring while keeping understanding*
 
 ## What you will be able to do
 
@@ -80,7 +80,7 @@ Then refactor in **small, behaviour-preserving steps**, running the tests after 
 
 For large mechanical migrations, prefer **recipe-based tools** that are tested and repeatable over free-form generation:
 
-- **OpenRewrite** recipes for Java version upgrades, Spring Boot 3 → 4, JUnit 4 → 5, Jakarta namespace changes (Phase 1 topics 1.8 and 4.6):
+- **OpenRewrite** recipes for Java version upgrades, Spring Boot 3 → 4, JUnit 4 → 5, Jakarta namespace changes (Phase 1 topics 1.12 and 4.7):
 
 ```bash
 ./mvnw -U org.openrewrite.maven:rewrite-maven-plugin:run \
@@ -149,7 +149,7 @@ Specification-based test, implementation-mirroring test, test-first with AI, tes
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [Characterization Tests, code coverage for refactoring](https://www.youtube.com/watch?v=J3hRYO2JKHI) · Generation Engineered · 7 min. Characterisation tests: pin behaviour before refactoring.
 - [Upgrading your Java & Spring Boot applications with OpenRewrite in IntelliJ](https://www.youtube.com/watch?v=e4R6AZHpAD8) · Dan Vega · 14 min. Upgrading Java and Spring Boot with OpenRewrite recipes.

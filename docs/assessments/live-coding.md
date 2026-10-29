@@ -8,7 +8,7 @@ Every phase ends with a **90-minute live-coding assessment** in the format junio
 
 | Part | Time | Task | Phase 1 | Phase 2 |
 | --- | --- | --- | --- | --- |
-| A. Algorithm | 30 min | One problem from the [practice track](../../practice/README.md) patterns, new to you, with tests to make pass | Arrays, hashing, two pointers, sliding window, strings, stacks, sorting | Any pattern up to week 24, including trees, graphs and dynamic programming |
+| A. Algorithm | 30 min | One problem from the [practice track](../../practice/README.md) patterns, new to you, with tests to make pass | Arrays, hashing, two pointers, sliding window, strings, stacks, sorting | Any pattern up to week 25, including trees, graphs and dynamic programming |
 | B. Service change | 60 min | A small, unfamiliar Spring Boot 4 service with a ticket: implement it with tests | Endpoint with validation, persistence and Problem Details | Secured endpoint with ownership checks, or an integration with timeouts and WireMock tests |
 
 - Taken on a video call with a mentor (screen shared) or as a proctored recording, in your own IDE.

@@ -3,9 +3,9 @@
 
 # 2.1 Threads, ExecutorService and CompletableFuture
 
-← [1.12 Design patterns in Java and in Spring](../../01-modern-java-oop/1.12-design-patterns/README.md) · [Module 2](../README.md) · [Phase 1](../../README.md) · [2.2 Race conditions, locks, atomics and concurrent collections](../2.2-race-conditions-locks-atomics/README.md) →
+← [1.14 Localization](../../01-modern-java-oop/1.14-localization-formatting/README.md) · [Module 2](../README.md) · [Phase 1](../../README.md) · [2.2 Race conditions, locks, atomics and concurrent collections](../2.2-race-conditions-locks-atomics/README.md) →
 
-> **Week 5** · Module 2: Concurrency & the JVM · Website topic covered: *Threads, ExecutorService, CompletableFuture*
+> **Week 6** · Module 2: Concurrency & the JVM · Website topic covered: *Threads, ExecutorService, CompletableFuture*
 
 ## What you will be able to do
 
@@ -223,7 +223,7 @@ Process, thread, concurrency, parallelism, CPU-bound, I/O-bound, thread states, 
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [Multithreading in Java Explained in 10 Minutes](https://www.youtube.com/watch?v=r_MbozD32eo) · Coding with John · 10 min. Threads, Runnable and join() explained in ten minutes.
 - [Java ExecutorService - Part 1 - Introduction](https://www.youtube.com/watch?v=6Oo-9Can3H8) · Defog Tech · 10 min. Why thread pools exist and how ExecutorService manages them.
@@ -340,4 +340,4 @@ What does the caller see?
 
 ---
 
-← [1.12 Design patterns in Java and in Spring](../../01-modern-java-oop/1.12-design-patterns/README.md) · [Module 2](../README.md) · [Phase 1](../../README.md) · [2.2 Race conditions, locks, atomics and concurrent collections](../2.2-race-conditions-locks-atomics/README.md) →
+← [1.14 Localization](../../01-modern-java-oop/1.14-localization-formatting/README.md) · [Module 2](../README.md) · [Phase 1](../../README.md) · [2.2 Race conditions, locks, atomics and concurrent collections](../2.2-race-conditions-locks-atomics/README.md) →

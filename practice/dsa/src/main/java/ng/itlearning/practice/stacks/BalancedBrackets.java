@@ -6,7 +6,7 @@ import java.util.Deque;
 import java.util.Map;
 
 /**
- * Week 10. Pattern: stack.
+ * Week 11. Pattern: stack.
  * <p>
  * A rules engine accepts expressions such as {@code (amount > [limit]) && {channel}}. Return whether every
  * (, [ and { is closed by the matching bracket in the right order; other characters are ignored.

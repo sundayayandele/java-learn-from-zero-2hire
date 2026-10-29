@@ -186,7 +186,7 @@ def coderunner_main_class(prog: str) -> str | None:
 
 
 def javadoc(stub: str) -> tuple[str, str]:
-    """The class Javadoc as HTML, and its first line (for example "Week 2. Pattern: hash map lookup.")."""
+    """The class Javadoc as HTML, and its first line (for example "Week 3. Pattern: hash map lookup.")."""
     m = re.search(r"/\*\*(.*?)\*/\s*public", stub, re.S)
     text = "\n".join(re.sub(r"^\s*\* ?", "", ln) for ln in m.group(1).strip().splitlines())
     first, _, rest = text.partition("\n")

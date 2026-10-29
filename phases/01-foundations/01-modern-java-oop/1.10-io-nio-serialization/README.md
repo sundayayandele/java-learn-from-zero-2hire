@@ -3,7 +3,7 @@
 
 # 1.10 Java I/O, NIO.2 files and serialization
 
-← [1.9 Kotlin for Java developers](../1.9-kotlin-for-java-developers/README.md) · [Module 1](../README.md) · [Phase 1](../../README.md) · [1.11 Localization](../1.11-localization-formatting/README.md) →
+← [1.9 Exceptions, immutability and clean-code habits](../1.9-exceptions-immutability-clean-code/README.md) · [Module 1](../README.md) · [Phase 1](../../README.md) · [1.11 Design patterns in Java and in Spring](../1.11-design-patterns/README.md) →
 
 > **Week 4** · Module 1: Modern Java & OOP Foundations · Website topic covered: *Added for the Oracle OCP Java SE 21/25 exam: I/O streams, NIO.2, serialization*
 
@@ -44,7 +44,7 @@ try (var reader = new BufferedReader(
 }
 ```
 
-Always specify the **charset** (`StandardCharsets.UTF_8`). Since Java 18 the default charset is UTF-8 everywhere (JEP 400), but files from partners can still be ISO-8859-1 or Windows-1252, and naming the charset documents your assumption. Always use **try-with-resources** (topic 1.7) so handles are released even on exceptions.
+Always specify the **charset** (`StandardCharsets.UTF_8`). Since Java 18 the default charset is UTF-8 everywhere (JEP 400), but files from partners can still be ISO-8859-1 or Windows-1252, and naming the charset documents your assumption. Always use **try-with-resources** (topic 1.9) so handles are released even on exceptions.
 
 Key methods to know:
 
@@ -178,7 +178,7 @@ Rules the exam and real code rely on:
 
 Deserialising attacker-controlled bytes has caused many remote-code-execution vulnerabilities (gadget chains in common libraries). In backend services:
 
-- Exchange data as **JSON** (Jackson, topic 4.2), CSV or Protobuf, never Java serialization, across trust boundaries.
+- Exchange data as **JSON** (Jackson, topic 4.3), CSV or Protobuf, never Java serialization, across trust boundaries.
 - If you must deserialise, configure an `ObjectInputFilter` allow-list (JEP 290 / 415).
 - This is listed under "Software and Data Integrity Failures" in the OWASP Top 10; Module 6 returns to it.
 
@@ -244,7 +244,7 @@ Byte stream, character stream, decorator, charset, `BufferedReader`, `InputStrea
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-24. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
 
 - [Java File Input/Output - It's Way Easier Than You Think](https://www.youtube.com/watch?v=ScUJx4aWRi0) · Coding with John · 8 min. Reading and writing files with readers and writers.
 - [How To Read/Write Text Files In Java NIO | Full Guide](https://www.youtube.com/watch?v=yrMufQdr374) · Born To Geek · 9 min. Reading and writing text files with java.nio Files and Path.
@@ -380,4 +380,4 @@ What does `base.relativize(f)` return?
 
 ---
 
-← [1.9 Kotlin for Java developers](../1.9-kotlin-for-java-developers/README.md) · [Module 1](../README.md) · [Phase 1](../../README.md) · [1.11 Localization](../1.11-localization-formatting/README.md) →
+← [1.9 Exceptions, immutability and clean-code habits](../1.9-exceptions-immutability-clean-code/README.md) · [Module 1](../README.md) · [Phase 1](../../README.md) · [1.11 Design patterns in Java and in Spring](../1.11-design-patterns/README.md) →

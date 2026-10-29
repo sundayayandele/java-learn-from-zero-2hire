@@ -1,0 +1,83 @@
+{
+  "topic": "4.9",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A Kotlin Spring service's `@Configuration` class fails at startup with an error about a final class that can't be subclassed for proxying.",
+      "question": "What is missing from the build?",
+      "options": [
+        "kotlin-reflect",
+        "jackson-module-kotlin",
+        "The Kotlin 'spring' (all-open) compiler plugin, which opens Spring-annotated classes for proxying",
+        "The jpa plugin"
+      ],
+      "answer": 2,
+      "explanation": "Kotlin classes are final by default. Spring proxies @Configuration, @Transactional and similar classes by subclassing them; the all-open plugin opens them automatically."
+    },
+    {
+      "type": "single",
+      "scenario": "A Kotlin DTO declares `data class TransferRequest(@NotBlank val narration: String, ...)`. Blank narrations pass validation in an older Kotlin project.",
+      "question": "What is the reliable fix?",
+      "options": [
+        "Use a Java record instead",
+        "Make narration nullable",
+        "Add @Valid to the data class",
+        "Use the field use-site target: @field:NotBlank, so the constraint is placed on the field Bean Validation inspects"
+      ],
+      "answer": 3,
+      "explanation": "Constructor properties generate a parameter, field and getter. Without an explicit target the annotation may land on the constructor parameter only; @field: puts it where Hibernate Validator looks."
+    },
+    {
+      "type": "single",
+      "scenario": "A developer maps `Account` as a Kotlin `data class` with a lazy `@ManyToOne customer`. Logging an account outside a transaction throws LazyInitializationException.",
+      "question": "Why, and what's the recommended mapping?",
+      "options": [
+        "Use FetchType.EAGER",
+        "Add @Transactional to toString",
+        "Lazy loading isn't supported in Kotlin",
+        "The generated toString/equals/hashCode touch every property, including the lazy association; use a regular class with a hand-written toString/equals based on a business key"
+      ],
+      "answer": 3,
+      "explanation": "Data classes generate members over all constructor properties. For entities, write equals/hashCode/toString explicitly and keep associations out of them."
+    },
+    {
+      "type": "single",
+      "scenario": "A Kotlin JPA entity fails with 'No default constructor for entity'.",
+      "question": "Which build configuration solves it without writing constructors by hand?",
+      "options": [
+        "kotlin-reflect",
+        "-Xjsr305=strict",
+        "The jpa (no-arg) compiler plugin",
+        "Making all properties var"
+      ],
+      "answer": 2,
+      "explanation": "JPA providers need a no-arg constructor. The jpa plugin generates a synthetic one for @Entity, @Embeddable and @MappedSuperclass classes."
+    },
+    {
+      "type": "single",
+      "scenario": "In Kotlin, a Spring Data repository method needs to return 'no account found' for an unknown number.",
+      "question": "What is the idiomatic return type?",
+      "options": [
+        "List<Account> and take the first",
+        "Account, catching EmptyResultDataAccessException",
+        "Account? (nullable), handled with ?: throw AccountNotFoundException(number)",
+        "Optional<Account>, then .get()"
+      ],
+      "answer": 2,
+      "explanation": "Spring Data supports nullable return types in Kotlin. The Elvis operator then makes the missing case explicit and concise."
+    },
+    {
+      "type": "single",
+      "scenario": "POST requests to a Kotlin controller fail with a JSON deserialisation error about missing a no-args constructor for the request data class.",
+      "question": "What is most likely missing?",
+      "options": [
+        "The jpa plugin",
+        "@field:JsonProperty on every property",
+        "A secondary constructor",
+        "jackson-module-kotlin on the classpath (Spring Boot registers it automatically when present)"
+      ],
+      "answer": 3,
+      "explanation": "The Kotlin Jackson module lets Jackson call primary constructors with named, non-null and default parameters. start.spring.io includes it for Kotlin projects."
+    }
+  ]
+}

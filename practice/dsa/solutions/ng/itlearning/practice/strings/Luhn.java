@@ -1,7 +1,7 @@
 package ng.itlearning.practice.strings;
 
 /**
- * Week 8. Pattern: digit processing.
+ * Week 9. Pattern: digit processing.
  * <p>
  * Return whether a card number passes the Luhn check. Spaces are allowed between digits; any other non-digit,
  * or fewer than 13 or more than 19 digits, makes it invalid. Starting from the rightmost digit, double every

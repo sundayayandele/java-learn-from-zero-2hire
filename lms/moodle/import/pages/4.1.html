@@ -1,4 +1,4 @@
-<p><em>Week 10 · Module 4: Spring Boot 4 Fundamentals</em></p>
+<p><em>Week 11 · Module 4: Spring Boot 4 Fundamentals</em></p>
 <h2 id="what-you-will-be-able-to-do">What you will be able to do</h2>
 <ul>
 <li>Explain inversion of control and dependency injection, and why
@@ -18,7 +18,7 @@ them with the conditions report, and override them.</li>
 <h2 id="why-this-matters-in-a-bank-or-fintech">Why this matters in a
 bank or fintech</h2>
 <p>Almost every Java backend job in Lagos, London or remote-first teams
-lists Spring Boot. Its core idea is the one you met in topic 1.3: depend
+lists Spring Boot. Its core idea is the one you met in topic 1.4: depend
 on abstractions and let something else wire the concrete objects
 together. Spring does that wiring for a whole application, consistently,
 which is what lets a bank's 40 microservices share the same structure,
@@ -86,7 +86,7 @@ reflection in tests</td>
 </table>
 <p>With a single constructor, <code>@Autowired</code> is unnecessary. If
 a constructor needs more than about five dependencies, the class
-probably has too many responsibilities (topic 1.3).</p>
+probably has too many responsibilities (topic 1.4).</p>
 <h2 id="2-creating-a-spring-boot-4-project">2. Creating a Spring Boot 4
 project</h2>
 <p>Generate one at <a href="https://start.spring.io">start.spring.io</a>
@@ -134,7 +134,7 @@ auto-configuration. Spring Boot 4 made them modular: each technology has
 its own starter (<code>spring-boot-starter-webmvc</code>,
 <code>spring-boot-starter-flyway</code>) and a matching <strong>test
 starter</strong> (<code>spring-boot-starter-webmvc-test</code>). Topic
-4.6 explains the change from Boot 3.</li>
+4.7 explains the change from Boot 3.</li>
 <li>The <strong>Spring Boot Maven plugin</strong> packages an executable
 "fat" jar with everything inside:
 <code>java -jar target/app.jar</code>.</li>
@@ -190,7 +190,7 @@ annotations (component scanning)</h3>
 <tr>
 <td><code>@Controller</code> / <code>@RestController</code></td>
 <td>Web</td>
-<td>Request mapping (topic 4.2)</td>
+<td>Request mapping (topic 4.3)</td>
 </tr>
 <tr>
 <td><code>@Configuration</code></td>
@@ -235,7 +235,7 @@ class AlertService {
 }</code></pre>
 <p>Injecting a <code>List&lt;T&gt;</code> or
 <code>Map&lt;String, T&gt;</code> of all implementations is how you
-build the "open/closed" rule engines from topic 1.3: add a new
+build the "open/closed" rule engines from topic 1.4: add a new
 <code>@Component FeeRule</code> and the engine picks it up without
 changes.</p>
 <p>If Spring finds no candidate you get
@@ -315,7 +315,7 @@ check whether someone added a Redis starter.</li>
 <li><strong>Your beans win.</strong> Define your own
 <code>DataSource</code>, <code>RestClient.Builder</code> customiser or
 <code>JsonMapper</code> and the auto-configured one backs off. You
-customise first through <strong>properties</strong> (topic 4.4), then
+customise first through <strong>properties</strong> (topic 4.5), then
 <strong>customiser beans</strong>, and only then by replacing
 beans.</li>
 </ol>
@@ -324,7 +324,7 @@ beans.</li>
 <p>The report lists <em>positive matches</em> (auto-configurations
 applied and why) and <em>negative matches</em> (skipped and why), which
 answers "why is this bean (not) here?". The Actuator
-<code>conditions</code> and <code>beans</code> endpoints (topic 4.5)
+<code>conditions</code> and <code>beans</code> endpoints (topic 4.6)
 expose the same information at runtime.</p>
 <p>To exclude an auto-configuration explicitly:
 <code>@SpringBootApplication(exclude = SomeAutoConfiguration.class)</code>

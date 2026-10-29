@@ -1,6 +1,6 @@
 ## What this module gives you
 
-Three weeks on data: designing relational schemas and querying them (week 7), making them correct under concurrency and fast under load, versioned with migrations and accessed from Java (week 8), and knowing when to add Redis or MongoDB (week 9).
+Three weeks on data: designing relational schemas and querying them (week 8), making them correct under concurrency and fast under load, versioned with migrations and accessed from Java (week 9), and knowing when to add Redis or MongoDB (week 10).
 
 Everything runs locally in Docker:
 
@@ -13,7 +13,7 @@ docker run -d --name mongo -p 27017:27017 mongo:8
 
 (`devpass` is a local-only practice password. Never reuse it anywhere real.)
 
-**Exit check for Module 3:** all six topic CBTs passed; projects 3.B and 3.D completed (they feed directly into the capstones); 3.A or 3.C optional.
+**Exit check for Module 3:** all six topic CBTs attempted (aim for 70%+); projects 3.B and 3.D completed (they feed directly into the capstones); 3.A or 3.C optional.
 
 ## Module projects
 
