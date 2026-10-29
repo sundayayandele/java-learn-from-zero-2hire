@@ -143,6 +143,12 @@ Each course summary, which is shown on the enrolment page, explains both routes.
 
 **Topic quizzes are pacing aids** (since 29 October 2026, review item 4): their answers are in the public topic READMEs, so passing them proves little. Each counts as complete after one finished attempt at any score (quiz rule "minimum attempts: 1"; grade-based completion would store a low score as "complete, failed", which the exam restriction rejects). The 7/10 pass mark stays as feedback. The exam and certificate need every topic quiz attempted. The private-bank exam, the capstone defence and the live-coding assessment are the real checks. Capstone reference solutions moved to the private assessments repository (`capstone-references/`); mentors share one after the learner's submission passes.
 
+**Mentor booking** (since 29 October 2026, review item 5): the Scheduler plugin (`mod_scheduler` v5.2-r1, commit 8a05f853, built into the image under `plugins/mod/scheduler`) gives each course two booking activities, each just above the assessment it serves:
+- *Book your capstone defence*: 30-minute slots, carrying the viva's "Capstone 1 passed" restriction (cm 381 and 383);
+- *Book your live-coding assessment*: 90-minute slots (cm 382 and 384).
+
+In both, learners hold one booking at a time and can't book within 24 hours of a slot. Mentors are Non-editing teachers and publish their own slots weekly; the lead mentor (Editing teacher) manages every booking. The start-here pages promise grading within 5 working days. The mentor process (turnaround, calibration samples, escalation, onboarding) is in the private repository: `mentors/mentor-guide.md`.
+
 **Learner journey test** (`scripts/moodle/journey_test.php`, run on 29 October 2026): it creates test learners and walks Phase 1 end to end through Moodle's APIs, from sign-up to course completion and the certificate. Everything passed. Re-run it before each cohort. The certificates' scope text was updated to the current requirements (32 or 27 topic quizzes, viva, live coding, checkpoint; Phase 2 needs two capstones). The capstone defence now requires Capstone 1 passed.
 
 **Privacy and policies** (since 29 October 2026):
