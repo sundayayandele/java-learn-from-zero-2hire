@@ -174,3 +174,22 @@ The Jobe side (node-exporter, Caddy metrics and their routes) is part of [`scrip
 After each nightly backup, `itl-backup.sh` encrypts it with `age` to the operator's public key (`/etc/itl-backup/recipients.txt`) and pushes it to the Jobe VPS (`/srv/itl-backups/nightly/<name>.tar.age`). The push key can only add backups: `scripts/moodle/jobe/setup-backup-receiver.sh` forces it to `itl-backup-receive`, which can't list, read or delete. The Jobe VPS keeps the 14 newest copies plus the newest of each of the last 6 months. Grafana alerts "Off-site backup missing or old" after 26 hours.
 
 The private key (`AGE-SECRET-KEY-…`) is only on the operator's Mac, in `~/.config/itlearning/backup-age.key`. **Store a copy in your password manager. Without it, the off-site copies can't be decrypted.** To restore on a new server: copy the `.tar.age` file and the key to the new server (key in `/dev/shm`), then run `age -d -i /dev/shm/key file.tar.age | tar xf -`, delete the key with `shred -u /dev/shm/key`, and follow the restore steps above.
+
+### Restore drill (29 October 2026): passed, about 15 minutes
+
+The newest off-site copy was restored onto the Jobe VPS with [`restore-drill.sh`](restore-drill.sh):
+
+| Step | Time |
+| --- | --- |
+| Decrypt the off-site copy (key piped to `/dev/shm`, then shredded) and check `SHA256SUMS` | 2 s |
+| Rebuild the Moodle image from the backed-up build context | 12.5 min |
+| Start MariaDB, load the dump, restore moodledata, start Moodle | 57 s |
+
+**Result:** every count matched production: users, courses, activities, 1,013 questions, certificates, policies, config and 4,802 file records. All 4,257 stored files were present, with correct checksums. The database schema check passed, the release matched, the login page rendered, and course pages required login. Afterwards everything was deleted.
+
+**Not measured:**
+- provisioning a new server with Docker;
+- pointing DNS at it and getting TLS through Nginx Proxy Manager;
+- restoring NPM's own data, which is not in the nightly backup (its proxy hosts are four entries, quick to re-create).
+
+**Repeat:** every quarter, and after any change to the backup script.
