@@ -216,7 +216,7 @@ API gateway, edge, route, predicate, filter, StripPrefix, server WebMvc, server 
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
 
 - [What is Spring Cloud Gateway in Microservices?](https://www.youtube.com/watch?v=3XEpq_Thzdo) · Java Guides · 4 min. What an API gateway does in a Spring microservices system, in four minutes.
 - [Spring Boot Microservices Tutorial - Part 5 - Spring Cloud Gateway MVC](https://www.youtube.com/watch?v=2AtL7qvTjOg) · Programming Techie · 13 min. Routing services through Spring Cloud Gateway MVC, the servlet flavour this programme uses.

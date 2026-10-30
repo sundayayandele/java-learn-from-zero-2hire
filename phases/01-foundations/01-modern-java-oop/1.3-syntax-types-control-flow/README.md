@@ -313,7 +313,7 @@ Static typing, primitive, reference, wrapper class, autoboxing, overflow, `BigDe
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
 
 - [Variables in Java ✘【12 minutes】](https://www.youtube.com/watch?v=so1iUWaLmKA) · Bro Code · 12 min. Variables, primitive types and String, explained slowly with examples.
 - [Java if statements 🚧【6 minutes】](https://www.youtube.com/watch?v=MY03bt_0JQI) · Bro Code · 6 min. if / else if / else decisions in six minutes.

@@ -244,7 +244,7 @@ Byte stream, character stream, decorator, charset, `BufferedReader`, `InputStrea
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
 
 - [Java File Input/Output - It's Way Easier Than You Think](https://www.youtube.com/watch?v=ScUJx4aWRi0) · Coding with John · 8 min. Reading and writing files with readers and writers.
 - [How To Read/Write Text Files In Java NIO | Full Guide](https://www.youtube.com/watch?v=yrMufQdr374) · Born To Geek · 9 min. Reading and writing text files with java.nio Files and Path.

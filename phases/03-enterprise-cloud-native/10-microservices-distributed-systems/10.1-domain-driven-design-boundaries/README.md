@@ -214,7 +214,7 @@ Bounded context, ubiquitous language, context map, customer–supplier, conformi
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
 
 - [Monolithic vs Microservice Architecture: Which To Use and When?](https://www.youtube.com/watch?v=NdeTGlZ__Do) · Alex Hyett · 11 min. When a monolith is the right choice and when services pay off.
 - [Domain-Driven Design: Bounded Contexts Explained! 🚀](https://www.youtube.com/watch?v=8SPVfacnFvM) · ByteMonk · 14 min. Bounded contexts and subdomains with clear examples.

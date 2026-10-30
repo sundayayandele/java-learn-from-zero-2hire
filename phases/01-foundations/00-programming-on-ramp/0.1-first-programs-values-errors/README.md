@@ -239,7 +239,7 @@ Program, statement, compile, compiler, runtime, JVM, variable, type, `int`, `lon
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
 
 - [How to accept user input in Java ⌨️【8 minutes】](https://www.youtube.com/watch?v=wAEPokhj5Q4) · Bro Code · 8 min. Reading input from the keyboard with Scanner, step by step.
 - [Java arithmetic is easy! 🧮](https://www.youtube.com/watch?v=QAD5unRlCyo) · Bro Code · 8 min. Arithmetic operators, including whole-number division and the remainder.

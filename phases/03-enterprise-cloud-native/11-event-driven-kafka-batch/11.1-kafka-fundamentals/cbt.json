@@ -1,0 +1,109 @@
+{
+  "topic": "11.1",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "Transfer events are keyed by transfer reference. A consumer must see TransferReserved before TransferCleared for the same transfer.",
+      "question": "Why does this work?",
+      "options": [
+        "Kafka orders every topic globally",
+        "Records with the same key go to the same partition, and order is guaranteed within a partition",
+        "Consumers sort records by timestamp",
+        "The broker delays later events until earlier ones are acknowledged"
+      ],
+      "answer": 1,
+      "explanation": "The producer hashes the key to pick a partition; order holds only within a partition, so same key means same order."
+    },
+    {
+      "type": "single",
+      "scenario": "A topic has 3 partitions. The fraud service runs 4 instances in the same consumer group.",
+      "question": "What happens?",
+      "options": [
+        "Each record is processed four times",
+        "Kafka adds a fourth partition automatically",
+        "Three instances each get a partition; the fourth sits idle",
+        "The group fails to start"
+      ],
+      "answer": 2,
+      "explanation": "Within a group each partition goes to one consumer, so consumers beyond the partition count are idle."
+    },
+    {
+      "type": "single",
+      "scenario": "Notifications and fraud both need every transfer event.",
+      "question": "How should they consume transfer-events?",
+      "options": [
+        "With different group ids, so each group gets every record",
+        "With the same group id, so the load is shared",
+        "One should read from the other's output",
+        "By deleting records once read"
+      ],
+      "answer": 0,
+      "explanation": "Each group tracks its own offsets and receives all records; sharing a group id would split the events between them."
+    },
+    {
+      "type": "single",
+      "scenario": "A consumer commits its offset as soon as it receives a batch, then crashes half-way through processing it.",
+      "question": "What is the result?",
+      "options": [
+        "The unprocessed records are delivered again",
+        "Kafka rolls the commit back",
+        "The records are moved to a dead-letter topic",
+        "The unprocessed records are skipped: at-most-once delivery"
+      ],
+      "answer": 3,
+      "explanation": "Committing before processing loses in-flight records after a crash. Commit after processing for at-least-once."
+    },
+    {
+      "type": "single",
+      "scenario": "A money-events topic has replication factor 3.",
+      "question": "Which producer and topic settings make a confirmed record survive the loss of one broker?",
+      "options": [
+        "acks=all with min.insync.replicas=2",
+        "acks=0 for speed",
+        "acks=1 with min.insync.replicas=1",
+        "Any settings: replication alone is enough"
+      ],
+      "answer": 0,
+      "explanation": "acks=all waits for the in-sync replicas, and min.insync.replicas=2 refuses writes that only one broker holds."
+    },
+    {
+      "type": "single",
+      "scenario": "A consumer subscribes to transfer-events before it exists. The broker auto-creates it with 1 partition; another service then declares it with 3.",
+      "question": "What can go wrong?",
+      "options": [
+        "Nothing: Kafka merges the definitions",
+        "The topic is deleted and recreated",
+        "Consumers may not notice the two new partitions for minutes, so records there wait unprocessed",
+        "Records are duplicated across partitions"
+      ],
+      "answer": 2,
+      "explanation": "This is why production clusters switch auto-creation off and every service declares topics with the same partition count."
+    },
+    {
+      "type": "single",
+      "scenario": "Your team lead says Kafka 4 still needs a ZooKeeper cluster.",
+      "question": "What is accurate?",
+      "options": [
+        "Only for consumer groups",
+        "Kafka 4.0 removed ZooKeeper; metadata is managed by Kafka itself with KRaft controllers",
+        "Only on Kubernetes",
+        "Only when replication factor is above 1"
+      ],
+      "answer": 1,
+      "explanation": "KRaft replaced ZooKeeper; in Kafka 4 there is no ZooKeeper mode at all."
+    },
+    {
+      "type": "single",
+      "scenario": "Transfers needs to know whether an account has enough money before it continues.",
+      "question": "Should that be a Kafka event?",
+      "options": [
+        "Yes, every interaction should be an event",
+        "Yes, with a reply topic for every request",
+        "No: it's a question that needs an answer now, so a synchronous call fits",
+        "No, Kafka can't carry balances"
+      ],
+      "answer": 2,
+      "explanation": "Events announce facts for others to react to later; a question the caller waits on is a synchronous call."
+    }
+  ]
+}

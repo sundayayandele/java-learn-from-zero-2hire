@@ -304,7 +304,7 @@ Collection, List, Set, Map, Queue, Deque, sequenced collection, Big-O, hash tabl
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
 
 - [Java Collections Explained (with examples)](https://www.youtube.com/watch?v=viTHc_4XfCA) · Visual Computer Science · 11 min. A map of the Collections Framework: List, Set, Queue, Map and how they relate.
 - [LinkedList vs ArrayList in Java Tutorial - Which Should You Use?](https://www.youtube.com/watch?v=5dscMs2hnDI) · Coding with John · 12 min. ArrayList vs LinkedList, with the performance reasoning interviewers ask about.

@@ -251,7 +251,7 @@ Authentication, authorisation, principal, credentials, `Authentication`, `Grante
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
 
 - [Spring Security Architecture Explained](https://www.youtube.com/watch?v=h-9vhFeM3MY) · Amigoscode · 15 min. Spring Security architecture: filters, authentication manager and providers.
 - [Spring Security Filter Chain Explained in 3 Minutes](https://www.youtube.com/watch?v=lRQTqKSSiFs) · Sergey Tech · 3 min. The security filter chain in three minutes.

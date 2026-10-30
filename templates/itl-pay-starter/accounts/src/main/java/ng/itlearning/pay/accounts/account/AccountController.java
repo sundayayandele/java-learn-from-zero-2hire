@@ -16,9 +16,10 @@ class AccountController {
 
     record Balance(String accountId, BigDecimal available) { }
     record HoldRequest(String reference, BigDecimal amount) { }
+    record Hold(BigDecimal amount, boolean released) { }
 
     private final Map<String, BigDecimal> available = new ConcurrentHashMap<>(Map.of("A1", new BigDecimal("50000.00"), "A2", new BigDecimal("1000.00")));
-    private final Map<String, BigDecimal> holds = new ConcurrentHashMap<>();
+    private final Map<String, Hold> holds = new ConcurrentHashMap<>();
     private final ApplicationEventPublisher events;
 
     AccountController(ApplicationEventPublisher events) { this.events = events; }
@@ -41,9 +42,23 @@ class AccountController {
             return ResponseEntity.unprocessableContent().body(pd);
         }
         available.put(id, balance.subtract(req.amount()));
-        holds.put(key, req.amount());
+        holds.put(key, new Hold(req.amount(), false));
         events.publishEvent(new FundsReserved(id, req.reference(), req.amount()));
         return ResponseEntity.created(URI.create("/accounts/" + id + "/holds/" + req.reference()))
                 .body(Map.of("reference", req.reference(), "status", "RESERVED"));
+    }
+
+    @DeleteMapping("/{id}/holds/{reference}")
+    synchronized ResponseEntity<?> release(@PathVariable String id, @PathVariable String reference) {
+        String key = id + ":" + reference;
+        Hold hold = holds.get(key);
+        if (hold == null) {
+            return ResponseEntity.notFound().build();
+        }
+        if (!hold.released()) {                                     // idempotent: a second release changes nothing
+            available.merge(id, hold.amount(), BigDecimal::add);
+            holds.put(key, new Hold(hold.amount(), true));
+        }
+        return ResponseEntity.ok(Map.of("reference", reference, "status", "RELEASED"));
     }
 }

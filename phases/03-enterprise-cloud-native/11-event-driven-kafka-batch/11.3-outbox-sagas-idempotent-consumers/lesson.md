@@ -1,0 +1,205 @@
+## What you will be able to do
+
+- Explain the dual-write problem, and solve it with a transactional outbox and a relay.
+- Design a saga with explicit states and compensations, and choose between orchestration and choreography.
+- Make consumers idempotent with a processed-event table or a state check.
+- Explain what "exactly once" really means in Kafka, and why your system still needs idempotency.
+
+## Why this matters in a bank or fintech
+
+Topic 10.4 replaced a single database transaction with a sequence of local steps: reserve, then post. Module 11 moves those steps onto events. Now two new failure modes appear: an event that is **lost** (the database committed, the message never left) and an event that arrives **twice** (it left, the acknowledgement didn't come back, it was sent again). Lose one and a customer's money is held forever; process one twice and they get two refunds. The three patterns in this topic are how payment systems survive both.
+
+## 1. The dual write
+
+The obvious code is wrong:
+
+```java
+@Transactional
+void reserve(...) {
+    transfers.save(transfer.reserved());
+    kafka.send("transfer-events", ...);      // inside the transaction, but Kafka isn't part of it
+}
+```
+
+If Kafka accepts the event and the database then rolls back, consumers act on a transfer that doesn't exist. Move the send after the commit and the opposite happens: the commit succeeds, the process dies before the send, and the event is lost. **Two systems can't be updated atomically without a shared transaction**, and Kafka can't join your database's transaction.
+
+## 2. The transactional outbox
+
+Write the event **into your own database, in the same transaction** as the state change, and publish it from there afterwards:
+
+```sql
+CREATE TABLE outbox (
+    id            BIGSERIAL     PRIMARY KEY,                  -- publish order
+    topic         TEXT          NOT NULL,
+    msg_key       TEXT          NOT NULL,
+    payload       TEXT          NOT NULL,
+    created_at    TIMESTAMPTZ   NOT NULL DEFAULT now(),
+    published_at  TIMESTAMPTZ
+);
+```
+
+ITL Pay's transfers service changes state and appends the event together, so either both happen or neither does:
+
+```java
+@Transactional
+boolean move(Transfer t, State from, State to, String event, String reason) {
+    int changed = jdbc.sql("UPDATE transfer SET state = ?, reason = ?, updated_at = now() WHERE reference = ? AND state = ?")
+            .params(to.name(), reason, t.reference(), from.name()).update();
+    if (changed == 1) {
+        outbox.append(event, t, reason);      // @Transactional(propagation = MANDATORY): no transaction, no event
+    }
+    return changed == 1;
+}
+```
+
+A **relay** publishes unpublished rows in order and marks them:
+
+```java
+@Scheduled(fixedDelayString = "${outbox.poll-ms}")
+@Transactional
+public void publish() throws Exception {
+    var rows = jdbc.sql("""
+            SELECT id, topic, msg_key, payload FROM outbox
+            WHERE published_at IS NULL ORDER BY id LIMIT 100
+            FOR UPDATE SKIP LOCKED""")
+            .query(Row.class).list();
+    for (Row row : rows) {
+        kafka.send(row.topic(), row.msgKey(), row.payload()).get(10, TimeUnit.SECONDS);
+        jdbc.sql("UPDATE outbox SET published_at = now() WHERE id = ?").param(row.id()).update();
+    }
+}
+```
+
+- `FOR UPDATE SKIP LOCKED` lets several instances of transfers run the relay without two of them sending the same row at the same time.
+- If the process dies after `send` and before the update commits, the row is sent **again** next time. The outbox gives you **at least once**, never exactly once, which is why every consumer must be idempotent (section 5).
+- Delete or archive published rows on a schedule, or the table grows forever.
+
+Two other ways to run the relay: **change data capture** (Debezium reads the database's write-ahead log and publishes outbox rows, with no polling), and **Spring Modulith's event publication registry**, which stores application events in a table and can externalise them to Kafka (`@Externalized`). Both are the same pattern; a hand-written relay shows you how it works.
+
+## 3. Sagas
+
+A **saga** is a business process made of local transactions, one per service, where each step has a **compensation** that undoes it in business terms. ITL Pay's transfer saga:
+
+```
+REQUESTED ──reserve (accounts, HTTP)──> RESERVED ──fraud: CLEARED──> CLEARED ──(v0.2: ledger posts)──> POSTED
+    │                                       │
+    └─ 422 insufficient funds ─> REJECTED    └─ fraud: REJECTED ─> release hold (compensation) ─> FAILED
+```
+
+Every arrow is one local transaction that also writes an event to the outbox. While a transfer is `RESERVED`, the money is held but not moved: a **semantic lock** that other processes can see and respect.
+
+**Two styles:**
+
+| | Orchestration | Choreography |
+| --- | --- | --- |
+| Who decides the next step | One orchestrator (here, transfers) that owns the state | Each service reacts to others' events; nobody owns the whole flow |
+| Seeing a transfer's state | One table | Pieced together from several services |
+| Adding a step | Change the orchestrator | Add a subscriber; but the flow becomes harder to follow |
+| Good for | Money movement, anything that needs an auditable state | Simple fan-out: notifications, statements, analytics |
+
+ITL Pay **orchestrates** the transfer: transfers owns the state, decides what happens on each answer and runs the compensations. Fraud and notifications are **choreographed**: they react to `transfer-events` without transfers knowing they exist. Most real systems mix the two this way.
+
+The orchestrator's step for fraud's answer, from the starter:
+
+```java
+@KafkaListener(topics = "fraud-decisions", groupId = "transfers")
+void on(String message) {
+    var decision = json.readValue(message, FraudDecision.class);
+    var transfer = transfers.find(decision.reference()).orElse(null);
+    if (transfer == null || transfer.state() != State.RESERVED) {
+        return;                                          // a redelivery: idempotent by state
+    }
+    if ("CLEARED".equals(decision.decision())) {
+        transfers.move(transfer, State.RESERVED, State.CLEARED, "TransferCleared", null);
+    } else {
+        accounts.release(transfer.fromAccount(), transfer.reference());   // compensate first; repeatable if we crash here
+        transfers.move(transfer, State.RESERVED, State.FAILED, "TransferFailed", decision.reason());
+    }
+}
+```
+
+Rules for compensations:
+
+- **They are business actions, recorded**, not deletes: "release hold", "reverse journal", "refund".
+- **They must be idempotent**: accounts' `DELETE /accounts/{id}/holds/{reference}` releases once and answers 200 every time after.
+- **Order them so a crash is safe**: release, then mark `FAILED`. If the process dies between the two, the decision is redelivered, the transfer is still `RESERVED`, and the release runs again harmlessly.
+- Some steps **can't be compensated** (an SMS was sent, money left for another bank). Put them last, after the steps that can still fail; that's why notifications react to final events.
+
+## 4. Idempotent consumers
+
+Two techniques, both used in the starter:
+
+**A state check (natural idempotency).** The saga step above only acts if the transfer is still `RESERVED`, and the update itself says `WHERE state = 'RESERVED'`, so two deliveries racing each other can't both win.
+
+**A processed-event table.** Each event carries a unique `eventId`. The consumer records it **in the same transaction** as its effect:
+
+```java
+@KafkaListener(topics = "transfer-events", groupId = "notifications")
+@Transactional
+public void on(String message) {
+    var event = json.readValue(message, TransferEvent.class);
+    // ... choose the text
+    int fresh = jdbc.sql("INSERT INTO processed_event (event_id) VALUES (?) ON CONFLICT DO NOTHING")
+            .param(event.eventId()).update();
+    if (fresh == 0) {
+        return;                                          // already handled
+    }
+    jdbc.sql("INSERT INTO notification (reference, account_id, message) VALUES (?, ?, ?)")
+            .params(event.reference(), event.from(), sms).update();
+}
+```
+
+If the effect is outside your database (calling the SMS provider), record the intent in the database and send from there, or pass the `eventId` to the provider as its idempotency key (Stripe-style APIs accept one).
+
+## 5. "Exactly once": what it does and doesn't mean
+
+Kafka's **exactly-once semantics** (idempotent producer plus transactions with `read_committed` consumers) guarantee that a **read from Kafka, process, write to Kafka** cycle takes effect once. It's real and useful for stream processing. But:
+
+- Your **database** isn't part of the Kafka transaction.
+- An **SMS, an email or an HTTP call** to another bank can't be rolled back.
+- The **outbox relay** can still publish twice.
+
+So "exactly once" for a payment system means **effectively once**: at-least-once delivery **plus** idempotent processing. Say that in an interview and you'll stand out.
+
+## Worked example: a rejected transfer, with duplicates
+
+From the starter's `TransferSagaTests`, with real PostgreSQL and Kafka:
+
+1. `POST /transfers` `TRF-FRAUD` for ₦8,000: accounts places the hold; transfers stores `RESERVED` and an outbox row in one transaction; the relay publishes `TransferReserved`.
+2. Fraud's decision `REJECTED` is delivered **twice** (the test sends it twice, as a retry would).
+3. The first delivery releases the hold and moves the transfer to `FAILED`, writing `TransferFailed` to the outbox.
+4. The second sees `FAILED`, not `RESERVED`, and does nothing.
+5. The test checks: accounts saw **exactly one** release, the state is `FAILED`, and `transfer-events` holds exactly `TransferReserved, TransferFailed` for that reference.
+
+Run against the Compose stack, a ₦25,000 transfer from A1 shows the same thing: the fraud service rejects it, A1's available balance goes back to ₦47,500, and the customer gets two SMSs: "being processed", then "not completed: over the single-transfer limit".
+
+## Common mistakes
+
+- Sending to Kafka inside or after a database transaction and calling it reliable.
+- An outbox without ordering, or a relay that marks rows published before the broker acknowledges them.
+- Compensations that delete data instead of recording a reversing action.
+- Compensations that aren't idempotent, or that run before the state is safe to repeat.
+- Consumers that check "already processed?" in one transaction and do the work in another.
+- Promising "exactly once" end to end.
+- Choreographing a money flow across five services so that nobody can say what state a transfer is in.
+
+## Practice
+
+1. Kill the transfers container between a reservation and the relay's next run (`docker compose kill transfers` right after a POST), start it again, and show the event is still published.
+2. Add a `statements` consumer that is idempotent by `eventId`, and a test that publishes every event twice.
+3. Draw ITL Pay's v0.2 saga including the ledger step and its compensation (reverse the journal), and write ADR 5 explaining why transfers orchestrates.
+4. Replace the polling relay with Spring Modulith's event publication registry and `@Externalized` in a branch, and compare the code and the guarantees.
+5. Write a reconciliation query (topic 10.4) that finds transfers `RESERVED` for more than 15 minutes, and turn it into the stuck-transfer sweeper from the `v0.2` brief.
+
+## Key terms
+
+Dual write, transactional outbox, relay, polling publisher, change data capture (CDC), Debezium, `FOR UPDATE SKIP LOCKED`, saga, local transaction, compensation, semantic lock, orchestration, choreography, idempotent consumer, processed-event table, natural idempotency, event id, exactly-once semantics, effectively once.
+
+## Further reading
+
+- [microservices.io: Transactional outbox](https://microservices.io/patterns/data/transactional-outbox.html)
+- [microservices.io: Saga](https://microservices.io/patterns/data/saga.html)
+- [microservices.io: Idempotent consumer](https://microservices.io/patterns/communication-style/idempotent-consumer.html)
+- [Debezium: Outbox event router](https://debezium.io/documentation/reference/stable/transformations/outbox-event-router.html)
+- [Spring Modulith reference: event externalization](https://docs.spring.io/spring-modulith/reference/events.html)
+- [Confluent: Exactly-once semantics in Apache Kafka](https://www.confluent.io/blog/exactly-once-semantics-are-possible-heres-how-apache-kafka-does-it/)

@@ -284,7 +284,7 @@ Continuous integration, continuous delivery, continuous deployment, pipeline, st
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
 
 - [How to use GitHub Actions | GitHub for Beginners](https://www.youtube.com/watch?v=BQrohJ3PT7I) · GitHub · 8 min. GitHub Actions from GitHub: workflows, jobs, runners and events.
 - [GitLab YAML pipeline Tutorial for Beginners. Setup Multi Stage, Multi Job Pipeline CI/CD.](https://www.youtube.com/watch?v=dKpCYkcmjXI) · Sumit Raj · 16 min. GitLab CI/CD pipelines: stages, jobs and artefacts.

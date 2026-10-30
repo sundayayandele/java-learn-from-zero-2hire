@@ -307,7 +307,7 @@ IoC, dependency injection, `ApplicationContext`, bean, constructor injection, st
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
 
 - [#4  IoC and DI in Spring](https://www.youtube.com/watch?v=5cRaQqQb14Q) · Telusko · 8 min. IoC and dependency injection in Spring, short and current.
 - [Spring Tutorial 01 - Understanding Dependency Injection](https://www.youtube.com/watch?v=GB8k2-Egfv0) · Java Brains · 15 min. The classic Java Brains explanation of why dependency injection exists.

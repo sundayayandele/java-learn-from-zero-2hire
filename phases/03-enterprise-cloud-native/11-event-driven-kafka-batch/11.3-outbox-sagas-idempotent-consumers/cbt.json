@@ -1,0 +1,109 @@
+{
+  "topic": "11.3",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "Transfers commits the RESERVED state, then the process is killed before it sends TransferReserved to Kafka.",
+      "question": "Which pattern prevents the event being lost?",
+      "options": [
+        "Sending to Kafka before committing",
+        "Retrying the HTTP request",
+        "A transactional outbox: write the event to a table in the same transaction and publish it from there",
+        "Kafka transactions"
+      ],
+      "answer": 2,
+      "explanation": "The state change and the event commit together; a relay publishes the event afterwards."
+    },
+    {
+      "type": "single",
+      "scenario": "The outbox relay sends a row to Kafka, then crashes before marking it published.",
+      "question": "What happens next, and what must be true of consumers?",
+      "options": [
+        "The row is lost; consumers must reconcile daily",
+        "The row is published again, so consumers must be idempotent",
+        "Kafka detects the duplicate, so nothing is needed",
+        "The database rolls back the original state change"
+      ],
+      "answer": 1,
+      "explanation": "The outbox gives at-least-once delivery. Idempotent consumers make the duplicate harmless."
+    },
+    {
+      "type": "single",
+      "scenario": "Several transfers instances run the outbox relay at the same time.",
+      "question": "What stops two of them sending the same row simultaneously?",
+      "options": [
+        "SELECT ... FOR UPDATE SKIP LOCKED",
+        "A unique index on payload",
+        "Kafka's idempotent producer",
+        "Running the relay only on Mondays"
+      ],
+      "answer": 0,
+      "explanation": "Each instance locks the rows it takes and skips rows locked by others."
+    },
+    {
+      "type": "single",
+      "scenario": "Fraud screening rejects a reserved transfer.",
+      "question": "What should the saga's compensation be?",
+      "options": [
+        "Delete the transfer row",
+        "Leave the hold in place for a manual fix",
+        "Debit the account and refund it later",
+        "Release the hold, idempotently, and record the transfer as FAILED"
+      ],
+      "answer": 3,
+      "explanation": "Compensations are recorded business actions that undo a step, and they must be safe to repeat."
+    },
+    {
+      "type": "single",
+      "scenario": "The same REJECTED decision is delivered twice.",
+      "question": "How does ITL Pay's orchestrator avoid releasing the hold twice?",
+      "options": [
+        "It acts only if the transfer is still RESERVED, and the update says WHERE state = 'RESERVED'",
+        "It keeps decisions in memory",
+        "It sleeps for a second between messages",
+        "Kafka never delivers duplicates"
+      ],
+      "answer": 0,
+      "explanation": "Natural idempotency: the state check and the conditional update make the second delivery a no-op."
+    },
+    {
+      "type": "single",
+      "scenario": "A consumer checks processed_event in one transaction and sends the notification in another.",
+      "question": "What is wrong?",
+      "options": [
+        "Nothing",
+        "Two transactions are always slower",
+        "Two deliveries can both pass the check before either records the event; record the id in the same transaction as the effect",
+        "processed_event must live in Kafka"
+      ],
+      "answer": 2,
+      "explanation": "The check and the effect must be atomic, which is why the starter inserts the event id and the notification in one transaction."
+    },
+    {
+      "type": "single",
+      "scenario": "Your team must choose between orchestration and choreography for the transfer flow.",
+      "question": "Which reason best supports orchestration?",
+      "options": [
+        "It needs no database",
+        "One service owns the transfer's state and its compensations, which suits auditable money movement",
+        "It removes the need for idempotency",
+        "It avoids Kafka entirely"
+      ],
+      "answer": 1,
+      "explanation": "An orchestrator gives one place to see and control the state; choreography suits simple fan-out like notifications."
+    },
+    {
+      "type": "single",
+      "scenario": "A vendor says their Kafka setup gives 'exactly once' so you can drop idempotency.",
+      "question": "What is the accurate response?",
+      "options": [
+        "Agree: Kafka transactions cover the database and SMS too",
+        "Agree, if acks=all",
+        "Disagree: exactly-once only works with one partition",
+        "Disagree: it covers read-process-write within Kafka, not your database or external calls, so you still need idempotent processing"
+      ],
+      "answer": 3,
+      "explanation": "In payments, 'exactly once' means effectively once: at-least-once delivery plus idempotent processing."
+    }
+  ]
+}

@@ -204,7 +204,7 @@ Class loader, bytecode verification, interpreter, JIT, C1/C2, warm-up, stack, fr
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
 
 - [Stack vs Heap Memory - Simple Explanation](https://www.youtube.com/watch?v=5OJRqkYbK-4) · Alex Hyett · 6 min. Stack vs heap memory in five minutes.
 - [Java's Garbage Collection Explained - How It Saves your Lazy Programmer Butt](https://www.youtube.com/watch?v=Mlbyft_MFYM) · Coding with John · 9 min. How Java's garbage collector finds and frees unreachable objects.

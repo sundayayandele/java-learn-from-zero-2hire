@@ -249,7 +249,7 @@ class PaymentGatewayClientTest {
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
 
 - [Creating REST Clients in Spring Boot 4 Just Got EASIER!](https://www.youtube.com/watch?v=TEd5e4Thu7M) · Dan Vega · 18 min. RestClient, HTTP interface clients and timeouts in Spring Boot 4.
 - [11 Understanding the circuit breaker pattern - Spring Boot Microservices Level 2](https://www.youtube.com/watch?v=mJ8JSach2P4) · Java Brains · 7 min. The circuit breaker pattern: closed, open and half-open states.

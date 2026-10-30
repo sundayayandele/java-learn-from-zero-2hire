@@ -1,0 +1,109 @@
+{
+  "topic": "11.5",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "The interest job ran on 31 October for business date 30 October and failed. It's rerun with businessDate=2026-10-30.",
+      "question": "What does Spring Batch do?",
+      "options": [
+        "Starts a new job instance from the first account",
+        "Refuses to run",
+        "Deletes the first run's postings and starts again",
+        "Creates a new execution of the same instance and restarts from the last committed chunk"
+      ],
+      "answer": 3,
+      "explanation": "The identifying parameters name the instance; a failed instance is restarted using the saved reader position."
+    },
+    {
+      "type": "single",
+      "scenario": "The job processes chunks of 100 and fails on the 457th account.",
+      "question": "What has been committed?",
+      "options": [
+        "Nothing: the whole job rolls back",
+        "Chunks 1–4 (accounts 1–400); chunk 5 rolls back",
+        "Accounts 1–456",
+        "Only the first chunk"
+      ],
+      "answer": 1,
+      "explanation": "Each chunk is one transaction; the failing chunk rolls back and earlier ones stay committed."
+    },
+    {
+      "type": "single",
+      "scenario": "A reader selects accounts without an ORDER BY.",
+      "question": "Why is this a problem for restarts?",
+      "options": [
+        "The saved position may point at different rows next time, so a restart can skip or repeat accounts",
+        "It's slower",
+        "Spring Batch refuses to start",
+        "It causes duplicate job instances"
+      ],
+      "answer": 0,
+      "explanation": "Restart relies on a stable sort order, ideally on a unique key."
+    },
+    {
+      "type": "single",
+      "scenario": "The writer uses INSERT ... ON CONFLICT (account_id, business_date) DO NOTHING.",
+      "question": "What does this protect against?",
+      "options": [
+        "Slow inserts",
+        "Missing accounts",
+        "Posting interest twice for the same account and day, even if a chunk were written again",
+        "Wrong rounding"
+      ],
+      "answer": 2,
+      "explanation": "An idempotent writer is the second line of defence after the saved reader position."
+    },
+    {
+      "type": "single",
+      "scenario": "A developer uses LocalDate.now() inside the interest processor.",
+      "question": "What goes wrong?",
+      "options": [
+        "Nothing",
+        "The job can't be scheduled",
+        "Rounding changes",
+        "A rerun on a later day posts interest for the wrong date; pass the business date as a job parameter"
+      ],
+      "answer": 3,
+      "explanation": "Batch jobs work on a business date, which can differ from the calendar date of the run."
+    },
+    {
+      "type": "single",
+      "scenario": "The job fails at 1 a.m. in Kubernetes.",
+      "question": "How does the scheduler know?",
+      "options": [
+        "It reads the logs",
+        "The process exits with a non-zero code",
+        "Spring Batch sends an email",
+        "It doesn't; someone checks in the morning"
+      ],
+      "answer": 1,
+      "explanation": "Spring Boot exits with the job's status (the starter's failed run exits with code 5); schedulers act on exit codes."
+    },
+    {
+      "type": "single",
+      "scenario": "An account has corrupt data and fails processing every time.",
+      "question": "What is the responsible way to keep the run going?",
+      "options": [
+        "Catch the exception and return null silently",
+        "Increase the chunk size",
+        "Skip it with a limit and write each skipped account to an exceptions report operations must clear",
+        "Retry it 100 times"
+      ],
+      "answer": 2,
+      "explanation": "Skipping is a business decision; every skip must be visible and followed up."
+    },
+    {
+      "type": "single",
+      "scenario": "The interest job for 1,000,000 accounts takes too long.",
+      "question": "Which change speeds it up while keeping restarts reliable?",
+      "options": [
+        "Partition the accounts into ranges, each a worker step that restarts independently",
+        "Load all accounts into memory first",
+        "Remove the job repository",
+        "Commit once at the end"
+      ],
+      "answer": 0,
+      "explanation": "Partitioning parallelises the work; each partition keeps its own restart state."
+    }
+  ]
+}

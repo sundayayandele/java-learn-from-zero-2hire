@@ -1,12 +1,62 @@
-# ITL Pay v0.1 locally: ./mvnw -q package -DskipTests && docker compose up --build
-# Only the gateway publishes a port; the services reach each other by name on Compose's network.
+# ITL Pay v0.2 locally: ./mvnw -q package -DskipTests && docker compose up --build
+# Only the gateway publishes a port; the services reach each other, Kafka and PostgreSQL by name.
 services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 2s
+      retries: 30
+
+  kafka:
+    image: apache/kafka:4.1.1
+    environment:                                   # one broker that is also its own KRaft controller
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"     # topics are declared, with their partition count, by the services (topic 11.1)
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 > /dev/null"]
+      interval: 5s
+      retries: 30
+
   accounts:
     build: ./accounts
   transfers:
     build: ./transfers
     environment:
       ACCOUNTS_URL: http://accounts:8081
+      DB_URL: jdbc:postgresql://postgres:5432/transfers
+      KAFKA_BOOTSTRAP: kafka:9092
+    depends_on:
+      postgres: { condition: service_healthy }
+      kafka: { condition: service_healthy }
+  fraud:
+    build: ./fraud
+    environment:
+      KAFKA_BOOTSTRAP: kafka:9092
+    depends_on:
+      kafka: { condition: service_healthy }
+  notifications:
+    build: ./notifications
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/notifications
+      KAFKA_BOOTSTRAP: kafka:9092
+    depends_on:
+      postgres: { condition: service_healthy }
+      kafka: { condition: service_healthy }
   gateway:
     build: ./gateway
     environment:
@@ -15,3 +65,13 @@ services:
     ports:
       - "8080:8080"
     depends_on: [accounts, transfers]
+
+  # A batch job, not a server: it runs when asked and exits.
+  # docker compose run --rm interest-batch businessDate=2026-10-30
+  interest-batch:
+    build: ./interest-batch
+    profiles: [batch]
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/interest
+    depends_on:
+      postgres: { condition: service_healthy }

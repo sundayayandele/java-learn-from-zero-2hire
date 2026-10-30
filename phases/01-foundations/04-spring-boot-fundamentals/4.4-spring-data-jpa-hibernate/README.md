@@ -331,7 +331,7 @@ JPA, Hibernate, Spring Data JPA, entity, `@Id`, `@GeneratedValue`, `@Enumerated(
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
 
 - [Hibernate & JPA Tutorial - Crash Course](https://www.youtube.com/watch?v=xHminZ9Dxm4) · Marco Codes · 24 min. JPA and Hibernate from the ground up: entities, mappings and the persistence context.
 - [JOIN FETCH with Hibernate - The end of n+1 select issues](https://www.youtube.com/watch?v=QAaTLLYdHJ0) · Thorben Janssen · 6 min. Fixing N+1 selects with JOIN FETCH, from Thorben Janssen.

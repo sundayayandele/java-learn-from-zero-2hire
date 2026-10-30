@@ -199,7 +199,7 @@ Store integration secrets in AWS Secrets Manager, Azure Key Vault or Google Secr
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
 
 - [How to Deploy Containers with AWS App Runner | Amazon Web Services](https://www.youtube.com/watch?v=GdnC4n1ZeCk) · Amazon Web Services · 9 min. Deploying containers with AWS App Runner, from AWS.
 - [Keycloak + Docker Compose: Setup & Authentication Tutorial](https://www.youtube.com/watch?v=WGcgiegv0W0) · Rayan Slim · 16 min. Running Keycloak with Docker Compose for local auth.

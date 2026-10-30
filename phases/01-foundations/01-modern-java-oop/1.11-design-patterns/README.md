@@ -269,7 +269,7 @@ Design pattern, Gang of Four (GoF), Strategy, open/closed principle, static fact
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
 
 - [The Strategy Pattern Explained and Implemented in Java | Behavioral Design Patterns | Geekific](https://www.youtube.com/watch?v=Nrwj3gZiuJU) · Geekific · 7 min. The Strategy pattern implemented in Java, step by step.
 - [The Proxy Pattern Explained and Implemented in Java | Structural Design Patterns | Geekific](https://www.youtube.com/watch?v=TS5i-uPXLs8) · Geekific · 6 min. The Proxy pattern in Java: the idea behind Spring's annotations.

@@ -1,0 +1,178 @@
+## What you will be able to do
+
+- Explain where batch processing still matters in banks, and what "end of day" involves.
+- Build a Spring Batch 6 job: job, step, chunk, reader, processor and writer.
+- Make a job restartable and idempotent, and prove it with a test.
+- Handle bad records with skip and retry, and speed jobs up with partitioning.
+- Schedule batch jobs and integrate them with the rest of the platform.
+
+## Why this matters in a bank or fintech
+
+Real-time payments haven't removed batch work; they've moved it. Every night a bank **accrues interest** on millions of accounts, **charges fees**, **ages loans**, produces **statements**, **reconciles** with card schemes and NIBSS settlement files, and sends regulatory returns to the CBN. Core banking systems such as Finacle and T24 have a famous **end-of-day (EOD)** run for exactly this. A job that dies half-way at 1 a.m. must restart and finish before the branches open, without paying anyone's interest twice. That's the problem Spring Batch is built for.
+
+## 1. The model
+
+| Piece | What it is |
+| --- | --- |
+| **Job** | The whole run: `dailyInterest` |
+| **Job parameters** | What makes one run different from another: `businessDate=2026-10-30` |
+| **Job instance** | One logical run: the job plus its identifying parameters. "Interest for 30 October" |
+| **Job execution** | One attempt at an instance. A failed instance can have several executions |
+| **Step** | A phase of the job. Most are **chunk-oriented**: read, process, write |
+| **Chunk** | N items read and processed, then written in **one transaction** |
+| **Job repository** | Database tables where Spring Batch records every instance, execution, step and its progress |
+
+The job repository is what makes restarts possible: after each chunk commits, Spring Batch saves how far the reader got in the step's **execution context**, in the same transaction.
+
+## 2. A chunk-oriented job
+
+The starter's `interest-batch` service, with Spring Boot 4.1 and Spring Batch 6 (`spring-boot-starter-batch-jdbc`):
+
+```java
+@Bean
+Job dailyInterest(JobRepository jobs, Step postInterest) {
+    return new JobBuilder("dailyInterest", jobs).start(postInterest).build();
+}
+
+@Bean
+Step postInterest(JobRepository jobs, PlatformTransactionManager tx, JdbcPagingItemReader<Account> accounts,
+                  ItemProcessor<Account, Posting> interest, JdbcBatchItemWriter<Posting> postings) {
+    return new StepBuilder("postInterest", jobs)
+            .<Account, Posting>chunk(CHUNK)          // 100 accounts per transaction
+            .transactionManager(tx)
+            .reader(accounts)
+            .processor(interest)
+            .writer(postings)
+            .build();
+}
+```
+
+The **reader** pages through accounts ordered by a unique key, which is what lets it restart from the right place:
+
+```java
+@Bean
+JdbcPagingItemReader<Account> accounts(DataSource db) throws Exception {
+    return new JdbcPagingItemReaderBuilder<Account>()
+            .name("accounts")                            // the key for its saved position
+            .dataSource(db)
+            .selectClause("SELECT account_id, balance, annual_rate")
+            .fromClause("FROM account_balance")
+            .sortKeys(Map.of("account_id", Order.ASCENDING))
+            .pageSize(CHUNK)
+            .rowMapper(new DataClassRowMapper<>(Account.class))
+            .build();
+}
+```
+
+The **processor** works out one day's interest with banker's rounding, and returns `null` (skip writing) for accounts that earn nothing. It's `@StepScope`, so it can read the job's parameters:
+
+```java
+@Bean
+@StepScope
+ItemProcessor<Account, Posting> interest(@Value("#{jobParameters['businessDate']}") String businessDate, ...) {
+    LocalDate day = LocalDate.parse(businessDate);
+    return account -> {
+        BigDecimal daily = account.balance().multiply(account.annualRate())
+                .divide(BigDecimal.valueOf(day.lengthOfYear()), 2, RoundingMode.HALF_EVEN);
+        return daily.signum() > 0 ? new Posting(account.accountId(), day, daily) : null;
+    };
+}
+```
+
+The **writer** inserts postings in a JDBC batch, and is idempotent too:
+
+```sql
+INSERT INTO interest_posting (account_id, business_date, amount)
+VALUES (:accountId, :businessDate, :amount)
+ON CONFLICT (account_id, business_date) DO NOTHING
+```
+
+(Most banks **accrue** interest daily and **post** it to the account monthly; the starter posts daily to keep the example small. Your `v0.2` posts the interest as ledger journals.)
+
+## 3. Restart: what really happens
+
+Spring Boot runs the job at start-up with parameters from the command line, and the process exits with the job's status, so a scheduler can see the result:
+
+```bash
+docker compose run --rm -e INTEREST_FAILONACCOUNT=SAV-0457 interest-batch businessDate=2026-10-30   # fails: exit code 5
+docker compose run --rm interest-batch businessDate=2026-10-30                                     # restarts: exit code 0
+docker compose run --rm interest-batch businessDate=2026-10-30                                     # refused: already complete
+```
+
+(`INTEREST_FAILONACCOUNT` sets the starter's demonstration property `interest.fail-on-account`, which makes the processor throw on one account.) Here's what happened in our run, with 1,000 accounts in chunks of 100, every fifth account earning nothing:
+
+1. **Run 1** commits chunks 1–4 (accounts 1–400: 320 postings), then account 457 throws. Chunk 5 rolls back. The execution is `FAILED`, and the step's execution context says the reader had finished 400 items.
+2. **Run 2**, with the **same** `businessDate`, is a new execution of the **same instance**. The reader resumes at account 401, reads 600 accounts, and the job completes with 800 postings in total.
+3. **Run 3** for the same date fails at once with `JobInstanceAlreadyCompleteException`: 30 October is done.
+
+The starter's `DailyInterestJobTests` checks exactly these numbers against a real PostgreSQL. Two things made it safe: the **saved reader position** (no re-reading) and the **unique key on postings** (even if a chunk were written twice, each account gets one posting per day).
+
+Spring Batch 6 notes: the `JobOperator` now starts jobs (`operator.start(job, parameters)`; `JobLauncher` is deprecated), packages moved (`org.springframework.batch.core.job.Job`, `org.springframework.batch.infrastructure.item...`), and `chunk(int)` takes the transaction manager through `.transactionManager(tx)`.
+
+## 4. Bad records: skip and retry
+
+A fault-tolerant step can retry transient errors and skip bad records up to a limit, logging each one:
+
+```java
+new StepBuilder("postInterest", jobs)
+        .<Account, Posting>chunk(CHUNK)
+        .transactionManager(tx)
+        .reader(accounts).processor(interest).writer(postings)
+        .faultTolerant()
+        .retry(TransientDataAccessException.class).retryLimit(3)
+        .skip(InvalidAccountException.class).skipLimit(10)      // your own exception for a record that can never be processed
+        .build();
+```
+
+Skipping is a business decision: skipping one account's interest silently is a customer complaint and an audit finding. Write every skipped item to an exceptions table or report that operations must clear before the day closes.
+
+## 5. Going faster
+
+- **Bigger chunks** mean fewer commits; measure, because very large chunks make rollbacks expensive.
+- **Partitioning**: a manager step splits the accounts into ranges (`SAV-0001`–`SAV-0250`, ...) and runs a worker step per range in parallel threads, or on other machines. Each partition restarts independently.
+- **Multi-threaded steps** are simpler but harder to restart correctly, because the reader's position isn't a single number any more.
+- Read with **paging or a cursor**, never "load all accounts into a list".
+
+## 6. Scheduling and the business day
+
+- A batch job is a **program that runs and exits**, not a server. Schedule it with cron on a VM, a **Kubernetes CronJob** (Module 12), or the bank's enterprise scheduler (Control-M is common in Nigerian banks).
+- Pass the **business date** as a parameter; never use "today" inside the job. A rerun on 2 November for 31 October must post 31 October's interest.
+- Jobs depend on each other: interest after the day's postings are closed, statements after interest. The scheduler, not the code, holds the dependencies.
+- **Reconcile** after the run (topic 10.4): the sum of postings matches the expected total, and every eligible account has exactly one posting.
+
+## Worked example: EOD at ITL Pay
+
+1. At 23:30 the scheduler runs `interest-batch businessDate=2026-10-30`.
+2. At 23:41 a database failover kills the job after 640,000 of 1,000,000 accounts. The job exits with code 5, and the scheduler raises an incident.
+3. At 23:55 the on-call engineer checks the database is back and reruns the same command. Spring Batch restarts at account 640,001.
+4. At 00:10 the job completes. The reconciliation query finds exactly one posting per eligible account, and the totals match the expected interest.
+5. The statements job, which depends on interest, starts next.
+
+## Common mistakes
+
+- Using `LocalDate.now()` inside the job instead of a business-date parameter.
+- Readers without a stable sort order, so a restart skips or repeats records.
+- Non-idempotent writers: a restart that overlaps a committed chunk posts twice.
+- Running batch work inside a web service's request thread, or as an `@Scheduled` method with no job repository.
+- Skipping records silently.
+- Making a job "restartable" by deleting its records and starting again.
+
+## Practice
+
+1. Run the starter's failure-and-restart sequence with Compose, then query `batch_job_execution` and `batch_step_execution` to see both executions and their read and write counts.
+2. Add a second step that writes a summary row (accounts processed, total interest) and fails if the total differs from a reconciliation query.
+3. Make the step fault-tolerant: skip accounts with a negative balance up to 10, and write each skipped account to an exceptions table. Test it.
+4. Partition the job into four ranges of account ids and measure the speed-up with 100,000 accounts.
+5. Write the operations note for the job: when it runs, what it depends on, how to rerun it, and what to check afterwards.
+
+## Key terms
+
+Batch processing, end of day (EOD), business date, accrual, posting, Spring Batch, job, job parameters, job instance, job execution, step, chunk, item reader, item processor, item writer, job repository, execution context, `@StepScope`, `JobOperator`, restart, idempotent writer, fault tolerance, skip, retry, partitioning, multi-threaded step, scheduler, cron, Kubernetes CronJob, Control-M, reconciliation.
+
+## Further reading
+
+- [Spring Batch reference documentation](https://docs.spring.io/spring-batch/reference/)
+- [Spring Batch reference: what's new in Spring Batch 6](https://docs.spring.io/spring-batch/reference/whatsnew.html)
+- [Spring Boot reference: Spring Batch](https://docs.spring.io/spring-boot/how-to/batch.html)
+- [Spring Batch reference: scaling and parallel processing](https://docs.spring.io/spring-batch/reference/scalability.html)
+- [Kubernetes: CronJob](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/)

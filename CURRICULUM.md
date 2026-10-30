@@ -154,13 +154,13 @@ Microservices, Kafka, Kubernetes, AWS, observability, reactive Java and Spring A
 
 Projects: E-commerce services: User, Product, Order, Payment; Banking services: Account, Transaction, Notification.
 
-### Module 11: Event-Driven Architecture with Kafka, and Batch Processing (weeks 28-29)
+### [Module 11: Event-Driven Architecture with Kafka, and Batch Processing](phases/03-enterprise-cloud-native/11-event-driven-kafka-batch/README.md) (weeks 28-29)
 
-- 11.1 Apache Kafka: topics, partitions, consumer groups, ordering
-- 11.2 Spring for Apache Kafka; RabbitMQ / AMQP for comparison
-- 11.3 Transactional outbox, sagas and idempotent consumers
-- 11.4 Dead-letter topics, retries and schema evolution
-- 11.5 Batch jobs and scheduling in banks: Spring Batch, chunking, restarts and end-of-day runs
+- [11.1 Apache Kafka: topics, partitions, consumer groups, ordering](phases/03-enterprise-cloud-native/11-event-driven-kafka-batch/11.1-kafka-fundamentals/README.md)
+- [11.2 Spring for Apache Kafka; RabbitMQ / AMQP for comparison](phases/03-enterprise-cloud-native/11-event-driven-kafka-batch/11.2-spring-kafka-and-rabbitmq/README.md)
+- [11.3 Transactional outbox, sagas and idempotent consumers](phases/03-enterprise-cloud-native/11-event-driven-kafka-batch/11.3-outbox-sagas-idempotent-consumers/README.md)
+- [11.4 Dead-letter topics, retries and schema evolution](phases/03-enterprise-cloud-native/11-event-driven-kafka-batch/11.4-dead-letters-retries-schemas/README.md)
+- [11.5 Batch jobs and scheduling in banks: Spring Batch, chunking, restarts and end-of-day runs](phases/03-enterprise-cloud-native/11-event-driven-kafka-batch/11.5-spring-batch-end-of-day/README.md)
 
 Projects: Event-driven order and payment processing; Real-time transaction notifications; Audit-logging pipeline; End-of-day interest posting batch job that can restart after a failure.
 

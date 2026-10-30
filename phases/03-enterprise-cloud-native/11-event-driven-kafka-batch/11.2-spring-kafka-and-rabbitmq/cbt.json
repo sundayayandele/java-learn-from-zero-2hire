@@ -1,0 +1,109 @@
+{
+  "topic": "11.2",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A @KafkaListener method throws an exception for one record, and the service uses Spring for Apache Kafka's default error handling.",
+      "question": "What happens?",
+      "options": [
+        "The record is retried forever",
+        "It's retried 9 more times with no delay, then logged and skipped",
+        "It's sent to a dead-letter topic automatically",
+        "The consumer stops"
+      ],
+      "answer": 1,
+      "explanation": "The default DefaultErrorHandler retries quickly and then logs and moves on, which is wrong for money events: configure a recoverer."
+    },
+    {
+      "type": "single",
+      "scenario": "A developer calls kafkaTemplate.send(...) and ignores the result.",
+      "question": "What is the risk?",
+      "options": [
+        "The record is sent twice",
+        "The key is dropped",
+        "The listener runs synchronously",
+        "A failed send goes unnoticed, because send is asynchronous and its future holds the error"
+      ],
+      "answer": 3,
+      "explanation": "send returns a CompletableFuture; wait for it or handle it in a callback to learn about failures."
+    },
+    {
+      "type": "single",
+      "scenario": "Transfers saves a transfer in PostgreSQL and then calls kafkaTemplate.send in the same method.",
+      "question": "What problem does this have?",
+      "options": [
+        "A dual write: the database and Kafka can't be updated atomically, so one can succeed without the other",
+        "None, if the method is @Transactional",
+        "Kafka rejects messages sent from transactional methods",
+        "The record loses its key"
+      ],
+      "answer": 0,
+      "explanation": "Kafka can't join the database transaction. Topic 11.3's outbox solves this."
+    },
+    {
+      "type": "single",
+      "scenario": "A test publishes an event and immediately asserts that the listener stored a row.",
+      "question": "Why does it fail intermittently, and what's the fix?",
+      "options": [
+        "Kafka loses test records; use EmbeddedKafka",
+        "Listeners are asynchronous; wait for the condition with Awaitility instead of asserting at once or sleeping",
+        "The test needs @Transactional",
+        "The listener must be made synchronous"
+      ],
+      "answer": 1,
+      "explanation": "Wait for a condition with a timeout; fixed sleeps are slow and still flaky."
+    },
+    {
+      "type": "single",
+      "scenario": "A producer adds a new field, channel, to TransferReserved.",
+      "question": "What lets existing consumers keep working?",
+      "options": [
+        "Renaming the event",
+        "Restarting consumers first",
+        "A tolerant reader: @JsonIgnoreProperties(ignoreUnknown = true) on the consumer's event type",
+        "Changing the topic name"
+      ],
+      "answer": 2,
+      "explanation": "Consumers that ignore unknown fields let producers add fields safely."
+    },
+    {
+      "type": "single",
+      "scenario": "A bank needs a pool of workers to generate PDF statements on request; each request is done once and then forgotten.",
+      "question": "Which fits best?",
+      "options": [
+        "A RabbitMQ work queue (or a Kafka topic with one consumer group)",
+        "A compacted Kafka topic read by every service",
+        "A database trigger",
+        "An HTTP call per statement from the web tier"
+      ],
+      "answer": 0,
+      "explanation": "Work items for one worker pool are a classic queue job; Kafka shines for replayable facts many systems need."
+    },
+    {
+      "type": "single",
+      "scenario": "In RabbitMQ, a producer publishes to the exchange 'transfers' with routing key transfer.reserved.",
+      "question": "What decides which queues receive it?",
+      "options": [
+        "The consumer group id",
+        "The partition key",
+        "The queue's retention period",
+        "The bindings between the exchange and queues"
+      ],
+      "answer": 3,
+      "explanation": "Exchanges route messages to queues according to bindings and routing keys."
+    },
+    {
+      "type": "single",
+      "scenario": "Testing the fraud listener, you can use @EmbeddedKafka or a Kafka Testcontainer with @ServiceConnection.",
+      "question": "What is the main advantage of the Testcontainer?",
+      "options": [
+        "It needs no Docker",
+        "It runs the same Kafka image as production, so behaviour matches more closely",
+        "It is always faster",
+        "It removes the need for Awaitility"
+      ],
+      "answer": 1,
+      "explanation": "Testcontainers runs the real broker in Docker; EmbeddedKafka is quicker to start but less like production."
+    }
+  ]
+}

@@ -164,7 +164,7 @@ OWASP, Top 10 (2025), API Security Top 10 (2023), broken access control, securit
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
 
 - [OWASP Top 10 2025: Your complete guide to securing your applications](https://www.youtube.com/watch?v=Jzr0Jdnq_EI) · Aikido Security · 25 min. The OWASP Top 10 2025 categories with examples.
 - [Hacking Websites with SQL Injection - Computerphile](https://www.youtube.com/watch?v=_jKylhJtPmI) · Computerphile · 9 min. How SQL injection works and why parameterised queries stop it.

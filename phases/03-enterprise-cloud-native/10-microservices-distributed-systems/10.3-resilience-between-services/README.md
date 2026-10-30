@@ -187,7 +187,7 @@ Cascading failure, timeout budget, connect timeout, read timeout, time limiter, 
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
 
 - [Circuit Breaker Pattern in Microservices](https://www.youtube.com/watch?v=dJI2saoM5_k) · ByteMonk · 10 min. How circuit breakers stop cascading failures, with the three states explained.
 - [Introduction to circuit breaker in microservices (for beginners)](https://www.youtube.com/watch?v=HRS9mIfiNn4) · sudoCODE · 12 min. Circuit breakers for beginners: thresholds, open, half-open and fallbacks.

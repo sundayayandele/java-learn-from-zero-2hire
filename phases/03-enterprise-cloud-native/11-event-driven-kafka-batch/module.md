@@ -1,0 +1,46 @@
+## What this module gives you
+
+Two weeks on making services talk through events without losing or doubling money: Kafka and Spring for Apache Kafka (week 28), then the patterns that make events safe in a bank: the transactional outbox, sagas with compensation, idempotent consumers, dead-letter topics and schema evolution, plus Spring Batch for end-of-day runs (week 29).
+
+All code runs on Spring Boot 4.1 with **Spring for Apache Kafka 4.1**, **Kafka 4.1 in KRaft mode** and **Spring Batch 6**. The [ITL Pay starter](../../../templates/itl-pay-starter/README.md) now contains every lesson's code, tested with Testcontainers: the transfer saga with an outbox, a fraud service with retry topics, a notifications service that is an idempotent consumer with a dead-letter topic, and a restartable interest batch job.
+
+**Weekly rhythm (20–25 hours):** read the lessons and code along (30%), videos (10%), topic quizzes (5%), the module project (20%) and your capstone system's `v0.2` (35%).
+
+**Exit check for Module 11:** the five topic quizzes attempted (aim for 70%+), one module project below, and capstone release `v0.2` tagged with ADR 4 and ADR 5.
+
+## Capstone step: ITL Pay `v0.2`
+
+Build on your `v0.1` and the [starter's Module 11 code](../../../templates/itl-pay-starter/README.md), and deliver:
+
+- **Events:** every state change in transfers and the ledger leaves through a **transactional outbox**; events are keyed by transfer reference and carry an `eventId`.
+- **Saga:** `REQUESTED → RESERVED → CLEARED → POSTED`, with fraud screening and ledger posting as event-driven steps, and compensations for each failure (release the hold, reverse a journal). Transfers orchestrates.
+- **Consumers:** every consumer is idempotent (processed-event table or a state check) and has retries plus a **dead-letter topic**, with a written replay procedure.
+- **Schemas:** a versioned JSON Schema for each event in `docs/events/`, with one backward-compatible change made and tested.
+- **Batch:** an end-of-day interest job that is restartable, idempotent per account and business date, and exits with a non-zero code on failure.
+- **Tests:** Testcontainers tests with real Kafka and PostgreSQL for the saga (happy path, fraud rejection, duplicate delivery), for a poison message reaching the DLT, and for a batch restart.
+- **Docs:** ADR 4 (events and the outbox), ADR 5 (saga style and compensations), the DLT runbook, and an updated README diagram.
+
+## Module projects
+
+Pick **at least one**, in addition to your capstone step.
+
+### Project 11.A: Event-driven order and payment processing
+
+- **Services:** Orders, Payments and Inventory communicate only through Kafka; Orders orchestrates `CREATED → STOCK_RESERVED → PAID → CONFIRMED`, with compensations (release stock, refund).
+- **Outbox** in Orders and Payments; **idempotent consumers** everywhere.
+- **Acceptance:** with Payments failing 30% of the time and every message delivered twice (a test that publishes each one twice), no order ends `CONFIRMED` without exactly one payment, and no stock stays reserved for a cancelled order.
+
+### Project 11.B: Real-time transaction notifications
+
+- A notifications service consumes transaction events and sends SMS, email and push through simulated providers, each with its own retry policy and a per-customer preference table.
+- **Acceptance:** one message per event per channel even with duplicates; a provider outage sends messages to retry topics, not the DLT, and they're delivered when it recovers; a poison event goes straight to the DLT and raises an alert in the logs.
+
+### Project 11.C: Audit-logging pipeline
+
+- Every service publishes audit events (who, what, when, before and after) to an `audit` topic; an audit service stores them append-only, with a hash chain so tampering is detectable.
+- **Acceptance:** a query API answers "everything that happened to account X between two dates" in order; a test proves that changing a stored row breaks the chain; the topic uses a retention policy you can justify to an auditor.
+
+### Project 11.D: End-of-day interest posting that can restart
+
+- A Spring Batch job accrues daily interest for 100,000 accounts (generate them), with tiered rates, and writes postings and a summary report file.
+- **Acceptance:** kill the job half-way (stop the container); the rerun with the same business date finishes without duplicates; a partitioned version runs at least twice as fast; the job exits non-zero on failure and a scheduler (cron or a Compose loop) runs it daily.

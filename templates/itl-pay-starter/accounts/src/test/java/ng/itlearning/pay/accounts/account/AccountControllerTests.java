@@ -33,4 +33,16 @@ class AccountControllerTests {
                         {"reference": "TRF-2", "amount": 9000.00}"""))
                 .hasStatus(422);
     }
+
+    @Test
+    void releasingAHoldGivesTheMoneyBackOnce() {
+        mvc.post().uri("/accounts/A2/holds").contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"reference": "TRF-3", "amount": 400.00}""").exchange();
+        assertThat(mvc.delete().uri("/accounts/A2/holds/TRF-3")).hasStatus(200);
+        assertThat(mvc.delete().uri("/accounts/A2/holds/TRF-3")).hasStatus(200);
+        assertThat(mvc.get().uri("/accounts/A2")).bodyJson()
+                .extractingPath("$.available").asNumber().satisfies(n -> assertThat(n.doubleValue()).isEqualTo(1000.00));
+        assertThat(mvc.delete().uri("/accounts/A2/holds/UNKNOWN")).hasStatus(404);
+    }
 }

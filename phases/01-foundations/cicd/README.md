@@ -133,7 +133,7 @@ Interview tip: be able to draw section 1's diagram and explain where secrets liv
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
 
 - [Create Your First Azure Pipeline using YAML | Azure DevOps Tutorial | An IT Professional](https://www.youtube.com/watch?v=Nc_jITa2qYE) · An IT Professional · 12 min. Your first Azure DevOps YAML pipeline, step by step.
 - [(Simple?) Real World Azure Pipelines YAML Walkthrough](https://www.youtube.com/watch?v=e0bF1LlclEs) · Julie Ng · 22 min. A real-world Azure Pipelines YAML file walked through stage by stage.

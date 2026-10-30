@@ -145,7 +145,7 @@ Author of record, hallucinated API, outdated idiom, plausible-but-wrong logic, c
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
 
 - [How Developers Secure AI-Generated Code: 5 Security Best Practices](https://www.youtube.com/watch?v=X0UI0O8YzJM) · IBM Technology · 11 min. IBM: five practices for securing AI-generated code.
 - [Vibe Coding Has A Security Problem (And How To Fix It)](https://www.youtube.com/watch?v=tK4NQtzfZbM) · Chris Raroque · 16 min. Why vibe-coded apps fail security checks, and how to fix it.

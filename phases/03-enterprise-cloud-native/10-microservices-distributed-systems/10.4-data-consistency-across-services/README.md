@@ -3,7 +3,7 @@
 
 # 10.4 Data consistency across services; distributed transactions
 
-← [10.3 Resilience patterns](../10.3-resilience-between-services/README.md) · [Module 10](../README.md) · [Phase 3](../../README.md)
+← [10.3 Resilience patterns](../10.3-resilience-between-services/README.md) · [Module 10](../README.md) · [Phase 3](../../README.md) · [11.1 Apache Kafka](../../11-event-driven-kafka-batch/11.1-kafka-fundamentals/README.md) →
 
 > **Week 27** · Module 10: Microservices & Distributed Systems · Website topic covered: *Database per service, why two-phase commit is avoided, eventual consistency, idempotency and reconciliation across services*
 
@@ -157,7 +157,7 @@ Database per service, data ownership, two-phase commit, XA, local transaction, s
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
 
 - [Distributed Transactions Explained: 2 Phase Commit vs Saga Pattern](https://www.youtube.com/watch?v=DOFflggE_0Q) · Hello Interview · 15 min. Two-phase commit versus sagas, and why services avoid distributed transactions.
 
@@ -291,4 +291,4 @@ What catches it?
 
 ---
 
-← [10.3 Resilience patterns](../10.3-resilience-between-services/README.md) · [Module 10](../README.md) · [Phase 3](../../README.md)
+← [10.3 Resilience patterns](../10.3-resilience-between-services/README.md) · [Module 10](../README.md) · [Phase 3](../../README.md) · [11.1 Apache Kafka](../../11-event-driven-kafka-batch/11.1-kafka-fundamentals/README.md) →

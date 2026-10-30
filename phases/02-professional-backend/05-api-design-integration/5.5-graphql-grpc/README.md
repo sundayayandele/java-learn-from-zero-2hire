@@ -238,7 +238,7 @@ Over-fetching, under-fetching, GraphQL schema, query, mutation, resolver, `@Quer
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
 
 - [GraphQL Explained in 100 Seconds](https://www.youtube.com/watch?v=eIQh02xuVw4) · Fireship · 2 min. GraphQL in 100 seconds: queries, schema and the problem it solves.
 - [🍃 Introduction to Spring GraphQL with Spring Boot](https://www.youtube.com/watch?v=atA2OovQBic) · Maciej Walkowiak 🍃 Spring Academy · 19 min. Spring for GraphQL: schema-first controllers in Spring Boot.

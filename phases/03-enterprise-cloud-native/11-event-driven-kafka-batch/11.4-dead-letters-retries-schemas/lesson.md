@@ -1,0 +1,146 @@
+## What you will be able to do
+
+- Tell transient failures from poison messages, and handle each correctly.
+- Configure blocking retries with a dead-letter topic, and non-blocking retry topics, in Spring for Apache Kafka.
+- Run a dead-letter topic in production: alert, inspect, fix and replay.
+- Evolve event schemas without breaking consumers, with JSON Schema or Avro and a schema registry.
+
+## Why this matters in a bank or fintech
+
+At 2 a.m. a consumer meets a message it can't process. If it retries forever, every event behind it on that partition waits: customers stop getting alerts and fraud stops screening. If it drops the message, a transfer is never settled and nobody knows. The right answer is a **dead-letter topic** plus a runbook. And because events outlive the code that wrote them, a careless change to an event's fields can break consumers in other teams that you've never met. Schema rules prevent that.
+
+## 1. Two kinds of failure
+
+| | Transient | Poison |
+| --- | --- | --- |
+| Example | Database briefly unavailable, SMS provider returns 503, timeout | Malformed JSON, a missing required field, an amount of `-5` |
+| Will a retry help? | Probably | Never |
+| Right handling | Retry with back-off, then dead-letter | Dead-letter at once |
+
+Spring for Apache Kafka lets you say which is which. Exceptions marked **not retryable** skip the retries:
+
+```java
+handler.addNotRetryableExceptions(JacksonException.class);   // can't parse it: no point trying again
+```
+
+## 2. Blocking retries and a dead-letter topic
+
+The notifications service retries in place, then dead-letters:
+
+```java
+@Bean
+DefaultErrorHandler errorHandler(KafkaTemplate<String, String> kafka) {
+    var recoverer = new DeadLetterPublishingRecoverer(kafka,
+            (record, ex) -> new TopicPartition(record.topic() + "-notifications-dlt", -1));   // -1: let Kafka pick the partition
+    var handler = new DefaultErrorHandler(recoverer, new FixedBackOff(1_000, 2));          // 1 try + 2 retries, 1 s apart
+    handler.addNotRetryableExceptions(JacksonException.class);
+    return handler;
+}
+```
+
+- **Blocking** means the consumer keeps retrying the same record before moving on, so **order is preserved** but the partition waits. Keep the total retry time short (seconds), well inside the consumer's `max.poll.interval.ms`.
+- The `DeadLetterPublishingRecoverer` copies the record to the DLT with headers describing the failure: original topic, partition, offset, exception class and message. That's what you'll read at 2 a.m.
+- Name DLTs **per consumer group** (`transfer-events-notifications-dlt`): the same event might be fine for fraud and fail for notifications, and you replay it only to the consumer that failed.
+
+## 3. Non-blocking retry topics
+
+For slow-to-recover failures, blocking holds up the whole partition. **Retry topics** move a failing record to a delay topic and carry on:
+
+```java
+@RetryableTopic(attempts = "3", backOff = @BackOff(delay = 1000, multiplier = 2.0),
+        retryTopicSuffix = "-fraud-retry", dltTopicSuffix = "-fraud-dlt",
+        exclude = JacksonException.class)
+@KafkaListener(topics = "transfer-events", groupId = "fraud")
+void on(String message) throws Exception { ... }
+
+@DltHandler
+void dead(String message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
+    log.error("dead letter on {}: {}", topic, message);
+}
+```
+
+Spring creates `transfer-events-fraud-retry-1000`, `transfer-events-fraud-retry-2000` and `transfer-events-fraud-dlt`, with consumers that wait for each record's due time. The trade-off is **ordering**: while one record waits in a retry topic, later records with the same key are processed. That's fine for fraud (one decision per transfer) and wrong for a consumer that must see `Reserved` before `Cleared`. Choose per consumer:
+
+| Use blocking retries when | Use retry topics when |
+| --- | --- |
+| Order per key matters | Order doesn't matter, or each key has one event |
+| Failures clear in seconds | A dependency can be down for minutes |
+| Volume is modest | You can't afford to stall a partition |
+
+Set the suffixes per group, as above, so two services retrying the same topic don't share retry topics.
+
+## 4. Running a dead-letter topic
+
+A DLT nobody reads is a slower way of losing data. Your runbook needs:
+
+1. **Alert** when anything arrives: a metric for DLT records per topic (Module 13), paging if it's money-related.
+2. **Inspect**: read the record and its headers:
+   ```bash
+   docker compose exec kafka /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 \
+        --topic transfer-events-notifications-dlt --from-beginning \
+        --property print.headers=true --property print.key=true
+   ```
+3. **Decide**: a bug in your consumer (fix it and replay), bad data from a producer (ask them to fix and resend, or correct it), or a duplicate that can be dropped (record why).
+4. **Replay**: publish the record back to the original topic (or a replay topic only your group reads) with a tool you've tested. Because consumers are idempotent, replaying a record that was in fact processed does no harm.
+5. **Record** what happened: banks need the audit trail.
+
+## 5. Schema evolution
+
+Events are a **contract** with consumers you may not know. Rules for JSON events:
+
+- **Add** fields freely, and make them optional for readers. Old consumers ignore them if they're **tolerant readers**: `@JsonIgnoreProperties(ignoreUnknown = true)`. The starter's fraud test sends an extra `addedLater` field to prove it.
+- **Never rename, remove or change the type** of a field consumers rely on. Add the new field, keep the old one for a deprecation period, then remove it in a new version.
+- **Never reuse** a field name with a new meaning.
+- For a breaking change, publish a **new event type or version** (`TransferReservedV2`, or a `schemaVersion` field), run both, then retire the old one.
+
+Compatibility has names worth knowing:
+
+| Mode | Meaning | Lets you |
+| --- | --- | --- |
+| Backward | New consumers can read old events | Upgrade consumers first |
+| Forward | Old consumers can read new events | Upgrade producers first |
+| Full | Both | Upgrade in any order |
+
+**Write the schema down.** A **JSON Schema** file per event in your repository (`docs/events/TransferReserved.v1.json`) is a good start, with a test that validates sample events against it. At larger scale, a **schema registry** (Confluent Schema Registry or Apicurio Registry) stores the schema for each topic, checks every new version against a compatibility mode, and lets serialisers send a small schema id instead of the whole schema. **Avro** and **Protobuf** are the usual binary formats with registries; JSON Schema works too. Many banks use Avro with a registry for high-volume topics and JSON for low-volume integration events.
+
+## Worked example: a poison message in notifications
+
+From the starter's `TransferNotifierTests`:
+
+1. The test publishes a valid `TransferReserved` **twice** and a broken message, `{"eventId": broken`.
+2. The broken message fails to parse with a `JacksonException`. It's not retryable, so the error handler sends it to `transfer-events-notifications-dlt` immediately, with the exception in the headers.
+3. The consumer carries on: the valid event produces one notification row; its duplicate is ignored by the processed-event table.
+4. The test asserts that the DLT holds exactly the broken message and that `TRF-7` has exactly one notification.
+
+In the fraud service, the same kind of message goes to `transfer-events-fraud-dlt` through `@RetryableTopic`'s `exclude`, and its `@DltHandler` logs it.
+
+## Common mistakes
+
+- Retrying poison messages, so a partition stalls on a record that will never succeed.
+- Infinite blocking retries, which also trigger rebalances when processing exceeds `max.poll.interval.ms`.
+- A DLT with no alert, no owner and no replay tool.
+- Retry topics for a consumer that depends on per-key order.
+- One shared DLT for every consumer group, so you can't replay to only the one that failed.
+- Renaming or removing event fields, or failing on unknown fields.
+- Schemas that exist only in the producer's Java classes.
+
+## Practice
+
+1. Make notifications fail for a "database down" case (stop PostgreSQL for 10 seconds while sending events) and show that blocking retries recover without a dead letter, as long as the outage is shorter than the retries.
+2. Write `docs/events/TransferReserved.v1.json` and a test that validates the outbox's real payload against it (the `networknt` json-schema-validator library is a common choice).
+3. Add a `channel` field to `TransferReserved` and prove, with a test, that the current fraud and notifications code still reads it.
+4. Build a replay command: read one record from a DLT by offset and publish it back to `transfer-events`, then show notifications processes it once.
+5. Write the DLT runbook for ITL Pay: who is paged, what they check, how they replay, how it's recorded.
+
+## Key terms
+
+Transient failure, poison message, retryable and not-retryable exceptions, back-off, blocking retry, `DefaultErrorHandler`, `DeadLetterPublishingRecoverer`, dead-letter topic (DLT), non-blocking retry, `@RetryableTopic`, retry topic, `@DltHandler`, `max.poll.interval.ms`, replay, runbook, schema evolution, tolerant reader, backward, forward and full compatibility, JSON Schema, Avro, Protobuf, schema registry.
+
+## Further reading
+
+- [Spring for Apache Kafka reference: handling exceptions](https://docs.spring.io/spring-kafka/reference/kafka/annotation-error-handling.html)
+- [Spring for Apache Kafka reference: non-blocking retries](https://docs.spring.io/spring-kafka/reference/retrytopic.html)
+- [Confluent: Kafka error handling and dead letter queues](https://www.confluent.io/learn/kafka-dead-letter-queue/)
+- [Confluent Schema Registry: schema evolution and compatibility](https://docs.confluent.io/platform/current/schema-registry/fundamentals/schema-evolution.html)
+- [JSON Schema: getting started](https://json-schema.org/learn/getting-started-step-by-step)
+- [Martin Fowler: Tolerant Reader](https://martinfowler.com/bliki/TolerantReader.html)

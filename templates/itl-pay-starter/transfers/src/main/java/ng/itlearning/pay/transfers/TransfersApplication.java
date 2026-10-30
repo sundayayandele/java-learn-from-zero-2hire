@@ -2,8 +2,10 @@ package ng.itlearning.pay.transfers;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
+@EnableScheduling   // runs the outbox relay
 public class TransfersApplication {
 
 	public static void main(String[] args) {

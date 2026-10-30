@@ -210,7 +210,7 @@ Proxy, CGLIB, JDK dynamic proxy, `BeanPostProcessor`, self-invocation, `@Transac
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
 
 - [[QUESTION] Why doesn't @Transactional work when called within the same class?](https://www.youtube.com/watch?v=gDpmbUoEpPQ) · Laur Spilca · 16 min. Why @Transactional doesn't work when called within the same class.
 - [Spring Transaction Propagation Explained | Spring Boot Transactions Part 3](https://www.youtube.com/watch?v=LCltftLZ_W0) · CodeSnippet by Chetan · 28 min. Spring transaction propagation explained with runnable examples.

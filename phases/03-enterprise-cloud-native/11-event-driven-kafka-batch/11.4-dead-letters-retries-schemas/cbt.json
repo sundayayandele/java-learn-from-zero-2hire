@@ -1,0 +1,109 @@
+{
+  "topic": "11.4",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A consumer receives a record whose JSON can't be parsed.",
+      "question": "How should it be handled?",
+      "options": [
+        "Retry it with exponential back-off for an hour",
+        "Skip it and log at debug level",
+        "Send it to the dead-letter topic at once, because no retry will fix it",
+        "Stop the consumer until someone fixes it"
+      ],
+      "answer": 2,
+      "explanation": "Poison messages never succeed; mark the exception not retryable so it goes straight to the DLT."
+    },
+    {
+      "type": "single",
+      "scenario": "The SMS provider is down for 20 minutes. Notifications uses blocking retries with long back-off for every failure.",
+      "question": "What is the effect?",
+      "options": [
+        "The partition stalls: every later event waits, and long processing can trigger rebalances",
+        "Nothing; blocking retries are free",
+        "Events go to other partitions",
+        "Kafka extends retention automatically"
+      ],
+      "answer": 0,
+      "explanation": "Blocking retries hold the partition. For long outages, use retry topics or a shorter blocking window plus a DLT."
+    },
+    {
+      "type": "single",
+      "scenario": "Fraud uses @RetryableTopic with retry topics.",
+      "question": "What do you give up compared with blocking retries?",
+      "options": [
+        "The dead-letter topic",
+        "At-least-once delivery",
+        "Consumer groups",
+        "Per-key ordering: later records with the same key can be processed while one waits in a retry topic"
+      ],
+      "answer": 3,
+      "explanation": "Non-blocking retries keep the partition moving at the cost of ordering, which is fine when each key has one relevant event."
+    },
+    {
+      "type": "single",
+      "scenario": "Fraud and notifications both consume transfer-events and both use dead-letter topics.",
+      "question": "Why name the DLTs per consumer group?",
+      "options": [
+        "Kafka requires unique names per service",
+        "So a failed record can be inspected and replayed to only the consumer that failed",
+        "To keep retention shorter",
+        "Because DLTs can only have one partition"
+      ],
+      "answer": 1,
+      "explanation": "The same event may succeed for one group and fail for another; replaying it to everyone would be wrong."
+    },
+    {
+      "type": "single",
+      "scenario": "Records have been arriving in a DLT for three days and nobody noticed.",
+      "question": "What was missing?",
+      "options": [
+        "A larger partition count",
+        "Kafka transactions",
+        "An alert on DLT records, an owner and a runbook to inspect, fix and replay",
+        "A schema registry"
+      ],
+      "answer": 2,
+      "explanation": "A DLT without monitoring and a replay process is a slow way to lose data."
+    },
+    {
+      "type": "single",
+      "scenario": "A producer wants to rename amount to amountKobo in TransferReserved.",
+      "question": "What is the safe approach?",
+      "options": [
+        "Add amountKobo, keep amount until all consumers have moved, then remove it in a new version",
+        "Rename it in one release",
+        "Change the type of amount to a string",
+        "Reuse amount with the new meaning"
+      ],
+      "answer": 0,
+      "explanation": "Never rename, remove or retype fields consumers use; add, deprecate, then remove in a new version."
+    },
+    {
+      "type": "single",
+      "scenario": "A schema registry is set to BACKWARD compatibility.",
+      "question": "What does it guarantee?",
+      "options": [
+        "Old consumers can read new events",
+        "New consumers can read events written with the previous schema, so you can upgrade consumers first",
+        "Producers and consumers can upgrade in any order",
+        "Schemas can never change"
+      ],
+      "answer": 1,
+      "explanation": "Backward: new readers handle old data. Forward is the reverse; full is both."
+    },
+    {
+      "type": "single",
+      "scenario": "A message in the DLT came from a consumer bug that is now fixed.",
+      "question": "Why is replaying it safe even if it was in fact processed before?",
+      "options": [
+        "Because DLT records expire",
+        "Because the replay tool deletes duplicates",
+        "Because the consumer is idempotent, so processing it twice has one effect",
+        "Because Kafka marks replayed records"
+      ],
+      "answer": 2,
+      "explanation": "Idempotent consumers are what make replay a routine operation instead of a risk."
+    }
+  ]
+}

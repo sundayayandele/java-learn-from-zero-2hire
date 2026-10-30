@@ -1,6 +1,6 @@
 {
   "about": "Curated English YouTube videos for every topic. Source of truth for the Watch section of each topic README and for the Moodle topic pages. Rules: English audio and captions, embeddable, official or well-established channels first, 'optional' for anything over 30 minutes. Checked by lms/check_videos.py; minutes and published are filled from YouTube by `python lms/check_videos.py --fill`.",
-  "checked": "2026-10-29",
+  "checked": "2026-10-30",
   "topics": {
     "0.1": [
       {
@@ -2155,6 +2155,96 @@
         "minutes": 6.0,
         "published": "2022-10-20",
         "why": "Scanning container images with Trivy, from Aqua Security."
+      }
+    ],
+    "11.1": [
+      {
+        "id": "ieIC07fqk_E",
+        "title": "Kafka Consumer Groups Explained | Apache Kafka® On The Go",
+        "channel": "Confluent, an IBM Company",
+        "minutes": 1.7,
+        "published": "2022-12-27",
+        "why": "How consumer groups share a topic's partitions, from Confluent's own team."
+      },
+      {
+        "id": "wX6a-XS5ROQ",
+        "title": "Kafka Architecture: Why It’s Fast and Fault-Tolerant",
+        "channel": "Anton Putra",
+        "minutes": 12.7,
+        "published": "2026-10-21",
+        "why": "Kafka's architecture: the log, partitions, replication and why it is fast and fault-tolerant."
+      }
+    ],
+    "11.2": [
+      {
+        "id": "xCyW3S-vgGA",
+        "title": "Spring Boot + Apache Kafka Tutorial - #5 - Configure Kafka Producer and Consumer",
+        "channel": "Java Guides",
+        "minutes": 9.9,
+        "published": "2022-05-08",
+        "why": "Configuring a Spring Boot producer and consumer step by step (Java Guides)."
+      },
+      {
+        "id": "GMmRtSFQ5Z0",
+        "title": "RabbitMQ vs Kafka | Trade-off's to choose one over other | Tech Primers",
+        "channel": "Tech Primers",
+        "minutes": 14.5,
+        "published": "2021-02-15",
+        "why": "The trade-offs between RabbitMQ and Kafka, and when to choose each."
+      }
+    ],
+    "11.3": [
+      {
+        "id": "5YLpjPmsPCA",
+        "title": "What is the Transactional Outbox Pattern? | Designing Event-Driven Microservices",
+        "channel": "Confluent, an IBM Company",
+        "minutes": 5.5,
+        "published": "2024-02-08",
+        "why": "The transactional outbox and the dual-write problem it solves, from Confluent."
+      },
+      {
+        "id": "--O9JUsvtEg",
+        "title": "Saga Pattern Explained: Distributed Transactions in Microservices",
+        "channel": "System Design Lab",
+        "minutes": 23.4,
+        "published": "2026-07-20",
+        "why": "Sagas: local transactions, compensations, orchestration and choreography."
+      }
+    ],
+    "11.4": [
+      {
+        "id": "aNBSd7T-RGA",
+        "title": "Kafka Error Handling with Spring Boot | Retry Strategies & Dead Letter Topics | JavaTechie",
+        "channel": "Java Techie",
+        "minutes": 28.6,
+        "published": "2024-03-01",
+        "why": "Retries and dead-letter topics with Spring Boot and Spring for Apache Kafka."
+      },
+      {
+        "id": "vQ4mPepAM7Q",
+        "title": "Schema Compatibility | Schema Registry 101",
+        "channel": "Confluent, an IBM Company",
+        "minutes": 5.2,
+        "published": "2022-11-05",
+        "why": "Schema compatibility modes in a schema registry: backward, forward and full."
+      }
+    ],
+    "11.5": [
+      {
+        "id": "8UdSKq4u_q0",
+        "title": "How to write spring batch with chunk | Spring Batch 5 | Spring Boot 3",
+        "channel": "Java Tech Solutions ",
+        "minutes": 12.5,
+        "published": "2023-06-18",
+        "why": "Building a chunk-oriented Spring Batch job: reader, processor and writer."
+      },
+      {
+        "id": "2SLZBKU55TI",
+        "title": "Scaling a Spring Batch Application  -  Exploring Job Repository - 014",
+        "channel": "Bayonne Sensei",
+        "minutes": 5.0,
+        "published": "2022-04-06",
+        "why": "Inside the job repository: the tables that record every run and make restarts possible."
       }
     ]
   }

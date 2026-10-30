@@ -300,7 +300,7 @@ Actuator, endpoint, exposure, management port, health indicator, health group, l
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-29. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
 
 - [The #1 Spring Boot Starter you should include in every single application](https://www.youtube.com/watch?v=4OVe0MWgZ4k) · Dan Vega · 19 min. Dan Vega on why Actuator belongs in every application.
 - [Spring Boot Quick Start 33 - Spring Boot Actuator](https://www.youtube.com/watch?v=ojc_Jy_0EgI) · Java Brains · 5 min. A five-minute first look at the Actuator endpoints.
