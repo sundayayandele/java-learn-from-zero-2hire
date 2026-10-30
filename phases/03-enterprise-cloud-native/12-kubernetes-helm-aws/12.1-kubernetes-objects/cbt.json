@@ -1,0 +1,109 @@
+{
+  "topic": "12.1",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A transfers pod crashes at 3 a.m. and nobody is awake.",
+      "question": "Why does a new one start by itself?",
+      "options": [
+        "The kubelet restarts every container forever regardless of how it was created",
+        "The Deployment declares two replicas, and its controller keeps reality equal to that desired state",
+        "The Service restarts pods it can't reach",
+        "Kubernetes copies the pod from etcd's backup"
+      ],
+      "answer": 1,
+      "explanation": "Controllers continuously reconcile actual state with the declared desired state."
+    },
+    {
+      "type": "single",
+      "scenario": "Notifications needs to call transfers. A developer hard-codes the IP address of a transfers pod.",
+      "question": "What goes wrong, and what should they use?",
+      "options": [
+        "Nothing; pod IPs are permanent",
+        "Pods can't talk to each other",
+        "Pod IPs change whenever pods are replaced; call the Service name, http://transfers:8082",
+        "They must use the node's IP address"
+      ],
+      "answer": 2,
+      "explanation": "A Service gives a stable name and spreads traffic across the ready pods."
+    },
+    {
+      "type": "single",
+      "scenario": "A Service exists, but every request to it fails, and `kubectl get endpointslices` shows no endpoints.",
+      "question": "What is the most likely cause?",
+      "options": [
+        "The Service's selector doesn't match the pods' labels",
+        "The pods use too much memory",
+        "The namespace has too many Services",
+        "The Service needs a LoadBalancer type"
+      ],
+      "answer": 0,
+      "explanation": "Labels connect Services to pods; a mismatched selector selects nothing."
+    },
+    {
+      "type": "single",
+      "scenario": "A team stores the database password in a Kubernetes Secret and says it's encrypted.",
+      "question": "What is accurate?",
+      "options": [
+        "Secrets are encrypted with the cluster's private key in the YAML",
+        "Secrets can only be read by the pod that uses them",
+        "Secrets are encrypted only when mounted as files",
+        "Secret values are base64-encoded, not encrypted; use encryption at rest, RBAC and a secrets manager with External Secrets"
+      ],
+      "answer": 3,
+      "explanation": "Base64 is an encoding. Protect Secrets with encryption at rest, access control, and by keeping the source of truth outside Git."
+    },
+    {
+      "type": "single",
+      "scenario": "You need PostgreSQL for a production banking service on EKS.",
+      "question": "What is the best choice?",
+      "options": [
+        "A hand-written StatefulSet with one replica",
+        "Amazon RDS, or a database operator such as CloudNativePG that handles backups and failover",
+        "A Deployment with an emptyDir volume",
+        "A ConfigMap holding the data"
+      ],
+      "answer": 1,
+      "explanation": "StatefulSets give identity and disks but not backups, failover or upgrades; managed services or operators do."
+    },
+    {
+      "type": "single",
+      "scenario": "It's 2026 and a team is choosing how to route external traffic into a new cluster.",
+      "question": "What should they use?",
+      "options": [
+        "ingress-nginx, because it's the default",
+        "NodePort Services on every node",
+        "The Gateway API with an implementation such as Envoy Gateway; ingress-nginx was retired in March 2026",
+        "A pod with hostNetwork"
+      ],
+      "answer": 2,
+      "explanation": "The Gateway API is Ingress's successor, and ingress-nginx no longer receives fixes."
+    },
+    {
+      "type": "single",
+      "scenario": "A security review asks why ITL Pay pods set readOnlyRootFilesystem: true.",
+      "question": "What is the main benefit?",
+      "options": [
+        "Faster start-up",
+        "Lower memory use",
+        "Spring Boot requires it",
+        "An attacker who gets code execution can't write tools or modify files in the container"
+      ],
+      "answer": 3,
+      "explanation": "Least privilege: non-root, no privilege escalation, no capabilities and a read-only filesystem, with /tmp as the only writable mount."
+    },
+    {
+      "type": "single",
+      "scenario": "A pod shows CrashLoopBackOff.",
+      "question": "Which command most directly shows why it's crashing?",
+      "options": [
+        "kubectl logs <pod> --previous",
+        "kubectl get nodes",
+        "kubectl top pods",
+        "kubectl get svc"
+      ],
+      "answer": 0,
+      "explanation": "The previous container's logs show why it exited; describe shows events such as OOMKilled."
+    }
+  ]
+}

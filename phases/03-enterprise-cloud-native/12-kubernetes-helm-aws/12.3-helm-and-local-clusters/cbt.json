@@ -1,0 +1,109 @@
+{
+  "topic": "12.3",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A team keeps a copy of all their YAML per environment, and production differs from staging in ways nobody planned.",
+      "question": "What does Helm offer?",
+      "options": [
+        "Automatic environment detection",
+        "One templated chart, with only the differences in small values files",
+        "A GUI for editing YAML",
+        "Faster pods"
+      ],
+      "answer": 1,
+      "explanation": "Shared templates plus per-environment values prevent drift."
+    },
+    {
+      "type": "single",
+      "scenario": "Inside `{{- range $name, $svc := .Values.services }}`, a template uses `.Values.image.tag` and fails.",
+      "question": "Why, and what's the fix?",
+      "options": [
+        "Inside range, `.` is the current item; use `$.Values.image.tag` to reach the root",
+        "Helm doesn't support nested values",
+        "range needs quotes",
+        "image must be defined per service"
+      ],
+      "answer": 0,
+      "explanation": "`$` always refers to the chart's root context."
+    },
+    {
+      "type": "single",
+      "scenario": "A chart is installed with `-f values.yaml -f values-aws.yaml`, and both set `defaults.resources`.",
+      "question": "Which value is used?",
+      "options": [
+        "The one in values.yaml",
+        "Helm fails on duplicates",
+        "The one in values-aws.yaml, because later files override earlier ones",
+        "The smaller of the two"
+      ],
+      "answer": 2,
+      "explanation": "Values files layer in order; the last one wins for the same key."
+    },
+    {
+      "type": "single",
+      "scenario": "A CI pipeline runs `helm upgrade` without `--wait`, and the new pods never become ready.",
+      "question": "What happens?",
+      "options": [
+        "Helm rolls back automatically",
+        "The pods are deleted",
+        "The cluster refuses the upgrade",
+        "The command succeeds anyway, so CI reports a good release; use --wait so it fails"
+      ],
+      "answer": 3,
+      "explanation": "--wait makes Helm wait for readiness and fail the command if it doesn't come."
+    },
+    {
+      "type": "single",
+      "scenario": "A release is broken after an upgrade.",
+      "question": "Which command restores the previous version?",
+      "options": [
+        "helm rollback <release> <revision>",
+        "helm uninstall",
+        "kubectl delete deploy --all",
+        "helm lint"
+      ],
+      "answer": 0,
+      "explanation": "Helm stores each revision, so rollback re-applies a previous one."
+    },
+    {
+      "type": "single",
+      "scenario": "The HPA manages the gateway, but each `helm upgrade` resets it to 2 replicas.",
+      "question": "What's wrong in the chart?",
+      "options": [
+        "The HPA is in another namespace",
+        "The Deployment sets replicas; leave it out when autoscaling is enabled",
+        "The chart version wasn't bumped",
+        "metrics-server is missing"
+      ],
+      "answer": 1,
+      "explanation": "The HPA owns the replica count; a chart that sets it fights the autoscaler."
+    },
+    {
+      "type": "single",
+      "scenario": "Your laptop needs a local cluster that's fast to create, scriptable and multi-node, using images you built.",
+      "question": "Which is the closest fit?",
+      "options": [
+        "A managed EKS cluster",
+        "kind, loading images with kind load docker-image",
+        "Docker Compose",
+        "A single pod with hostNetwork"
+      ],
+      "answer": 1,
+      "explanation": "kind runs Kubernetes nodes as Docker containers and loads local images without a registry."
+    },
+    {
+      "type": "single",
+      "scenario": "A reviewer wants to see exactly what a chart change will apply in the AWS environment, without a cluster.",
+      "question": "What should they run?",
+      "options": [
+        "helm install --dry-run on production",
+        "kubectl get all",
+        "helm history",
+        "helm template with -f values-aws.yaml (and helm lint)"
+      ],
+      "answer": 3,
+      "explanation": "Rendering locally shows the exact YAML; lint catches common errors."
+    }
+  ]
+}

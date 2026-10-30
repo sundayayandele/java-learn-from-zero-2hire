@@ -1,0 +1,109 @@
+{
+  "topic": "12.5",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A Terraform plan shows `-/+ resource \"aws_db_instance\" ... (forces replacement)`.",
+      "question": "What does that mean?",
+      "options": [
+        "The database will be patched in place",
+        "Only its tags change",
+        "Terraform will delete the database and create a new one; stop and reconsider",
+        "Terraform will take a snapshot"
+      ],
+      "answer": 2,
+      "explanation": "Read every plan; production databases get deletion protection and prevent_destroy."
+    },
+    {
+      "type": "single",
+      "scenario": "Two engineers run terraform apply at the same time against state stored on one laptop.",
+      "question": "What should the team have?",
+      "options": [
+        "Remote state in S3 with versioning and locking (use_lockfile)",
+        "State committed to Git",
+        "Separate state per engineer",
+        "No state at all"
+      ],
+      "answer": 0,
+      "explanation": "Remote, locked, versioned state prevents corruption and loss."
+    },
+    {
+      "type": "single",
+      "scenario": "CI needs to run terraform plan against AWS.",
+      "question": "What is the recommended way to authenticate?",
+      "options": [
+        "An IAM user's access keys in GitHub secrets",
+        "The root account",
+        "GitHub's OIDC token to assume a scoped IAM role for the job",
+        "A password in the workflow file"
+      ],
+      "answer": 2,
+      "explanation": "OIDC gives short-lived credentials with no stored keys."
+    },
+    {
+      "type": "single",
+      "scenario": "Argo CD has selfHeal on. An engineer scales fraud to 3 replicas with kubectl during an incident.",
+      "question": "What happens?",
+      "options": [
+        "Argo CD deletes the namespace",
+        "The change stays until the next merge",
+        "Argo CD sends an email and does nothing",
+        "Argo CD puts fraud back to what Git says; the fix must be made as a pull request"
+      ],
+      "answer": 3,
+      "explanation": "Self-heal keeps the cluster equal to Git, which makes every change reviewable."
+    },
+    {
+      "type": "single",
+      "scenario": "How does a new image version reach production in a GitOps setup?",
+      "question": "Which flow is correct?",
+      "options": [
+        "CI runs helm upgrade against production directly",
+        "CI pushes the image, then a pull request changes the tag in the production values; merging it lets Argo CD roll it out",
+        "An engineer edits the Deployment with kubectl",
+        "Argo CD pulls the newest image automatically from any registry"
+      ],
+      "answer": 1,
+      "explanation": "Deployments become commits with authors, reviews and reverts."
+    },
+    {
+      "type": "single",
+      "scenario": "Which file should be committed alongside the Terraform code?",
+      "question": "Choose one.",
+      "options": [
+        ".terraform.lock.hcl, which pins provider versions",
+        ".terraform/ with downloaded providers",
+        "terraform.tfstate",
+        "backend.hcl with the state bucket's details for your account"
+      ],
+      "answer": 0,
+      "explanation": "The lock file makes everyone and CI use the same provider versions; state, caches and local config stay out."
+    },
+    {
+      "type": "single",
+      "scenario": "A team uses Terraform both for the VPC and to deploy every application release.",
+      "question": "What's the problem?",
+      "options": [
+        "Terraform can't create Kubernetes objects",
+        "It's too fast",
+        "Application changes many times a day share a pipeline and state with rarely changed, high-risk infrastructure; keep them separate",
+        "Argo CD forbids it"
+      ],
+      "answer": 2,
+      "explanation": "Terraform for cloud resources, GitOps for platform add-ons and applications."
+    },
+    {
+      "type": "single",
+      "scenario": "Why might a bank choose OpenTofu over Terraform?",
+      "question": "Which reason is accurate?",
+      "options": [
+        "It's the only tool supporting AWS",
+        "It's open source under MPL after Terraform's move to the Business Source Licence in 2023, and reads the same code",
+        "It doesn't need state",
+        "It's built into Kubernetes"
+      ],
+      "answer": 1,
+      "explanation": "Licensing, not features, is the usual reason."
+    }
+  ]
+}

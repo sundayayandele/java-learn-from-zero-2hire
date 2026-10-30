@@ -164,13 +164,13 @@ Projects: E-commerce services: User, Product, Order, Payment; Banking services: 
 
 Projects: Event-driven order and payment processing; Real-time transaction notifications; Audit-logging pipeline; End-of-day interest posting batch job that can restart after a failure.
 
-### Module 12: Kubernetes, Helm & Cloud on AWS (weeks 30-31)
+### [Module 12: Kubernetes, Helm & Cloud on AWS](phases/03-enterprise-cloud-native/12-kubernetes-helm-aws/README.md) (weeks 30-31)
 
-- 12.1 Kubernetes objects: Pods, Deployments, Services, Ingress, ConfigMaps, Secrets
-- 12.2 Probes, resource limits and autoscaling for JVM workloads
-- 12.3 Helm charts and local clusters with kind or Minikube
-- 12.4 AWS essentials: IAM, VPC, RDS, S3, EKS; overview of AKS, GKE and OpenShift
-- 12.5 Infrastructure as Code with Terraform; GitOps with Argo CD
+- [12.1 Kubernetes objects: Pods, Deployments, Services, Ingress, ConfigMaps, Secrets](phases/03-enterprise-cloud-native/12-kubernetes-helm-aws/12.1-kubernetes-objects/README.md)
+- [12.2 Probes, resource limits and autoscaling for JVM workloads](phases/03-enterprise-cloud-native/12-kubernetes-helm-aws/12.2-probes-resources-autoscaling/README.md)
+- [12.3 Helm charts and local clusters with kind or Minikube](phases/03-enterprise-cloud-native/12-kubernetes-helm-aws/12.3-helm-and-local-clusters/README.md)
+- [12.4 AWS essentials: IAM, VPC, RDS, S3, EKS; overview of AKS, GKE and OpenShift](phases/03-enterprise-cloud-native/12-kubernetes-helm-aws/12.4-aws-essentials-eks/README.md)
+- [12.5 Infrastructure as Code with Terraform; GitOps with Argo CD](phases/03-enterprise-cloud-native/12-kubernetes-helm-aws/12.5-terraform-and-gitops/README.md)
 
 Projects: Helm chart for your microservices; Deploy the capstone to a managed Kubernetes cluster; Terraform module for database and storage.
 

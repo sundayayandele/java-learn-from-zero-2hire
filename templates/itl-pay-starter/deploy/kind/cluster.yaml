@@ -1,0 +1,6 @@
+# A one-node local cluster for ITL Pay: kind create cluster --config deploy/kind/cluster.yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: itl-pay
+nodes:
+  - role: control-plane

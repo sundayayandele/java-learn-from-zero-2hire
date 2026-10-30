@@ -1,0 +1,25 @@
+# GitOps (topic 12.5): Argo CD keeps the cluster equal to what's in Git.
+# Point repoURL at YOUR repository, then: kubectl apply -n argocd -f deploy/argocd/itl-pay-local.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: itl-pay-local
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/sundayayandele/java-learn-from-zero-2hire.git
+    targetRevision: main
+    path: templates/itl-pay-starter/deploy/helm/itl-pay
+    helm:
+      valueFiles:
+        - values-local.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: itl-pay
+  syncPolicy:
+    automated:
+      prune: true       # delete what was removed from Git
+      selfHeal: true    # undo changes made by hand with kubectl
+    syncOptions:
+      - CreateNamespace=true

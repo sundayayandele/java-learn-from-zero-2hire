@@ -1,0 +1,39 @@
+## What this module gives you
+
+Two weeks on running ITL Pay the way banks and fintechs run services today: on Kubernetes, packaged with Helm, on a local cluster first (week 30), then on AWS with the infrastructure written as Terraform and deployments driven from Git by Argo CD (week 31).
+
+Everything runs locally for free on **kind** (Kubernetes 1.37 in Docker), with **Helm 4**, the **Gateway API** through Envoy Gateway, **Terraform 1.17** and **Argo CD 3.5**. The [ITL Pay starter](../../../templates/itl-pay-starter/README.md) now has a `deploy/` folder with every lesson's files, tested on kind: plain manifests for PostgreSQL and Kafka, a Helm chart for the six services (probes, limits, autoscaling, a nightly CronJob, a Gateway API route), Terraform for AWS (VPC, EKS, RDS, S3, ECR and a budget) and an Argo CD Application. `deploy/kind/up.sh` builds the whole local system with one command.
+
+**Cost warning.** A managed cluster costs money from the moment it exists: the EKS control plane alone is about US$73 a month, plus nodes, a NAT gateway and the database. Set a **budget alarm first**, create the cluster, deploy, record your evidence and **destroy it the same day**. A US$10–20 VPS running k3s is an equally valid target for the cloud deployment.
+
+**Weekly rhythm (20–25 hours):** read the lessons and code along (30%), videos (10%), topic quizzes (5%), the module project (20%) and your capstone system's `v0.3` (35%).
+
+**Exit check for Module 12:** the five topic quizzes attempted (aim for 70%+), one module project below, and capstone release `v0.3` tagged with ADR 6 and ADR 7.
+
+## Capstone step: ITL Pay `v0.3`
+
+Build on your `v0.2` and the [starter's `deploy/` folder](../../../templates/itl-pay-starter/README.md), and deliver:
+
+- **Chart:** one Helm chart for all your services (including the ledger), with values files for local and cloud; probes, requests and limits, security contexts, a PodDisruptionBudget for every service with more than one replica, and the interest job as a CronJob.
+- **Local:** the whole system on kind from one script, reachable through a Gateway API route; evidence that a rolling restart under load drops no requests.
+- **Autoscaling:** an HPA on the gateway and transfers, with a load test showing it scale up and back down.
+- **Cloud:** Terraform for the network, cluster, database, object storage, image registry and a budget, with remote state; the system deployed to a managed cluster (EKS, AKS, GKE) or a k3s VPS, and the evidence recorded before you destroy it.
+- **GitOps:** an Argo CD Application that deploys from your repository; a change merged to `main` reaches the cluster without anyone running `helm` or `kubectl`.
+- **Secrets:** no passwords in Git; in the cloud they come from a secrets manager.
+- **Docs:** ADR 6 (how ITL Pay runs on Kubernetes: probes, resources, scaling) and ADR 7 (cloud and GitOps choices, including cost), and a deployment runbook.
+
+## Module projects
+
+Pick **at least one**, in addition to your capstone step.
+
+### Project 12.A: Helm chart for your microservices
+
+Take your Phase 2 capstone (or two of its services) and write a production-quality chart: values schema (`values.schema.json`), probes, resources, security contexts, a PodDisruptionBudget, an HPA, a ConfigMap for non-secret settings, and a `NOTES.txt`. **Acceptance:** `helm lint` passes with strict mode, a `helm template` snapshot test in CI catches an accidental change, and `helm upgrade` then `helm rollback` both work on kind.
+
+### Project 12.B: Deploy the capstone to a managed Kubernetes cluster
+
+Deploy ITL Pay to EKS (or AKS, GKE, or a k3s VPS) with images in a private registry, TLS on the public route, and logs reachable from the cluster. **Acceptance:** a screen recording or screenshots of a transfer going through the public URL, `kubectl get pods` with everything ready, the bill for the day, and the `terraform destroy` output.
+
+### Project 12.C: Terraform module for database and storage
+
+Write a reusable Terraform module that creates a PostgreSQL database (RDS) with its subnet group, security group and Secrets Manager password, and a private, versioned, encrypted S3 bucket with a lifecycle rule. **Acceptance:** inputs and outputs documented, `terraform validate` and `fmt` in CI, a `plan` that creates two environments (dev and staging) from the same module with different sizes, and a written cost estimate.

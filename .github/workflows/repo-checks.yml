@@ -77,3 +77,30 @@ jobs:
       - name: Build and test ${{ matrix.project }} on Java 25
         working-directory: ${{ matrix.project }}
         run: ./mvnw -B verify ${{ matrix.args }}
+
+  deploy:
+    # The ITL Pay starter's Kubernetes and cloud files (Module 12): chart renders for every environment, Terraform is valid
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: templates/itl-pay-starter/deploy
+    steps:
+      - uses: actions/checkout@v5
+      - uses: azure/setup-helm@v4
+        with:
+          version: v4.3.1
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.17.1
+      - name: Helm chart lints and renders with local and AWS values
+        run: |
+          for env in local aws; do
+            helm lint helm/itl-pay -f helm/itl-pay/values-$env.yaml
+            helm template itl-pay helm/itl-pay -f helm/itl-pay/values-$env.yaml > /dev/null
+          done
+      - name: Terraform is formatted and valid
+        working-directory: templates/itl-pay-starter/deploy/terraform/aws
+        run: |
+          terraform fmt -check -recursive
+          terraform init -backend=false -input=false
+          terraform validate

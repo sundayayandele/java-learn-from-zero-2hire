@@ -3,7 +3,7 @@
 
 # 11.5 Batch jobs and scheduling in banks: Spring Batch, chunking, restarts and end-of-day runs
 
-← [11.4 Dead-letter topics, retries and schema evolution](../11.4-dead-letters-retries-schemas/README.md) · [Module 11](../README.md) · [Phase 3](../../README.md)
+← [11.4 Dead-letter topics, retries and schema evolution](../11.4-dead-letters-retries-schemas/README.md) · [Module 11](../README.md) · [Phase 3](../../README.md) · [12.1 Kubernetes objects](../../12-kubernetes-helm-aws/12.1-kubernetes-objects/README.md) →
 
 > **Week 29** · Module 11: Event-Driven Architecture with Kafka, and Batch Processing · Website topic covered: *Spring Batch jobs, steps and chunks, readers and writers, restartability, partitioning and scheduling end-of-day banking runs*
 
@@ -319,4 +319,4 @@ Which change speeds it up while keeping restarts reliable?
 
 ---
 
-← [11.4 Dead-letter topics, retries and schema evolution](../11.4-dead-letters-retries-schemas/README.md) · [Module 11](../README.md) · [Phase 3](../../README.md)
+← [11.4 Dead-letter topics, retries and schema evolution](../11.4-dead-letters-retries-schemas/README.md) · [Module 11](../README.md) · [Phase 3](../../README.md) · [12.1 Kubernetes objects](../../12-kubernetes-helm-aws/12.1-kubernetes-objects/README.md) →

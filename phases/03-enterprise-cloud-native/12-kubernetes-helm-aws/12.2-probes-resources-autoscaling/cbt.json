@@ -1,0 +1,109 @@
+{
+  "topic": "12.2",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "Transfers' liveness probe checks the database. The database fails over for 30 seconds.",
+      "question": "What happens?",
+      "options": [
+        "Nothing; liveness is only informational",
+        "Every transfers pod is restarted at once, which doesn't fix the database and turns a blip into an outage",
+        "Only one pod restarts",
+        "Kubernetes pauses the database"
+      ],
+      "answer": 1,
+      "explanation": "Liveness must check only the process itself, never its dependencies."
+    },
+    {
+      "type": "single",
+      "scenario": "A Spring Boot service takes 70 seconds to start on a busy node, and liveness kills it before it finishes.",
+      "question": "What fixes this?",
+      "options": [
+        "Remove the liveness probe",
+        "A shorter liveness timeout",
+        "A startup probe that allows enough time before liveness starts counting",
+        "Restart the node"
+      ],
+      "answer": 2,
+      "explanation": "The startup probe gives slow starts room without weakening liveness afterwards."
+    },
+    {
+      "type": "single",
+      "scenario": "A container has a 512Mi memory limit and the JVM runs with -XX:MaxRAMPercentage=90.",
+      "question": "What is the risk?",
+      "options": [
+        "The heap plus non-heap memory exceeds the limit and the container is OOMKilled",
+        "The JVM refuses to start",
+        "CPU throttling",
+        "Nothing; the JVM stays within the limit automatically"
+      ],
+      "answer": 0,
+      "explanation": "MaxRAMPercentage sizes only the heap; metaspace, threads and buffers need room too."
+    },
+    {
+      "type": "single",
+      "scenario": "JVM services have tight CPU limits, and start-up takes several minutes.",
+      "question": "Why?",
+      "options": [
+        "CPU limits slow down the network",
+        "The JVM needs several cores while starting and during GC, and CPU limits throttle exactly then",
+        "Memory limits are too high",
+        "Probes use too much CPU"
+      ],
+      "answer": 1,
+      "explanation": "Many teams set realistic CPU requests and no (or generous) CPU limits for JVMs."
+    },
+    {
+      "type": "single",
+      "scenario": "ITL Pay's gateway was restarted under steady load without a pre-stop pause; 4 of 700 requests failed.",
+      "question": "Why did they fail?",
+      "options": [
+        "The new pods weren't ready",
+        "Kafka was rebalancing",
+        "The HPA removed pods",
+        "Routing learned about the stopping pods slightly after they began shutting down, so a few requests reached closed processes"
+      ],
+      "answer": 3,
+      "explanation": "A short pre-stop sleep keeps old pods serving until routing has caught up; graceful shutdown finishes in-flight requests."
+    },
+    {
+      "type": "single",
+      "scenario": "Right after every rollout, the HPA scales the gateway from 2 to 4 pods with almost no traffic.",
+      "question": "What is the best fix?",
+      "options": [
+        "Turn off the HPA",
+        "Remove readiness probes",
+        "A realistic CPU request and a scale-up stabilisation window, so JVM warm-up CPU doesn't trigger scaling",
+        "Set replicas: 4 in the Deployment"
+      ],
+      "answer": 2,
+      "explanation": "Warm-up CPU against a small request reads as very high utilisation; the window makes the HPA wait for sustained load."
+    },
+    {
+      "type": "single",
+      "scenario": "Notifications consumes a topic with 3 partitions and falls behind.",
+      "question": "What is the right scaling signal and limit?",
+      "options": [
+        "Consumer lag, with KEDA, and no more than 3 useful consumers in the group",
+        "CPU only, to 20 pods",
+        "Memory use",
+        "Number of HTTP requests"
+      ],
+      "answer": 0,
+      "explanation": "Lag measures the backlog; consumers beyond the partition count sit idle."
+    },
+    {
+      "type": "single",
+      "scenario": "A node is drained for an upgrade while the gateway runs 3 replicas.",
+      "question": "What stops all 3 being evicted at once?",
+      "options": [
+        "The HPA",
+        "The readiness probe",
+        "A PodDisruptionBudget with maxUnavailable: 1",
+        "terminationGracePeriodSeconds"
+      ],
+      "answer": 2,
+      "explanation": "PDBs limit voluntary disruptions such as drains."
+    }
+  ]
+}

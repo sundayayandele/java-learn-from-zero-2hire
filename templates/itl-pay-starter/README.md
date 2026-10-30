@@ -1,6 +1,6 @@
 # ITL Pay starter (Phase 3 capstone system)
 
-← [Phase 3](../../phases/03-enterprise-cloud-native/README.md) · [Module 10](../../phases/03-enterprise-cloud-native/10-microservices-distributed-systems/README.md) · [Module 11](../../phases/03-enterprise-cloud-native/11-event-driven-kafka-batch/README.md)
+← [Phase 3](../../phases/03-enterprise-cloud-native/README.md) · [Module 10](../../phases/03-enterprise-cloud-native/10-microservices-distributed-systems/README.md) · [Module 11](../../phases/03-enterprise-cloud-native/11-event-driven-kafka-batch/README.md) · [Module 12](../../phases/03-enterprise-cloud-native/12-kubernetes-helm-aws/README.md)
 
 The starting point for the Phase 3 capstone system: Spring Boot 4.1 services (Java 21) built by one Maven command, with Spring Cloud 2025.1, Spring Modulith 2.1, Spring for Apache Kafka 4.1 and Spring Batch 6. It holds the code from every lesson so far, tested.
 
@@ -38,6 +38,28 @@ docker compose run --rm interest-batch businessDate=2026-10-30                  
 
 Balances in `accounts` are still in memory with two demo accounts (A1 ₦50,000, A2 ₦1,000), so the flow is easy to follow.
 
+## On Kubernetes (Module 12)
+
+`deploy/` runs the same system on Kubernetes, tested on kind (Kubernetes 1.37) with Helm 4, Envoy Gateway 1.9 and Argo CD 3.5:
+
+| Path | What it is | Topic |
+| --- | --- | --- |
+| `deploy/kind/up.sh` | Creates a local cluster and deploys everything with one command (5–10 minutes; about 4 GiB of memory) | 12.3 |
+| `deploy/kind/gateway.yaml` | The Gateway API gateway (Envoy Gateway) that lets traffic into the cluster | 12.1 |
+| `deploy/infra/` | Plain manifests for PostgreSQL and Kafka as StatefulSets, for kind only | 12.1 |
+| `deploy/helm/itl-pay/` | The Helm chart for the six services: probes, requests and limits, security contexts, autoscaling, disruption budgets, the nightly interest CronJob and the HTTPRoute; `values-local.yaml` and `values-aws.yaml` | 12.1–12.3 |
+| `deploy/terraform/aws/` | Terraform for AWS: VPC, EKS, RDS PostgreSQL 18, a statements bucket, ECR repositories and a budget alarm. Validated, not applied: applying it costs money | 12.4, 12.5 |
+| `deploy/argocd/` | An Argo CD Application that deploys the chart from Git | 12.5 |
+
+```bash
+deploy/kind/up.sh                               # needs Docker, kind, kubectl and Helm
+kubectl -n envoy-gateway-system port-forward \
+    svc/$(kubectl -n envoy-gateway-system get svc -l gateway.envoyproxy.io/owning-gateway-name=itl-pay -o name | cut -d/ -f2) 8088:80
+curl -s localhost:8088/api/accounts/A1
+kubectl -n itl-pay create job eod-now --from=cronjob/interest-batch    # run tonight's interest job now
+kind delete cluster --name itl-pay              # remove everything
+```
+
 ## Your `v0.1` (Module 10)
 
 Copy this folder into your own repository, then:
@@ -57,3 +79,12 @@ Copy this folder into your own repository, then:
 4. Write the **dead-letter runbook**: how you alert on a DLT, inspect a message, fix and **replay** it (a small replay command or endpoint), with a test.
 5. Point **interest-batch** at your ledger's balances (a read model fed by `JournalPosted` events, or the ledger's API), and post interest as journals, still one per account per day.
 6. Write ADR 4 (events and the outbox: why not "save, then send") and ADR 5 (saga style: why Transfers orchestrates). Tag `v0.2`.
+
+## Your `v0.3` (Module 12)
+
+1. Add your ledger (and accounts' database) to the chart, and give accounts a second replica once its balances are in PostgreSQL.
+2. Run the whole system on kind from one script, and record a rolling restart under load with no failed requests.
+3. Load-test the gateway and transfers, and show the HPA scaling up and back down.
+4. Apply the Terraform (or your own for AKS, GKE or a k3s VPS) with remote state and a budget alarm first; deploy with `values-aws.yaml`, passwords synced from the secrets manager by External Secrets; record the evidence; destroy it the same day.
+5. Point an Argo CD Application at your repository, and show a merged change reaching the cluster with nobody running `helm` or `kubectl`.
+6. Write ADR 6 (running on Kubernetes: probes, resources, scaling) and ADR 7 (cloud, Terraform and GitOps, with the cost). Tag `v0.3`.

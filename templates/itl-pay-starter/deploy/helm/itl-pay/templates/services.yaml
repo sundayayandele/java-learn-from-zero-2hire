@@ -1,0 +1,129 @@
+{{- range $name, $svc := .Values.services }}
+{{- $replicas := $svc.replicas | default $.Values.defaults.replicas }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  labels:
+    app.kubernetes.io/name: {{ $name }}
+    {{- include "itl-pay.labels" $ | nindent 4 }}
+spec:
+  {{- if not ($svc.autoscaling).enabled }}
+  replicas: {{ $replicas }}                     # with autoscaling on, the HPA owns the replica count
+  {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ $name }}
+  {{- if eq $name "accounts" }}
+  strategy:
+    type: Recreate                              # in-memory state: never run two at once, even during a rollout
+  {{- end }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ $name }}
+        {{- include "itl-pay.labels" $ | nindent 8 }}
+    spec:
+      securityContext:
+        {{- include "itl-pay.podSecurity" $ | nindent 8 }}
+      terminationGracePeriodSeconds: 45         # > preStop sleep + Spring's shutdown timeout
+      containers:
+        - name: {{ $name }}
+          image: {{ include "itl-pay.image" (dict "root" $ "name" $name) }}
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ $svc.port }}
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: {{ $.Values.defaults.javaOptions | quote }}
+            - name: SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE
+              value: 30s
+            {{- include "itl-pay.connections" (dict "root" $ "svc" $svc) | nindent 12 }}
+            {{- range $key, $value := $svc.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          startupProbe:                         # gives a slow JVM start up to 3 minutes before liveness counts
+            httpGet: { path: /actuator/health/liveness, port: http }
+            periodSeconds: 5
+            failureThreshold: 36
+          livenessProbe:                        # "restart me": only the app's own state, never its dependencies
+            httpGet: { path: /actuator/health/liveness, port: http }
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:                       # "send me traffic": false while starting and while shutting down
+            httpGet: { path: /actuator/health/readiness, port: http }
+            periodSeconds: 5
+            failureThreshold: 3
+          lifecycle:
+            preStop:
+              sleep: { seconds: 5 }             # let Services and the gateway stop routing here before shutdown starts
+          resources:
+            {{- toYaml ($svc.resources | default $.Values.defaults.resources) | nindent 12 }}
+          securityContext:
+            {{- include "itl-pay.containerSecurity" $ | nindent 12 }}
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }    # the only writable path: Tomcat's work files
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  labels:
+    app.kubernetes.io/name: {{ $name }}
+    {{- include "itl-pay.labels" $ | nindent 4 }}
+spec:
+  selector:
+    app.kubernetes.io/name: {{ $name }}
+  ports:
+    - name: http
+      port: {{ $svc.port }}
+      targetPort: http
+{{- if ($svc.autoscaling).enabled }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "itl-pay.labels" $ | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ $name }}
+  minReplicas: {{ $svc.autoscaling.minReplicas }}
+  maxReplicas: {{ $svc.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ $svc.autoscaling.cpuUtilization }}
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 120           # ignore the CPU burst of JVMs warming up after a rollout (topic 12.2)
+    scaleDown:
+      stabilizationWindowSeconds: 300
+{{- end }}
+{{- if or (gt (int $replicas) 1) ($svc.autoscaling).enabled }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget                       # a node drain never takes every replica at once
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "itl-pay.labels" $ | nindent 4 }}
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ $name }}
+{{- end }}
+{{- end }}

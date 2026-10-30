@@ -1,0 +1,71 @@
+# Defaults for every environment. values-local.yaml (kind) and values-aws.yaml (EKS) override them.
+
+image:
+  registry: ""                 # "" for images loaded into kind; an ECR address in the cloud
+  tag: "0.3.0"
+  pullPolicy: IfNotPresent
+
+infra:
+  postgresHost: postgres       # a Service in the cluster locally; the RDS endpoint in the cloud
+  kafkaBootstrap: kafka:9092
+
+# Database passwords live in this Secret, one key per database. Locally the chart creates it;
+# in the cloud it's created by External Secrets from AWS Secrets Manager, and createSecret is false.
+databases:
+  secretName: itl-pay-db
+  createSecret: false
+  passwords: {}
+
+# Applied to every service unless the service overrides it
+defaults:
+  replicas: 1
+  javaOptions: "-XX:MaxRAMPercentage=60 -XX:+ExitOnOutOfMemoryError"
+  resources:
+    requests: { cpu: 100m, memory: 384Mi }   # measured: about 200-270 MiB each after start-up
+    limits: { memory: 640Mi }  # no CPU limit: throttling makes JVM start-up and GC pauses slow (topic 12.2)
+
+services:
+  accounts:
+    port: 8081
+    replicas: 1                # balances are in memory until your v0.1 gives accounts a database: never scale it
+  transfers:
+    port: 8082
+    database: transfers
+    kafka: true
+    replicas: 2
+    env:
+      ACCOUNTS_URL: http://accounts:8081
+  fraud:
+    port: 8083
+    kafka: true
+  notifications:
+    port: 8084
+    database: notifications
+    kafka: true
+  gateway:
+    port: 8080
+    replicas: 2
+    resources:                 # autoscaled on CPU, so the request must be realistic: utilisation is measured against it
+      requests: { cpu: 250m, memory: 384Mi }
+      limits: { memory: 640Mi }
+    env:
+      ACCOUNTS_URL: http://accounts:8081
+      TRANSFERS_URL: http://transfers:8082
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 5
+      cpuUtilization: 70
+
+interestBatch:
+  enabled: true
+  database: interest
+  schedule: "30 23 * * *"      # 23:30 every day ...
+  timeZone: Africa/Lagos       # ... in Lagos, not the node's UTC clock
+
+# Traffic in from outside the cluster, with the Gateway API (topic 12.1)
+route:
+  enabled: false
+  gatewayName: itl-pay
+  gatewayNamespace: ""         # the Gateway's namespace, if it isn't this release's
+  hostnames: []

@@ -1,0 +1,21 @@
+# EKS (topic 12.4), filled in from `terraform output`. Passwords come from AWS Secrets Manager, not from here.
+image:
+  registry: 123456789012.dkr.ecr.eu-west-1.amazonaws.com/    # your account's ECR
+infra:
+  postgresHost: itl-pay.abcdefghijkl.eu-west-1.rds.amazonaws.com
+  kafkaBootstrap: b-1.itlpay.xxxxxx.c2.kafka.eu-west-1.amazonaws.com:9092
+databases:
+  createSecret: false
+defaults:
+  resources:
+    requests: { cpu: 250m, memory: 768Mi }
+    limits: { memory: 1Gi }
+services:
+  transfers:
+    replicas: 3
+    autoscaling: { enabled: true, minReplicas: 3, maxReplicas: 10, cpuUtilization: 70 }
+  gateway:
+    autoscaling: { enabled: true, minReplicas: 3, maxReplicas: 10, cpuUtilization: 70 }
+route:
+  enabled: true
+  hostnames: ["api.pay.example.ng"]

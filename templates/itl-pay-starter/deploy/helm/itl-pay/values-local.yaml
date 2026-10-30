@@ -1,0 +1,9 @@
+# kind on your laptop: helm upgrade --install itl-pay deploy/helm/itl-pay -n itl-pay -f deploy/helm/itl-pay/values-local.yaml
+databases:
+  createSecret: true
+  passwords:                   # development passwords, matching deploy/infra/postgres.yaml
+    transfers: transfers
+    notifications: notifications
+    interest: interest
+route:
+  enabled: true

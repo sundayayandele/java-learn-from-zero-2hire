@@ -2246,6 +2246,96 @@
         "published": "2022-04-06",
         "why": "Inside the job repository: the tables that record every run and make restarts possible."
       }
+    ],
+    "12.1": [
+      {
+        "id": "Krpb44XR0bk",
+        "title": "Kubernetes Components explained! Pods, Services, Secrets, ConfigMap | Kubernetes Tutorial 14",
+        "channel": "TechWorld with Nana",
+        "minutes": 18.2,
+        "published": "2020-01-16",
+        "why": "Pods, Services, ConfigMaps, Secrets, Deployments and StatefulSets, each explained with a diagram (TechWorld with Nana)."
+      },
+      {
+        "id": "yWD_FGMJOCw",
+        "title": "What is Gateway API for Kubernetes? Find out in ten minutes!",
+        "channel": "Cloud Native Skunkworks",
+        "minutes": 11.2,
+        "published": "2023-01-25",
+        "why": "The Gateway API in ten minutes: GatewayClass, Gateway and HTTPRoute, and how it differs from Ingress."
+      }
+    ],
+    "12.2": [
+      {
+        "id": "x2e6pIBLKzw",
+        "title": "Day 18/40 - Kubernetes Health Probes Explained | Liveness vs Readiness Probes",
+        "channel": "Tech Tutorials with Piyush",
+        "minutes": 28.9,
+        "published": "2024-07-16",
+        "why": "Liveness, readiness and startup probes, with a demo of each one failing."
+      },
+      {
+        "id": "FfDI08sgrYY",
+        "title": "Kubernetes pod autoscaling for beginners",
+        "channel": "That DevOps Guy",
+        "minutes": 13.4,
+        "published": "2020-09-02",
+        "why": "Requests, limits and the Horizontal Pod Autoscaler, scaling a real deployment on CPU."
+      }
+    ],
+    "12.3": [
+      {
+        "id": "w51lDVuRWuk",
+        "title": "Helm and Helm Charts Explained - Helm Tutorial for Beginners",
+        "channel": "DevOps Journey",
+        "minutes": 9.9,
+        "published": "2022-09-30",
+        "why": "What Helm is, how a chart is structured, and releases, upgrades and rollbacks."
+      },
+      {
+        "id": "-Si3j4t_zyc",
+        "title": "Helm Charts Explained: Beginner to Advanced",
+        "channel": "DevOps with Flavius",
+        "minutes": 10.8,
+        "published": "2026-06-30",
+        "why": "Writing Helm charts step by step, from templates and values to helpers."
+      }
+    ],
+    "12.4": [
+      {
+        "id": "aGI_yUbmTFU",
+        "title": "Amazon EKS Explained: Introduction to Managed Kubernetes on AWS",
+        "channel": "CodeLucky",
+        "minutes": 5.9,
+        "published": "2025-10-12",
+        "why": "An introduction to Amazon EKS: the managed control plane, node groups and how it fits with other AWS services."
+      },
+      {
+        "id": "OtfemiDmXQs",
+        "title": "AWS Core Services: EC2, S3, VPC, IAM & RDS Fundamentals | Uplatz",
+        "channel": "Uplatz",
+        "minutes": 6.9,
+        "published": "2025-12-29",
+        "why": "The AWS core services behind a cluster: EC2, S3, VPC, IAM and RDS."
+      }
+    ],
+    "12.5": [
+      {
+        "id": "l5k1ai_GBDE",
+        "title": "Terraform explained in 15 mins | Terraform Tutorial for Beginners",
+        "channel": "TechWorld with Nana",
+        "minutes": 18.2,
+        "published": "2020-07-04",
+        "why": "Terraform's core ideas: providers, resources, state, plan and apply (TechWorld with Nana)."
+      },
+      {
+        "id": "YfGgTFJ9sT8",
+        "title": "What is GitOps | GitOps Introduction | What is ArgoCD? | What Problem GitOps Solves ?",
+        "channel": "Valaxy Technologies",
+        "minutes": 11.8,
+        "published": "2025-09-01",
+        "why": "What GitOps is, the problem it solves, and where Argo CD fits."
+      }
     ]
   }
 }

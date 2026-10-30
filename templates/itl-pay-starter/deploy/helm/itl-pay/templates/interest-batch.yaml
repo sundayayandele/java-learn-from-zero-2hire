@@ -1,0 +1,47 @@
+{{- if .Values.interestBatch.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: interest-batch
+  labels:
+    app.kubernetes.io/name: interest-batch
+    {{- include "itl-pay.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.interestBatch.schedule | quote }}
+  timeZone: {{ .Values.interestBatch.timeZone }}
+  concurrencyPolicy: Forbid                     # never two end-of-day runs at once
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      backoffLimit: 2                           # a failed run is retried; Spring Batch restarts it where it stopped
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: interest-batch
+            {{- include "itl-pay.labels" . | nindent 12 }}
+        spec:
+          restartPolicy: Never
+          securityContext:
+            {{- include "itl-pay.podSecurity" . | nindent 12 }}
+          containers:
+            - name: interest-batch
+              image: {{ include "itl-pay.image" (dict "root" . "name" "interest-batch") }}
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              # The scheduler decides the business date (yesterday, in Lagos) and passes it in; the job never asks the clock.
+              command: ["sh", "-c", "exec java -jar /app/app.jar businessDate=$(TZ={{ .Values.interestBatch.timeZone }} date -d yesterday +%F)"]
+              env:
+                - name: JAVA_TOOL_OPTIONS
+                  value: {{ .Values.defaults.javaOptions | quote }}
+                {{- include "itl-pay.connections" (dict "root" . "svc" (dict "database" .Values.interestBatch.database)) | nindent 16 }}
+              resources:
+                {{- toYaml .Values.defaults.resources | nindent 16 }}
+              securityContext:
+                {{- include "itl-pay.containerSecurity" . | nindent 16 }}
+              volumeMounts:
+                - { name: tmp, mountPath: /tmp }
+          volumes:
+            - name: tmp
+              emptyDir: {}
+{{- end }}

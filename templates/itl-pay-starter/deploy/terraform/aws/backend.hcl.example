@@ -1,0 +1,3 @@
+# Copy to backend.hcl (not committed) and fill in
+bucket = "itl-pay-terraform-state-123456789012"
+region = "eu-west-1"

@@ -1,0 +1,109 @@
+{
+  "topic": "12.4",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "The statements service needs to write to S3 from a pod on EKS.",
+      "question": "What is the right way to give it permission?",
+      "options": [
+        "Store an IAM user's access keys in a Kubernetes Secret",
+        "EKS Pod Identity: associate a least-privilege IAM role with the pod's service account",
+        "Make the bucket public",
+        "Use the node's administrator role"
+      ],
+      "answer": 1,
+      "explanation": "Short-lived, scoped credentials with no stored keys."
+    },
+    {
+      "type": "single",
+      "scenario": "RDS must be reachable from the cluster's nodes and nothing else.",
+      "question": "Which setup achieves that?",
+      "options": [
+        "Private subnets, publicly_accessible = false, and a security group allowing 5432 only from the nodes' security group",
+        "A public subnet with a strong password",
+        "A security group open to 0.0.0.0/0 on 5432",
+        "A NAT gateway in front of RDS"
+      ],
+      "answer": 0,
+      "explanation": "Network placement plus security-group references keep the database private."
+    },
+    {
+      "type": "single",
+      "scenario": "A learner leaves an EKS cluster with a NAT gateway running for a month.",
+      "question": "What is the realistic outcome?",
+      "options": [
+        "Nothing; the free tier covers it",
+        "AWS deletes it after a week",
+        "A bill well over US$100 for the control plane, NAT gateway, nodes and database",
+        "A warning but no charge"
+      ],
+      "answer": 2,
+      "explanation": "Create a budget first, tag resources and destroy learning environments the same day."
+    },
+    {
+      "type": "single",
+      "scenario": "Why does the starter set manage_master_user_password = true on RDS?",
+      "question": "What does it achieve?",
+      "options": [
+        "It makes the database faster",
+        "It disables the password",
+        "It lets Terraform print the password",
+        "RDS generates and stores the password in Secrets Manager, so it's never in code or Terraform state"
+      ],
+      "answer": 3,
+      "explanation": "Secrets kept out of code and state can't leak through them."
+    },
+    {
+      "type": "single",
+      "scenario": "ECR repositories are set to IMMUTABLE tags.",
+      "question": "What does that guarantee?",
+      "options": [
+        "Images are scanned",
+        "A tag such as 0.3.1 always refers to the same image, so what was tested is what runs",
+        "Images can't be deleted",
+        "Images are smaller"
+      ],
+      "answer": 1,
+      "explanation": "Mutable tags let 'the same version' change under you."
+    },
+    {
+      "type": "single",
+      "scenario": "A Nigerian bank asks whether to put customer data in eu-west-1.",
+      "question": "Which consideration must be part of the decision?",
+      "options": [
+        "Only latency",
+        "Only price",
+        "Data-protection law (the Nigeria Data Protection Act 2023) and regulator guidance on where personal data may be stored and transferred",
+        "The number of availability zones"
+      ],
+      "answer": 2,
+      "explanation": "Data residency is a legal and compliance decision; options include af-south-1 and the Lagos Local Zone."
+    },
+    {
+      "type": "single",
+      "scenario": "A bank runs Kubernetes in its own data centre with strong security defaults and vendor support.",
+      "question": "Which platform is it most likely using?",
+      "options": [
+        "Red Hat OpenShift",
+        "Amazon EKS",
+        "Google GKE Autopilot",
+        "kind"
+      ],
+      "answer": 0,
+      "explanation": "OpenShift is common on-premises in banks, and also available managed on AWS (ROSA) and Azure (ARO)."
+    },
+    {
+      "type": "single",
+      "scenario": "Why are EKS nodes and the database placed in private subnets?",
+      "question": "What is the benefit?",
+      "options": [
+        "Private subnets are cheaper",
+        "They can't be reached directly from the internet; inbound traffic comes only through load balancers in public subnets",
+        "Kubernetes requires it",
+        "They have more IP addresses"
+      ],
+      "answer": 1,
+      "explanation": "Only the load balancers face the internet."
+    }
+  ]
+}
