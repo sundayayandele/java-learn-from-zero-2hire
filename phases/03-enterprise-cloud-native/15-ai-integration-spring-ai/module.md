@@ -1,0 +1,34 @@
+## What this module gives you
+
+One week on adding AI features to a Java backend the way a bank can live with: grounded in the company's own documents, unable to move money, careful with customer data, measured and affordable. You build ITL Pay's **support assistant** with Spring AI: a `ChatClient` against a local model (topic 15.1), answers grounded in the help centre through retrieval from pgvector (15.2), read-only tools scoped to the signed-in customer, and an MCP server other AI clients can use (15.3), with guardrails and an evaluation that decides which model is good enough (15.4).
+
+The [ITL Pay starter](../../../templates/itl-pay-starter/README.md) now has an `assistant` service, tested without a model (fake models make the tests fast and repeatable) and evaluated with one (`./mvnw test -Peval` runs 18 scored questions against Ollama). Everything runs free on your own machine with [Ollama](https://ollama.com); a hosted model is a configuration change. The numbers in these topics come from running it on an ordinary laptop, including the answers it got wrong.
+
+**What you need:** Ollama installed natively, with `qwen3:4b-instruct` (2.5 GB) and `nomic-embed-text` (274 MB) pulled. With 8 GB of RAM, use `qwen3:1.7b` (1.4 GB) instead and expect weaker tool calling (topic 15.4 shows by how much). A GPU or Apple silicon makes answers several times faster but isn't required.
+
+**Weekly rhythm (20–25 hours):** read the lessons and code along (30%), videos (10%), topic quizzes (5%), the module project (20%) and your capstone system's `v0.6` (35%).
+
+**Exit check for Module 15:** the four topic quizzes attempted (aim for 70%+), one module project below, and capstone release `v0.6` tagged with an evaluation report and ADR 10.
+
+## Capstone step: ITL Pay `v0.6`
+
+Build on your `v0.5` and the [starter's Module 15 code](../../../templates/itl-pay-starter/README.md), and deliver:
+
+- **Assistant:** a support assistant behind your gateway that answers from your own help centre or API documentation, cites the sections it used, and says it doesn't know when they don't cover the question.
+- **Tools:** read-only tools for the signed-in customer's balances and transfers, with the customer taken from the verified access token at the gateway (your Phase 2 Keycloak realm), never from the model; a test proving a tool can't read another customer's data whatever the model asks.
+- **MCP:** an MCP server exposing only public information, and one MCP client (an IDE, an agent or a test) using it.
+- **Guardrails:** personal data redacted before any model call, injected instructions treated as data, answers checked on the way out, timeouts and output limits, and metrics for tokens, latency and refusals on your Grafana dashboard.
+- **Evaluation:** at least 25 scored questions covering facts, tools, other customers' data and things the assistant must refuse; a report for two models; and a threshold that fails the build when quality drops.
+- **Docs:** ADR 10: which model ITL Pay uses and where it runs, what data may reach it, and what it costs per thousand questions, from your own measurements.
+
+## Module projects
+
+Pick **at least one**, in addition to your capstone step.
+
+### Project 15.A: Customer-support assistant grounded in your API docs
+
+Build an assistant for developers integrating with ITL Pay, grounded in your OpenAPI specification and API guides (chunked per operation and per guide section). **Acceptance:** answers cite the operation or section they came from; the assistant says it doesn't know for anything the docs don't cover; re-ingestion embeds only changed documents; an evaluation of at least 20 questions with a report comparing two chunking strategies or two embedding models.
+
+### Project 15.B: Transaction-query agent that calls your services as tools
+
+Build an agent that answers questions like "how much did I send to Ada last month?" by calling read-only tools over your transfers and ledger services. **Acceptance:** every tool is scoped to the authenticated customer outside the model; tool inputs are validated; results are summarised from tool data, never guessed; the same tools are exposed through MCP to one client; an evaluation including attempts to read someone else's data, all of which fail.

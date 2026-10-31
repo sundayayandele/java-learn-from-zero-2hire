@@ -2,7 +2,7 @@
 
 image:
   registry: ""                 # "" for images loaded into kind; an ECR address in the cloud
-  tag: "0.5.0"
+  tag: "0.6.0"
   pullPolicy: IfNotPresent
 
 infra:
@@ -53,6 +53,14 @@ services:
     database: rates
     env:
       DB_HOST: postgres          # rates builds its R2DBC and Flyway URLs from DB_HOST and the database name
+  assistant:                   # Spring AI: RAG over pgvector, read-only tools, an MCP server (Module 15)
+    port: 8087
+    database: assistant
+    env:
+      OLLAMA_URL: http://ollama:11434   # an Ollama Service, or switch to a hosted model (topic 15.1)
+      ACCOUNTS_URL: http://accounts:8081
+      TRANSFERS_URL: http://transfers:8082
+      RATES_URL: http://rates:8085
   gateway:
     port: 8080
     replicas: 2
@@ -63,6 +71,7 @@ services:
       ACCOUNTS_URL: http://accounts:8081
       TRANSFERS_URL: http://transfers:8082
       RATES_URL: http://rates:8085
+      ASSISTANT_URL: http://assistant:8087
     autoscaling:
       enabled: true
       minReplicas: 2

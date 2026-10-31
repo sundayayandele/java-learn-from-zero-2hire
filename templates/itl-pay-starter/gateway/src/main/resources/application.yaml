@@ -27,6 +27,12 @@ spring:
                 - Path=/api/rates/**,/api/quotes/**
               filters:
                 - StripPrefix=1
+            - id: assistant
+              uri: ${ASSISTANT_URL:http://localhost:8087}
+              predicates:
+                - Path=/api/assistant/**
+              filters:
+                - StripPrefix=1
 # Observability (Module 13): traces to the OpenTelemetry collector, metrics scraped by Prometheus
 management:
   tracing:

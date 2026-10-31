@@ -1,0 +1,109 @@
+{
+ "topic": "15.1",
+ "questions": [
+  {
+   "type": "single",
+   "scenario": "A developer builds a chat feature and is surprised that the model 'forgot' what the customer said one message earlier.",
+   "question": "Why?",
+   "options": [
+    "Each model call is independent: the application must send the earlier messages again",
+    "The context window was full",
+    "The temperature was too high",
+    "Ollama deletes conversations after each answer"
+   ],
+   "answer": 0,
+   "explanation": "A model has no memory between calls; a conversation is your code resending the history."
+  },
+  {
+   "type": "single",
+   "scenario": "The support assistant's system prompt is built by concatenating the rules with the customer's message into one string.",
+   "question": "What is the main risk?",
+   "options": [
+    "Higher token cost",
+    "The customer's text can rewrite the rules, because it arrives with the authority of your instructions",
+    "Structured output stops working",
+    "The model answers more slowly"
+   ],
+   "answer": 1,
+   "explanation": "Keep instructions in the system message and customer input in the user message; never mix them."
+  },
+  {
+   "type": "single",
+   "scenario": "You need ITL Pay's triage endpoint to return a category from a fixed list and an urgency.",
+   "question": "What is the best approach with Spring AI?",
+   "options": [
+    "Ask for prose and search it with regular expressions",
+    "Set temperature to 0 and trust the text",
+    "Call .entity(Triage.class) with a record whose category and urgency are enums",
+    "Fine-tune a model"
+   ],
+   "answer": 2,
+   "explanation": "entity() adds format instructions with a JSON Schema and parses the reply into the record; enums limit the values."
+  },
+  {
+   "type": "single",
+   "scenario": "A triage call returned valid JSON with urgency HIGH for a customer asking about FX fees.",
+   "question": "What does this show?",
+   "options": [
+    "Spring AI's parser is broken",
+    "The enum should be removed",
+    "The model is too large",
+    "A typed result is not a correct result: use it to sort a queue, not to take irreversible action"
+   ],
+   "answer": 3,
+   "explanation": "Structured output guarantees shape, not truth."
+  },
+  {
+   "type": "single",
+   "scenario": "On the starter's laptop, the first question after start-up took 24.8 s, then answers took 2 to 12 s.",
+   "question": "What explains the first one?",
+   "options": [
+    "Ollama loaded the model into memory on first use",
+    "pgvector built its index",
+    "Spring AI downloaded the model",
+    "The JVM compiled the controller"
+   ],
+   "answer": 0,
+   "explanation": "The first call pays for loading the model; later calls reuse it while it stays loaded."
+  },
+  {
+   "type": "single",
+   "scenario": "Over 18 questions the assistant used about 839 input tokens and 47 output tokens per answer, though the questions were one sentence long.",
+   "question": "Where did most input tokens come from?",
+   "options": [
+    "The customer's question",
+    "The system prompt, retrieved help sections and tool definitions sent with every call",
+    "The model's thinking",
+    "Spring AI's logging"
+   ],
+   "answer": 1,
+   "explanation": "Every call carries the instructions, context and tool schemas; estimate cost from measured tokens, not question length."
+  },
+  {
+   "type": "single",
+   "scenario": "You switch the assistant from Ollama to Claude by changing the starter and properties.",
+   "question": "What else must you configure?",
+   "options": [
+    "Nothing: every provider does chat and embeddings",
+    "A second ChatClient bean",
+    "An embedding model from a provider that has one (for example keep Ollama's), because Anthropic offers no embeddings",
+    "A new vector table for every request"
+   ],
+   "answer": 2,
+   "explanation": "Chat and embeddings are separate choices: spring.ai.model.chat and spring.ai.model.embedding."
+  },
+  {
+   "type": "single",
+   "scenario": "A team picks gemma3:1b for a local assistant that must look up balances through tools.",
+   "question": "What should they check first?",
+   "options": [
+    "Whether it has the largest context window",
+    "Whether it runs in Docker",
+    "Its temperature default",
+    "Whether the model supports tool calling (ollama show lists its capabilities)"
+   ],
+   "answer": 3,
+   "explanation": "Not every model supports tools; gemma3:1b doesn't, so tool calling would never happen."
+  }
+ ]
+}

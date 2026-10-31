@@ -6,5 +6,10 @@ databases:
     notifications: notifications
     interest: interest
     rates: rates
+    assistant: assistant
+services:
+  assistant:
+    env:                       # Ollama on your machine, reached from the kind node (Docker Desktop's host name)
+      OLLAMA_URL: http://host.docker.internal:11434
 route:
   enabled: true

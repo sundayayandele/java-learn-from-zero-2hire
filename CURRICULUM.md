@@ -192,12 +192,12 @@ Projects: End-to-end tracing across your services; Grafana dashboard with alert 
 
 Projects: Non-blocking rates/quotes streaming endpoint; Benchmark: MVC + virtual threads vs WebFlux.
 
-### Module 15: AI Integration with Spring AI (week 35)
+### [Module 15: AI Integration with Spring AI](phases/03-enterprise-cloud-native/15-ai-integration-spring-ai/README.md) (week 35)
 
-- 15.1 Spring AI ChatClient with hosted and open-source models
-- 15.2 Retrieval-augmented generation (RAG) with pgvector
-- 15.3 Tool calling and exposing services via MCP (Model Context Protocol)
-- 15.4 Guardrails, evaluation, cost and latency control
+- [15.1 Spring AI ChatClient with hosted and open-source models](phases/03-enterprise-cloud-native/15-ai-integration-spring-ai/15.1-spring-ai-chatclient/README.md)
+- [15.2 Retrieval-augmented generation (RAG) with pgvector](phases/03-enterprise-cloud-native/15-ai-integration-spring-ai/15.2-rag-with-pgvector/README.md)
+- [15.3 Tool calling and exposing services via MCP (Model Context Protocol)](phases/03-enterprise-cloud-native/15-ai-integration-spring-ai/15.3-tool-calling-and-mcp/README.md)
+- [15.4 Guardrails, evaluation, cost and latency control](phases/03-enterprise-cloud-native/15-ai-integration-spring-ai/15.4-guardrails-evaluation-cost/README.md)
 
 Projects: Customer-support assistant grounded in your API docs; Transaction-query agent that calls your services as tools.
 

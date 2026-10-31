@@ -3,7 +3,7 @@
 
 # 14.3 Reactive vs virtual threads: choosing the right model
 
-← [14.2 Reactive database access with R2DBC](../14.2-r2dbc-reactive-data/README.md) · [Module 14](../README.md) · [Phase 3](../../README.md)
+← [14.2 Reactive database access with R2DBC](../14.2-r2dbc-reactive-data/README.md) · [Module 14](../README.md) · [Phase 3](../../README.md) · [15.1 Spring AI ChatClient with hosted and open-source models](../../15-ai-integration-spring-ai/15.1-spring-ai-chatclient/README.md) →
 
 > **Week 34** · Module 14: Reactive & High-Throughput Java · Website topic covered: *Choosing between reactive and virtual threads: throughput, latency, debugging and team cost, with a benchmark*
 
@@ -271,4 +271,4 @@ Which model fits best?
 
 ---
 
-← [14.2 Reactive database access with R2DBC](../14.2-r2dbc-reactive-data/README.md) · [Module 14](../README.md) · [Phase 3](../../README.md)
+← [14.2 Reactive database access with R2DBC](../14.2-r2dbc-reactive-data/README.md) · [Module 14](../README.md) · [Phase 3](../../README.md) · [15.1 Spring AI ChatClient with hosted and open-source models](../../15-ai-integration-spring-ai/15.1-spring-ai-chatclient/README.md) →

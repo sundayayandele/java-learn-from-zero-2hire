@@ -4,8 +4,8 @@
 # Tear it all down with: kind delete cluster --name itl-pay
 set -euo pipefail
 cd "$(dirname "$0")/../.."          # templates/itl-pay-starter
-TAG=0.5.0
-SERVICES="accounts transfers gateway fraud notifications interest-batch rates"
+TAG=0.6.0
+SERVICES="accounts transfers gateway fraud notifications interest-batch rates assistant"
 
 echo "== cluster"
 kind create cluster --config deploy/kind/cluster.yaml
@@ -42,4 +42,6 @@ Ready. Reach the API through the Gateway:
   kubectl -n envoy-gateway-system port-forward \
       svc/$(kubectl -n envoy-gateway-system get svc -l gateway.envoyproxy.io/owning-gateway-name=itl-pay -o name | cut -d/ -f2) 8088:80
   curl -s localhost:8088/api/accounts/A1
+
+The assistant needs Ollama running on this machine with the models pulled (topic 15.1).
 DONE

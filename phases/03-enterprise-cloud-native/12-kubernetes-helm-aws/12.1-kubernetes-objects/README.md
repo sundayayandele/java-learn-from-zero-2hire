@@ -51,7 +51,7 @@ spec:
     spec:
       containers:
         - name: transfers
-          image: itl-pay/transfers:0.5.0
+          image: itl-pay/transfers:0.6.0
           ports:
             - name: http
               containerPort: 8082
@@ -112,7 +112,7 @@ metadata:
 spec:
   serviceName: postgres
   replicas: 1
-  # ... pod template with the postgres:18-alpine container ...
+  # ... pod template with the PostgreSQL 18 container (pgvector/pgvector:0.8.1-pg18-trixie since Module 15) ...
   volumeClaimTemplates:
     - metadata:
         name: data

@@ -14,7 +14,7 @@ scrape_configs:
   - job_name: itl-pay
     metrics_path: /actuator/prometheus
     static_configs:
-      - targets: [gateway:8080, accounts:8081, transfers:8082, fraud:8083, notifications:8084, rates:8085]
+      - targets: [gateway:8080, accounts:8081, transfers:8082, fraud:8083, notifications:8084, rates:8085, assistant:8087]
     relabel_configs:
       - source_labels: [__address__]        # gateway:8080 -> service="gateway"
         regex: "([^:]+):.*"

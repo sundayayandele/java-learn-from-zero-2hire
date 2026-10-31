@@ -21,6 +21,12 @@ data:
     CREATE DATABASE interest OWNER interest;
     CREATE USER rates WITH PASSWORD 'rates';
     CREATE DATABASE rates OWNER rates;
+    CREATE USER assistant WITH PASSWORD 'assistant';
+    CREATE DATABASE assistant OWNER assistant;
+    \connect assistant
+    CREATE EXTENSION IF NOT EXISTS vector;
+    CREATE EXTENSION IF NOT EXISTS hstore;
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 ---
 apiVersion: v1
 kind: Service
@@ -46,7 +52,7 @@ spec:
     spec:
       containers:
         - name: postgres
-          image: postgres:18-alpine
+          image: pgvector/pgvector:0.8.1-pg18-trixie   # PostgreSQL 18 with pgvector (topic 15.2)
           env:
             - name: POSTGRES_PASSWORD
               valueFrom: { secretKeyRef: { name: postgres-admin, key: password } }

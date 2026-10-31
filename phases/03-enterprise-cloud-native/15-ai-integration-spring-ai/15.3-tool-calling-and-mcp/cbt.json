@@ -1,0 +1,109 @@
+{
+ "topic": "15.3",
+ "questions": [
+  {
+   "type": "single",
+   "scenario": "The assistant's model decides to look up a balance.",
+   "question": "What actually runs the accountBalance method?",
+   "options": [
+    "Your application: the model only returns a tool call (a name and JSON arguments), and Spring AI's ToolCallingAdvisor executes it",
+    "The model, on the provider's servers",
+    "Ollama",
+    "The gateway"
+   ],
+   "answer": 0,
+   "explanation": "The model asks; your code decides and runs, which is where the control is."
+  },
+  {
+   "type": "single",
+   "scenario": "A developer writes accountBalance(String customerId, String accountId) as a tool.",
+   "question": "What is wrong with it?",
+   "options": [
+    "Nothing, as long as the system prompt forbids other customers",
+    "The model, or an injected prompt, chooses whose data is read; the customer must come from the authenticated request via ToolContext",
+    "Tools can't take two parameters",
+    "It should return a number"
+   ],
+   "answer": 1,
+   "explanation": "Scope outside the model: the ToolContext is never shown to the model and can't be changed by it."
+  },
+  {
+   "type": "single",
+   "scenario": "transferStatus is asked for TRF-9, which exists but belongs to another customer.",
+   "question": "What should it return?",
+   "options": [
+    "The transfer, with the amount hidden",
+    "An error saying the transfer belongs to someone else",
+    "Exactly what it returns for a reference that doesn't exist",
+    "HTTP 403"
+   ],
+   "answer": 2,
+   "explanation": "Different answers for 'not yours' and 'missing' let an attacker confirm references."
+  },
+  {
+   "type": "single",
+   "scenario": "A product owner asks for a 'reverse transfer' tool so the assistant can fix mistakes for customers.",
+   "question": "What is the right response?",
+   "options": [
+    "Add it, with a system-prompt rule to use it carefully",
+    "Add it but only for transfers under ₦20,000",
+    "Add it and log every call",
+    "Keep the assistant read-only; reversals go through the app or support with strong authentication and checks"
+   ],
+   "answer": 3,
+   "explanation": "A write tool behind a chat interface turns every successful prompt injection into a possible fraud."
+  },
+  {
+   "type": "single",
+   "scenario": "The starter's test makes a scripted model call accountBalance for A2 while customer C1 is signed in.",
+   "question": "What does the test assert?",
+   "options": [
+    "The tool answers that the customer has no account A2, and accounts was never called",
+    "The model refuses",
+    "The request fails with 403",
+    "The balance is masked"
+   ],
+   "answer": 0,
+   "explanation": "It simulates a successful injection and proves the tool's check holds; removing the check makes it fail."
+  },
+  {
+   "type": "single",
+   "scenario": "In the evaluation qwen3:1.7b reported a transfer as PENDING when it was COMPLETED, without calling transferStatus.",
+   "question": "What does this show?",
+   "options": [
+    "The tool is broken",
+    "Small models can skip tools and guess; measure tool use before choosing a model",
+    "The transfer service was down",
+    "RAG returned the wrong document"
+   ],
+   "answer": 1,
+   "explanation": "Tool calling quality varies a lot by model; the evaluation catches guesses."
+  },
+  {
+   "type": "single",
+   "scenario": "ITL Pay wants other AI clients (a staff IDE assistant, another team's agent) to get exchange rates and search the help centre.",
+   "question": "What does the starter use?",
+   "options": [
+    "A new REST API with OpenAPI",
+    "A Kafka topic",
+    "An MCP server: Spring AI exposes the public @Tool methods at /mcp over streamable HTTP",
+    "A shared library"
+   ],
+   "answer": 2,
+   "explanation": "MCP lets any compatible AI client discover and call your tools."
+  },
+  {
+   "type": "single",
+   "scenario": "The assistant's MCP server exposes exchangeRate and searchHelpDocs, but not the balance and transfer tools.",
+   "question": "Why?",
+   "options": [
+    "MCP can't carry personal data",
+    "Customer tools are too slow",
+    "MCP clients can't call tools with parameters",
+    "Customer tools need a verified customer, which an unauthenticated MCP client doesn't provide"
+   ],
+   "answer": 3,
+   "explanation": "Until MCP authorisation is in place, customer-data tools over MCP would be a data leak."
+  }
+ ]
+}

@@ -2,7 +2,7 @@
 # Only the gateway (8080) and Grafana (3300) publish ports; the services reach each other by name.
 services:
   postgres:
-    image: postgres:18-alpine
+    image: pgvector/pgvector:0.8.1-pg18-trixie   # PostgreSQL 18 with the pgvector extension (topic 15.2)
     environment:
       POSTGRES_PASSWORD: postgres
     volumes:
@@ -94,17 +94,33 @@ services:
       LOGGING_STRUCTURED_FORMAT_CONSOLE: ecs
     depends_on:
       postgres: { condition: service_healthy }
+  # Ollama runs on your machine, not in Compose: natively it can use your GPU, and the models stay downloaded (topic 15.1)
+  assistant:
+    build: ./assistant
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/assistant
+      OLLAMA_URL: http://host.docker.internal:11434
+      ACCOUNTS_URL: http://accounts:8081
+      TRANSFERS_URL: http://transfers:8082
+      RATES_URL: http://rates:8085
+      OTLP_ENDPOINT: http://observability:4318
+      LOGGING_STRUCTURED_FORMAT_CONSOLE: ecs
+    extra_hosts:
+      - host.docker.internal:host-gateway          # Docker Desktop has this name already; Linux needs this line
+    depends_on:
+      postgres: { condition: service_healthy }
   gateway:
     build: ./gateway
     environment:
       ACCOUNTS_URL: http://accounts:8081
       TRANSFERS_URL: http://transfers:8082
       RATES_URL: http://rates:8085
+      ASSISTANT_URL: http://assistant:8087
       OTLP_ENDPOINT: http://observability:4318
       LOGGING_STRUCTURED_FORMAT_CONSOLE: ecs
     ports:
       - "8080:8080"
-    depends_on: [accounts, transfers, rates]
+    depends_on: [accounts, transfers, rates, assistant]
 
   # A batch job, not a server: it runs when asked and exits.
   # docker compose run --rm interest-batch businessDate=2026-10-30

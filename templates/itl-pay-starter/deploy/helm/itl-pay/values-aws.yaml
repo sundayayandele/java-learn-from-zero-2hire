@@ -14,6 +14,9 @@ services:
   rates:
     env:
       DB_HOST: itl-pay.abcdefghijkl.eu-west-1.rds.amazonaws.com
+  assistant:                   # RDS for PostgreSQL supports pgvector: CREATE EXTENSION vector; once, as the admin user
+    env:
+      OLLAMA_URL: http://ollama.ai:11434   # Ollama on a GPU node group, or a hosted model instead (topic 15.1)
   transfers:
     replicas: 3
     autoscaling: { enabled: true, minReplicas: 3, maxReplicas: 10, cpuUtilization: 70 }

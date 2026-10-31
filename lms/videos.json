@@ -2481,6 +2481,78 @@
         "published": "2023-11-14",
         "why": "Virtual threads versus reactive programming: what each solves and when reactive still wins."
       }
+    ],
+    "15.1": [
+      {
+        "id": "5sLYAQS9sWQ",
+        "title": "How Large Language Models Work",
+        "channel": "IBM Technology",
+        "minutes": 5.5,
+        "published": "2023-07-28",
+        "why": "What a large language model is and how it produces text, in plain terms: tokens, training and why answers vary."
+      },
+      {
+        "id": "IdIDI71sGZM",
+        "title": "ChatClient vs ChatModel: Which Spring AI API Should You Use?",
+        "channel": "Dan Vega",
+        "minutes": 18.7,
+        "published": "2026-07-02",
+        "why": "Spring AI's ChatClient and ChatModel APIs side by side, and when to use each, from a Spring developer advocate."
+      }
+    ],
+    "15.2": [
+      {
+        "id": "T-D1OfcDW1M",
+        "title": "What is Retrieval-Augmented Generation (RAG)?",
+        "channel": "IBM Technology",
+        "minutes": 6.6,
+        "published": "2023-08-23",
+        "why": "Why retrieval-augmented generation grounds answers in your own up-to-date documents, and what it can't fix."
+      },
+      {
+        "id": "LObZAT9_FHU",
+        "title": "Retrieval Augmented Generation: Spring AI + PGVector + LM Studio Integration",
+        "channel": "Let's Code",
+        "minutes": 15.0,
+        "published": "2025-10-01",
+        "why": "RAG with Spring AI and PGVector against a locally running model, built from scratch."
+      }
+    ],
+    "15.3": [
+      {
+        "id": "eur8dUO9mvE",
+        "title": "What is MCP? Integrate AI Agents with Databases & APIs",
+        "channel": "IBM Technology",
+        "minutes": 3.8,
+        "published": "2025-02-19",
+        "why": "What the Model Context Protocol is and how it connects AI agents to databases and APIs."
+      },
+      {
+        "id": "w5YVHG1j3Co",
+        "title": "Build Your Own MCP Server in Under 15 Minutes | Spring AI Tutorial",
+        "channel": "Dan Vega",
+        "minutes": 20.4,
+        "published": "2025-03-26",
+        "why": "Building an MCP server with Spring AI: tools from annotated methods, then connecting a client."
+      }
+    ],
+    "15.4": [
+      {
+        "id": "jrHRe9lSqqA",
+        "title": "What Is a Prompt Injection Attack?",
+        "channel": "IBM Technology",
+        "minutes": 10.9,
+        "published": "2024-05-30",
+        "why": "How prompt injection works, direct and indirect, and the layered defences against it."
+      },
+      {
+        "id": "9FrHzqg7Obg",
+        "title": "How to Choose Guardrails for your AI System",
+        "channel": "Probably Private",
+        "minutes": 20.8,
+        "published": "2026-05-24",
+        "why": "How to choose guardrails for an AI system: input and output checks, their limits and trade-offs."
+      }
     ]
   }
 }

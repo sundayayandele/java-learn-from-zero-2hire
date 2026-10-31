@@ -42,8 +42,8 @@ apiVersion: v2
 name: itl-pay
 description: ITL Pay services on Kubernetes (Phase 3 capstone starter, topic 12.3)
 type: application
-version: 0.5.0          # the chart's own version: bump it when the templates change
-appVersion: "0.5.0"     # the version of the services it deploys
+version: 0.6.0          # the chart's own version: bump it when the templates change
+appVersion: "0.6.0"     # the version of the services it deploys
 ```
 
 ## 2. Values and templates

@@ -1,0 +1,109 @@
+{
+ "topic": "15.2",
+ "questions": [
+  {
+   "type": "single",
+   "scenario": "A customer asks the assistant for ITL Pay's fee on a ₦30,000 transfer to another bank. Suppose that, without retrieval, the model answers ₦52.50.",
+   "question": "Why is this dangerous, and what fixes it?",
+   "options": [
+    "The model knows ITL Pay's fees but rounds them; lower the temperature",
+    "The model has never seen ITL Pay's fee table and produces a plausible number; retrieve the fee section and answer only from it",
+    "The context window is too small; use a bigger model",
+    "The question needs a tool call"
+   ],
+   "answer": 1,
+   "explanation": "RAG puts your own documents in the prompt so facts come from them, not from training data."
+  },
+  {
+   "type": "single",
+   "scenario": "You switch from nomic-embed-text (768 dimensions) to another embedding model, but keep the existing vector_store rows.",
+   "question": "What happens?",
+   "options": [
+    "Search keeps working",
+    "Only new documents are affected",
+    "Old and new vectors can't be compared (and the dimensions may not match): re-embed everything",
+    "pgvector converts the vectors automatically"
+   ],
+   "answer": 2,
+   "explanation": "Vectors are only comparable within one embedding model."
+  },
+  {
+   "type": "single",
+   "scenario": "The help centre is written as pages with '## ' sections, each answering one question.",
+   "question": "Which chunking strategy suits it best?",
+   "options": [
+    "One chunk per section, prefixed with the page and section titles",
+    "Fixed 50-character chunks",
+    "One chunk per file",
+    "One chunk per sentence"
+   ],
+   "answer": 0,
+   "explanation": "Structure-aware chunks answer one question each and carry their context."
+  },
+  {
+   "type": "single",
+   "scenario": "ITL Pay's assistant restarts ten times a day. Embedding all documents on each start is slow and, with a hosted model, costs money.",
+   "question": "What does the starter do?",
+   "options": [
+    "Embeds only on the first day",
+    "Embeds documents lazily, at question time",
+    "Stores embeddings in Redis",
+    "Keeps each file's SHA-256 and re-embeds a file only when its hash changes, deleting its old chunks first"
+   ],
+   "answer": 3,
+   "explanation": "The help_doc table records the version embedded; unchanged files are skipped."
+  },
+  {
+   "type": "single",
+   "scenario": "The assistant's retriever uses topK(3) and similarityThreshold(0.55).",
+   "question": "What does the threshold do?",
+   "options": [
+    "Drops chunks less similar to the question than 0.55, so weakly related text isn't sent",
+    "Limits the answer to 55% of the context window",
+    "Sets the model's temperature",
+    "Makes the search exact instead of approximate"
+   ],
+   "answer": 0,
+   "explanation": "Without a threshold every question gets three chunks, relevant or not."
+  },
+  {
+   "type": "single",
+   "scenario": "allowEmptyContext is true in the starter's ContextualQueryAugmenter.",
+   "question": "Why?",
+   "options": [
+    "To save tokens",
+    "With no matching documents the question may still need a tool, such as a balance lookup, so it goes to the model",
+    "Because pgvector can't return empty results",
+    "To make answers longer"
+   ],
+   "answer": 1,
+   "explanation": "The default (false) answers 'I don't know' when nothing is retrieved, which suits a documents-only assistant."
+  },
+  {
+   "type": "single",
+   "scenario": "The assistant gave the ₦25 fee but left out the ₦50 stamp duty that was in the same retrieved chunk.",
+   "question": "What should you conclude?",
+   "options": [
+    "Retrieval failed",
+    "pgvector lost part of the chunk",
+    "Answers grounded in the right document can still be incomplete: add the missing fact to the evaluation's expectations",
+    "Stamp duty should be removed from the help centre"
+   ],
+   "answer": 2,
+   "explanation": "Retrieval was right; the generation was incomplete. The evaluation must check the facts that matter."
+  },
+  {
+   "type": "single",
+   "scenario": "The starter's tests use a fake embedding model that hashes words into 768 buckets.",
+   "question": "What do these tests prove, and what don't they?",
+   "options": [
+    "They prove the real model ranks the right section first",
+    "They prove nothing because the embeddings are fake",
+    "They prove the chat model's answers are correct",
+    "They prove ingestion, re-embedding, retrieval wiring and citations work; ranking quality with the real model is the evaluation's job"
+   ],
+   "answer": 3,
+   "explanation": "Fakes test your code quickly and repeatably; the evaluation tests quality."
+  }
+ ]
+}
