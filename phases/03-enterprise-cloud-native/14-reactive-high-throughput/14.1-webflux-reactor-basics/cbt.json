@@ -1,0 +1,109 @@
+{
+  "topic": "14.1",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A WebFlux handler calls a JDBC repository directly.",
+      "question": "What is the problem?",
+      "options": [
+        "Nothing; WebFlux handles it",
+        "JDBC blocks an event-loop thread, stalling every request that thread serves",
+        "JDBC is faster, so it's better",
+        "WebFlux can't compile JDBC code"
+      ],
+      "answer": 1,
+      "explanation": "Never block an event loop; use R2DBC or move blocking work to boundedElastic deliberately."
+    },
+    {
+      "type": "single",
+      "scenario": "A developer writes rate.map(r -> repository.save(quote(r))) and the quote is never saved.",
+      "question": "Why?",
+      "options": [
+        "map returns a Mono<Mono<Quote>>; the inner Mono is never subscribed. Use flatMap",
+        "save() needs @Transactional",
+        "map is too slow",
+        "R2DBC needs a commit call"
+      ],
+      "answer": 0,
+      "explanation": "Use flatMap for functions that return a Mono or Flux."
+    },
+    {
+      "type": "single",
+      "scenario": "Rate ticks for one pair must be applied to the database strictly in order.",
+      "question": "Which operator fits?",
+      "options": [
+        "flatMap",
+        "zipWith",
+        "concatMap",
+        "switchIfEmpty"
+      ],
+      "answer": 2,
+      "explanation": "concatMap processes one inner publisher at a time, preserving order."
+    },
+    {
+      "type": "single",
+      "scenario": "A market feed produces rates faster than a mobile client on 3G can receive them.",
+      "question": "Which backpressure strategy suits prices?",
+      "options": [
+        "onBackpressureBuffer with no limit",
+        "onBackpressureError",
+        "Block the feed until the client catches up",
+        "onBackpressureLatest: the client gets the newest rate, never a backlog of stale ones"
+      ],
+      "answer": 3,
+      "explanation": "An old price is worthless; keep only the latest."
+    },
+    {
+      "type": "single",
+      "scenario": "The rates service has one simulated feed that every client subscribes to, seeing only ticks after they join.",
+      "question": "What kind of publisher is that?",
+      "options": [
+        "Cold",
+        "Hot",
+        "Lazy",
+        "Synchronous"
+      ],
+      "answer": 1,
+      "explanation": "A hot publisher emits regardless of subscribers; a cold one starts again for each."
+    },
+    {
+      "type": "single",
+      "scenario": "You need live rates in a browser: one-way, over plain HTTP, reconnecting automatically.",
+      "question": "What fits best?",
+      "options": [
+        "Polling every 10 ms",
+        "A Kafka consumer in the browser",
+        "Server-sent events (text/event-stream with EventSource)",
+        "SOAP"
+      ],
+      "answer": 2,
+      "explanation": "SSE is simple, one-way and proxy-friendly."
+    },
+    {
+      "type": "single",
+      "scenario": "In Spring Boot 4, a service fails to start: no bean of type WebClient.Builder.",
+      "question": "What's missing?",
+      "options": [
+        "spring-boot-starter-webclient",
+        "spring-boot-starter-webmvc",
+        "reactor-test",
+        "A @EnableWebFlux annotation"
+      ],
+      "answer": 0,
+      "explanation": "Boot 4 moved client auto-configuration into its own starters, like spring-boot-starter-restclient."
+    },
+    {
+      "type": "single",
+      "scenario": "A test of an SSE endpoint must check three events arrive within 10 seconds.",
+      "question": "What's the right tool?",
+      "options": [
+        "Thread.sleep(10000) then assert",
+        "A unit test of the controller method without subscribing",
+        "Mockito",
+        "StepVerifier on the response body, with take(3) and verify(Duration.ofSeconds(10))"
+      ],
+      "answer": 3,
+      "explanation": "StepVerifier subscribes and asserts signals with a timeout."
+    }
+  ]
+}

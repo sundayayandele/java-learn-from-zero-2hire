@@ -21,6 +21,12 @@ spring:
               filters:
                 - StripPrefix=1
                 - AddRequestHeader=X-Gateway, itl-pay
+            - id: rates
+              uri: ${RATES_URL:http://localhost:8085}
+              predicates:
+                - Path=/api/rates/**,/api/quotes/**
+              filters:
+                - StripPrefix=1
 # Observability (Module 13): traces to the OpenTelemetry collector, metrics scraped by Prometheus
 management:
   tracing:

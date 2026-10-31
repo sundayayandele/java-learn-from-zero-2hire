@@ -1,0 +1,130 @@
+## What you will be able to do
+
+- Explain what virtual threads are, how they differ from platform threads and from reactive code, and where each one's limits come from.
+- Use Little's law to predict when a thread pool becomes the bottleneck.
+- Design and run a fair benchmark, and recognise when a benchmark is measuring the wrong thing.
+- Protect any of the three models from overload with a limit on work in progress.
+- Choose between reactive and virtual threads for a given service, and defend the choice.
+
+## Why this matters in a bank or fintech
+
+For a decade, Java teams that needed to handle many slow calls at once had one serious option: reactive programming. It works, but it changes how every line is written, how stack traces look and how new joiners are trained. Java 21's virtual threads offer much of the same scalability with ordinary blocking code. Teams are now deciding, service by service, which to use, and interviewers ask about it. This topic answers with measurements from the starter, including the runs that went wrong, because those taught as much as the ones that worked.
+
+## 1. Three ways to wait
+
+A request that calls a provider taking one second spends almost all its life **waiting**. The question is what that waiting costs.
+
+| Model | While a request waits for I/O | What limits concurrency |
+| --- | --- | --- |
+| **Platform threads** (classic MVC on Tomcat) | Its OS thread is blocked; about 1 MB of stack reserved; Tomcat has 200 by default | The pool size |
+| **Virtual threads** (MVC with `spring.threads.virtual.enabled=true`) | The virtual thread is **parked**; its carrier OS thread runs other virtual threads | Memory, and whatever else you call (pools, the dependency) |
+| **Reactive** (WebFlux) | Nothing is blocked; a callback is registered; a few event-loop threads serve everything | Memory, and whatever else you call |
+
+A **virtual thread** is a thread managed by the JVM rather than the OS. Millions can exist; when one blocks on I/O, the JVM unmounts it from its **carrier** (a platform thread in a small pool) and mounts another. Your code stays blocking, readable and debuggable, with normal stack traces.
+
+**Little's law** says: requests in flight = arrival rate × time each request takes. At 300 requests a second, each taking 1 second, 300 requests are in flight at any moment. A platform-thread pool of 200 can hold only 200 of them, so it can serve at most **200 requests a second**; the rest queue. Virtual threads and reactive code have no such pool.
+
+## 2. The benchmark, and what went wrong first
+
+The starter has the same endpoint written two ways:
+
+- `rates` (WebFlux): calls the provider with `WebClient` and reads the database with R2DBC, combined with `zipWith`.
+- `rates-mvc` (Spring MVC): calls the provider with `RestClient` and reads the database with `JdbcClient`, plain blocking code, run once with virtual threads on and once off (Tomcat's 200 platform threads).
+
+`load/bench.compose.yaml` gives each the same limits (2 CPUs, 768 MB), and `load/bench.js` sends a **constant arrival rate** with k6. Our first two attempts produced numbers that looked dramatic and were worthless:
+
+1. **The whole ITL Pay stack was running alongside**, and the shared provider also read PostgreSQL on every call. Every variant failed about half its requests at only 500 a second. The bottleneck was the environment, not the frameworks.
+2. With the stack stopped and the provider answering from memory, every variant still topped out around 250–350 requests a second. Loading the provider alone showed **1,000 requests a second at 1% CPU**, so it wasn't that. Loading the reactive service's simplest endpoint (one database read) used **both of its CPUs at about 300 requests a second**, and Flight Recorder showed very little Java code running: the CPU was going into the network path through Docker Desktop's virtual machine on this Intel Mac. **On this machine, about 300 requests a second per service is the CPU ceiling before any framework difference can show.**
+
+Lesson one: before believing a benchmark, find out what it's actually measuring. Load the dependencies on their own, check CPU, profile once.
+
+## 3. The result: waiting-heavy load below the CPU ceiling
+
+So the final run measures what differs between the models: lots of **waiting**. The provider takes **1 second**; tracing is off for all three; one variant runs at a time on a fresh JVM, warmed up first.
+
+| Rate (requests/s) | Model | Successful/s | p50 | p95 | p99 | Errors | Live JVM threads | Memory |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 200 | Reactive | 186 | 1.00 s | 1.14 s | 1.24 s | 0% | 27 | 306 MiB |
+| 200 | Virtual threads | 188 | 1.01 s | 1.03 s | 1.13 s | 0% | 50 | 304 MiB |
+| 200 | Platform threads | 188 | 1.02 s | 1.06 s | 1.12 s | 0% | 239 | 328 MiB |
+| **300** | Reactive | **279** | 1.00 s | 1.17 s | 1.27 s | 0% | 27 | 331 MiB |
+| **300** | Virtual threads | **279** | 1.01 s | 1.20 s | 1.37 s | 0% | 78 | 365 MiB |
+| **300** | Platform threads | **192** | **2.98 s** | 3.02 s | 3.11 s | 0% | 246 | 349 MiB |
+
+(At 50 and 100 requests a second all three were identical: p50 1.00 s, no errors. k6 also reported a few hundred "dropped iterations" for every variant while it ramped up its virtual users; for platform threads at 300 it was 2,660, because requests weren't finishing.)
+
+What it shows:
+
+- **Below the pool limit, all three are the same.** At 200 requests a second, a 200-thread pool is just enough, and latency is equal. Most services live here, which is why "just use MVC" is often the right answer.
+- **Past the pool limit, platform threads queue.** At 300 a second, exactly as Little's law predicts, platform threads delivered about 200 a second and requests waited three times as long. Virtual threads and reactive kept pace.
+- **Virtual threads matched reactive** on throughput and latency, with plain blocking code. That's the headline of Java 21.
+- **Reactive used the fewest threads** (27 at every load), and its memory grew least. That matters at tens of thousands of concurrent connections (streams, websockets), less at hundreds.
+
+## 4. Overload: what happens when demand exceeds capacity
+
+The first, CPU-bound runs taught something the clean run couldn't: what each model does when demand is far above capacity (there, 1,000–2,000 requests a second against a ceiling of about 300).
+
+- **Virtual threads:** memory climbed to the container's 768 MB limit, the logs showed `OutOfMemoryError: Java heap space`, and the service stopped answering even its health check. Nothing limits how many requests a virtual-thread server accepts, so when requests arrive faster than they finish, they pile up in memory. A pool of 200 platform threads at least acts as a brake.
+- **Platform threads:** also became unresponsive at the highest load, at the memory limit, without an `OutOfMemoryError` in the logs: the queue in front of the pool grows too.
+- **Reactive:** failed most requests (timeouts) but stayed up, at 25 threads and about 330 MB.
+
+The fix isn't a different model, it's a **limit on work in progress**: a bulkhead or semaphore around the slow call (topic 10.3), a bounded queue, a maximum number of connections, or rate limiting at the gateway. With a limit, excess requests fail fast with `503` (or `429`) and the service survives; without one, all three models can be pushed over. **Virtual threads remove the pool's accidental protection; put a deliberate one back.**
+
+## 5. Pitfalls and good practice for virtual threads
+
+- **Don't pool virtual threads.** Create one per task (`Executors.newVirtualThreadPerTaskExecutor()`); Spring does this for you.
+- **Limit what's scarce explicitly.** Database connections, a partner's rate limit, memory: use a semaphore or the connection pool's own limit, not a thread pool.
+- **Pinning:** before JDK 24, a virtual thread blocking inside a `synchronized` block couldn't unmount from its carrier, which could starve the carriers. JDK 24 (JEP 491) removed most of that; on Java 21, prefer `ReentrantLock` around blocking calls in hot paths. JFR's `jdk.VirtualThreadPinned` event shows where it happens.
+- **ThreadLocals** work but multiply: with millions of threads, large thread-local caches cost memory. Scoped values (topic 1.15) are the modern alternative.
+- **Watch the libraries.** In our runs, the virtual-thread service still had 50–78 live JVM threads, because the JDK HTTP client and other libraries run their own platform-thread pools. Live thread count alone doesn't tell you a library is misbehaving, but it's worth looking at under load.
+
+## 6. Choosing
+
+| Choose virtual threads (MVC) when | Choose reactive (WebFlux) when |
+| --- | --- |
+| The service is request–response: CRUD, orchestration, calls to a few dependencies | You stream: server-sent events, websockets, long-lived connections by the tens of thousands |
+| The team knows Spring MVC, JPA, JDBC | You need backpressure end to end, from a producer to slow consumers |
+| You want readable stack traces and simple debugging | You compose many concurrent calls with timeouts and fallbacks declaratively |
+| Libraries you need are blocking | The rest of your stack is already reactive (R2DBC, reactive Kafka, reactive Redis) |
+
+Many teams end up with **both**: MVC and virtual threads for most services, WebFlux for the few streaming or fan-out-heavy ones. ITL Pay's `rates` stays reactive because it streams live prices; transfers, accounts and the rest stay on MVC.
+
+## Worked example: an FX aggregator for salary day
+
+An illustrative scenario, using the patterns measured above.
+
+1. ITL Pay's FX aggregator asks three liquidity providers for a price on every quote; each takes 300–800 ms. Demand on salary day reaches 800 quotes a second.
+2. Little's law: 800 × 0.8 s ≈ 640 requests in flight. The old service on 200 platform threads queues badly; that's what the dashboard showed last month.
+3. The team switches the service to virtual threads (one property), adds a semaphore of 1,000 permits around the provider calls and a gateway rate limit, and load-tests at 1,200 a second.
+4. Result: latency stays at the providers' speed up to capacity; beyond it, excess requests get a fast `503` with "try again", memory stays flat, and the service never stops answering its health checks.
+5. The live price stream for the app stays on the reactive `rates` service, which holds 20,000 open connections on a handful of threads.
+
+## Common mistakes
+
+- Benchmarking on a busy machine, or against a dependency that saturates first, and drawing conclusions about frameworks.
+- Expecting virtual threads to make CPU-bound work faster (they don't; they make waiting cheap).
+- Turning on virtual threads and removing every limit, then running out of memory under overload.
+- Pooling virtual threads.
+- Choosing WebFlux for a CRUD service the team can't easily debug.
+- Mixing blocking calls into reactive code "just this once".
+
+## Practice
+
+1. Reproduce the 300-requests-a-second step on your machine with `load/bench.compose.yaml` and `load/bench.js`. Then find your own machine's CPU ceiling the way we did, by loading `/rates/USD-NGN` alone.
+2. Raise Tomcat's pool to 400 (`server.tomcat.threads.max`) for the platform variant and rerun at 300. Explain the result with Little's law, then explain why "just add threads" isn't a general answer.
+3. Add a semaphore of 300 permits to `rates-mvc`'s provider call (answer `503` when none is free), drive it at 1,000 requests a second, and show memory staying flat and the health check responding.
+4. Record JFR in `rates-mvc` under load with `jdk.VirtualThreadPinned` enabled and report whether any pinning appears.
+5. Write ADR 9 for your capstone: which services use which model, with your numbers.
+
+## Key terms
+
+Platform thread, virtual thread, carrier thread, mount and unmount, pinning, JEP 444, JEP 491, Little's law, concurrency, throughput, latency, thread pool, event loop, backpressure, work in progress, bulkhead, semaphore, load shedding, overload, constant arrival rate, dropped iterations, benchmark hygiene, CPU ceiling.
+
+## Further reading
+
+- [JEP 444: Virtual Threads](https://openjdk.org/jeps/444)
+- [JEP 491: Synchronize Virtual Threads without Pinning](https://openjdk.org/jeps/491)
+- [Oracle: Virtual threads guide](https://docs.oracle.com/en/java/javase/21/core/virtual-threads.html)
+- [Spring Boot reference: virtual threads](https://docs.spring.io/spring-boot/reference/features/task-execution-and-scheduling.html)
+- [Little's law (Wikipedia)](https://en.wikipedia.org/wiki/Little%27s_law)
+- [Spring blog: Embracing virtual threads](https://spring.io/blog/2022/10/11/embracing-virtual-threads)

@@ -2426,6 +2426,61 @@
         "published": "2026-05-05",
         "why": "SLAs, SLOs, SLIs and error budgets, explained for developers."
       }
+    ],
+    "14.1": [
+      {
+        "id": "q4SyGZD-jSg",
+        "title": "Project Reactor | Reactor Modules | Reactor Specification | Mono | Flux detailed explanation.",
+        "channel": "Java Talkies",
+        "minutes": 13.3,
+        "published": "2023-04-21",
+        "why": "Project Reactor's Mono and Flux in detail, with the Reactive Streams specification behind them."
+      },
+      {
+        "id": "4MfsVEgFgxM",
+        "title": "Introduction to Mono and Flux | Spring Webflux | Reactive Publishers",
+        "channel": "TechyKumar",
+        "minutes": 18.6,
+        "published": "2024-01-07",
+        "why": "A short introduction to Mono and Flux and how a pipeline runs only when subscribed."
+      }
+    ],
+    "14.2": [
+      {
+        "id": "fIMdlE5Hvzk",
+        "title": "Spring Tips:  Reactive SQL Data Access with Spring Data R2DBC",
+        "channel": "SpringDeveloper",
+        "minutes": 34.6,
+        "published": "2018-12-18",
+        "optional": true,
+        "why": "Optional and from 2018, so some APIs have moved on: reactive SQL access with R2DBC and Spring Data R2DBC, from the Spring team."
+      },
+      {
+        "id": "Zkcy0tlYJpI",
+        "title": "R2DBC and Spring for Non-Blocking Database Access",
+        "channel": "OktaDev",
+        "minutes": 14.0,
+        "published": "2021-11-11",
+        "why": "Building a non-blocking Spring application on R2DBC, step by step."
+      }
+    ],
+    "14.3": [
+      {
+        "id": "GFm4p04ebWk",
+        "title": "Are Virtual Threads Killing Reactive Programming?",
+        "channel": "Hussein Akar",
+        "minutes": 4.4,
+        "published": "2025-06-12",
+        "why": "Whether virtual threads replace reactive programming, and where reactive still earns its complexity."
+      },
+      {
+        "id": "eAjy7E_FQN0",
+        "title": "Java Virtual Thread: Is Reactive Programming Dead?",
+        "channel": "Vinoth Selvaraj",
+        "minutes": 12.9,
+        "published": "2023-11-14",
+        "why": "Virtual threads versus reactive programming: what each solves and when reactive still wins."
+      }
     ]
   }
 }

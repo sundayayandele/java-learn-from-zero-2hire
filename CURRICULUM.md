@@ -184,11 +184,11 @@ Projects: Helm chart for your microservices; Deploy the capstone to a managed Ku
 
 Projects: End-to-end tracing across your services; Grafana dashboard with alert rules; Memory-leak hunt and latency-reduction lab.
 
-### Module 14: Reactive & High-Throughput Java (week 34)
+### [Module 14: Reactive & High-Throughput Java](phases/03-enterprise-cloud-native/14-reactive-high-throughput/README.md) (week 34)
 
-- 14.1 Spring WebFlux and Project Reactor basics
-- 14.2 Reactive database access with R2DBC
-- 14.3 Reactive vs virtual threads: choosing the right model
+- [14.1 Spring WebFlux and Project Reactor basics](phases/03-enterprise-cloud-native/14-reactive-high-throughput/14.1-webflux-reactor-basics/README.md)
+- [14.2 Reactive database access with R2DBC](phases/03-enterprise-cloud-native/14-reactive-high-throughput/14.2-r2dbc-reactive-data/README.md)
+- [14.3 Reactive vs virtual threads: choosing the right model](phases/03-enterprise-cloud-native/14-reactive-high-throughput/14.3-reactive-vs-virtual-threads/README.md)
 
 Projects: Non-blocking rates/quotes streaming endpoint; Benchmark: MVC + virtual threads vs WebFlux.
 

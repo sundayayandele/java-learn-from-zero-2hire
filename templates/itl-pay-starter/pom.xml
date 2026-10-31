@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ng.itlearning.pay</groupId>
     <artifactId>itl-pay</artifactId>
-    <version>0.4.0-SNAPSHOT</version>
+    <version>0.5.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>ITL Pay (Phase 3 capstone system)</name>
     <modules>
@@ -15,5 +15,7 @@
         <module>fraud</module>
         <module>notifications</module>
         <module>interest-batch</module>
+        <module>rates</module>
+        <module>rates-mvc</module>
     </modules>
 </project>

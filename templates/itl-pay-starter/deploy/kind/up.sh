@@ -4,8 +4,8 @@
 # Tear it all down with: kind delete cluster --name itl-pay
 set -euo pipefail
 cd "$(dirname "$0")/../.."          # templates/itl-pay-starter
-TAG=0.4.0
-SERVICES="accounts transfers gateway fraud notifications interest-batch"
+TAG=0.5.0
+SERVICES="accounts transfers gateway fraud notifications interest-batch rates"
 
 echo "== cluster"
 kind create cluster --config deploy/kind/cluster.yaml

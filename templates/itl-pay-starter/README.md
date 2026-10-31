@@ -1,6 +1,6 @@
 # ITL Pay starter (Phase 3 capstone system)
 
-← [Phase 3](../../phases/03-enterprise-cloud-native/README.md) · [Module 10](../../phases/03-enterprise-cloud-native/10-microservices-distributed-systems/README.md) · [Module 11](../../phases/03-enterprise-cloud-native/11-event-driven-kafka-batch/README.md) · [Module 12](../../phases/03-enterprise-cloud-native/12-kubernetes-helm-aws/README.md) · [Module 13](../../phases/03-enterprise-cloud-native/13-observability-performance/README.md)
+← [Phase 3](../../phases/03-enterprise-cloud-native/README.md) · [Module 10](../../phases/03-enterprise-cloud-native/10-microservices-distributed-systems/README.md) · [Module 11](../../phases/03-enterprise-cloud-native/11-event-driven-kafka-batch/README.md) · [Module 12](../../phases/03-enterprise-cloud-native/12-kubernetes-helm-aws/README.md) · [Module 13](../../phases/03-enterprise-cloud-native/13-observability-performance/README.md) · [Module 14](../../phases/03-enterprise-cloud-native/14-reactive-high-throughput/README.md)
 
 The starting point for the Phase 3 capstone system: Spring Boot 4.1 services (Java 21) built by one Maven command, with Spring Cloud 2025.1, Spring Modulith 2.1, Spring for Apache Kafka 4.1 and Spring Batch 6. It holds the code from every lesson so far, tested.
 
@@ -12,6 +12,8 @@ The starting point for the Phase 3 capstone system: Spring Boot 4.1 services (Ja
 | `fraud` | 8083 | Reacts to `TransferReserved`, publishes `CLEARED` or `REJECTED` (over ₦20,000) to `fraud-decisions`; **retry topics** and a dead-letter topic | 11.2, 11.4 |
 | `notifications` | 8084 | An **idempotent consumer**: one SMS per event even when Kafka delivers twice; blocking retries, then a **dead-letter topic** | 11.3, 11.4 |
 | `interest-batch` | – | **Spring Batch** end-of-day interest posting for 1,000 savings accounts, in chunks of 100, **restartable** and idempotent per account and day | 11.5 |
+| `rates` | 8085 | **Reactive** FX rates: WebFlux, `WebClient` and R2DBC; the latest rates, a **server-sent-events** stream with backpressure, and quotes valid for 30 seconds (`/api/rates/**`, `/api/quotes`) | 14.1, 14.2 |
+| `rates-mvc` | 8086 | The same benchmark endpoint on Spring MVC with **virtual threads** (or platform threads), for comparison; not part of the running system | 14.3 |
 
 PostgreSQL 18 (one database and user per service), Kafka 4.1 (one KRaft broker), Redis 8 and Grafana's all-in-one observability image (Grafana, Prometheus, Tempo) run in Docker Compose. The tests start their own PostgreSQL, Kafka and Redis with Testcontainers, so `./mvnw verify` needs Docker running.
 
@@ -35,6 +37,10 @@ docker compose exec kafka /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-s
 # traces in Explore -> Tempo; alert rules in Alerting. Logs are JSON with trace ids:
 docker compose logs notifications | grep SMS
 
+# Live FX rates (Module 14): server-sent events through the gateway, and a quote
+curl -N 'localhost:8080/api/rates/stream?pair=USD-NGN'
+curl -s -X POST localhost:8080/api/quotes -H 'Content-Type: application/json' -d '{"pair":"GBP-NGN","amount":250}'
+
 # Load test (Module 13): about 3.5 minutes, up to 60 transfers a second
 docker run --rm --network itl-pay-starter_default -v "$PWD/load:/scripts" grafana/k6:2.3.0 run /scripts/transfers.js
 
@@ -44,6 +50,18 @@ docker compose run --rm interest-batch businessDate=2026-10-30                  
 ```
 
 Balances in `accounts` are still in memory with two demo accounts (A1 ₦50,000, A2 ₦1,000), so the flow is easy to follow.
+
+## Reactive versus virtual threads (Module 14)
+
+The benchmark runs on its own (stop the main stack first), one variant at a time, each with 2 CPUs and 768 MB, against a provider that answers after 1 second:
+
+```bash
+docker compose -f compose.yaml -f load/bench.compose.yaml up -d --build postgres fx-provider rates rates-mvc rates-mvc-platform
+docker run --rm --network itl-pay-starter_default -v "$PWD/load:/scripts" -e TARGET=http://rates:8085 -e RATE=300 grafana/k6:2.3.0 run /scripts/bench.js
+#   TARGET=http://rates-mvc:8086 (virtual threads) or http://rates-mvc-platform:8086 (200 platform threads)
+```
+
+At 300 requests a second, reactive and virtual threads both served about 280 a second at about 1 s, while 200 platform threads served about 190 a second at about 3 s: Little's law. Topic 14.3 has the full results, including what happened under overload.
 
 ## Observability and performance (Module 13)
 
@@ -125,3 +143,11 @@ Copy this folder into your own repository, then:
 4. Remove accounts' global lock (per-account locking in PostgreSQL), and prove the gain with Flight Recorder and the load test.
 5. Load-test at your expected peak and twice it; write the report (throughput, percentiles, errors, the bottleneck, the fix, before and after).
 6. Write ADR 8 (observability choices) and a short postmortem of one problem the load test found. Tag `v0.4`.
+
+## Your `v0.5` (Module 14)
+
+1. Make foreign-currency transfers use a quote: the request carries a quote id from `rates`, and transfers checks it hasn't expired before reserving funds.
+2. Add a limit on work in progress (a semaphore, bulkhead or gateway rate limit) to whichever services face slow dependencies, and prove with k6 that overload produces fast `503`s, flat memory and a responsive health check.
+3. Run the benchmark on your own machine: find your CPU ceiling first, then compare the three variants below and above it; write the report.
+4. Show the rates stream in a small web page with `EventSource`, and test a slow client's behaviour.
+5. Write ADR 9: which ITL Pay services are reactive, which use virtual threads, and why, with your numbers. Tag `v0.5`.

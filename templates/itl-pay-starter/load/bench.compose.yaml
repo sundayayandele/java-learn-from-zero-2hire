@@ -1,0 +1,45 @@
+# The reactive-versus-virtual-threads benchmark (topic 14.3). Run it on its own, not next to the whole stack:
+#   docker compose -f compose.yaml -f load/bench.compose.yaml up -d --build postgres fx-provider rates rates-mvc rates-mvc-platform
+# and test one service at a time; stop the others so they don't compete for CPU.
+# Each service under test gets the same 2 CPUs and 768 MB, and calls the same provider, which answers after 1 second:
+# a waiting-heavy workload, where the threading models differ.
+services:
+  fx-provider:                     # plays the external FX provider: the reactive rates image, answering /provider after a delay
+    build: ./rates
+    environment:
+      DB_HOST: postgres
+      MANAGEMENT_TRACING_EXPORT_OTLP_ENABLED: "false"
+    cpus: 3
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  rates:                           # WebFlux + WebClient + R2DBC
+    environment:
+      PROVIDER_URL: http://fx-provider:8085
+      MANAGEMENT_TRACING_ENABLED: "false"         # measure the frameworks, not tracing: spans cost CPU even when not exported
+      PROVIDER_DELAY_MS: "1000"
+    cpus: 2
+    mem_limit: 768m
+
+  rates-mvc:                       # Spring MVC + RestClient + JDBC, every request on a virtual thread
+    build: ./rates-mvc
+    environment:
+      DB_HOST: postgres
+      PROVIDER_URL: http://fx-provider:8085
+      PROVIDER_DELAY_MS: "1000"
+    cpus: 2
+    mem_limit: 768m
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  rates-mvc-platform:              # the same code on Tomcat's default pool of 200 platform threads
+    build: ./rates-mvc
+    environment:
+      DB_HOST: postgres
+      PROVIDER_URL: http://fx-provider:8085
+      PROVIDER_DELAY_MS: "1000"
+      SPRING_THREADS_VIRTUAL_ENABLED: "false"
+    cpus: 2
+    mem_limit: 768m
+    depends_on:
+      postgres: { condition: service_healthy }

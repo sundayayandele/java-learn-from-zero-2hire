@@ -11,6 +11,9 @@ defaults:
     requests: { cpu: 250m, memory: 768Mi }
     limits: { memory: 1Gi }
 services:
+  rates:
+    env:
+      DB_HOST: itl-pay.abcdefghijkl.eu-west-1.rds.amazonaws.com
   transfers:
     replicas: 3
     autoscaling: { enabled: true, minReplicas: 3, maxReplicas: 10, cpuUtilization: 70 }

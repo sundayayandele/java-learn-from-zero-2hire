@@ -1,0 +1,109 @@
+{
+  "topic": "14.2",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "Why does a reactive service need R2DBC rather than JDBC?",
+      "question": "Choose one.",
+      "options": [
+        "R2DBC is a faster SQL dialect",
+        "JDBC is deprecated",
+        "JDBC calls block the thread; R2DBC drivers are non-blocking, so the whole request path stays reactive",
+        "R2DBC doesn't need a database"
+      ],
+      "answer": 2,
+      "explanation": "Mixing blocking JDBC into WebFlux undoes the model."
+    },
+    {
+      "type": "single",
+      "scenario": "The rates service uses R2DBC. How does it run Flyway migrations?",
+      "question": "Choose one.",
+      "options": [
+        "Over JDBC at start-up, with the JDBC driver and spring.flyway.url, before requests are served",
+        "Flyway supports R2DBC natively",
+        "It doesn't use migrations",
+        "With a reactive migration library only"
+      ],
+      "answer": 0,
+      "explanation": "Blocking once at start-up is harmless."
+    },
+    {
+      "type": "single",
+      "scenario": "A developer generates the quote's UUID in Java and calls repository.save(quote). Nothing is inserted.",
+      "question": "Why?",
+      "options": [
+        "UUIDs aren't supported",
+        "The transaction rolled back",
+        "R2DBC needs a sequence",
+        "Spring Data R2DBC treats a non-null id as an existing row and issues an UPDATE; implement Persistable, use R2dbcEntityTemplate.insert, or write the INSERT"
+      ],
+      "answer": 3,
+      "explanation": "isNew() is decided from the id."
+    },
+    {
+      "type": "single",
+      "scenario": "Which JPA feature does Spring Data R2DBC not provide?",
+      "question": "Choose one.",
+      "options": [
+        "Query derivation from method names",
+        "Lazy-loaded relationships and a persistence context",
+        "@Query",
+        "Paging"
+      ],
+      "answer": 1,
+      "explanation": "R2DBC maps rows to objects; relationships are explicit queries."
+    },
+    {
+      "type": "single",
+      "scenario": "Inside a @Transactional method returning Mono, a developer adds a separate auditMono.subscribe().",
+      "question": "What happens to that audit write?",
+      "options": [
+        "It runs outside the returned pipeline, so it isn't in the transaction and may not run when expected; chain it with flatMap instead",
+        "It's part of the transaction",
+        "It runs twice",
+        "It blocks the event loop"
+      ],
+      "answer": 0,
+      "explanation": "Keep all work in the one chain you return."
+    },
+    {
+      "type": "single",
+      "scenario": "Where does a reactive transaction live, if not on a thread?",
+      "question": "Choose one.",
+      "options": [
+        "In a ThreadLocal",
+        "In a static field",
+        "In the Reactor context of the subscription",
+        "In the database only"
+      ],
+      "answer": 2,
+      "explanation": "There's no single thread to bind it to."
+    },
+    {
+      "type": "single",
+      "scenario": "@ServiceConnection on a PostgreSQLContainer fails with NoClassDefFoundError: R2DBCDatabaseContainer.",
+      "question": "What's missing?",
+      "options": [
+        "The JDBC driver",
+        "A Docker daemon",
+        "spring-boot-starter-jdbc",
+        "The testcontainers-r2dbc test dependency"
+      ],
+      "answer": 3,
+      "explanation": "With it, the container configures both R2DBC and JDBC (for Flyway)."
+    },
+    {
+      "type": "single",
+      "scenario": "A team's CRUD service uses JPA heavily, and they want to move to WebFlux 'for speed'.",
+      "question": "What's the best advice?",
+      "options": [
+        "Rewrite everything in R2DBC",
+        "Measure first; MVC with JPA and virtual threads is simpler and often fast enough; use R2DBC where the service is reactive end to end",
+        "Use JDBC inside WebFlux",
+        "Disable transactions"
+      ],
+      "answer": 1,
+      "explanation": "Choose by workload and team, with numbers."
+    }
+  ]
+}

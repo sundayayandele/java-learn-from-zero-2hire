@@ -86,16 +86,25 @@ services:
     depends_on:
       postgres: { condition: service_healthy }
       kafka: { condition: service_healthy }
+  rates:
+    build: ./rates
+    environment:
+      DB_HOST: postgres
+      OTLP_ENDPOINT: http://observability:4318
+      LOGGING_STRUCTURED_FORMAT_CONSOLE: ecs
+    depends_on:
+      postgres: { condition: service_healthy }
   gateway:
     build: ./gateway
     environment:
       ACCOUNTS_URL: http://accounts:8081
       TRANSFERS_URL: http://transfers:8082
+      RATES_URL: http://rates:8085
       OTLP_ENDPOINT: http://observability:4318
       LOGGING_STRUCTURED_FORMAT_CONSOLE: ecs
     ports:
       - "8080:8080"
-    depends_on: [accounts, transfers]
+    depends_on: [accounts, transfers, rates]
 
   # A batch job, not a server: it runs when asked and exits.
   # docker compose run --rm interest-batch businessDate=2026-10-30

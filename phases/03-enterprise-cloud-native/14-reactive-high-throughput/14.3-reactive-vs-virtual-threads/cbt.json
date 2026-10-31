@@ -1,0 +1,109 @@
+{
+  "topic": "14.3",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A service gets 300 requests a second, each spending 1 second waiting on a provider.",
+      "question": "By Little's law, how many requests are in flight?",
+      "options": [
+        "30",
+        "3",
+        "300",
+        "3,000"
+      ],
+      "answer": 2,
+      "explanation": "In flight = arrival rate × time in the system."
+    },
+    {
+      "type": "single",
+      "scenario": "In the starter's benchmark at 300 requests/s with a 1 s provider, platform threads served 192/s with p50 2.98 s, while virtual threads and reactive served 279/s at about 1 s.",
+      "question": "Why?",
+      "options": [
+        "Tomcat's 200-thread pool caps a 1-second call at about 200 requests a second, so the rest queued",
+        "Platform threads are slower at CPU work",
+        "The provider favoured virtual threads",
+        "Garbage collection"
+      ],
+      "answer": 0,
+      "explanation": "A blocking pool limits concurrency; virtual threads and reactive don't."
+    },
+    {
+      "type": "single",
+      "scenario": "At 200 requests/s, all three models had the same latency and no errors.",
+      "question": "What does that tell you?",
+      "options": [
+        "Reactive is always best",
+        "The benchmark was broken",
+        "Virtual threads are always slower",
+        "Below the pool limit the threading model doesn't matter much; most services live there"
+      ],
+      "answer": 3,
+      "explanation": "Differences show only past the limit, or at very high connection counts."
+    },
+    {
+      "type": "single",
+      "scenario": "The first benchmark runs had every variant failing half its requests at 500/s.",
+      "question": "What was the lesson?",
+      "options": [
+        "WebFlux is unreliable",
+        "The environment, not the frameworks, was the bottleneck: other services competed for CPU and the shared provider saturated first; check what a benchmark measures",
+        "Virtual threads don't work",
+        "k6 can't do 500/s"
+      ],
+      "answer": 1,
+      "explanation": "Load dependencies alone, check CPU, profile once."
+    },
+    {
+      "type": "single",
+      "scenario": "Under heavy overload, the virtual-thread service ran out of heap and stopped answering health checks.",
+      "question": "What's the right fix?",
+      "options": [
+        "Add a limit on work in progress (a semaphore or bulkhead, or a gateway rate limit) so excess requests fail fast",
+        "Go back to platform threads",
+        "Increase the heap until it stops",
+        "Disable health checks"
+      ],
+      "answer": 0,
+      "explanation": "Virtual threads remove the pool's accidental brake; put a deliberate one back."
+    },
+    {
+      "type": "single",
+      "scenario": "Which statement about virtual threads is accurate?",
+      "question": "Choose one.",
+      "options": [
+        "They make CPU-bound work faster",
+        "They must be pooled",
+        "They make waiting cheap: a blocked virtual thread unmounts and its carrier runs others",
+        "They require reactive code"
+      ],
+      "answer": 2,
+      "explanation": "They help I/O-bound concurrency, not computation."
+    },
+    {
+      "type": "single",
+      "scenario": "On Java 21, a virtual thread blocks on I/O inside a synchronized block in a hot path.",
+      "question": "What can happen, and what helps?",
+      "options": [
+        "Nothing",
+        "The JVM crashes",
+        "It becomes a platform thread forever",
+        "It pins its carrier thread, which can starve carriers; prefer ReentrantLock there, or use JDK 24+ where JEP 491 removed most pinning"
+      ],
+      "answer": 3,
+      "explanation": "JFR's jdk.VirtualThreadPinned event shows where."
+    },
+    {
+      "type": "single",
+      "scenario": "ITL Pay needs a service holding 20,000 open price streams to mobile apps.",
+      "question": "Which model fits best?",
+      "options": [
+        "Platform threads with a pool of 20,000",
+        "Reactive (WebFlux with SSE), with backpressure per client",
+        "A batch job",
+        "Polling every second over MVC"
+      ],
+      "answer": 1,
+      "explanation": "Long-lived streaming connections are reactive's strength; request–response services suit virtual threads."
+    }
+  ]
+}

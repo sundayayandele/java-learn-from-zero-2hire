@@ -1,0 +1,176 @@
+## What you will be able to do
+
+- Explain why reactive services need a reactive database driver, and what R2DBC is.
+- Query and write with `DatabaseClient` and Spring Data R2DBC repositories.
+- Use reactive transactions correctly, and migrate the schema with Flyway.
+- Test R2DBC code with Testcontainers and `StepVerifier`.
+- Know R2DBC's limits compared with JPA and JDBC.
+
+## Why this matters in a bank or fintech
+
+A WebFlux service that talks to PostgreSQL through JDBC blocks an event-loop thread on every query, and you're back to the problem reactive was meant to solve, only harder to see. **R2DBC** gives you a non-blocking database driver so the whole path, from HTTP request to database and back, stays reactive. For a quotes service under a burst of currency-conversion requests, that's the difference between a few threads serving thousands of requests and a stalled event loop.
+
+## 1. R2DBC in one paragraph
+
+**R2DBC** (Reactive Relational Database Connectivity) is a specification for non-blocking SQL drivers, like JDBC but returning `Publisher`s. PostgreSQL's driver is `org.postgresql:r2dbc-postgresql`; connections are pooled by `r2dbc-pool`. With Spring Boot 4.1:
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-r2dbc</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.postgresql</groupId>
+    <artifactId>r2dbc-postgresql</artifactId>
+    <scope>runtime</scope>
+</dependency>
+```
+
+```properties
+spring.r2dbc.url=r2dbc:postgresql://${DB_HOST:localhost}:5432/${DB_NAME:rates}
+spring.r2dbc.username=${DB_USER:rates}
+spring.r2dbc.password=${DB_PASSWORD:rates}
+spring.r2dbc.pool.max-size=20
+```
+
+**Migrations still use JDBC.** Flyway runs once at start-up, before any request, so blocking is harmless there. The rates service adds the JDBC driver and points Flyway at the same database:
+
+```properties
+spring.flyway.url=jdbc:postgresql://${DB_HOST:localhost}:5432/${DB_NAME:rates}
+spring.flyway.user=${DB_USER:rates}
+spring.flyway.password=${DB_PASSWORD:rates}
+```
+
+## 2. DatabaseClient: SQL, reactively
+
+`DatabaseClient` is R2DBC's equivalent of `JdbcClient`: you write SQL, bind parameters and map rows.
+
+```java
+public Flux<Rate> current() {
+    return db.sql("SELECT pair, bid, ask, updated_at FROM rate ORDER BY pair")
+            .map((row, meta) -> new Rate(row.get("pair", String.class), row.get("bid", BigDecimal.class),
+                    row.get("ask", BigDecimal.class), row.get("updated_at", OffsetDateTime.class).toInstant()))
+            .all();
+}
+```
+
+Writes return the number of rows changed, as a `Mono`:
+
+```java
+return db.sql("UPDATE rate SET bid = :bid, ask = :ask, updated_at = now() WHERE pair = :pair")
+        .bind("bid", next.bid()).bind("ask", next.ask()).bind("pair", next.pair())
+        .fetch().rowsUpdated()
+        .thenReturn(next);
+```
+
+Note `.all()` (a `Flux`), `.one()` (exactly one, as a `Mono`) and `.first()`, and that **nothing runs until subscribed**: a `db.sql(...).fetch().rowsUpdated()` that you build but don't return or subscribe to never touches the database.
+
+## 3. Spring Data R2DBC repositories
+
+For simple entities, repositories save you the SQL:
+
+```java
+interface QuoteRepository extends ReactiveCrudRepository<QuoteEntity, UUID> {
+    Flux<QuoteEntity> findByPairAndExpiresAtAfter(String pair, Instant now);
+}
+```
+
+What's different from JPA (topic 4.4):
+
+- **No lazy loading, no relationships, no persistence context.** Spring Data R2DBC maps a row to an object, nothing more. You load related data with explicit queries. Many teams find that a relief.
+- **"New or existing?"** `save()` decides whether to INSERT or UPDATE from the id: a non-null id means UPDATE. If your application generates UUIDs (as the quotes do), `save()` tries to update a row that doesn't exist. Either implement `Persistable` (`isNew()`), use `R2dbcEntityTemplate.insert(...)`, or write the INSERT with `DatabaseClient` as the rates service does.
+- Query derivation, `@Query`, paging with `Pageable` returning `Flux`, and auditing all work.
+
+## 4. Reactive transactions
+
+Spring Boot configures an `R2dbcTransactionManager`, and `@Transactional` works on methods that return `Mono` or `Flux`:
+
+```java
+@PostMapping("/quotes")
+@ResponseStatus(HttpStatus.CREATED)
+@Transactional                                         // a reactive transaction: R2DBC's, bound to this subscription
+Mono<Quote> quote(@RequestBody QuoteRequest req) {
+    ...
+    return rates.one(parts[0], parts[1])
+            .map(r -> new Quote(UUID.randomUUID(), r.pair(), req.amount(), r.ask(), ..., Instant.now().plusSeconds(30)))
+            .flatMap(q -> db.sql("INSERT INTO quote (...) VALUES (...)").bind(...).fetch().rowsUpdated().thenReturn(q));
+}
+```
+
+The transaction isn't bound to a thread (there's no thread to bind to); it lives in the **Reactor context** of that subscription. Two consequences:
+
+- The transaction begins when the returned `Mono` is subscribed, and commits when it completes, or rolls back on an error signal.
+- Work you start **outside** the returned pipeline (a separate `.subscribe()` inside the method) isn't part of the transaction and may not even run. Keep everything in the one chain you return.
+
+For programmatic control, `TransactionalOperator` wraps a pipeline: `operator.transactional(pipeline)`.
+
+The same Reactor context is how **tracing** follows a request across operators and threads: Micrometer's context-propagation library moves the trace id between the Reactor context and thread-locals (for log lines, for example). Check it end to end in your own service: send a request with a `traceparent` header through the gateway and find the rates spans in Tempo (topic 13.1).
+
+## 5. Testing
+
+Spring Boot's `@ServiceConnection` on a `PostgreSQLContainer` configures **both** R2DBC (for the app) and JDBC (for Flyway), as long as `testcontainers-r2dbc` is on the test classpath. Without it, the context failed to start with `NoClassDefFoundError: org/testcontainers/r2dbc/R2DBCDatabaseContainer`, which is how we found out.
+
+```java
+@TestConfiguration(proxyBeanMethods = false)
+static class Containers {
+    @Bean
+    @ServiceConnection                                 // configures both R2DBC (the app) and JDBC (Flyway)
+    PostgreSQLContainer postgres() {
+        return new PostgreSQLContainer("postgres:18-alpine");
+    }
+}
+```
+
+Check database effects with `StepVerifier`:
+
+```java
+StepVerifier.create(db.sql("SELECT count(*) AS n FROM quote").map(row -> row.get("n", Long.class)).one())
+        .assertNext(n -> assertThat(n).isGreaterThanOrEqualTo(1))
+        .verifyComplete();
+```
+
+## 6. When R2DBC isn't the right tool
+
+- Your team knows JPA well and the service is CRUD: MVC, JPA and virtual threads (topic 14.3) are simpler and fast enough.
+- You need features R2DBC drivers don't have (some vendor-specific types, stored-procedure-heavy code), or a database without a mature R2DBC driver.
+- Long, complex transactions with lots of logic in between: reactive code makes them hard to read.
+
+R2DBC shines when the rest of the service is reactive, the queries are simple, and concurrency is high.
+
+## Worked example: the quote that must not be half-saved
+
+An illustrative scenario; the starter's tested behaviour is in the sections above.
+
+
+1. `POST /api/quotes` for ₦250,000 of GBP. The pipeline reads the latest GBP-NGN ask with `DatabaseClient`, builds the quote, and inserts it, all in one returned `Mono` under `@Transactional`.
+2. The insert violates a constraint (say, an unknown pair slipped past validation): the error signal travels down the pipeline, the transaction manager rolls back, and the client gets an error, with nothing half-written.
+3. A developer adds an audit insert with its own `.subscribe()` inside the method. In a test the audit row sometimes appears and sometimes doesn't, and it's never rolled back with the quote. Moving it into the chain (`.flatMap(q -> audit(q).thenReturn(q))`) fixes both.
+
+## Common mistakes
+
+- Using JDBC or JPA inside a WebFlux handler.
+- Building database calls that are never subscribed, or subscribing separately inside a transactional method.
+- `save()` with application-assigned ids turning into failed UPDATEs.
+- Expecting lazy-loaded relationships.
+- Forgetting the JDBC driver and `spring.flyway.url` for migrations.
+- Pools sized like JDBC pools without measuring: R2DBC needs far fewer threads, not necessarily fewer connections.
+
+## Practice
+
+1. Replace the quote INSERT with a Spring Data R2DBC repository and an entity implementing `Persistable<UUID>`, and keep the test green.
+2. Add `GET /quotes/{id}` that returns 404 for expired quotes, and test it with `StepVerifier` and `WebTestClient`.
+3. Write a test proving that an error after the insert rolls the quote back (use a pair that triggers a failure in a later step).
+4. Add an index for "quotes for a pair that haven't expired" and check the plan with `EXPLAIN`.
+5. Measure: run the quotes endpoint under k6 with `spring.r2dbc.pool.max-size` at 5, 20 and 50, and explain the results.
+
+## Key terms
+
+R2DBC, reactive driver, `r2dbc-postgresql`, `r2dbc-pool`, `DatabaseClient`, `fetch()`, `rowsUpdated()`, `all()`, `one()`, Spring Data R2DBC, `ReactiveCrudRepository`, `Persistable`, `R2dbcEntityTemplate`, `R2dbcTransactionManager`, reactive transaction, Reactor context, `TransactionalOperator`, context propagation, Flyway over JDBC, `testcontainers-r2dbc`.
+
+## Further reading
+
+- [R2DBC specification and drivers](https://r2dbc.io/)
+- [Spring Data R2DBC reference](https://docs.spring.io/spring-data/relational/reference/r2dbc.html)
+- [Spring Framework reference: data access with R2DBC](https://docs.spring.io/spring-framework/reference/data-access/r2dbc.html)
+- [Spring Boot reference: R2DBC](https://docs.spring.io/spring-boot/reference/data/sql.html#data.sql.r2dbc)
+- [r2dbc-postgresql](https://github.com/pgjdbc/r2dbc-postgresql)

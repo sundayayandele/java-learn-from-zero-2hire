@@ -6,3 +6,5 @@ CREATE USER notifications WITH PASSWORD 'notifications';
 CREATE DATABASE notifications OWNER notifications;
 CREATE USER interest WITH PASSWORD 'interest';
 CREATE DATABASE interest OWNER interest;
+CREATE USER rates WITH PASSWORD 'rates';
+CREATE DATABASE rates OWNER rates;

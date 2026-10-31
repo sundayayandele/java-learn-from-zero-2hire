@@ -2,7 +2,7 @@
 
 image:
   registry: ""                 # "" for images loaded into kind; an ECR address in the cloud
-  tag: "0.4.0"
+  tag: "0.5.0"
   pullPolicy: IfNotPresent
 
 infra:
@@ -48,6 +48,11 @@ services:
     port: 8084
     database: notifications
     kafka: true
+  rates:                       # reactive: WebFlux and R2DBC (Module 14)
+    port: 8085
+    database: rates
+    env:
+      DB_HOST: postgres          # rates builds its R2DBC and Flyway URLs from DB_HOST and the database name
   gateway:
     port: 8080
     replicas: 2
@@ -57,6 +62,7 @@ services:
     env:
       ACCOUNTS_URL: http://accounts:8081
       TRANSFERS_URL: http://transfers:8082
+      RATES_URL: http://rates:8085
     autoscaling:
       enabled: true
       minReplicas: 2
