@@ -1,0 +1,7 @@
+[Unit]
+Description=Keep Moodle AI tools out of itlearning.tech quizzes and assignments
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/itl-ai-guard

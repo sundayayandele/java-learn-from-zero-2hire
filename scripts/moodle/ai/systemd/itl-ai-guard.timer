@@ -1,0 +1,9 @@
+[Unit]
+Description=Block Moodle AI in new quizzes and assignments daily at 04:30 UTC
+
+[Timer]
+OnCalendar=*-*-* 04:30:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target
