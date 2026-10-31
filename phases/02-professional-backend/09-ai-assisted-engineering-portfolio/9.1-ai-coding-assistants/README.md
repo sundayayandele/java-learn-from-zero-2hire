@@ -145,7 +145,7 @@ Large language model, inline completion, chat assistant, agentic coding assistan
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [Copilot Best Practices (What Not To Do)](https://www.youtube.com/watch?v=2q0BoioYSxQ) · Visual Studio Code · 9 min. Copilot best practices: what not to do, from the VS Code team.
 - [Claude Code best practices | Code w/ Claude](https://www.youtube.com/watch?v=gv0WHhKelSE) · Anthropic · 26 min. Claude Code best practices from Anthropic: context, plans, verification.

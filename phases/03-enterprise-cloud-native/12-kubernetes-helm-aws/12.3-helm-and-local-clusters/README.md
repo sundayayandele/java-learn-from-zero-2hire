@@ -42,8 +42,8 @@ apiVersion: v2
 name: itl-pay
 description: ITL Pay services on Kubernetes (Phase 3 capstone starter, topic 12.3)
 type: application
-version: 0.3.0          # the chart's own version: bump it when the templates change
-appVersion: "0.3.0"     # the version of the services it deploys
+version: 0.4.0          # the chart's own version: bump it when the templates change
+appVersion: "0.4.0"     # the version of the services it deploys
 ```
 
 ## 2. Values and templates
@@ -193,7 +193,7 @@ Helm, chart, release, revision, `Chart.yaml`, chart version, app version, values
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [Helm and Helm Charts Explained - Helm Tutorial for Beginners](https://www.youtube.com/watch?v=w51lDVuRWuk) · DevOps Journey · 10 min. What Helm is, how a chart is structured, and releases, upgrades and rollbacks.
 - [Helm Charts Explained: Beginner to Advanced](https://www.youtube.com/watch?v=-Si3j4t_zyc) · DevOps with Flavius · 11 min. Writing Helm charts step by step, from templates and values to helpers.

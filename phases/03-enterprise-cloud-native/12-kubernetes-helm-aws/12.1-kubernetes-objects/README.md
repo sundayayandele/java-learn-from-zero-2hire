@@ -51,7 +51,7 @@ spec:
     spec:
       containers:
         - name: transfers
-          image: itl-pay/transfers:0.3.0
+          image: itl-pay/transfers:0.4.0
           ports:
             - name: http
               containerPort: 8082
@@ -246,7 +246,7 @@ Cluster, node, control plane, API server, etcd, scheduler, controller, kubelet, 
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [Kubernetes Components explained! Pods, Services, Secrets, ConfigMap | Kubernetes Tutorial 14](https://www.youtube.com/watch?v=Krpb44XR0bk) · TechWorld with Nana · 18 min. Pods, Services, ConfigMaps, Secrets, Deployments and StatefulSets, each explained with a diagram (TechWorld with Nana).
 - [What is Gateway API for Kubernetes? Find out in ten minutes!](https://www.youtube.com/watch?v=yWD_FGMJOCw) · Cloud Native Skunkworks · 11 min. The Gateway API in ten minutes: GatewayClass, Gateway and HTTPRoute, and how it differs from Ingress.

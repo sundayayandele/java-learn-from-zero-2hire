@@ -188,7 +188,7 @@ Batch processing, end of day (EOD), business date, accrual, posting, Spring Batc
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [How to write spring batch with chunk | Spring Batch 5 | Spring Boot 3](https://www.youtube.com/watch?v=8UdSKq4u_q0) · Java Tech Solutions  · 12 min. Building a chunk-oriented Spring Batch job: reader, processor and writer.
 - [Scaling a Spring Batch Application  -  Exploring Job Repository - 014](https://www.youtube.com/watch?v=2SLZBKU55TI) · Bayonne Sensei · 5 min. Inside the job repository: the tables that record every run and make restarts possible.

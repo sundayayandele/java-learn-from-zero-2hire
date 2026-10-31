@@ -1,0 +1,109 @@
+{
+  "topic": "13.5",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A load test uses 50 virtual users that each wait for a response before sending the next request.",
+      "question": "What's the risk?",
+      "options": [
+        "None",
+        "When the system slows down, the test sends less traffic and hides the limit; use an arrival-rate executor",
+        "It's too much load",
+        "k6 can't do that"
+      ],
+      "answer": 1,
+      "explanation": "Real customers keep arriving regardless of your latency."
+    },
+    {
+      "type": "single",
+      "scenario": "k6 reports dropped_iterations during the spike.",
+      "question": "What does that mean?",
+      "options": [
+        "k6 crashed",
+        "The thresholds passed",
+        "k6 couldn't start iterations at the target rate: the system (or the load generator) passed its limit",
+        "Requests were cached"
+      ],
+      "answer": 2,
+      "explanation": "A sign you've exceeded capacity at that rate."
+    },
+    {
+      "type": "single",
+      "scenario": "ITL Pay's SLO is 99.5% of transfer requests succeeding over 30 days, with 1,000,000 requests a month.",
+      "question": "What is the error budget?",
+      "options": [
+        "5,000 failed requests",
+        "500 failed requests",
+        "50,000 failed requests",
+        "0.5 failed requests"
+      ],
+      "answer": 0,
+      "explanation": "0.5% of 1,000,000."
+    },
+    {
+      "type": "single",
+      "scenario": "An alert fires when the error ratio exceeds 14.4 × 0.5% over both 1 hour and 5 minutes.",
+      "question": "Why two windows?",
+      "options": [
+        "To double the noise",
+        "Kafka requires it",
+        "Grafana limits rules",
+        "The long window makes it significant; the short one makes it current, so it resolves quickly after a fix"
+      ],
+      "answer": 3,
+      "explanation": "The multiwindow burn-rate pattern from Google's SRE workbook."
+    },
+    {
+      "type": "single",
+      "scenario": "During an outage, engineers debate the root cause while customers can't transfer.",
+      "question": "What should the incident commander push for?",
+      "options": [
+        "Finish the diagnosis first",
+        "Mitigate first (roll back, switch off, fail over), diagnose afterwards",
+        "Write the postmortem now",
+        "Wait for the vendor"
+      ],
+      "answer": 1,
+      "explanation": "Restore service, then investigate."
+    },
+    {
+      "type": "single",
+      "scenario": "A postmortem concludes 'engineer X deployed a bad config'.",
+      "question": "What's missing?",
+      "options": [
+        "Nothing",
+        "X's manager's name",
+        "Blameless analysis of how the system allowed it, contributing factors, and action items with owners and dates",
+        "A longer timeline"
+      ],
+      "answer": 2,
+      "explanation": "People hide problems from processes that punish them."
+    },
+    {
+      "type": "single",
+      "scenario": "In ITL Pay's load test, the circuit breaker opened after 14 timeouts with a count-based window of 10 calls at 60 calls a second.",
+      "question": "What was wrong with the configuration?",
+      "options": [
+        "The window covered a sixth of a second, so one short stall opened it; a time-based window with a minimum number of calls fit better",
+        "The breaker should be removed",
+        "Timeouts should be 60 s",
+        "Nothing"
+      ],
+      "answer": 0,
+      "explanation": "Topic 10.3 lists too-small windows as a common mistake; the load test proved it."
+    },
+    {
+      "type": "single",
+      "scenario": "Which belongs in a load-test report?",
+      "question": "Choose the best answer.",
+      "options": [
+        "Only the average latency",
+        "Throughput, percentiles, errors, the hardware and configuration, the bottleneck found, the change made and before-and-after numbers",
+        "Screenshots of k6's logo",
+        "Only whether the test passed"
+      ],
+      "answer": 1,
+      "explanation": "A report explains the system's limit and what to do about it."
+    }
+  ]
+}

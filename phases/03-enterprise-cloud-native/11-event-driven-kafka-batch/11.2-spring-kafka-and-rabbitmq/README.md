@@ -191,7 +191,7 @@ Spring for Apache Kafka, `KafkaTemplate`, `@KafkaListener`, listener container, 
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [Spring Boot + Apache Kafka Tutorial - #5 - Configure Kafka Producer and Consumer](https://www.youtube.com/watch?v=xCyW3S-vgGA) · Java Guides · 10 min. Configuring a Spring Boot producer and consumer step by step (Java Guides).
 - [RabbitMQ vs Kafka | Trade-off's to choose one over other | Tech Primers](https://www.youtube.com/watch?v=GMmRtSFQ5Z0) · Tech Primers · 14 min. The trade-offs between RabbitMQ and Kafka, and when to choose each.

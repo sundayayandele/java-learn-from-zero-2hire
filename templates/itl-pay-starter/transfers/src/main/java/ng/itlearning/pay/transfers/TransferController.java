@@ -44,6 +44,6 @@ class TransferController {
 
     @GetMapping("/{reference}")
     ResponseEntity<?> get(@PathVariable String reference) {
-        return ResponseEntity.of(transfers.find(reference));
+        return ResponseEntity.of(transfers.status(reference));
     }
 }

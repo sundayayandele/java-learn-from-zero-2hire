@@ -21,3 +21,27 @@ spring:
               filters:
                 - StripPrefix=1
                 - AddRequestHeader=X-Gateway, itl-pay
+# Observability (Module 13): traces to the OpenTelemetry collector, metrics scraped by Prometheus
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OTLP_ENDPOINT:http://localhost:4318}/v1/traces
+    resource-attributes:
+      deployment.environment.name: ${ENVIRONMENT:local}
+  otlp:
+    metrics:
+      export:
+        enabled: false
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus

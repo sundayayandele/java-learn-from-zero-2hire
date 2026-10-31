@@ -30,19 +30,24 @@ Kubernetes keeps services running only if it can tell when they're healthy, how 
 Spring Boot detects that it's running on Kubernetes and exposes both health groups automatically, backed by its **availability states**: liveness is `CORRECT` unless the app marks itself broken; readiness is `ACCEPTING_TRAFFIC` once started and switches to `REFUSING_TRAFFIC` when shutdown begins.
 
 ```yaml
-startupProbe:                         # gives a slow JVM start up to 3 minutes before liveness counts
+startupProbe:                         # up to 5 minutes before liveness counts
   httpGet: { path: /actuator/health/liveness, port: http }
   periodSeconds: 5
-  failureThreshold: 36
+  timeoutSeconds: 3
+  failureThreshold: 60
 livenessProbe:                        # "restart me": only the app's own state, never its dependencies
   httpGet: { path: /actuator/health/liveness, port: http }
   periodSeconds: 10
+  timeoutSeconds: 3                   # the 1 s default restarted busy JVMs on a shared node
   failureThreshold: 3
 readinessProbe:                       # "send me traffic": false while starting and while shutting down
   httpGet: { path: /actuator/health/readiness, port: http }
   periodSeconds: 5
+  timeoutSeconds: 3
   failureThreshold: 3
 ```
+
+**Size the probes from measurements.** The first version of the chart used a 3-minute startup budget and Kubernetes' default 1-second probe timeout, and it worked, until Module 13 added OpenTelemetry and a Helm upgrade restarted every service at once. On the one-node kind cluster, transfers started in **19 seconds alone**, but JVMs starting **together** took **117 to 179 seconds** (they all compile code at full speed with small CPU requests), and probes timed out at 1 second while the JVMs were busy. Four pods were killed (exit code 143, `SIGTERM` from the kubelet) and restarted. With a 3-second timeout and a 5-minute startup budget, restarting all five Deployments at once gave **0 restarts**. Read `Started ... in N seconds (process running for M)` in your logs under realistic conditions, and leave a margin.
 
 The rule that matters most: **liveness must never check dependencies.** If transfers' liveness included the database, a 30-second database failover would restart every transfers pod at once, turning a blip into an outage, and the restarts wouldn't fix the database (topic 10.3 made the same point about health endpoints). Readiness may include a dependency the service truly can't work without; even then, think about whether you want every pod to drop out together.
 
@@ -179,7 +184,7 @@ Startup probe, liveness probe, readiness probe, availability state, health group
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [Day 18/40 - Kubernetes Health Probes Explained | Liveness vs Readiness Probes](https://www.youtube.com/watch?v=x2e6pIBLKzw) · Tech Tutorials with Piyush · 29 min. Liveness, readiness and startup probes, with a demo of each one failing.
 - [Kubernetes pod autoscaling for beginners](https://www.youtube.com/watch?v=FfDI08sgrYY) · That DevOps Guy · 13 min. Requests, limits and the Horizontal Pod Autoscaler, scaling a real deployment on CPU.

@@ -165,7 +165,7 @@ Event, broker, topic, partition, offset, key, record, retention, replication fac
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [Kafka Consumer Groups Explained | Apache Kafka® On The Go](https://www.youtube.com/watch?v=ieIC07fqk_E) · Confluent, an IBM Company · 2 min. How consumer groups share a topic's partitions, from Confluent's own team.
 - [Kafka Architecture: Why It’s Fast and Fault-Tolerant](https://www.youtube.com/watch?v=wX6a-XS5ROQ) · Anton Putra · 13 min. Kafka's architecture: the log, partitions, replication and why it is fast and fault-tolerant.

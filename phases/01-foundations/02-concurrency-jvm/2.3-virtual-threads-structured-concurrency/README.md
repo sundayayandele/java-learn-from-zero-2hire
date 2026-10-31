@@ -221,7 +221,7 @@ Platform thread, virtual thread, carrier thread, mount/unmount, throughput vs la
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [Java Threads vs Virtual Threads | Why This Changes Everything](https://www.youtube.com/watch?v=0NtIcbSsjBc) · ByteMonk · 8 min. Platform threads vs virtual threads, with a clear mental model of carrier threads.
 - [Java Virtual Threads](https://www.youtube.com/watch?v=kirhhcFAGB4) · Jakob Jenkov · 9 min. Creating and running virtual threads in code.

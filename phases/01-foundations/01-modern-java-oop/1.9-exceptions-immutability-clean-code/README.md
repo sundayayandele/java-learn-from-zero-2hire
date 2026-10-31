@@ -294,7 +294,7 @@ Checked exception, unchecked exception, `Error`, `throws`, multi-catch, `finally
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [Exception Handling in Java Tutorial](https://www.youtube.com/watch?v=1XAfapkBQjk) · Coding with John · 13 min. try / catch / finally and how exceptions travel up the call stack.
 - [Checked vs. Unchecked Exceptions in Java Tutorial - What's The Difference?](https://www.youtube.com/watch?v=bCPClyGsVhc) · Coding with John · 10 min. Checked vs unchecked exceptions, and when each is the right choice.

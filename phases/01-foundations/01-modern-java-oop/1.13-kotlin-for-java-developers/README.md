@@ -295,7 +295,7 @@ Kotlin, `val`/`var`, type inference, null safety, nullable type, safe call `?.`,
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [Kotlin in 100 Seconds](https://www.youtube.com/watch?v=xT8oP0wy-A0) · Fireship · 2 min. Kotlin in 100 seconds: what it is and why JVM teams adopt it.
 - [Top 5 KEY DIFFERENCES between Java and Kotlin](https://www.youtube.com/watch?v=f-y817B6CUE) · Visual Computer Science · 8 min. The five differences between Java and Kotlin that matter most.

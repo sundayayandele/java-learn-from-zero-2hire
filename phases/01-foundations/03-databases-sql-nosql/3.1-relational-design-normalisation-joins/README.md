@@ -276,7 +276,7 @@ Table, row, column, primary key, surrogate key, natural key, foreign key, constr
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [Learn Database Normalization - 1NF, 2NF, 3NF, 4NF, 5NF](https://www.youtube.com/watch?v=GFQaEYEc8_8) · Decomplexify · 29 min. The clearest explanation of 1NF through 5NF, with one running example.
 - [6 SQL Joins you MUST know! (Animated + Practice)](https://www.youtube.com/watch?v=Yh4CrPHVBdE) · Anton Putra · 10 min. Six joins animated, with practice queries.

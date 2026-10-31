@@ -42,7 +42,7 @@ spec:
     spec:
       containers:
         - name: transfers
-          image: itl-pay/transfers:0.3.0
+          image: itl-pay/transfers:0.4.0
           ports:
             - name: http
               containerPort: 8082

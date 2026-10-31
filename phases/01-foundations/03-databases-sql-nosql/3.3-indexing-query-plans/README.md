@@ -236,7 +236,7 @@ Sequential scan, B-tree, index scan, index-only scan, bitmap scan, selectivity, 
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [what is a database index?](https://www.youtube.com/watch?v=Jemuod4wKWo) · Hussein Nasser · 5 min. What a database index physically is, from Hussein Nasser.
 - [Postgres Explain Explained - How Databases Prepare Optimal Query Plans to Execute SQL](https://www.youtube.com/watch?v=P7EUFtjeAmI) · Hussein Nasser · 10 min. How PostgreSQL chooses a plan, and how to read EXPLAIN output.

@@ -28,6 +28,17 @@ helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
 - name: KAFKA_BOOTSTRAP
   value: {{ .root.Values.infra.kafkaBootstrap }}
 {{- end }}
+{{- if .svc.redis }}
+- name: REDIS_HOST
+  value: {{ .root.Values.infra.redisHost }}
+{{- end }}
+{{- with .root.Values.observability.otlpEndpoint }}
+- name: OTLP_ENDPOINT
+  value: {{ . }}
+{{- else }}
+- name: MANAGEMENT_TRACING_EXPORT_OTLP_ENABLED      # no collector configured: trace ids in logs, nothing exported
+  value: "false"
+{{- end }}
 {{- end }}
 
 {{/* The pod-level and container-level security settings every workload uses (topic 12.1). */}}

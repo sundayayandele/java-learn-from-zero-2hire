@@ -215,7 +215,7 @@ Reproduce, hypothesis, root cause, stack trace, `Caused by`, `Suppressed`, frame
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [Debugging Java code in IntelliJ IDEA](https://www.youtube.com/watch?v=V5iQ1FyRtBo) · IntelliJ IDEA, a JetBrains IDE · 7 min. JetBrains' own guide to debugging Java in IntelliJ IDEA.
 - [Thread Dump Analysis Fundamentals - Part 1](https://www.youtube.com/watch?v=1qzHSEjU8Hc) · Pierre-Hugues Charbonneau · 13 min. Thread dump analysis fundamentals: states, locks and what to look for.

@@ -149,7 +149,7 @@ Specification-based test, implementation-mirroring test, test-first with AI, tes
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [Characterization Tests, code coverage for refactoring](https://www.youtube.com/watch?v=J3hRYO2JKHI) · Generation Engineered · 7 min. Characterisation tests: pin behaviour before refactoring.
 - [Upgrading your Java & Spring Boot applications with OpenRewrite in IntelliJ](https://www.youtube.com/watch?v=e4R6AZHpAD8) · Dan Vega · 14 min. Upgrading Java and Spring Boot with OpenRewrite recipes.

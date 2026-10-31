@@ -156,7 +156,7 @@ Transient failure, poison message, retryable and not-retryable exceptions, back-
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [Kafka Error Handling with Spring Boot | Retry Strategies & Dead Letter Topics | JavaTechie](https://www.youtube.com/watch?v=aNBSd7T-RGA) · Java Techie · 29 min. Retries and dead-letter topics with Spring Boot and Spring for Apache Kafka.
 - [Schema Compatibility | Schema Registry 101](https://www.youtube.com/watch?v=vQ4mPepAM7Q) · Confluent, an IBM Company · 5 min. Schema compatibility modes in a schema registry: backward, forward and full.

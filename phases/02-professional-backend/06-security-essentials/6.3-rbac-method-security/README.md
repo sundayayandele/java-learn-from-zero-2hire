@@ -194,7 +194,7 @@ Role, authority, permission, scope, RBAC, ABAC, least privilege, `@EnableMethodS
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [🔐 Spring Security - Method Security Explained | @PreAuthorize, @PostAuthorize](https://www.youtube.com/watch?v=e5585jgfTU8) · CodeSnippet by Chetan · 22 min. Method security with @PreAuthorize and role/authority checks.
 - [Broken Object Level Authorization (BOLA) Explained](https://www.youtube.com/watch?v=YciLnEY1AN0) · The Cyber Mentors · 8 min. Broken object level authorisation (BOLA), the top API risk, explained.

@@ -215,7 +215,7 @@ Dual write, transactional outbox, relay, polling publisher, change data capture 
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [What is the Transactional Outbox Pattern? | Designing Event-Driven Microservices](https://www.youtube.com/watch?v=5YLpjPmsPCA) · Confluent, an IBM Company · 6 min. The transactional outbox and the dual-write problem it solves, from Confluent.
 - [Saga Pattern Explained: Distributed Transactions in Microservices](https://www.youtube.com/watch?v=--O9JUsvtEg) · System Design Lab · 23 min. Sagas: local transactions, compensations, orchestration and choreography.

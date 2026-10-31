@@ -157,7 +157,7 @@ Database per service, data ownership, two-phase commit, XA, local transaction, s
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [Distributed Transactions Explained: 2 Phase Commit vs Saga Pattern](https://www.youtube.com/watch?v=DOFflggE_0Q) · Hello Interview · 15 min. Two-phase commit versus sagas, and why services avoid distributed transactions.
 

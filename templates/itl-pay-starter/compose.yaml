@@ -1,5 +1,5 @@
-# ITL Pay v0.2 locally: ./mvnw -q package -DskipTests && docker compose up --build
-# Only the gateway publishes a port; the services reach each other, Kafka and PostgreSQL by name.
+# ITL Pay locally: ./mvnw -q package -DskipTests && docker compose up --build
+# Only the gateway (8080) and Grafana (3300) publish ports; the services reach each other by name.
 services:
   postgres:
     image: postgres:18-alpine
@@ -32,21 +32,48 @@ services:
       interval: 5s
       retries: 30
 
+  redis:
+    image: redis:8-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      retries: 30
+
+  # Grafana, Prometheus, Tempo and an OpenTelemetry collector in one container, for local use (Module 13)
+  observability:
+    image: grafana/otel-lgtm:0.38.1
+    ports:
+      - "3300:3000"                                # Grafana: http://localhost:3300 (admin / admin); 3300 avoids clashing with dev servers on 3000
+    volumes:
+      - ./observability/prometheus.yaml:/otel-lgtm/prometheus.yaml:ro
+      - ./observability/alerts.yaml:/otel-lgtm/itl-pay-alerts.yaml:ro
+      - ./observability/dashboards.yaml:/otel-lgtm/grafana/conf/provisioning/dashboards/itl-pay.yaml:ro
+      - ./observability/dashboards:/otel-lgtm/itl-pay-dashboards:ro
+
   accounts:
     build: ./accounts
+    environment:
+      OTLP_ENDPOINT: http://observability:4318
+      LOGGING_STRUCTURED_FORMAT_CONSOLE: ecs       # JSON logs with trace ids (topic 13.2)
   transfers:
     build: ./transfers
     environment:
       ACCOUNTS_URL: http://accounts:8081
       DB_URL: jdbc:postgresql://postgres:5432/transfers
       KAFKA_BOOTSTRAP: kafka:9092
+      REDIS_HOST: redis
+      OTLP_ENDPOINT: http://observability:4318
+      LOGGING_STRUCTURED_FORMAT_CONSOLE: ecs
     depends_on:
       postgres: { condition: service_healthy }
       kafka: { condition: service_healthy }
+      redis: { condition: service_healthy }
   fraud:
     build: ./fraud
     environment:
       KAFKA_BOOTSTRAP: kafka:9092
+      OTLP_ENDPOINT: http://observability:4318
+      LOGGING_STRUCTURED_FORMAT_CONSOLE: ecs
     depends_on:
       kafka: { condition: service_healthy }
   notifications:
@@ -54,6 +81,8 @@ services:
     environment:
       DB_URL: jdbc:postgresql://postgres:5432/notifications
       KAFKA_BOOTSTRAP: kafka:9092
+      OTLP_ENDPOINT: http://observability:4318
+      LOGGING_STRUCTURED_FORMAT_CONSOLE: ecs
     depends_on:
       postgres: { condition: service_healthy }
       kafka: { condition: service_healthy }
@@ -62,6 +91,8 @@ services:
     environment:
       ACCOUNTS_URL: http://accounts:8081
       TRANSFERS_URL: http://transfers:8082
+      OTLP_ENDPOINT: http://observability:4318
+      LOGGING_STRUCTURED_FORMAT_CONSOLE: ecs
     ports:
       - "8080:8080"
     depends_on: [accounts, transfers]

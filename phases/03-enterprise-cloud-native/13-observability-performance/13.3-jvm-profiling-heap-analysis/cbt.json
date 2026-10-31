@@ -1,0 +1,109 @@
+{
+  "topic": "13.3",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A span shows AccountController.hold taking 600 ms under load, but CPU is low.",
+      "question": "Which tool tells you whether the time is CPU, a lock or GC?",
+      "options": [
+        "A longer trace",
+        "Java Flight Recorder (e.g. jfr view contention-by-site, gc-pauses, hot-methods)",
+        "Prometheus' up metric",
+        "A bigger heap"
+      ],
+      "answer": 1,
+      "explanation": "Profilers look inside the JVM where traces stop."
+    },
+    {
+      "type": "single",
+      "scenario": "ITL Pay's images have a JRE without jcmd.",
+      "question": "What is the recommended way to run jcmd against production?",
+      "options": [
+        "Install a JDK in every production image",
+        "SSH into the node and run java -jar",
+        "A debug container with a JDK that shares the app's process namespace and runs as the same user and group",
+        "Restart the app with debug flags"
+      ],
+      "answer": 2,
+      "explanation": "Keep production images slim; bring tools when needed (kubectl debug)."
+    },
+    {
+      "type": "single",
+      "scenario": "A debug container running as user 10001 but group 0 fails to attach to a JVM running as 10001:999.",
+      "question": "Why?",
+      "options": [
+        "The attach mechanism and /proc access require the same user and group as the target JVM",
+        "The JDK versions differ",
+        "JFR is disabled",
+        "Attach only works on Windows"
+      ],
+      "answer": 0,
+      "explanation": "Matching uid and gid fixed it in the starter."
+    },
+    {
+      "type": "single",
+      "scenario": "JFR shows AccountController.hold contended 846 times, up to 678 ms each.",
+      "question": "What's the best fix?",
+      "options": [
+        "A longer timeout in transfers",
+        "More threads in accounts",
+        "Remove the global lock: lock per account, e.g. a conditional UPDATE on the account's row in PostgreSQL",
+        "Disable the circuit breaker"
+      ],
+      "answer": 2,
+      "explanation": "Fix the contention, not the symptom."
+    },
+    {
+      "type": "single",
+      "scenario": "Heap use after each full GC keeps rising over hours.",
+      "question": "What's the first cheap step to find what's growing?",
+      "options": [
+        "Take two class histograms a few minutes apart and compare",
+        "Increase -Xmx",
+        "Restart nightly",
+        "Turn off GC logging"
+      ],
+      "answer": 0,
+      "explanation": "A class whose count only grows is the suspect; then take a heap dump."
+    },
+    {
+      "type": "single",
+      "scenario": "You open a heap dump in Eclipse MAT.",
+      "question": "Which view shows which objects keep the most memory alive?",
+      "options": [
+        "The thread list",
+        "The dominator tree",
+        "The class loader list",
+        "The OQL console"
+      ],
+      "answer": 1,
+      "explanation": "Then follow the path to GC roots to see why they can't be collected."
+    },
+    {
+      "type": "single",
+      "scenario": "A teammate wants to take heap dumps of production every hour, just in case.",
+      "question": "What should you tell them?",
+      "options": [
+        "Good idea",
+        "Only on weekends",
+        "Heap dumps pause the JVM and contain customer data; take them deliberately, store them securely, and prefer -XX:+HeapDumpOnOutOfMemoryError",
+        "They're always empty"
+      ],
+      "answer": 2,
+      "explanation": "Treat dumps as sensitive production data."
+    },
+    {
+      "type": "single",
+      "scenario": "JFR found threads waiting on a synchronized table inside a logging library, reached from the Redis cache code.",
+      "question": "What is the sensible next step?",
+      "options": [
+        "Patch the library in production",
+        "Confirm it (load test with the cache off and compare), check the libraries' issue trackers and versions, then decide",
+        "Ignore it",
+        "Increase the heap"
+      ],
+      "answer": 1,
+      "explanation": "Measure, confirm, then act."
+    }
+  ]
+}

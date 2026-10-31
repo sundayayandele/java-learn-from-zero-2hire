@@ -45,17 +45,20 @@ spec:
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
-          startupProbe:                         # gives a slow JVM start up to 3 minutes before liveness counts
-            httpGet: { path: /actuator/health/liveness, port: http }
+          startupProbe:                         # up to 5 minutes before liveness counts: measured on kind, JVMs starting
+            httpGet: { path: /actuator/health/liveness, port: http }   # all at once took up to 3 minutes (alone: 20 s)
             periodSeconds: 5
-            failureThreshold: 36
+            timeoutSeconds: 3
+            failureThreshold: 60
           livenessProbe:                        # "restart me": only the app's own state, never its dependencies
             httpGet: { path: /actuator/health/liveness, port: http }
             periodSeconds: 10
+            timeoutSeconds: 3                   # the 1 s default restarted busy JVMs on a shared node (topic 12.2)
             failureThreshold: 3
           readinessProbe:                       # "send me traffic": false while starting and while shutting down
             httpGet: { path: /actuator/health/readiness, port: http }
             periodSeconds: 5
+            timeoutSeconds: 3
             failureThreshold: 3
           lifecycle:
             preStop:

@@ -147,7 +147,7 @@ Agile, Scrum, sprint, sprint goal, product owner, Scrum master, backlog, refinem
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [Scrum Essentials in Under 10 Minutes](https://www.youtube.com/watch?v=RtQ3tpq-RuE) · Scrum Alliance · 10 min. Scrum essentials in under ten minutes, from the Scrum Alliance.
 - [How to write good User Stories in Agile](https://www.youtube.com/watch?v=7hoGqhb6qAs) · The Agile Shop · 4 min. How to write good user stories.

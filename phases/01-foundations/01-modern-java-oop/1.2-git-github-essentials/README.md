@@ -256,7 +256,7 @@ Version control, repository, working tree, staging area, commit, hash, `.gitigno
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [Git Explained in 100 Seconds](https://www.youtube.com/watch?v=hwP7WQkmECE) · Fireship · 2 min. What Git is for, in under two minutes.
 - [How Git Works: Explained in 4 Minutes](https://www.youtube.com/watch?v=e9lnsKot_SQ) · ByteByteGo · 4 min. How Git stores commits, branches and remotes, visually.

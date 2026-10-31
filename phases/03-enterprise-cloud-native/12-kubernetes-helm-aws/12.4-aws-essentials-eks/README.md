@@ -155,7 +155,7 @@ AWS account, region, availability zone, IAM, user, role, policy, least privilege
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [Amazon EKS Explained: Introduction to Managed Kubernetes on AWS](https://www.youtube.com/watch?v=aGI_yUbmTFU) · CodeLucky · 6 min. An introduction to Amazon EKS: the managed control plane, node groups and how it fits with other AWS services.
 - [AWS Core Services: EC2, S3, VPC, IAM & RDS Fundamentals | Uplatz](https://www.youtube.com/watch?v=OtfemiDmXQs) · Uplatz · 7 min. The AWS core services behind a cluster: EC2, S3, VPC, IAM and RDS.

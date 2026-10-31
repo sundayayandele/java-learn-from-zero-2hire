@@ -160,7 +160,7 @@ Interview loop, recruiter screen, online assessment, take-home, live coding, tim
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [Top 50 Java Interview Questions and Answers | Ace Your Java Programming Interviews #java #interview](https://www.youtube.com/watch?v=YlcvaqyD7Qs) · ArcCode · 21 min. Common Java interview questions with concise answers.
 - [STAR INTERVIEW QUESTIONS & ANSWERS! (The STAR TECHNIQUE for Behavioural Interview Questions!)](https://www.youtube.com/watch?v=uQEuo7woEEk) · CareerVidz · 11 min. The STAR technique for behavioural questions, with examples.

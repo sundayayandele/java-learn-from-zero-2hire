@@ -255,7 +255,7 @@ Property source, precedence, relaxed binding, placeholder, `@ConfigurationProper
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [Spring profiles explained -  Microservice configuration with Spring Boot [08]](https://www.youtube.com/watch?v=P91tqdWUHE4) · Java Brains · 17 min. How Spring profiles select configuration per environment.
 - [Spring Boot Profiles: Manage Dev, Staging & Production Environments Easily](https://www.youtube.com/watch?v=mGo_IToQ7EE) · Philipp Lackner · 23 min. Managing dev, staging and production settings cleanly.

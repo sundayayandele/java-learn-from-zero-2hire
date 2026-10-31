@@ -1,0 +1,145 @@
+## What you will be able to do
+
+- Write a load test with k6 that models real traffic, with thresholds that fail the build.
+- Run it, find the bottleneck with metrics, traces and a profiler, fix it, and prove the fix with numbers.
+- Define SLIs and SLOs, compute an error budget, and write burn-rate alerts.
+- Alert on symptoms, write runbooks, run an incident and write a blameless postmortem.
+
+## Why this matters in a bank or fintech
+
+Salary day, Black Friday, a viral promotion: the traffic you didn't test for is the traffic that takes you down, in public. Load tests find the limit before customers do. SLOs turn "is the system OK?" into a number the business agrees to, and error budgets decide when to ship features and when to fix reliability. And when something breaks anyway, a calm, practised incident process and an honest postmortem are what regulators, partners and your own team want to see.
+
+## 1. A realistic load test with k6
+
+**k6** scripts are JavaScript; the engine is Go, so one laptop generates thousands of requests a second. The starter's `load/transfers.js` models customers sending transfers while their apps poll the status:
+
+```javascript
+export const options = {
+  scenarios: {
+    salary_day: {
+      executor: 'ramping-arrival-rate',   // a fixed rate of new transfers, like real traffic: it doesn't slow down when we do
+      startRate: 5, timeUnit: '1s', preAllocatedVUs: 50, maxVUs: 200,
+      stages: [
+        { duration: '30s', target: 20 },  // ramp up to 20 transfers a second
+        { duration: '1m', target: 20 },   // hold
+        { duration: '30s', target: 60 },  // salary-day spike
+        { duration: '1m', target: 60 },
+        { duration: '20s', target: 0 },
+      ],
+    },
+  },
+  thresholds: {
+    'http_req_failed': ['rate<0.01'],                    // fewer than 1% errors
+    'http_req_duration{name:create}': ['p(95)<500'],     // the SLO: 95% of transfers answered within 500 ms
+    'http_req_duration{name:status}': ['p(95)<100'],
+  },
+};
+```
+
+Two choices matter:
+
+- **Arrival rate, not a fixed number of users.** A "closed" test with 50 users that each wait for a response slows down when the system slows down, and hides the problem. Real customers keep arriving. `ramping-arrival-rate` keeps sending at the target rate, and `dropped_iterations` counts the ones k6 couldn't start: a sign you've passed the limit.
+- **Thresholds** make k6 exit non-zero, so the test can gate a pipeline.
+
+```bash
+docker run --rm --network itl-pay-starter_default -v "$PWD/load:/scripts" grafana/k6:2.3.0 run /scripts/transfers.js
+```
+
+JMeter (GUI, XML test plans, very common in banks' QA teams) and Gatling (Scala/Java DSL) do the same job; the method below is what matters.
+
+## 2. What happened when we ran it
+
+All runs on one laptop, every service, Kafka, PostgreSQL, Redis and Grafana in Docker: far less capacity than production, which is fine, because the point is to find **what breaks first**.
+
+**Run 1.** 27,068 requests, **0 errors**, transfer creation p95 **446 ms** (inside the SLO), status p95 256 ms (missed its 100 ms target), and 207 dropped iterations during the 60/s spike. The dashboard showed the real story:
+
+- The **outbox's oldest event was 45 seconds old** at the peak. The relay sent events one at a time, waiting for each acknowledgement, then slept 500 ms. At 60 transfers a second, two events each, it couldn't keep up. Customers would see "pending" for most of a minute.
+- **18 requests were waiting for a database connection** (all 10 in use), because the relay held its transaction open while waiting on Kafka.
+
+**The fix** (now in the starter): send the whole batch, wait once for all acknowledgements (the idempotent producer keeps per-key order), mark the batch published with one `UPDATE ... WHERE id IN (...)`, and keep draining without the pause while there's a backlog.
+
+**Run 2.** Same test: oldest outbox event **3.3 s** (from 45), connection waits **3** (from 18). Latency was about the same: on this laptop, CPU was the limit.
+
+**Run 3.** **215 errors (0.79%)**, all `503 Accounts is unavailable`. Prometheus showed 14 calls to accounts timing out, then the circuit breaker **open**, rejecting 212 calls. Accounts' hold endpoint had taken up to 3.1 s. Two problems, both found with tools:
+
+- **The cause:** JFR (topic 13.3) showed `AccountController.hold` is one `synchronized` method for all accounts: 846 contended entries, up to 678 ms waiting for the lock.
+- **The breaker was too twitchy:** a window of the **last 10 calls** is a sixth of a second at 60 calls a second, so one short stall opened it. Topic 10.3 lists exactly this as a common mistake.
+
+**Run 4**, with a **time-based** window instead (10 seconds, at least 20 calls, set through environment variables, no code change): the breaker never opened (1 failed call, 0 rejected). But a burst of 211 gateway errors appeared in a single 15-second window at the steady 20/s stage, none during the spike. Prometheus's `up` metric showed **transfers unreachable for about 60 seconds and accounts for 30**, while the other services were fine, and neither container restarted. We haven't explained that freeze: it's in the practice tasks, and it's a good reminder that a load test often finds something you weren't looking for.
+
+**What a report says.** Not just "p95 446 ms". It says: the system handles 20 transfers a second comfortably on this hardware; at 60, the outbox relay was the first bottleneck (fixed: 45 s → 3 s); the next is accounts' global lock (fix planned: per-account locking in PostgreSQL); the breaker configuration was too sensitive (changed to a time-based window); one unexplained 60-second freeze is under investigation.
+
+## 3. SLIs, SLOs and error budgets
+
+- An **SLI** (service level indicator) is a measurement of what users experience: the share of `POST /api/transfers` requests that don't fail with 5xx; the share answered within 500 ms.
+- An **SLO** (objective) is the target for an SLI over a window: **99.5% of transfer requests succeed, measured over 30 days.**
+- The **error budget** is what's left: 0.5%. At a million transfer requests a month, that's 5,000 failed requests. While budget remains, ship features; when it's spent, reliability work comes first. That's the deal SLOs make between product and engineering.
+- An **SLA** is a contract with penalties (with a partner bank, say), set looser than the SLO so you have warning.
+
+Choose SLOs from what users need, not from what the system happens to do, and keep them few: availability and latency of the main journeys.
+
+## 4. Alerting on symptoms: burn rates
+
+Alert when the **budget is burning too fast**, not on every error. The **burn rate** is how many times faster than "exactly on budget" you're failing: a burn rate of 1 spends the budget in exactly 30 days; 14.4 spends 2% of it in an hour. The starter uses the multiwindow pattern from Google's SRE workbook:
+
+```yaml
+- alert: TransfersErrorBudgetBurningFast
+  expr: itlpay:transfer_requests:error_ratio_5m > (14.4 * 0.005) and itlpay:transfer_requests:error_ratio_1h > (14.4 * 0.005)
+  labels: { severity: page }
+```
+
+Both windows must agree: the 1-hour window ensures it's significant, the 5-minute window ensures it's still happening, so the alert resolves quickly after a fix. A slower burn (6× over 6 hours) can open a ticket instead of paging.
+
+**Page on symptoms** (transfers failing, transfers slow, outbox stuck: customers' money isn't moving). **Don't page on causes** (CPU 80%, one pod restarted): put those on dashboards. Every paging alert needs a **runbook**: what it means, how to check, how to mitigate, who to call.
+
+## 5. Incidents and postmortems
+
+When an alert fires for real:
+
+1. **Declare an incident** and pick an **incident commander** (coordinates; doesn't debug), someone on **communications** (status page, customer support, partners, management), and people **operating** (investigating, fixing).
+2. **Mitigate first, diagnose later.** Roll back the release, scale up, switch off the new feature, fail over. The root cause can wait until customers can transfer again.
+3. **Keep a timeline** in the incident channel as you go: what you saw, what you did, when.
+4. Afterwards, a **blameless postmortem**: what happened, impact (how many customers, how much money delayed, for how long), timeline, root causes and contributing factors, what went well, and **action items with owners and dates**. "Blameless" means asking how the system let a reasonable person make the mistake, not who made it; people hide problems from processes that punish them.
+
+Banks also have regulatory duties around significant incidents and outages: your postmortem and timeline are the evidence, so write them as if an auditor will read them, because one may.
+
+## Worked example: postmortem of Run 3
+
+- **Summary:** during the 60 transfers/s stage of a load test, 0.79% of transfer requests failed with 503.
+- **Impact:** 215 failed requests out of 27,156; no money moved incorrectly (a 503 means the hold was never placed, and the client was told "not started").
+- **Sequence:** under the spike, accounts' hold latency rose to 3.1 s; 14 calls from transfers timed out; the circuit breaker opened and rejected 212 calls fast. In a real postmortem you'd add clock times from the dashboards and the incident channel.
+- **Root cause:** a global lock in accounts' `hold` (JFR: up to 678 ms waits).
+- **Contributing factor:** a count-based breaker window of 10 calls, too small for the traffic.
+- **What went well:** the breaker protected accounts and answered fast and honestly; the dashboard and JFR found the cause within minutes.
+- **Actions:** per-account locking via PostgreSQL (owner: accounts team, `v0.1`); time-based breaker window (done, verified in Run 4); investigate the 60-second freeze seen in Run 4 (owner: you).
+
+## Common mistakes
+
+- Closed-model load tests that slow down with the system and hide the limit.
+- Testing one endpoint in isolation, with no background jobs or consumers running.
+- Reporting averages instead of percentiles, or results without the hardware and configuration.
+- Changing several things between runs, so you can't tell what helped.
+- SLOs of 100%, or a dozen of them nobody reads.
+- Alerts on causes and noise, so the real page gets ignored.
+- Postmortems that name a person and stop there, or have no action items.
+
+## Practice
+
+1. Run `load/transfers.js` against the starter and write a one-page report in the format of section 2, with your own numbers.
+2. Investigate the Run 4 freeze: repeat the run with the time-based breaker while recording JFR in transfers and accounts, and watch `docker stats`. Write down what you find, even if it's "not reproduced".
+3. Add a k6 scenario where 1% of transfers exceed the fraud limit, and assert in a threshold that the rejected ones end `FAILED` (poll the status).
+4. Calculate the error budget in requests and minutes for 99.5% and 99.9% at 2 million transfer requests a month, and explain which you'd choose for ITL Pay and why.
+5. Write the runbook for `OutboxStuck`: what it means, the first three checks, the mitigations, and how to verify recovery.
+
+## Key terms
+
+Load test, open and closed model, arrival rate, virtual user (VU), dropped iterations, threshold, k6, JMeter, Gatling, bottleneck, capacity, SLI, SLO, SLA, error budget, burn rate, multiwindow alert, symptom-based alerting, runbook, on call, incident commander, mitigation, timeline, blameless postmortem, action item.
+
+## Further reading
+
+- [k6 documentation: scenarios and executors](https://grafana.com/docs/k6/latest/using-k6/scenarios/)
+- [k6 documentation: thresholds](https://grafana.com/docs/k6/latest/using-k6/thresholds/)
+- [Google SRE book: Service level objectives](https://sre.google/sre-book/service-level-objectives/)
+- [Google SRE workbook: Alerting on SLOs](https://sre.google/workbook/alerting-on-slos/)
+- [Google SRE book: Postmortem culture](https://sre.google/sre-book/postmortem-culture/)
+- [PagerDuty incident response guide](https://response.pagerduty.com/)

@@ -91,7 +91,7 @@ GitOps moves the "deploy" gate into Git: CI opens a pull request that changes th
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [Build and Push Docker Images with GitHub Actions](https://www.youtube.com/watch?v=x7f9x30W_dI) · Rishab in Cloud · 13 min. Build and push Docker images with GitHub Actions.
 - [Container Image Scanning with Trivy -- Ep. 1 Trivy Overview](https://www.youtube.com/watch?v=-IH5inFyEqU) · Aqua Security Open Source · 6 min. Scanning container images with Trivy, from Aqua Security.

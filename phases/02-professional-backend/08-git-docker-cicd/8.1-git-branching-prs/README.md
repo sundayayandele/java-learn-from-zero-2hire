@@ -188,7 +188,7 @@ Commit, SHA, branch, `HEAD`, working tree, staging area, remote, `origin/main`, 
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [Branching Strategies Explained](https://www.youtube.com/watch?v=U_IFGpJDbeU) · DevOps & AI Toolkit · 18 min. Git branching strategies compared: GitFlow, GitHub flow, trunk-based.
 - [Git MERGE vs REBASE: Everything You Need to Know](https://www.youtube.com/watch?v=0chZFIZLR_0) · ByteByteGo · 5 min. Merge versus rebase, visually, from ByteByteGo.

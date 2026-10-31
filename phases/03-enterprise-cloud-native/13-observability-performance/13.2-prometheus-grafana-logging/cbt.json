@@ -1,0 +1,109 @@
+{
+  "topic": "13.2",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "You need requests per second from http_server_requests_seconds_count.",
+      "question": "Which PromQL is right?",
+      "options": [
+        "http_server_requests_seconds_count",
+        "sum(rate(http_server_requests_seconds_count[1m]))",
+        "avg(http_server_requests_seconds_count)",
+        "max(http_server_requests_seconds_count)"
+      ],
+      "answer": 1,
+      "explanation": "Counters only grow; rate() turns them into per-second values."
+    },
+    {
+      "type": "single",
+      "scenario": "Each of three transfers instances reports its own p95 latency, and a dashboard averages them.",
+      "question": "What's wrong, and the fix?",
+      "options": [
+        "Nothing",
+        "Use max instead of avg",
+        "Percentiles can't be averaged; compute histogram_quantile over summed histogram buckets",
+        "Use the median"
+      ],
+      "answer": 2,
+      "explanation": "Enable percentile histograms and aggregate the buckets."
+    },
+    {
+      "type": "single",
+      "scenario": "The k6 test shows latency rising. The HikariCP panel shows all 10 connections active and 18 waiting.",
+      "question": "What does that point to?",
+      "options": [
+        "Requests are queueing for database connections because they're held too long or the pool is too small for the load",
+        "Redis is down",
+        "GC pauses",
+        "Kafka lag"
+      ],
+      "answer": 0,
+      "explanation": "Saturation panels show where requests wait."
+    },
+    {
+      "type": "single",
+      "scenario": "Which alert follows the 'alert on symptoms' rule?",
+      "question": "Choose one.",
+      "options": [
+        "CPU above 80% on any pod",
+        "A pod restarted",
+        "The outbox's oldest event is older than 60 seconds",
+        "JVM heap above 70%"
+      ],
+      "answer": 2,
+      "explanation": "Customers feel stuck transfers; CPU and restarts belong on dashboards unless they hurt users."
+    },
+    {
+      "type": "single",
+      "scenario": "A team wants logs they can search across services and join with traces.",
+      "question": "What should each log line contain?",
+      "options": [
+        "Structured JSON with the trace id and span id",
+        "Plain text with colours",
+        "The full request body including card numbers",
+        "Only errors"
+      ],
+      "answer": 0,
+      "explanation": "Structured logs with trace ids join the three signals; never log sensitive data."
+    },
+    {
+      "type": "single",
+      "scenario": "Why does the starter provision its Grafana dashboard from a JSON file in the repository?",
+      "question": "Choose one.",
+      "options": [
+        "Grafana can't save dashboards",
+        "Files are faster to render",
+        "So the dashboard is versioned and reviewed like code, and identical in every environment",
+        "JSON dashboards need no data source"
+      ],
+      "answer": 2,
+      "explanation": "Provisioning prevents click-ops drift."
+    },
+    {
+      "type": "single",
+      "scenario": "Prometheus' `up` metric for transfers shows 0 for a minute while the container never restarted.",
+      "question": "What does it tell you?",
+      "options": [
+        "Prometheus couldn't scrape transfers during that minute: it was unreachable or frozen, which deserves investigation",
+        "Transfers was idle",
+        "The metric is broken",
+        "Kafka was down"
+      ],
+      "answer": 0,
+      "explanation": "up is a free health signal for every target."
+    },
+    {
+      "type": "single",
+      "scenario": "A developer logs every incoming request at INFO with the full payload.",
+      "question": "What are the problems?",
+      "options": [
+        "None",
+        "It's slower but fine",
+        "It only affects disk space",
+        "Volume and cost, and payloads may contain personal or card data; use metrics and traces for traffic, and log decisions without sensitive fields"
+      ],
+      "answer": 3,
+      "explanation": "Logs are copied widely and kept long: mask at the source."
+    }
+  ]
+}

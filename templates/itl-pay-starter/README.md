@@ -1,6 +1,6 @@
 # ITL Pay starter (Phase 3 capstone system)
 
-← [Phase 3](../../phases/03-enterprise-cloud-native/README.md) · [Module 10](../../phases/03-enterprise-cloud-native/10-microservices-distributed-systems/README.md) · [Module 11](../../phases/03-enterprise-cloud-native/11-event-driven-kafka-batch/README.md) · [Module 12](../../phases/03-enterprise-cloud-native/12-kubernetes-helm-aws/README.md)
+← [Phase 3](../../phases/03-enterprise-cloud-native/README.md) · [Module 10](../../phases/03-enterprise-cloud-native/10-microservices-distributed-systems/README.md) · [Module 11](../../phases/03-enterprise-cloud-native/11-event-driven-kafka-batch/README.md) · [Module 12](../../phases/03-enterprise-cloud-native/12-kubernetes-helm-aws/README.md) · [Module 13](../../phases/03-enterprise-cloud-native/13-observability-performance/README.md)
 
 The starting point for the Phase 3 capstone system: Spring Boot 4.1 services (Java 21) built by one Maven command, with Spring Cloud 2025.1, Spring Modulith 2.1, Spring for Apache Kafka 4.1 and Spring Batch 6. It holds the code from every lesson so far, tested.
 
@@ -13,7 +13,7 @@ The starting point for the Phase 3 capstone system: Spring Boot 4.1 services (Ja
 | `notifications` | 8084 | An **idempotent consumer**: one SMS per event even when Kafka delivers twice; blocking retries, then a **dead-letter topic** | 11.3, 11.4 |
 | `interest-batch` | – | **Spring Batch** end-of-day interest posting for 1,000 savings accounts, in chunks of 100, **restartable** and idempotent per account and day | 11.5 |
 
-PostgreSQL 18 (one database and user per service) and Kafka 4.1 (one KRaft broker) run in Docker Compose. The tests start their own PostgreSQL and Kafka with Testcontainers, so `./mvnw verify` needs Docker running.
+PostgreSQL 18 (one database and user per service), Kafka 4.1 (one KRaft broker), Redis 8 and Grafana's all-in-one observability image (Grafana, Prometheus, Tempo) run in Docker Compose. The tests start their own PostgreSQL, Kafka and Redis with Testcontainers, so `./mvnw verify` needs Docker running.
 
 ```bash
 ./mvnw verify                                   # build and test every service
@@ -31,12 +31,40 @@ docker compose logs notifications | grep SMS
 docker compose exec kafka /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 \
      --topic transfer-events --from-beginning --property print.key=true
 
+# Observability (Module 13): Grafana at http://localhost:3300 (admin / admin), dashboard "ITL Pay";
+# traces in Explore -> Tempo; alert rules in Alerting. Logs are JSON with trace ids:
+docker compose logs notifications | grep SMS
+
+# Load test (Module 13): about 3.5 minutes, up to 60 transfers a second
+docker run --rm --network itl-pay-starter_default -v "$PWD/load:/scripts" grafana/k6:2.3.0 run /scripts/transfers.js
+
 # End-of-day interest: make it fail part-way, then rerun the same day to restart it
 docker compose run --rm -e INTEREST_FAILONACCOUNT=SAV-0457 interest-batch businessDate=2026-10-30   # exit code 5
 docker compose run --rm interest-batch businessDate=2026-10-30                                     # restarts at account 401
 ```
 
 Balances in `accounts` are still in memory with two demo accounts (A1 ₦50,000, A2 ₦1,000), so the flow is easy to follow.
+
+## Observability and performance (Module 13)
+
+| Path or piece | What it is | Topic |
+| --- | --- | --- |
+| `spring-boot-starter-opentelemetry` in every service | Traces over OTLP to Tempo, across HTTP, the circuit breaker, Spring Modulith and Kafka | 13.1 |
+| `outbox.traceparent` | The outbox stores each event's trace context and the relay continues it, so one trace covers the whole saga (tested) | 13.1 |
+| `itlpay_transfers_total`, `itlpay_outbox_oldest_age_seconds` | Business metrics: transfers by state, and how long the oldest event has waited to leave the outbox | 13.1, 13.2 |
+| `observability/` | Prometheus scrape config, alert rules (SLO burn rate, slow transfers, outbox stuck, breaker open, consumer lag) and the provisioned Grafana dashboard | 13.2, 13.5 |
+| `CacheConfig`, `Transfers.status` | Redis cache-aside for the status apps poll, evicted after commit, falling back to the database if Redis is down (tested) | 13.4 |
+| `OutboxRelay` | Pipelined batch sends: the load test found the one-at-a-time relay 45 s behind at 60 transfers a second; now about 3 s | 13.5 |
+| `load/transfers.js` | The k6 load test with the SLO thresholds | 13.5 |
+
+Profile a running service with Flight Recorder from a JDK debug container (topic 13.3):
+
+```bash
+G=$(docker exec itl-pay-starter-accounts-1 id -g)
+docker run --rm --pid=container:itl-pay-starter-accounts-1 --user 10001:$G eclipse-temurin:21-jdk \
+    jcmd 1 JFR.start name=load settings=profile filename=/tmp/accounts.jfr
+# ... run the load test, then JFR.stop name=load, docker cp the file out, and: jfr view contention-by-site accounts.jfr
+```
 
 ## On Kubernetes (Module 12)
 
@@ -46,7 +74,7 @@ Balances in `accounts` are still in memory with two demo accounts (A1 ₦50,000,
 | --- | --- | --- |
 | `deploy/kind/up.sh` | Creates a local cluster and deploys everything with one command (5–10 minutes; about 4 GiB of memory) | 12.3 |
 | `deploy/kind/gateway.yaml` | The Gateway API gateway (Envoy Gateway) that lets traffic into the cluster | 12.1 |
-| `deploy/infra/` | Plain manifests for PostgreSQL and Kafka as StatefulSets, for kind only | 12.1 |
+| `deploy/infra/` | Plain manifests for PostgreSQL and Kafka as StatefulSets, and Redis, for kind only | 12.1 |
 | `deploy/helm/itl-pay/` | The Helm chart for the six services: probes, requests and limits, security contexts, autoscaling, disruption budgets, the nightly interest CronJob and the HTTPRoute; `values-local.yaml` and `values-aws.yaml` | 12.1–12.3 |
 | `deploy/terraform/aws/` | Terraform for AWS: VPC, EKS, RDS PostgreSQL 18, a statements bucket, ECR repositories and a budget alarm. Validated, not applied: applying it costs money | 12.4, 12.5 |
 | `deploy/argocd/` | An Argo CD Application that deploys the chart from Git | 12.5 |
@@ -88,3 +116,12 @@ Copy this folder into your own repository, then:
 4. Apply the Terraform (or your own for AKS, GKE or a k3s VPS) with remote state and a budget alarm first; deploy with `values-aws.yaml`, passwords synced from the secrets manager by External Secrets; record the evidence; destroy it the same day.
 5. Point an Argo CD Application at your repository, and show a merged change reaching the cluster with nobody running `helm` or `kubectl`.
 6. Write ADR 6 (running on Kubernetes: probes, resources, scaling) and ADR 7 (cloud, Terraform and GitOps, with the cost). Tag `v0.3`.
+
+## Your `v0.4` (Module 13)
+
+1. Extend tracing to your ledger, so one trace covers the whole saga up to `POSTED`; add a timer for the saga's duration.
+2. Add your own business metrics and panels (amounts by outcome, saga duration p95), and keep the dashboard in Git.
+3. Write two SLOs for `POST /api/transfers` (availability and latency), with burn-rate alerts and a runbook for each paging alert.
+4. Remove accounts' global lock (per-account locking in PostgreSQL), and prove the gain with Flight Recorder and the load test.
+5. Load-test at your expected peak and twice it; write the report (throughput, percentiles, errors, the bottleneck, the fix, before and after).
+6. Write ADR 8 (observability choices) and a short postmortem of one problem the load test found. Tag `v0.4`.

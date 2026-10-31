@@ -174,13 +174,13 @@ Projects: Event-driven order and payment processing; Real-time transaction notif
 
 Projects: Helm chart for your microservices; Deploy the capstone to a managed Kubernetes cluster; Terraform module for database and storage.
 
-### Module 13: Observability, Performance & Production Support (weeks 32-33)
+### [Module 13: Observability, Performance & Production Support](phases/03-enterprise-cloud-native/13-observability-performance/README.md) (weeks 32-33)
 
-- 13.1 Distributed tracing with OpenTelemetry; metrics with Micrometer
-- 13.2 Prometheus and Grafana dashboards; structured logging
-- 13.3 JVM profiling and heap analysis (JFR, heap dumps, memory leaks)
-- 13.4 Caching strategies with Redis; database tuning under load
-- 13.5 Load testing with k6 or JMeter; SLOs, alerts and incident response
+- [13.1 Distributed tracing with OpenTelemetry; metrics with Micrometer](phases/03-enterprise-cloud-native/13-observability-performance/13.1-opentelemetry-tracing-metrics/README.md)
+- [13.2 Prometheus and Grafana dashboards; structured logging](phases/03-enterprise-cloud-native/13-observability-performance/13.2-prometheus-grafana-logging/README.md)
+- [13.3 JVM profiling and heap analysis (JFR, heap dumps, memory leaks)](phases/03-enterprise-cloud-native/13-observability-performance/13.3-jvm-profiling-heap-analysis/README.md)
+- [13.4 Caching strategies with Redis; database tuning under load](phases/03-enterprise-cloud-native/13-observability-performance/13.4-caching-and-database-under-load/README.md)
+- [13.5 Load testing with k6 or JMeter; SLOs, alerts and incident response](phases/03-enterprise-cloud-native/13-observability-performance/13.5-load-testing-slos-incidents/README.md)
 
 Projects: End-to-end tracing across your services; Grafana dashboard with alert rules; Memory-leak hunt and latency-reduction lab.
 

@@ -275,7 +275,7 @@ HTTP, HTTPS, client, server, request, response, stateless, method, URL, path, qu
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [What is a REST API?](https://www.youtube.com/watch?v=lsMQRaeKNDk) · IBM Technology · 9 min. What a REST API is: resources, methods and representations.
 - [What Is REST API? Examples And How To Use It: Crash Course System Design #3](https://www.youtube.com/watch?v=-mN3VyJuCjM) · ByteByteGo · 5 min. REST APIs with examples: HTTP methods, status codes and statelessness.

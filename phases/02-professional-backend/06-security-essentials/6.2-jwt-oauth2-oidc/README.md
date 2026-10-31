@@ -216,7 +216,7 @@ JWT, JWS, header, claims, `iss`, `sub`, `aud`, `exp`, `kid`, JWKS, RS256, HS256,
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [JWT Explained In Under 10 Minutes (JSON Web Tokens)](https://www.youtube.com/watch?v=Y2H3DXDeS3Q) · Ariel Weinberger · 9 min. What a JWT is: header, claims, signature, and what it does not protect.
 - [An Illustrated Guide to OAuth and OpenID Connect](https://www.youtube.com/watch?v=t18YB3xDfXI) · OktaDev · 17 min. OAuth 2.0 and OpenID Connect in plain English, from Okta.

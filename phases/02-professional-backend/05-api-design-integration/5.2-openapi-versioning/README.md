@@ -270,7 +270,7 @@ OpenAPI Specification, Swagger UI, springdoc-openapi, `/v3/api-docs`, schema, `o
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [API Versioning Made Simple with Spring Boot 4.0](https://www.youtube.com/watch?v=qjo2tYf01xo) · Dan Vega · 27 min. First-class API versioning in Spring Boot 4: header, path and media-type strategies.
 - [Spring Doc OpenApi Setup In SpringBoot | Swagger Setuo using SpringDoc Open api|SpringBoot tutorials](https://www.youtube.com/watch?v=LsD89_f9vjE) · KB Tutorials · 18 min. Adding springdoc-openapi to a Spring Boot app and reading the generated Swagger UI.

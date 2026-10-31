@@ -206,7 +206,7 @@ Image, layer, container, registry, repository, tag, digest, Dockerfile, build co
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [Docker Multi-Stage Builds - Fast and Efficient Dockerfiles](https://www.youtube.com/watch?v=_Q9KSFUZH0c) · Depot · 6 min. Multi-stage Docker builds: small, secure production images.
 - [Docker Compose in 12 Minutes](https://www.youtube.com/watch?v=Qw9zlE3t8Ko) · Jake Wright · 12 min. Docker Compose for multi-container local environments.

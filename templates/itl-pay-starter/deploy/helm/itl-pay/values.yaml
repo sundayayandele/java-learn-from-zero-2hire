@@ -2,12 +2,17 @@
 
 image:
   registry: ""                 # "" for images loaded into kind; an ECR address in the cloud
-  tag: "0.3.0"
+  tag: "0.4.0"
   pullPolicy: IfNotPresent
 
 infra:
   postgresHost: postgres       # a Service in the cluster locally; the RDS endpoint in the cloud
   kafkaBootstrap: kafka:9092
+  redisHost: redis             # ElastiCache in the cloud
+
+# Traces over OTLP (Module 13): set the collector's address to turn export on
+observability:
+  otlpEndpoint: ""             # e.g. http://otel-collector.observability:4318
 
 # Database passwords live in this Secret, one key per database. Locally the chart creates it;
 # in the cloud it's created by External Secrets from AWS Secrets Manager, and createSecret is false.
@@ -32,6 +37,7 @@ services:
     port: 8082
     database: transfers
     kafka: true
+    redis: true
     replicas: 2
     env:
       ACCOUNTS_URL: http://accounts:8081

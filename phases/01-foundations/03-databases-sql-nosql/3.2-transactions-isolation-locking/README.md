@@ -229,7 +229,7 @@ Transaction, ACID, commit, rollback, savepoint, WAL, isolation level, dirty read
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [ACID Properties in Databases With Examples](https://www.youtube.com/watch?v=GAe5oB742dw) · ByteByteGo · 5 min. ACID properties with examples, from ByteByteGo.
 - [Transaction Isolation Levels With PostgreSQL as an example](https://www.youtube.com/watch?v=G8wDjV0N9tk) · mkdev · 8 min. Isolation levels and their anomalies, demonstrated in PostgreSQL.

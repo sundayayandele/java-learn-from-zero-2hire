@@ -160,7 +160,7 @@ Immutable image, environment configuration, liveness probe, readiness probe, gra
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [Top 5 Most-Used Deployment Strategies](https://www.youtube.com/watch?v=AWVTKBUnoIg) · ByteByteGo · 10 min. Deployment strategies: rolling, blue-green, canary, feature toggles.
 - [How to deploy a container image to Cloud Run](https://www.youtube.com/watch?v=zihPR6TeqjY) · Google Cloud Tech · 3 min. Deploying a container image to Google Cloud Run.

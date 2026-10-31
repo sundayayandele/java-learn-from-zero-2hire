@@ -1,0 +1,109 @@
+{
+  "topic": "13.1",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "A transfer request passes through the gateway, transfers and accounts.",
+      "question": "What carries the trace across those HTTP calls?",
+      "options": [
+        "The W3C traceparent header, injected by the caller and read by the callee",
+        "A shared database table of trace ids",
+        "The request body",
+        "Each service starts its own trace"
+      ],
+      "answer": 0,
+      "explanation": "Context propagation puts the trace id and parent span id in traceparent."
+    },
+    {
+      "type": "single",
+      "scenario": "ITL Pay writes events to an outbox; a scheduled relay sends them to Kafka later.",
+      "question": "Why did traces stop at the database before the starter's fix?",
+      "options": [
+        "Kafka doesn't support headers",
+        "The relay ran in its own scheduled trace, so the original request's context was lost; the fix stores traceparent in the outbox row and continues it",
+        "Tracing is disabled for Kafka by default in all versions",
+        "The database deleted the trace"
+      ],
+      "answer": 1,
+      "explanation": "Asynchronous hops through storage need the context stored with the data."
+    },
+    {
+      "type": "single",
+      "scenario": "A trace shows 40 ms of synchronous work, then 450 ms of nothing before 'outbox publish'.",
+      "question": "What does the gap most likely show?",
+      "options": [
+        "Kafka is slow",
+        "A GC pause",
+        "The relay's 500 ms polling interval",
+        "Network latency to Tempo"
+      ],
+      "answer": 2,
+      "explanation": "Traces make the cost of design choices like polling visible."
+    },
+    {
+      "type": "single",
+      "scenario": "A developer adds a metric tag accountId to itlpay.transfers.",
+      "question": "What is the problem?",
+      "options": [
+        "Tags must be numeric",
+        "Prometheus can't store counters",
+        "Micrometer ignores tags",
+        "High cardinality: a time series per account can overwhelm Prometheus; put ids in traces and logs instead"
+      ],
+      "answer": 3,
+      "explanation": "Keep metric tags to small, bounded sets of values."
+    },
+    {
+      "type": "single",
+      "scenario": "You want to track how long the oldest unpublished outbox event has waited.",
+      "question": "Which Micrometer meter type fits?",
+      "options": [
+        "A counter",
+        "A gauge",
+        "A distribution summary of request sizes",
+        "A long task timer on the controller"
+      ],
+      "answer": 1,
+      "explanation": "A gauge reports a current value sampled when metrics are read."
+    },
+    {
+      "type": "single",
+      "scenario": "In production at 5,000 requests a second, a team samples 100% of traces.",
+      "question": "What is a sensible change?",
+      "options": [
+        "Turn tracing off",
+        "Sample by account id",
+        "Sample a fraction (head sampling) and keep all error traces with tail sampling in the collector",
+        "Sample only the gateway"
+      ],
+      "answer": 2,
+      "explanation": "Sampling keeps cost under control while keeping the traces that matter."
+    },
+    {
+      "type": "single",
+      "scenario": "Which statement about OpenTelemetry and Micrometer in Spring Boot 4.1 is accurate?",
+      "question": "Choose one.",
+      "options": [
+        "Micrometer Observation instruments the code once; the OpenTelemetry bridge turns observations into spans exported over OTLP",
+        "They can't be used together",
+        "Micrometer only does logging",
+        "OpenTelemetry replaces Spring's HTTP client"
+      ],
+      "answer": 0,
+      "explanation": "spring-boot-starter-opentelemetry wires Micrometer Tracing's OTel bridge and the OTLP exporter."
+    },
+    {
+      "type": "single",
+      "scenario": "A test sends a request with traceparent 00-4bf92f35...-...-01 and checks the Kafka record.",
+      "question": "What should it assert?",
+      "options": [
+        "The record's key is the trace id",
+        "The record has no headers",
+        "The record's traceparent header contains the same trace id",
+        "The record arrived within 1 ms"
+      ],
+      "answer": 2,
+      "explanation": "The trace id survives; the span id changes at each hop."
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "about": "Curated English YouTube videos for every topic. Source of truth for the Watch section of each topic README and for the Moodle topic pages. Rules: English audio and captions, embeddable, official or well-established channels first, 'optional' for anything over 30 minutes. Checked by lms/check_videos.py; minutes and published are filled from YouTube by `python lms/check_videos.py --fill`.",
-  "checked": "2026-10-30",
+  "checked": "2026-10-31",
   "topics": {
     "0.1": [
       {
@@ -2335,6 +2335,96 @@
         "minutes": 11.8,
         "published": "2025-09-01",
         "why": "What GitOps is, the problem it solves, and where Argo CD fits."
+      }
+    ],
+    "13.1": [
+      {
+        "id": "PmrSvsEJBUc",
+        "title": "Distributed Tracing Explained | Traces, Spans & OpenTelemetry",
+        "channel": "Escoding",
+        "minutes": 7.5,
+        "published": "2026-09-04",
+        "why": "Traces, spans, context propagation and sampling, the vocabulary of distributed tracing."
+      },
+      {
+        "id": "iTRymaKNGLc",
+        "title": "OpenTelemetry Explained: Observability Framework for Distributed Systems | Traces, Metrics & Logs",
+        "channel": "CodeLucky",
+        "minutes": 6.0,
+        "published": "2025-12-13",
+        "why": "What OpenTelemetry standardises across traces, metrics and logs, and how the collector fits."
+      }
+    ],
+    "13.2": [
+      {
+        "id": "RGZE6KZixlU",
+        "title": "PromQL Mastery: Queries That Find Problems Instantly",
+        "channel": "Gheware DevOps AI",
+        "minutes": 7.4,
+        "published": "2025-12-29",
+        "why": "PromQL that finds problems: rate, sum by and histogram_quantile, with examples."
+      },
+      {
+        "id": "vf5MJLoXUG0",
+        "title": "Grafana Tutorial for Beginners | What is Grafana | Prometheus and Grafana Monitoring (2026)",
+        "channel": "Tech With Diego",
+        "minutes": 6.0,
+        "published": "2026-06-29",
+        "why": "Grafana with Prometheus: data sources, panels and building a dashboard."
+      }
+    ],
+    "13.3": [
+      {
+        "id": "1LUae4wSZyM",
+        "title": "Performance Costs of Synchronized Methods in Java: JDK Mission Control & JVM Flight Recorder Example",
+        "channel": "Cameron McKenzie",
+        "minutes": 6.6,
+        "published": "2020-12-12",
+        "why": "Finding the cost of synchronized methods with Flight Recorder and Mission Control: the same kind of lock ITL Pay hit."
+      },
+      {
+        "id": "DM8hiMrQB7g",
+        "title": "Identify &  Fix JVM memory leaks with Java Flight Recorder and JDK Mission Control",
+        "channel": "Cameron McKenzie",
+        "minutes": 7.3,
+        "published": "2020-12-13",
+        "why": "Finding a memory leak with Flight Recorder's old-object sampling and Mission Control."
+      }
+    ],
+    "13.4": [
+      {
+        "id": "8A6s9d0jnWI",
+        "title": "Caching Strategies With Redis",
+        "channel": "Software With Shawn",
+        "minutes": 11.5,
+        "published": "2024-10-02",
+        "why": "Caching with Redis: cache-aside, its pitfalls, TTLs and write-through."
+      },
+      {
+        "id": "V1oGVbxD8mk",
+        "title": "Distributed Caching Strategies: Cache-Aside, Write-Through, Write-Behind",
+        "channel": "CodeLucky",
+        "minutes": 6.4,
+        "published": "2025-12-13",
+        "why": "Cache-aside, write-through and write-behind compared, with when to use each."
+      }
+    ],
+    "13.5": [
+      {
+        "id": "gvounvDSDGg",
+        "title": "Basics of load testing with k6 and Grafana in 20 minutes",
+        "channel": "k6",
+        "minutes": 20.0,
+        "published": "2021-10-12",
+        "why": "Load testing with k6 and Grafana in 20 minutes, from the k6 team."
+      },
+      {
+        "id": "DchunaXjxfA",
+        "title": "SLA SLO SLI & Error Budget – Every Developer MUST Know This | System Design Explained",
+        "channel": "Neural Bytes",
+        "minutes": 24.8,
+        "published": "2026-05-05",
+        "why": "SLAs, SLOs, SLIs and error budgets, explained for developers."
       }
     ]
   }

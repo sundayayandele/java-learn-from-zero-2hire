@@ -1,0 +1,51 @@
+# ITL Pay alert rules (topic 13.5). Alert on what customers feel (symptoms), not on every cause.
+groups:
+  - name: itl-pay-slo
+    rules:
+      # SLO: 99.5% of transfer requests through the gateway succeed (no 5xx), measured over 30 days.
+      # Error budget = 0.5%. Page when it's burning 14.4x too fast over both 1 hour and 5 minutes
+      # (2% of the month's budget gone in an hour), the multiwindow burn-rate pattern from the Google SRE workbook.
+      - record: itlpay:transfer_requests:error_ratio_5m
+        expr: |
+          sum(rate(http_server_requests_seconds_count{service="transfers", uri="/transfers", method="POST", status=~"5.."}[5m]))
+          / sum(rate(http_server_requests_seconds_count{service="transfers", uri="/transfers", method="POST"}[5m]))
+      - record: itlpay:transfer_requests:error_ratio_1h
+        expr: |
+          sum(rate(http_server_requests_seconds_count{service="transfers", uri="/transfers", method="POST", status=~"5.."}[1h]))
+          / sum(rate(http_server_requests_seconds_count{service="transfers", uri="/transfers", method="POST"}[1h]))
+      - alert: TransfersErrorBudgetBurningFast
+        expr: itlpay:transfer_requests:error_ratio_5m > (14.4 * 0.005) and itlpay:transfer_requests:error_ratio_1h > (14.4 * 0.005)
+        labels: { severity: page }
+        annotations:
+          summary: "Transfers are failing fast enough to spend the month's error budget in about 2 days"
+          runbook: "docs/runbooks/transfers-failing.md"
+
+      # SLO: 95% of transfer requests answer within 500 ms.
+      - alert: TransfersSlow
+        expr: |
+          histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{service="transfers", uri="/transfers", method="POST"}[5m]))) > 0.5
+        for: 10m
+        labels: { severity: ticket }
+        annotations:
+          summary: "p95 transfer latency above 500 ms for 10 minutes"
+
+  - name: itl-pay-internals
+    rules:
+      - alert: OutboxStuck
+        expr: max(itlpay_outbox_oldest_age_seconds) > 60
+        for: 2m
+        labels: { severity: page }
+        annotations:
+          summary: "An event has waited more than a minute to leave the outbox: Kafka down, or the relay stuck"
+      - alert: CircuitBreakerOpen
+        expr: max by (name) (resilience4j_circuitbreaker_state{state="open"}) == 1
+        for: 2m
+        labels: { severity: page }
+        annotations:
+          summary: "Circuit breaker {{ $labels.name }} has been open for 2 minutes"
+      - alert: ConsumerFallingBehind
+        expr: max by (service, client_id) (kafka_consumer_fetch_manager_records_lag_max) > 1000
+        for: 5m
+        labels: { severity: ticket }
+        annotations:
+          summary: "{{ $labels.service }} is more than 1,000 records behind"

@@ -258,7 +258,7 @@ Condition, comparison operator, `&&`, `||`, `!`, `if`/`else if`/`else`, `while`,
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [Java for loops are easy! 🔂](https://www.youtube.com/watch?v=vOmZ4JFhRds) · Bro Code · 10 min. for loops from first principles, with the start, condition and update explained.
 - [Learn Java while loops in 12 minutes! ♾️](https://www.youtube.com/watch?v=ZjHJrmYknrk) · Bro Code · 12 min. while loops, and how to avoid loops that never end.

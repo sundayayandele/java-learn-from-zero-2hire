@@ -159,7 +159,7 @@ ATS (applicant tracking system), one-page CV, summary, quantified bullet, action
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [The Resume that got me into Google - Software Engineer Resume Tips](https://www.youtube.com/watch?v=bwgjvzMSlMQ) · NeetCode · 14 min. A software engineer CV that got interviews: what to keep, what to cut.
 - [5 MUST-KNOW LinkedIn Profile Tips for Job Seekers!](https://www.youtube.com/watch?v=B4OhuzwLc9o) · Jeff Su · 8 min. Five LinkedIn profile fixes that recruiters notice.

@@ -97,7 +97,7 @@ Use Situation, Task, Action, Result, and keep each under two minutes:
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [The Java Developer Roadmap You Need in the AI Era](https://www.youtube.com/watch?v=na3gWTOBJEE) · Amigoscode · 22 min. What the Java job market asks for now, and where AI fits.
 - [Ex-Google Recruiter Explains: 6 Résumé Secrets That Get You Hired](https://www.youtube.com/watch?v=eGmZZFJ-8PY) · Farah Sharghi · 10 min. Résumé advice from an ex-Google recruiter.

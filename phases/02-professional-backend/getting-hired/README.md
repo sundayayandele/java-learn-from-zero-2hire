@@ -95,7 +95,7 @@ The five from Phase 1, plus:
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [How to Get Hired as a Software Engineer in 2026 (Junior Developers)](https://www.youtube.com/watch?v=tQnkO-QpBQo) · Daf James · 4 min. How juniors get hired as software engineers in 2026.
 - [How to make a Dev resume that actually gets you hired](https://www.youtube.com/watch?v=fD0E57QYSPk) · Anthony Sistilli · 19 min. A developer CV that gets interviews: structure and evidence.

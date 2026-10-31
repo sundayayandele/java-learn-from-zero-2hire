@@ -252,7 +252,7 @@ LTS, feature release, JEP, preview, incubator, unnamed variable, flexible constr
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [What’s New in Java 25 in 2 Minutes... More or Less - Sip of Java](https://www.youtube.com/watch?v=lCNNA1erCfk) · Java · 5 min. The Java team's own short tour of what's new in Java 25.
 - [Modern Java Features That Change How We Write Code | Java 21 & 25 | Geekific](https://www.youtube.com/watch?v=9i2AgGEXlz4) · Geekific · 7 min. The modern language features from Java 21 to 25, side by side with older code.

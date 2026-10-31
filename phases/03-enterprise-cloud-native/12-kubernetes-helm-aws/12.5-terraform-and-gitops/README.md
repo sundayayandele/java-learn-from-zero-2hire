@@ -3,7 +3,7 @@
 
 # 12.5 Infrastructure as Code with Terraform; GitOps with Argo CD
 
-← [12.4 AWS essentials](../12.4-aws-essentials-eks/README.md) · [Module 12](../README.md) · [Phase 3](../../README.md)
+← [12.4 AWS essentials](../12.4-aws-essentials-eks/README.md) · [Module 12](../README.md) · [Phase 3](../../README.md) · [13.1 Distributed tracing with OpenTelemetry; metrics with Micrometer](../../13-observability-performance/13.1-opentelemetry-tracing-metrics/README.md) →
 
 > **Week 31** · Module 12: Kubernetes, Helm & Cloud on AWS · Website topic covered: *Infrastructure as code with Terraform, remote state and plans in CI; GitOps with Argo CD*
 
@@ -190,7 +190,7 @@ Infrastructure as code, Terraform, OpenTofu, provider, resource, module, variabl
 
 ## Watch
 
-All videos are in English with English captions and were checked on 2026-10-30. Moodle learners see them embedded.
+All videos are in English with English captions and were checked on 2026-10-31. Moodle learners see them embedded.
 
 - [Terraform explained in 15 mins | Terraform Tutorial for Beginners](https://www.youtube.com/watch?v=l5k1ai_GBDE) · TechWorld with Nana · 18 min. Terraform's core ideas: providers, resources, state, plan and apply (TechWorld with Nana).
 - [What is GitOps | GitOps Introduction | What is ArgoCD? | What Problem GitOps Solves ?](https://www.youtube.com/watch?v=YfGgTFJ9sT8) · Valaxy Technologies · 12 min. What GitOps is, the problem it solves, and where Argo CD fits.
@@ -321,4 +321,4 @@ Which reason is accurate?
 
 ---
 
-← [12.4 AWS essentials](../12.4-aws-essentials-eks/README.md) · [Module 12](../README.md) · [Phase 3](../../README.md)
+← [12.4 AWS essentials](../12.4-aws-essentials-eks/README.md) · [Module 12](../README.md) · [Phase 3](../../README.md) · [13.1 Distributed tracing with OpenTelemetry; metrics with Micrometer](../../13-observability-performance/13.1-opentelemetry-tracing-metrics/README.md) →

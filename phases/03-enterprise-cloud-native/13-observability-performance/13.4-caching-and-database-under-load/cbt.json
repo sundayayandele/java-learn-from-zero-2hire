@@ -1,0 +1,109 @@
+{
+  "topic": "13.4",
+  "questions": [
+    {
+      "type": "single",
+      "scenario": "Which data is safe for ITL Pay to cache in Redis?",
+      "question": "Choose one.",
+      "options": [
+        "Available balances used to approve transfers",
+        "Fraud scores used for decisions",
+        "The transfer status shown to a customer's app, evicted when it changes",
+        "Transfer limits"
+      ],
+      "answer": 2,
+      "explanation": "Never cache data used for financial decisions; read it from the source of truth."
+    },
+    {
+      "type": "single",
+      "scenario": "A cache eviction runs before the database transaction commits.",
+      "question": "What can go wrong?",
+      "options": [
+        "Nothing",
+        "A read between eviction and commit loads the old row and caches it again until the TTL expires",
+        "Redis rejects the eviction",
+        "The transaction rolls back"
+      ],
+      "answer": 1,
+      "explanation": "Evict after commit: the starter's cache manager is transaction-aware."
+    },
+    {
+      "type": "single",
+      "scenario": "Redis goes down. With Spring's default settings and Lettuce's default timeout, status reads fail after a long wait.",
+      "question": "What does the starter do instead?",
+      "options": [
+        "A CacheErrorHandler that logs and falls back to the database, with 250 ms Redis timeouts",
+        "Retries Redis forever",
+        "Returns 503",
+        "Caches in memory forever"
+      ],
+      "answer": 0,
+      "explanation": "A cache must never take the service down."
+    },
+    {
+      "type": "single",
+      "scenario": "A popular key expires and hundreds of requests hit the database at once.",
+      "question": "What is this, and one defence?",
+      "options": [
+        "A deadlock; restart PostgreSQL",
+        "Cache stampede; @Cacheable(sync = true), jittered TTLs or refresh-ahead",
+        "Cache poisoning; delete Redis",
+        "Replication lag; add replicas"
+      ],
+      "answer": 1,
+      "explanation": "Let one loader fetch; spread expiries."
+    },
+    {
+      "type": "single",
+      "scenario": "Why does the starter store cache values as JSON instead of Java serialisation?",
+      "question": "Choose one.",
+      "options": [
+        "Redis can't store bytes",
+        "JSON is always smaller",
+        "It's readable, tolerant of class changes, and avoids deserialisation security risks",
+        "Spring requires it"
+      ],
+      "answer": 2,
+      "explanation": "Java deserialisation of untrusted bytes is a known attack vector."
+    },
+    {
+      "type": "single",
+      "scenario": "Under load, 18 requests wait for a HikariCP connection.",
+      "question": "What should you investigate before enlarging the pool?",
+      "options": [
+        "Why connections are held so long, such as a transaction kept open while calling Kafka",
+        "The JVM version",
+        "Redis memory",
+        "The number of Kafka partitions"
+      ],
+      "answer": 0,
+      "explanation": "In ITL Pay, fixing the relay cut waiting from 18 to 3 with the same pool."
+    },
+    {
+      "type": "single",
+      "scenario": "Every transfer debits one 'bank float' account row.",
+      "question": "What will a load test show?",
+      "options": [
+        "Faster transfers",
+        "Lock queues on that row, visible in pg_stat_activity",
+        "More cache hits",
+        "Lower CPU"
+      ],
+      "answer": 1,
+      "explanation": "Hot rows serialise transactions; spread them or redesign."
+    },
+    {
+      "type": "single",
+      "scenario": "Six services each have a pool of 10 connections and run 3 replicas.",
+      "question": "Why might this fail?",
+      "options": [
+        "Hikari limits pools to 5",
+        "Redis can't handle it",
+        "Kafka needs connections too",
+        "180 connections exceed PostgreSQL's default max_connections of 100"
+      ],
+      "answer": 3,
+      "explanation": "Pool size times instances must fit, with headroom; consider PgBouncer."
+    }
+  ]
+}

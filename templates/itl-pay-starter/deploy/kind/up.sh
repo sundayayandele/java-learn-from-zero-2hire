@@ -4,7 +4,7 @@
 # Tear it all down with: kind delete cluster --name itl-pay
 set -euo pipefail
 cd "$(dirname "$0")/../.."          # templates/itl-pay-starter
-TAG=0.3.0
+TAG=0.4.0
 SERVICES="accounts transfers gateway fraud notifications interest-batch"
 
 echo "== cluster"
@@ -23,11 +23,12 @@ for s in $SERVICES; do docker build -q -t "itl-pay/$s:$TAG" "$s" >/dev/null; don
 # shellcheck disable=SC2046
 kind load docker-image --name itl-pay $(for s in $SERVICES; do echo "itl-pay/$s:$TAG"; done)
 
-echo "== PostgreSQL and Kafka"
+echo "== PostgreSQL, Kafka and Redis"
 kubectl create namespace itl-pay
 kubectl -n itl-pay apply -f deploy/infra/
 kubectl -n itl-pay rollout status statefulset/postgres --timeout=5m
 kubectl -n itl-pay rollout status statefulset/kafka --timeout=5m
+kubectl -n itl-pay rollout status deployment/redis --timeout=5m
 
 echo "== ITL Pay"
 kubectl apply -f deploy/kind/gateway.yaml

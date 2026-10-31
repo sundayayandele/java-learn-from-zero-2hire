@@ -16,8 +16,10 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.micrometer.tracing.test.autoconfigure.AutoConfigureTracing;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -26,7 +28,9 @@ import org.springframework.web.client.RestClient;
 import org.testcontainers.kafka.KafkaContainer;
 
 /** The transfer saga end to end, with real PostgreSQL and Kafka and a fake accounts service. */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = "management.tracing.export.otlp.enabled=false")   // trace, but send spans nowhere
+@AutoConfigureTracing
 @Import(TestcontainersConfiguration.class)
 class TransferSagaTests {
 
@@ -73,6 +77,7 @@ class TransferSagaTests {
     @Autowired Transfers transfers;
     @Autowired KafkaTemplate<String, String> kafka;
     @Autowired KafkaContainer kafkaContainer;
+    @Autowired StringRedisTemplate redis;
 
     RestClient http() {
         return RestClient.create("http://localhost:" + port);
@@ -121,10 +126,54 @@ class TransferSagaTests {
     }
 
     @Test
+    void theTraceContinuesFromTheHttpRequestThroughTheOutboxToKafka() {
+        String traceId = "4bf92f3577b34da6a3ce929d0e0e4736";
+        http().post().uri("/transfers").header("Content-Type", "application/json")
+                .header("traceparent", "00-" + traceId + "-00f067aa0ba902b7-01")      // as if the gateway had started the trace
+                .body("{\"reference\":\"TRF-TRACE\",\"from\":\"A1\",\"to\":\"A2\",\"amount\":100.00}")
+                .retrieve().toBodilessEntity();
+
+        assertThat(headerFor("TRF-TRACE", "traceparent")).contains(traceId);   // same trace id on the Kafka record
+    }
+
+    @Test
+    void theStatusIsCachedAndEvictedWhenTheTransferMoves() {
+        requestTransfer("TRF-CACHE", "500.00");
+        assertThat(http().get().uri("/transfers/TRF-CACHE").retrieve().body(String.class)).contains("RESERVED");
+        assertThat(redis.hasKey("itl-pay:transfers::TRF-CACHE")).isTrue();                     // cache-aside filled it
+
+        kafka.send("fraud-decisions", "TRF-CACHE", "{\"reference\":\"TRF-CACHE\",\"decision\":\"CLEARED\"}");
+        await().atMost(Duration.ofSeconds(20)).until(() -> stateOf("TRF-CACHE") == Transfers.State.CLEARED);
+        await().atMost(Duration.ofSeconds(5)).until(() -> !redis.hasKey("itl-pay:transfers::TRF-CACHE"));   // evicted after commit
+        assertThat(http().get().uri("/transfers/TRF-CACHE").retrieve().body(String.class)).contains("CLEARED");
+    }
+
+    @Test
     void aRejectedReservationIsRecordedAndAnswered422() {
         assertThat(org.assertj.core.api.Assertions.catchThrowable(() -> requestTransfer("TRF-NOFUNDS", "99999.00")))
                 .isInstanceOfSatisfying(HttpClientErrorException.class, e -> assertThat(e.getStatusCode().value()).isEqualTo(422));
         assertThat(stateOf("TRF-NOFUNDS")).isEqualTo(Transfers.State.REJECTED);
+    }
+
+    /** The value of one header on the first transfer-events record for a reference. */
+    String headerFor(String reference, String header) {
+        Map<String, Object> config = Map.of(
+                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaContainer.getBootstrapServers(),
+                ConsumerConfig.GROUP_ID_CONFIG, "test-" + System.nanoTime(),
+                ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        try (var consumer = new KafkaConsumer<>(config, new StringDeserializer(), new StringDeserializer())) {
+            consumer.subscribe(List.of(Outbox.TOPIC));
+            List<String> values = new CopyOnWriteArrayList<>();
+            await().atMost(Duration.ofSeconds(20)).pollDelay(Duration.ZERO).until(() -> {
+                consumer.poll(Duration.ofMillis(500)).forEach(r -> {
+                    if (r.key().equals(reference) && r.headers().lastHeader(header) != null) {
+                        values.add(new String(r.headers().lastHeader(header).value()));
+                    }
+                });
+                return !values.isEmpty();
+            });
+            return values.getFirst();
+        }
     }
 
     /** Reads every event for one reference from transfer-events, in order. */
