@@ -193,6 +193,13 @@ See [ops/monitoring](../../ops/monitoring/README.md).
 - **Grace period:** staff had 7 days to set up an authenticator app (*Preferences → Multi-factor authentication preferences*), after which Moodle takes them to that page.
 - **If an administrator is locked out:** on the server, run `docker exec -u www-data moodle php admin/cli/cfg.php --component=tool_mfa --name=enabled --set=0`, log in, fix the factor, then set it back to 1.
 
+### AI on itlearning.tech (31 October 2026)
+
+- **Provider.** Moodle's Ollama provider ("ITLChat") calls the `ollama` container directly at `http://ollama:11434` on the `itlearning-tech_default` Docker network, with no login, using `llama3.2:1b` for generate, summarise and explain ([`scripts/moodle/ai/fix_provider.php`](../../scripts/moodle/ai/fix_provider.php)). It used to point at Open WebUI (`chat.itlearning.tech`, which answers `405`), with an admin password and a model that wasn't installed. The settings before the change, without the password, are in `/opt/itlearning-tech/ai/provider-before-20261031.json`.
+- **Outbound-request protection.** Moodle blocks private addresses and non-standard ports for every outgoing request. Only Ollama's address (`172.16.1.8`) was removed from the blocked `172.16.0.0/12` range (the rest of the range, including the database, stays blocked), and port `11434` was added to the allowed ports. **If the `ollama` container gets a different address after being recreated, AI stops working** (safely): pin its address in the compose file, or update *Site administration > General > Security > HTTP security*.
+- **No AI in assessments.** In every quiz and assignment, the Student role is prohibited from course assistance (*Summarise*, *Explain*) and the editor's AI generation. `itl-ai-guard.timer` re-applies this daily at 04:30 UTC for new activities; run `itl-ai-guard` by hand after adding assessments, or `itl-ai-guard --check` to report ([`scripts/moodle/ai`](../../scripts/moodle/ai/install.sh)). Moodle can't stop other AI sites in another tab: use Safe Exam Browser for the end-of-phase exams.
+- **Speed.** On this 2-vCPU server the first request after the model unloads (5 minutes idle) takes about 80 s; later ones about 13 s.
+
 ## 6. Updating content
 
 Edit the source in the repository (`lesson.md`, `cbt.json`, `lms/videos.json`, `assessments/private/...`), run `python scripts/build.py`, `python scripts/check_repo.py` and `python scripts/moodle/build_moodle.py`, then replace the Page content and re-import changed question banks (import into the same category, then swap questions in the quiz). Run `python lms/check_videos.py --quick` monthly to catch removed videos.
